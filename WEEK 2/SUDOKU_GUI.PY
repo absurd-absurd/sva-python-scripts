@@ -65,6 +65,7 @@ HOW TO USE IN MAYA
 5. "New Puzzle" starts over with a freshly generated one.
 """
 
+import colorsys
 import math
 import random
 
@@ -233,6 +234,16 @@ def _assign_color(transform, color, name):
     cmds.sets(transform, edit=True, forceElement=sg)
 
 
+def _random_star_color():
+    """A fresh random color for each new star, kept inside a bright, saturated "toy" range
+    (via HSV rather than plain random RGB) so it never comes out muddy, too dark, or washed
+    out no matter which random hue it lands on."""
+    hue = random.random()
+    saturation = random.uniform(0.55, 0.8)
+    value = random.uniform(0.85, 1.0)
+    return colorsys.hsv_to_rgb(hue, saturation, value)
+
+
 def _dome_profile(rings_per_hemisphere):
     """Latitude angles (radians, 0 = equator, +-pi/2 = pole) for the rings between the
     equator and each pole, evenly spaced in ANGLE rather than in height. That's what makes
@@ -242,69 +253,77 @@ def _dome_profile(rings_per_hemisphere):
             for i in range(1, rings_per_hemisphere + 1)]
 
 
-def build_reward_star(num_points=5, outer_radius=2.6, inner_radius=1.15, puff_height=2.6,
+def build_reward_star(num_points=5, outer_radius=2.6, inner_radius=1.15, puff_depth=1.8,
                        rings_per_hemisphere=5, smooth_divisions=2,
                        center=(0.0, 3.0, 0.0), color=(1.0, 0.88, 0.45),
                        group_name=_REWARD_GROUP_NAME):
-    """Builds a puffy, rounded 5-pointed star -- a star-shaped balloon -- as a single mesh.
+    """Builds a puffy, rounded 5-pointed star -- a star-shaped balloon -- as a single mesh,
+    standing upright (its points laid out in the X/Y plane, facing the camera) rather than
+    lying flat on the ground.
 
-    Rather than a flat prism with hard edges, this stacks horizontal star-outline rings
-    from a bottom point up through the equator to a top point, each ring scaled down by
-    how close it is to a pole (following a quarter-circle profile, see _dome_profile), so
-    the whole shape is already rounded before any smoothing happens. cmds.polySmooth then
-    softens every remaining facet -- including the star's point tips -- into the soft,
-    inflated look of a plush toy instead of a faceted low-poly star.
+    This stacks star-outline "slices" from the back of the star through the middle to the
+    front, each slice scaled down the closer it is to the front/back tip (following a
+    quarter-circle profile, see _dome_profile), so the whole shape is already rounded before
+    any smoothing happens. cmds.polySmooth then softens every remaining facet -- including
+    the star's point tips -- into the soft, inflated look of a plush toy instead of a
+    faceted low-poly star.
     """
     n = num_points * 2
     directions = []
     for i in range(n):
         angle = math.radians(90.0 - i * (360.0 / n))
         base_radius = outer_radius if i % 2 == 0 else inner_radius
+        # (dx, dy) instead of (dx, dz): the star's outline lives in the vertical X/Y plane
+        # now, so it reads as an upright star from the front instead of a flat shape you'd
+        # only recognize looking straight down at it
         directions.append((math.cos(angle) * base_radius, math.sin(angle) * base_radius))
 
     latitudes = _dome_profile(rings_per_hemisphere)
-    # ring stack from bottom pole to top pole: bottom-hemisphere latitudes (most-negative
-    # first, so the list already runs bottom-to-top), the equator, then the top hemisphere
-    ring_latitudes = [-lat for lat in reversed(latitudes)] + [0.0] + latitudes
+    # slice stack from the back tip to the front tip: back-half latitudes (most-negative
+    # first, so the list already runs back-to-front), the middle, then the front half
+    slice_latitudes = [-lat for lat in reversed(latitudes)] + [0.0] + latitudes
 
-    rings = []
-    for lat in ring_latitudes:
+    slices = []
+    for lat in slice_latitudes:
         radial_scale = math.cos(lat)
-        y = center[1] + math.sin(lat) * (puff_height / 2.0)
-        rings.append([(center[0] + dx * radial_scale, y, center[2] + dz * radial_scale)
-                      for dx, dz in directions])
+        # puffiness now bulges along Z (front-to-back depth) instead of Y (up/down height),
+        # so the star's height/width still come from outer_radius/inner_radius as before
+        z = center[2] + math.sin(lat) * (puff_depth / 2.0)
+        slices.append([(center[0] + dx * radial_scale, center[1] + dy * radial_scale, z)
+                       for dx, dy in directions])
 
-    bottom_pole = (center[0], center[1] - puff_height / 2.0, center[2])
-    top_pole = (center[0], center[1] + puff_height / 2.0, center[2])
+    back_tip = (center[0], center[1], center[2] - puff_depth / 2.0)
+    front_tip = (center[0], center[1], center[2] + puff_depth / 2.0)
 
     faces = []
 
-    # bottom pole cap -- a fan of triangles closing off the lowest ring to a single point.
-    # order is (pole, j, i) -- the reverse of the "increasing" order used everywhere else --
-    # so this cap's normal faces down and out, matching the bottom-cap winding the original
-    # flat star used (see the "reversed winding" note that used to live here).
-    lowest_ring = rings[0]
+    # back-tip cap -- a fan of triangles closing off the back-most slice to a single point.
+    # order is (tip, j, i) -- the reverse of the "increasing" order used everywhere else --
+    # so this cap's normal faces backward and out, matching the winding the original flat
+    # star used for its cap that faced away from the shape (see the "reversed winding" note
+    # that used to live here).
+    back_slice = slices[0]
     for i in range(n):
         j = (i + 1) % n
         faces.append(cmds.polyCreateFacet(
-            point=[bottom_pole, lowest_ring[j], lowest_ring[i]], constructionHistory=False)[0])
+            point=[back_tip, back_slice[j], back_slice[i]], constructionHistory=False)[0])
 
-    # side bands between every pair of consecutive rings, climbing from bottom to top --
+    # side bands between every pair of consecutive slices, moving from back to front --
     # same (lower[i], lower[j], upper[j], upper[i]) winding proven on the original star's
-    # single band and on the labyrinth walls, just repeated once per ring pair now
-    for ring_index in range(len(rings) - 1):
-        lower, upper = rings[ring_index], rings[ring_index + 1]
+    # single band and on the labyrinth walls, just repeated once per slice pair now
+    for slice_index in range(len(slices) - 1):
+        lower, upper = slices[slice_index], slices[slice_index + 1]
         for i in range(n):
             j = (i + 1) % n
             faces.append(cmds.polyCreateFacet(
                 point=[lower[i], lower[j], upper[j], upper[i]], constructionHistory=False)[0])
 
-    # top pole cap -- increasing order, so its normal faces up and out
-    highest_ring = rings[-1]
+    # front-tip cap -- increasing order, so its normal faces forward and out
+    front_slice = slices[-1]
     for i in range(n):
         j = (i + 1) % n
         faces.append(cmds.polyCreateFacet(
-            point=[top_pole, highest_ring[i], highest_ring[j]], constructionHistory=False)[0])
+            point=[front_tip, front_slice[i], front_slice[j]], constructionHistory=False)[0])
 
     merged = cmds.polyUnite(faces, constructionHistory=False, name="rewardStar")[0]
     cmds.polyMergeVertex(merged, distance=0.001, constructionHistory=False)
@@ -486,7 +505,7 @@ def _on_solved():
         # habit 2: delete only the exact group this tool made before building a new one
         if cmds.objExists(_REWARD_GROUP_NAME):
             cmds.delete(_REWARD_GROUP_NAME)
-        build_reward_star()
+        build_reward_star(color=_random_star_color())
     finally:
         cmds.undoInfo(closeChunk=True)
     cmds.confirmDialog(title="Solved!", message="Nice work -- you solved it.\nEnjoy your star.",
