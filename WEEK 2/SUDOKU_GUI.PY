@@ -465,7 +465,7 @@ def _build_ui():
         # allowance. Generous on purpose -- a window a little roomier than it strictly needs
         # to be is harmless; one that's too narrow clips content with no way to reach it.
         window_w = max(dropdown_w + 90, grid_size * cell_px + 100)
-        window_h = 250 + grid_size * cell_px
+        window_h = 280 + grid_size * cell_px  # extra headroom below the buttons, now that there are only two
 
         # Maya remembers a window's size by its NAME (windowPref) and can silently re-apply
         # a remembered size to a new window created with that name -- clearing it first
@@ -473,13 +473,19 @@ def _build_ui():
         if cmds.windowPref(_WINDOW_NAME, exists=True):
             cmds.windowPref(_WINDOW_NAME, remove=True)
 
+        # the width every full-row control (the description text, the two buttons) gets
+        # explicitly, so they fill the window edge-to-edge instead of defaulting to Maya's
+        # own tiny natural size for a text/button control -- the same issue the dropdowns
+        # had before they got an explicit width, just not noticed on those until now
+        content_w = window_w - 40
+
         window = cmds.window(_WINDOW_NAME, title="Sudoku", widthHeight=(window_w, window_h), sizeable=False)
         main = cmds.columnLayout(adjustableColumn=False, rowSpacing=6, columnAttach=("both", 12))
 
         cmds.text(label=" ")
         cmds.text(label="Sudoku", font="boldLabelFont")
         cmds.text(label="%dx%d puzzle -- fill in 1 to %d." % (grid_size, grid_size, grid_size),
-                  font="smallPlainLabelFont", align="left")
+                  font="smallPlainLabelFont", align="left", width=content_w)
         cmds.separator(height=8, style="in")
 
         _ui["difficulty"] = cmds.optionMenu(label="Difficulty", width=dropdown_w, changeCommand=_on_difficulty_changed)
@@ -524,9 +530,12 @@ def _build_ui():
 
         cmds.separator(height=10, style="in")
 
-        cmds.button(label="Check Solution", height=36, backgroundColor=(0.35, 0.55, 0.35), command=_on_check)
-        cmds.button(label="New Puzzle", height=28, command=_on_new_puzzle)
-        cmds.button(label="Close", height=24, command=lambda *_: cmds.deleteUI(_WINDOW_NAME))
+        cmds.button(label="Check Solution", width=content_w, height=48,
+                    backgroundColor=(0.35, 0.55, 0.35), command=_on_check)
+        # no separate "Close" button -- the window's own title-bar close control already
+        # does that, and the extra button was just getting cut off at the bottom with no
+        # real purpose of its own
+        cmds.button(label="New Puzzle", width=content_w, height=40, command=_on_new_puzzle)
 
         cmds.showWindow(window)
         # re-assert the size AFTER the window is actually shown: Maya can run its own
