@@ -1,10 +1,11 @@
 """
 sudoku_gui.py
 
-Maya tool (maya.cmds UI, no PySide needed) that pops up a small, easy,
-playable 4x4 mini-sudoku (numbers 1-4, 2x2 boxes) as a real interactive
-grid of text fields -- type the numbers in, check your answer, and a
-correct solve builds a 3D gold star in the viewport as a reward.
+Maya tool (maya.cmds UI, no PySide needed) that pops up a small, playable
+mini-sudoku -- size chosen from a dropdown, 4x4 up to 9x9 -- as a real
+interactive grid of text fields -- type the numbers in, check your answer,
+and a correct solve builds a puffy, randomly-colored 3D star in the
+viewport as a reward.
 
 THE POPUP WINDOW *IS* THE GAME -- there's no separate board drawn in
 the 3D scene. You solve the puzzle in the tool's own window; the only
@@ -33,18 +34,28 @@ itself. The "board" is real Maya text fields you type into, and the
 only 3D geometry built is the reward star, which never needs to show
 text at all.
 
-WHY 4x4 AND NOT 9x9
----------------------
-A regular 9x9 sudoku takes real solving effort. Making this a small,
-fast, genuinely-easy puzzle (4 numbers, 2x2 boxes, most cells already
-filled in) means someone can open the tool and solve it in well under
-a minute -- the point here is demonstrating the interactive loop and
-the reward, not testing anyone's sudoku skills.
+VARIABLE GRID SIZE (4-9) AND WHY 5 AND 7 ARE DIFFERENT
+----------------------------------------------------------
+A classic sudoku's "box" regions only work cleanly when the grid size
+factors into two roughly-equal numbers -- 4 = 2x2 boxes, 6 = 2x3 boxes,
+8 = 2x4 boxes, 9 = 3x3 boxes. 5 and 7 are prime: there's no way to split
+them into a grid of smaller boxes at all (the only factors are 1 and the
+number itself, which just means "the whole row" -- not a real region).
+Rather than fake a box constraint that doesn't actually mean anything at
+those two sizes, a 5x5 or 7x7 puzzle here is a genuine Latin square
+instead: every row and every column still has to contain each number
+exactly once, and the puzzle is still carved down to a single unique
+solution the same way as any other size -- it just doesn't have the
+extra box rule on top. That's an honest tradeoff, documented here rather
+than hidden: BOX_SHAPES below is the one place that decision gets made,
+and every solver function takes the box shape as a parameter (None
+meaning "no boxes") instead of assuming boxes always exist.
 
 WHAT IT HAS TO GET RIGHT
 --------------------------
-1. The generated puzzle must be a fully valid mini-sudoku with exactly
-   one solution.
+1. The generated puzzle must be a fully valid sudoku (or, at 5x5/7x7, a
+   fully valid Latin square) with exactly one solution, at whatever grid
+   size is currently selected.
 2. Checking a solve compares against that real, unique answer.
 3. Wrong entries get highlighted, not just rejected, so solving it
    inside the tool is actually possible.
@@ -58,11 +69,14 @@ HOW TO USE IN MAYA
 1. Open Maya's Script Editor (Windows > General Editors > Script Editor),
    on a Python tab.
 2. Paste this whole file in and run it (Ctrl+Enter / Execute All).
-3. A small "Sudoku" window opens. Given digits are shaded and locked;
-   click an empty box and type 1-4.
+3. A small "Sudoku" window opens. Pick a grid size (4-9) and a difficulty
+   from the two dropdowns. Given digits are shaded and locked; click an
+   empty box and type a number in range.
 4. Hit "Check Solution". Wrong cells turn red -- fix and check again.
-   A correct solve builds a gold star in the viewport.
-5. "New Puzzle" starts over with a freshly generated one.
+   A correct solve builds a puffy, randomly-colored 3D star in the
+   viewport.
+5. "New Puzzle" starts over with a freshly generated one at whatever
+   size and difficulty are currently selected.
 """
 
 import math
@@ -77,49 +91,63 @@ except ImportError:
 
 _REWARD_GROUP_NAME = "sudokuRewardStar_grp"
 
-# grid is BOX_SIZE x BOX_SIZE boxes of BOX_SIZE x BOX_SIZE cells each --
-# 2x2 boxes of 2x2 cells = a 4x4 grid using digits 1-4. Every solver
-# function below works off these two numbers instead of hardcoded 9s/3s,
-# so this is the one place puzzle size is decided.
-BOX_SIZE = 2
-GRID_SIZE = BOX_SIZE * BOX_SIZE
+GRID_SIZE_OPTIONS = [4, 5, 6, 7, 8, 9]
 
-# how many of the GRID_SIZE*GRID_SIZE cells each difficulty leaves filled in --
-# carving stops early if removing more would break uniqueness, so a puzzle may
-# end up with a couple more clues than the target if it has to
-DIFFICULTY_CLUE_TARGETS = {
-    "Easy": 12,
-    "Medium": 9,
-    "Hard": 7,
-    "Expert": 6,
+# box (region) shape -- (box_rows, box_cols) -- for each selectable grid size, chosen to be
+# as square as possible for sizes that factor evenly. 5 and 7 are prime and have no such
+# factorization, so they're None -- see the module docstring's "VARIABLE GRID SIZE" section.
+BOX_SHAPES = {
+    4: (2, 2),
+    5: None,
+    6: (2, 3),
+    7: None,
+    8: (2, 4),
+    9: (3, 3),
+}
+
+# fraction of the grid's cells each difficulty leaves filled in -- scales to any grid size
+# instead of a fixed clue count. Carving stops early if removing more would break
+# uniqueness, so a puzzle may end up with a couple more clues than the target if it has to.
+DIFFICULTY_FILL_FRACTION = {
+    "Easy": 0.75,
+    "Medium": 0.5625,
+    "Hard": 0.4375,
+    "Expert": 0.375,
 }
 
 
 # ---------------------------------------------------------------------------
-# Sudoku solver / generator -- pure Python, no Maya dependency at all
+# Sudoku solver / generator -- pure Python, no Maya dependency at all.
+# Every function here takes grid_size and box_shape explicitly instead of reading a fixed
+# module-level constant, so the exact same logic generates anything from a 4x4 up to a 9x9
+# puzzle (or a 5x5/7x7 Latin square, where box_shape is None).
 # ---------------------------------------------------------------------------
-def _is_valid(grid, row, col, value):
-    # a placement is legal only if that value doesn't already appear in the row, column, or box
-    for i in range(GRID_SIZE):
+def _is_valid(grid, row, col, value, grid_size, box_shape):
+    # a placement is legal only if that value doesn't already appear in the row or column...
+    for i in range(grid_size):
         if grid[row][i] == value or grid[i][col] == value:
             return False
-    box_row, box_col = (row // BOX_SIZE) * BOX_SIZE, (col // BOX_SIZE) * BOX_SIZE
-    for r in range(box_row, box_row + BOX_SIZE):
-        for c in range(box_col, box_col + BOX_SIZE):
-            if grid[r][c] == value:
-                return False
+    # ...or, at grid sizes that actually have box regions, the box
+    if box_shape is not None:
+        box_rows, box_cols = box_shape
+        box_row, box_col = (row // box_rows) * box_rows, (col // box_cols) * box_cols
+        for r in range(box_row, box_row + box_rows):
+            for c in range(box_col, box_col + box_cols):
+                if grid[r][c] == value:
+                    return False
     return True
 
 
-def _find_best_empty_cell(grid):
+def _find_best_empty_cell(grid, grid_size, box_shape):
     # picking the empty cell with the FEWEST legal candidates (instead of just the first blank)
     # makes backtracking dramatically faster, since we fail fast on the most constrained cells
     best_cell = None
     best_candidates = None
-    for r in range(GRID_SIZE):
-        for c in range(GRID_SIZE):
+    for r in range(grid_size):
+        for c in range(grid_size):
             if grid[r][c] == 0:
-                candidates = [v for v in range(1, GRID_SIZE + 1) if _is_valid(grid, r, c, v)]
+                candidates = [v for v in range(1, grid_size + 1)
+                              if _is_valid(grid, r, c, v, grid_size, box_shape)]
                 if best_candidates is None or len(candidates) < len(best_candidates):
                     best_cell, best_candidates = (r, c), candidates
                     if len(candidates) == 0:
@@ -127,38 +155,38 @@ def _find_best_empty_cell(grid):
     return best_cell, best_candidates
 
 
-def _fill_full_grid(grid):
+def _fill_full_grid(grid, grid_size, box_shape):
     """Recursively fill an empty grid into one complete, valid, randomized solution."""
-    cell, candidates = _find_best_empty_cell(grid)
+    cell, candidates = _find_best_empty_cell(grid, grid_size, box_shape)
     if cell is None:
         return True  # no empty cells left -- solved
     row, col = cell
     random.shuffle(candidates)
     for value in candidates:
         grid[row][col] = value
-        if _fill_full_grid(grid):
+        if _fill_full_grid(grid, grid_size, box_shape):
             return True
         grid[row][col] = 0
     return False
 
 
-def _count_solutions(grid, limit=2):
+def _count_solutions(grid, grid_size, box_shape, limit=2):
     """Counts solutions up to `limit`, stopping early -- we only need to know if it's exactly 1."""
-    cell, candidates = _find_best_empty_cell(grid)
+    cell, candidates = _find_best_empty_cell(grid, grid_size, box_shape)
     if cell is None:
         return 1  # reached a complete, valid grid -- that's one solution
     row, col = cell
     total = 0
     for value in candidates:
         grid[row][col] = value
-        total += _count_solutions(grid, limit - total)
+        total += _count_solutions(grid, grid_size, box_shape, limit - total)
         grid[row][col] = 0
         if total >= limit:
             break  # found enough solutions to know it's not unique -- no need to keep searching
     return total
 
 
-def _carve_puzzle(solved_grid, target_clues, seed=None):
+def _carve_puzzle(solved_grid, grid_size, box_shape, target_clues, seed=None):
     """Remove cells from a solved grid one at a time, only keeping a removal if the
     puzzle still has exactly one solution afterward -- this is what makes it a real
     sudoku instead of just a grid with holes in it."""
@@ -166,10 +194,10 @@ def _carve_puzzle(solved_grid, target_clues, seed=None):
         random.seed(seed)
 
     puzzle = [row[:] for row in solved_grid]
-    cells = [(r, c) for r in range(GRID_SIZE) for c in range(GRID_SIZE)]
+    cells = [(r, c) for r in range(grid_size) for c in range(grid_size)]
     random.shuffle(cells)
 
-    clues_remaining = GRID_SIZE * GRID_SIZE
+    clues_remaining = grid_size * grid_size
     for row, col in cells:
         if clues_remaining <= target_clues:
             break
@@ -178,7 +206,7 @@ def _carve_puzzle(solved_grid, target_clues, seed=None):
 
         # test uniqueness on a scratch copy so we don't disturb the puzzle we're building
         test_grid = [r[:] for r in puzzle]
-        if _count_solutions(test_grid, limit=2) != 1:
+        if _count_solutions(test_grid, grid_size, box_shape, limit=2) != 1:
             puzzle[row][col] = removed_value  # removing this cell broke uniqueness -- put it back
         else:
             clues_remaining -= 1
@@ -186,27 +214,33 @@ def _carve_puzzle(solved_grid, target_clues, seed=None):
     return puzzle
 
 
-def generate_puzzle(difficulty="Easy", seed=None):
-    """Returns (puzzle, solved) -- both GRID_SIZE x GRID_SIZE lists of lists, 0 = blank."""
+def generate_puzzle(grid_size=4, difficulty="Easy", seed=None):
+    """Returns (puzzle, solved) -- both grid_size x grid_size lists of lists, 0 = blank."""
+    if grid_size not in BOX_SHAPES:
+        raise ValueError("grid_size must be one of %s" % (GRID_SIZE_OPTIONS,))
+    box_shape = BOX_SHAPES[grid_size]
+
     if seed is not None:
         random.seed(seed)
 
-    solved = [[0] * GRID_SIZE for _ in range(GRID_SIZE)]
-    _fill_full_grid(solved)
+    solved = [[0] * grid_size for _ in range(grid_size)]
+    _fill_full_grid(solved, grid_size, box_shape)
 
-    target_clues = DIFFICULTY_CLUE_TARGETS.get(difficulty, DIFFICULTY_CLUE_TARGETS["Easy"])
-    puzzle = _carve_puzzle(solved, target_clues, seed=seed)
+    fraction = DIFFICULTY_FILL_FRACTION.get(difficulty, DIFFICULTY_FILL_FRACTION["Easy"])
+    target_clues = max(grid_size, round(fraction * grid_size * grid_size))
+    puzzle = _carve_puzzle(solved, grid_size, box_shape, target_clues, seed=seed)
     return puzzle, solved
 
 
-def _grid_to_text(grid):
+def _grid_to_text(grid, grid_size, box_shape):
+    box_rows, box_cols = box_shape if box_shape else (grid_size, grid_size)
     lines = []
-    for r in range(GRID_SIZE):
-        if r % BOX_SIZE == 0 and r != 0:
-            lines.append("-" * (GRID_SIZE * 2 + BOX_SIZE - 1))
+    for r in range(grid_size):
+        if box_shape and r % box_rows == 0 and r != 0:
+            lines.append("-" * (grid_size * 2 + (grid_size // box_cols)))
         row_cells = []
-        for c in range(GRID_SIZE):
-            if c % BOX_SIZE == 0 and c != 0:
+        for c in range(grid_size):
+            if box_shape and c % box_cols == 0 and c != 0:
                 row_cells.append("|")
             row_cells.append(str(grid[r][c]) if grid[r][c] != 0 else ".")
         lines.append(" ".join(row_cells))
@@ -246,7 +280,7 @@ _STAR_COLOR_PALETTE = {
 
 def _random_star_color():
     """Picks one of exactly the 7 allowed star colors at random -- never anything outside
-    that list, and (per the winding fix above) never unlit black regardless of which one."""
+    that list, and (per the winding fix below) never unlit black regardless of which one."""
     return random.choice(list(_STAR_COLOR_PALETTE.values()))
 
 
@@ -362,20 +396,25 @@ def build_reward_star(num_points=5, outer_radius=2.6, inner_radius=1.15, puff_de
 # ---------------------------------------------------------------------------
 _WINDOW_NAME = "sudokuWindow"
 _ui = {"cells": {}}
-_current_puzzle = {"puzzle": None, "solved": None}
-_settings = {"difficulty": "Easy", "use_seed": False, "seed": 1}
+_current_puzzle = {"puzzle": None, "solved": None, "grid_size": None, "box_shape": None}
+_settings = {"difficulty": "Easy", "grid_size": 4, "use_seed": False, "seed": 1}
 
 
-def _block_shade(row, col):
+def _block_shade(row, col, box_shape):
     """True for cells in a box that should get the alternate (light gray) shading,
-    giving a checkerboard-of-boxes look without needing any spacer/border geometry."""
-    return ((row // BOX_SIZE) + (col // BOX_SIZE)) % 2 == 1
+    giving a checkerboard-of-boxes look without needing any spacer/border geometry.
+    With no box shape (5x5/7x7 Latin squares), there's no box to shade by, so every
+    cell just gets the same plain background."""
+    if box_shape is None:
+        return False
+    box_rows, box_cols = box_shape
+    return ((row // box_rows) + (col // box_cols)) % 2 == 1
 
 
-def _normal_bg(row, col, given):
+def _normal_bg(row, col, given, box_shape):
     if given:
         return (0.80, 0.82, 0.88)
-    return (0.90, 0.90, 0.90) if _block_shade(row, col) else (1.0, 1.0, 1.0)
+    return (0.90, 0.90, 0.90) if _block_shade(row, col, box_shape) else (1.0, 1.0, 1.0)
 
 
 _rebuild_state = {"in_progress": False}
@@ -395,8 +434,10 @@ def _build_ui():
         # window destroyed with nothing built to replace it -- exactly the "GUI just
         # disappears" symptom. Doing the fallible work first means a failure here
         # leaves whatever window was already open untouched.
-        puzzle, solved = generate_puzzle(difficulty=_settings["difficulty"],
+        grid_size = _settings["grid_size"]
+        puzzle, solved = generate_puzzle(grid_size=grid_size, difficulty=_settings["difficulty"],
                                           seed=(_settings["seed"] if _settings["use_seed"] else None))
+        box_shape = BOX_SHAPES[grid_size]
 
         if cmds.window(_WINDOW_NAME, exists=True):
             cmds.deleteUI(_WINDOW_NAME)
@@ -407,16 +448,19 @@ def _build_ui():
             cmds.delete(_REWARD_GROUP_NAME)
 
         _current_puzzle["puzzle"], _current_puzzle["solved"] = puzzle, solved
+        _current_puzzle["grid_size"], _current_puzzle["box_shape"] = grid_size, box_shape
         _ui["cells"] = {}
 
-        cell_px = 50
-        window_w = max(260, GRID_SIZE * cell_px + 40)
-        window = cmds.window(_WINDOW_NAME, title="Sudoku", widthHeight=(window_w, 320), sizeable=False)
+        # slightly smaller cells for the bigger grids so a 9x9 window doesn't sprawl
+        cell_px = 50 if grid_size <= 6 else 40
+        window_w = max(260, grid_size * cell_px + 40)
+        window_h = 320 + (grid_size - 4) * (cell_px - 8)
+        window = cmds.window(_WINDOW_NAME, title="Sudoku", widthHeight=(window_w, window_h), sizeable=False)
         main = cmds.columnLayout(adjustableColumn=True, rowSpacing=6, columnAttach=("both", 12))
 
         cmds.text(label=" ")
         cmds.text(label="Sudoku", font="boldLabelFont")
-        cmds.text(label="Quick 4x4 puzzle -- fill in 1 to 4, then Check Solution.",
+        cmds.text(label="%dx%d puzzle -- fill in 1 to %d, then Check Solution." % (grid_size, grid_size, grid_size),
                   font="smallPlainLabelFont", wordWrap=True, align="left")
         cmds.separator(height=8, style="in")
 
@@ -425,18 +469,23 @@ def _build_ui():
             cmds.menuItem(label=level, parent=_ui["difficulty"])
         cmds.optionMenu(_ui["difficulty"], edit=True, value=_settings["difficulty"])
 
+        _ui["grid_size"] = cmds.optionMenu(label="Numbers", changeCommand=_on_grid_size_changed)
+        for size in GRID_SIZE_OPTIONS:
+            cmds.menuItem(label=str(size), parent=_ui["grid_size"])
+        cmds.optionMenu(_ui["grid_size"], edit=True, value=str(_settings["grid_size"]))
+
         cmds.separator(height=8, style="in")
 
-        cmds.rowColumnLayout(numberOfColumns=GRID_SIZE, columnWidth=[(i + 1, cell_px) for i in range(GRID_SIZE)])
-        for row in range(GRID_SIZE):
-            for col in range(GRID_SIZE):
+        cmds.rowColumnLayout(numberOfColumns=grid_size, columnWidth=[(i + 1, cell_px) for i in range(grid_size)])
+        for row in range(grid_size):
+            for col in range(grid_size):
                 given_value = puzzle[row][col]
                 is_given = given_value != 0
                 field = cmds.textField(
                     text=(str(given_value) if is_given else ""),
                     editable=(not is_given),
                     font="boldLabelFont",
-                    backgroundColor=_normal_bg(row, col, is_given),
+                    backgroundColor=_normal_bg(row, col, is_given, box_shape),
                     width=cell_px, height=cell_px,
                     changeCommand=lambda val, r=row, c=col: _on_cell_edited(r, c),
                 )
@@ -467,16 +516,22 @@ def _on_difficulty_changed(value):
     _settings["difficulty"] = value
 
 
+def _on_grid_size_changed(value):
+    _settings["grid_size"] = int(value)
+
+
 def _on_cell_edited(row, col):
     # handling "an input I didn't plan for": someone can type anything into a text
     # field, not just a valid digit. Anything that isn't a single valid digit gets
     # reduced to its last valid digit, or cleared -- rather than crashing or accepting
-    # garbage that would make the checker misbehave.
+    # garbage that would make the checker misbehave. Valid digits depend on the grid size
+    # of the puzzle actually on screen right now, not whatever the dropdown currently shows.
     field = _ui["cells"][(row, col)]
     value = cmds.textField(field, query=True, text=True)
     if value == "":
         return
-    valid_digits = "".join(str(d) for d in range(1, GRID_SIZE + 1))
+    grid_size = _current_puzzle["grid_size"]
+    valid_digits = "".join(str(d) for d in range(1, grid_size + 1))
     cleaned = "".join(ch for ch in value if ch in valid_digits)
     fixed = cleaned[-1] if cleaned else ""
     if fixed != value:
@@ -486,21 +541,23 @@ def _on_cell_edited(row, col):
 def _on_check(*_args):
     puzzle = _current_puzzle["puzzle"]
     solved = _current_puzzle["solved"]
+    grid_size = _current_puzzle["grid_size"]
+    box_shape = _current_puzzle["box_shape"]
     incomplete = False
     all_correct = True
 
-    for row in range(GRID_SIZE):
-        for col in range(GRID_SIZE):
+    for row in range(grid_size):
+        for col in range(grid_size):
             if puzzle[row][col] != 0:
                 continue  # given cells are never wrong -- nothing to check
             field = _ui["cells"][(row, col)]
             text = cmds.textField(field, query=True, text=True)
             if text == "":
                 incomplete = True
-                cmds.textField(field, edit=True, backgroundColor=_normal_bg(row, col, False))
+                cmds.textField(field, edit=True, backgroundColor=_normal_bg(row, col, False, box_shape))
                 continue
             if int(text) == solved[row][col]:
-                cmds.textField(field, edit=True, backgroundColor=_normal_bg(row, col, False))
+                cmds.textField(field, edit=True, backgroundColor=_normal_bg(row, col, False, box_shape))
             else:
                 all_correct = False
                 cmds.textField(field, edit=True, backgroundColor=(0.95, 0.55, 0.55))
@@ -552,7 +609,8 @@ if __name__ == "__main__":
         # ImportError when there's no Maya, prove the puzzle logic works on its own
         print("maya.cmds not available -- the interactive board needs Maya, but here's "
               "a puzzle generated by the same logic, printed to the terminal:\n")
-        demo_puzzle, demo_solved = generate_puzzle(difficulty="Easy", seed=1)
-        print(_grid_to_text(demo_puzzle))
+        demo_grid_size = 4
+        demo_puzzle, demo_solved = generate_puzzle(grid_size=demo_grid_size, difficulty="Easy", seed=1)
+        print(_grid_to_text(demo_puzzle, demo_grid_size, BOX_SHAPES[demo_grid_size]))
         print("\nSolution:\n")
-        print(_grid_to_text(demo_solved))
+        print(_grid_to_text(demo_solved, demo_grid_size, BOX_SHAPES[demo_grid_size]))
