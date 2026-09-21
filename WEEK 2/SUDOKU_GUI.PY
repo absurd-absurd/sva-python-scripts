@@ -453,29 +453,58 @@ def _build_ui():
 
         # slightly smaller cells for the bigger grids so a 9x9 window doesn't sprawl
         cell_px = 50 if grid_size <= 6 else 40
-        window_w = max(260, grid_size * cell_px + 40)
-        window_h = 320 + (grid_size - 4) * (cell_px - 8)
+        # every dropdown gets this same explicit width -- an optionMenu with no width set
+        # defaults to a tiny one in Maya, which is exactly why "Difficulty"/"Numbers" showed
+        # up clipped down to a single character in the screenshot, independent of anything
+        # about the window's own size
+        dropdown_w = 150
+
+        # generous, grid-size-driven size: content width (grid_size * cell_px) plus a large,
+        # fixed allowance for the column padding/labels/window chrome around it, and content
+        # height that scales directly with the number of cell rows plus a fixed header/footer
+        # allowance. Generous on purpose -- a window a little roomier than it strictly needs
+        # to be is harmless; one that's too narrow clips content with no way to reach it.
+        window_w = max(dropdown_w + 90, grid_size * cell_px + 100)
+        window_h = 250 + grid_size * cell_px
+
+        # Maya remembers a window's size by its NAME (windowPref) and can silently re-apply
+        # a remembered size to a new window created with that name -- clearing it first
+        # makes sure nothing left over from an earlier run/size can override this one.
+        if cmds.windowPref(_WINDOW_NAME, exists=True):
+            cmds.windowPref(_WINDOW_NAME, remove=True)
+
         window = cmds.window(_WINDOW_NAME, title="Sudoku", widthHeight=(window_w, window_h), sizeable=False)
-        main = cmds.columnLayout(adjustableColumn=True, rowSpacing=6, columnAttach=("both", 12))
+        main = cmds.columnLayout(adjustableColumn=False, rowSpacing=6, columnAttach=("both", 12))
 
         cmds.text(label=" ")
         cmds.text(label="Sudoku", font="boldLabelFont")
-        cmds.text(label="%dx%d puzzle -- fill in 1 to %d, then Check Solution." % (grid_size, grid_size, grid_size),
-                  font="smallPlainLabelFont", wordWrap=True, align="left")
+        cmds.text(label="%dx%d puzzle -- fill in 1 to %d." % (grid_size, grid_size, grid_size),
+                  font="smallPlainLabelFont", align="left")
         cmds.separator(height=8, style="in")
 
-        _ui["difficulty"] = cmds.optionMenu(label="Difficulty", changeCommand=_on_difficulty_changed)
+        _ui["difficulty"] = cmds.optionMenu(label="Difficulty", width=dropdown_w, changeCommand=_on_difficulty_changed)
         for level in ["Easy", "Medium", "Hard", "Expert"]:
             cmds.menuItem(label=level, parent=_ui["difficulty"])
         cmds.optionMenu(_ui["difficulty"], edit=True, value=_settings["difficulty"])
 
-        _ui["grid_size"] = cmds.optionMenu(label="Numbers", changeCommand=_on_grid_size_changed)
+        _ui["grid_size"] = cmds.optionMenu(label="Numbers", width=dropdown_w, changeCommand=_on_grid_size_changed)
         for size in GRID_SIZE_OPTIONS:
             cmds.menuItem(label=str(size), parent=_ui["grid_size"])
         cmds.optionMenu(_ui["grid_size"], edit=True, value=str(_settings["grid_size"]))
 
         cmds.separator(height=8, style="in")
 
+        # Wrapping the grid in its own scrollLayout is a hard guarantee, independent of
+        # whatever is causing the outer window to render narrower than requested: even if
+        # the window ends up too small, every cell stays reachable by scrolling instead of
+        # being permanently cut off with no way to get to it at all. The viewport is capped
+        # at the grid's own full content size, so for a window that IS sized correctly, no
+        # scrollbar appears at all -- this only ever kicks in as a fallback.
+        grid_content_w = grid_size * cell_px
+        grid_content_h = grid_size * cell_px
+        grid_scroll = cmds.scrollLayout(childResizable=False,
+                                         horizontalScrollBarThickness=14, verticalScrollBarThickness=14,
+                                         width=grid_content_w + 16, height=grid_content_h + 16)
         cmds.rowColumnLayout(numberOfColumns=grid_size, columnWidth=[(i + 1, cell_px) for i in range(grid_size)])
         for row in range(grid_size):
             for col in range(grid_size):
@@ -490,6 +519,7 @@ def _build_ui():
                     changeCommand=lambda val, r=row, c=col: _on_cell_edited(r, c),
                 )
                 _ui["cells"][(row, col)] = field
+        cmds.setParent(grid_scroll)
         cmds.setParent(main)
 
         cmds.separator(height=10, style="in")
@@ -499,6 +529,12 @@ def _build_ui():
         cmds.button(label="Close", height=24, command=lambda *_: cmds.deleteUI(_WINDOW_NAME))
 
         cmds.showWindow(window)
+        # re-assert the size AFTER the window is actually shown: Maya can run its own
+        # layout/auto-fit pass at show time that silently shrinks a window back down from
+        # the size it was created with, which fits the "I set a size but it came out small
+        # anyway" symptom -- setting it again here, in edit mode, on the already-shown
+        # window overrides that instead of hoping the creation-time size sticks
+        cmds.window(_WINDOW_NAME, edit=True, widthHeight=(window_w, window_h))
     except Exception:
         # if something still goes wrong after the old window is already gone, at least
         # make it loud and specific instead of silently vanishing -- paste this traceback
