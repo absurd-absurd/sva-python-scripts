@@ -214,9 +214,11 @@ def _grid_to_text(grid):
 
 
 # ---------------------------------------------------------------------------
-# Reward: a 3D star, built the same proven way as the labyrinth walls were --
-# a ring of points, quad side faces between a bottom and top loop, two cap
-# faces, unite, merge. No text, no fonts, nothing that can vary by machine.
+# Reward: a puffy, rounded-edge 3D star -- like a star-shaped plush toy/balloon,
+# not a faceted low-poly star. Built the same reliable way as the labyrinth
+# walls were (individual quads via polyCreateFacet, unite, merge), just with
+# many horizontal rings instead of two, then rounded off with polySmooth.
+# No text, no fonts, nothing that can vary by machine.
 # ---------------------------------------------------------------------------
 def _make_color_shader(color, name):
     shader = cmds.shadingNode("lambert", asShader=True, name=name)
@@ -231,35 +233,89 @@ def _assign_color(transform, color, name):
     cmds.sets(transform, edit=True, forceElement=sg)
 
 
-def build_reward_star(num_points=5, outer_radius=3.0, inner_radius=1.2, height=1.0,
-                       center=(0.0, 3.0, 0.0), color=(1.0, 0.84, 0.1),
+def _dome_profile(rings_per_hemisphere):
+    """Latitude angles (radians, 0 = equator, +-pi/2 = pole) for the rings between the
+    equator and each pole, evenly spaced in ANGLE rather than in height. That's what makes
+    the silhouette bulge like a rounded dome instead of tapering off in straight lines --
+    the same trick as building a sphere from latitude bands."""
+    return [(i / float(rings_per_hemisphere + 1)) * (math.pi / 2.0)
+            for i in range(1, rings_per_hemisphere + 1)]
+
+
+def build_reward_star(num_points=5, outer_radius=2.6, inner_radius=1.15, puff_height=2.6,
+                       rings_per_hemisphere=5, smooth_divisions=2,
+                       center=(0.0, 3.0, 0.0), color=(1.0, 0.88, 0.45),
                        group_name=_REWARD_GROUP_NAME):
-    """Builds a solid N-pointed star (default 5) as a single mesh."""
+    """Builds a puffy, rounded 5-pointed star -- a star-shaped balloon -- as a single mesh.
+
+    Rather than a flat prism with hard edges, this stacks horizontal star-outline rings
+    from a bottom point up through the equator to a top point, each ring scaled down by
+    how close it is to a pole (following a quarter-circle profile, see _dome_profile), so
+    the whole shape is already rounded before any smoothing happens. cmds.polySmooth then
+    softens every remaining facet -- including the star's point tips -- into the soft,
+    inflated look of a plush toy instead of a faceted low-poly star.
+    """
     n = num_points * 2
-    bottom_pts, top_pts = [], []
+    directions = []
     for i in range(n):
         angle = math.radians(90.0 - i * (360.0 / n))
-        radius = outer_radius if i % 2 == 0 else inner_radius
-        x = center[0] + radius * math.cos(angle)
-        z = center[2] + radius * math.sin(angle)
-        bottom_pts.append((x, center[1] - height / 2.0, z))
-        top_pts.append((x, center[1] + height / 2.0, z))
+        base_radius = outer_radius if i % 2 == 0 else inner_radius
+        directions.append((math.cos(angle) * base_radius, math.sin(angle) * base_radius))
+
+    latitudes = _dome_profile(rings_per_hemisphere)
+    # ring stack from bottom pole to top pole: bottom-hemisphere latitudes (most-negative
+    # first, so the list already runs bottom-to-top), the equator, then the top hemisphere
+    ring_latitudes = [-lat for lat in reversed(latitudes)] + [0.0] + latitudes
+
+    rings = []
+    for lat in ring_latitudes:
+        radial_scale = math.cos(lat)
+        y = center[1] + math.sin(lat) * (puff_height / 2.0)
+        rings.append([(center[0] + dx * radial_scale, y, center[2] + dz * radial_scale)
+                      for dx, dz in directions])
+
+    bottom_pole = (center[0], center[1] - puff_height / 2.0, center[2])
+    top_pole = (center[0], center[1] + puff_height / 2.0, center[2])
 
     faces = []
+
+    # bottom pole cap -- a fan of triangles closing off the lowest ring to a single point.
+    # order is (pole, j, i) -- the reverse of the "increasing" order used everywhere else --
+    # so this cap's normal faces down and out, matching the bottom-cap winding the original
+    # flat star used (see the "reversed winding" note that used to live here).
+    lowest_ring = rings[0]
     for i in range(n):
         j = (i + 1) % n
-        # side quad connecting this edge of the bottom loop to the matching top edge
         faces.append(cmds.polyCreateFacet(
-            point=[bottom_pts[i], bottom_pts[j], top_pts[j], top_pts[i]],
-            constructionHistory=False,
-        )[0])
+            point=[bottom_pole, lowest_ring[j], lowest_ring[i]], constructionHistory=False)[0])
 
-    # bottom cap (reversed winding so its normal faces down) and top cap
-    faces.append(cmds.polyCreateFacet(point=list(reversed(bottom_pts)), constructionHistory=False)[0])
-    faces.append(cmds.polyCreateFacet(point=top_pts, constructionHistory=False)[0])
+    # side bands between every pair of consecutive rings, climbing from bottom to top --
+    # same (lower[i], lower[j], upper[j], upper[i]) winding proven on the original star's
+    # single band and on the labyrinth walls, just repeated once per ring pair now
+    for ring_index in range(len(rings) - 1):
+        lower, upper = rings[ring_index], rings[ring_index + 1]
+        for i in range(n):
+            j = (i + 1) % n
+            faces.append(cmds.polyCreateFacet(
+                point=[lower[i], lower[j], upper[j], upper[i]], constructionHistory=False)[0])
+
+    # top pole cap -- increasing order, so its normal faces up and out
+    highest_ring = rings[-1]
+    for i in range(n):
+        j = (i + 1) % n
+        faces.append(cmds.polyCreateFacet(
+            point=[top_pole, highest_ring[i], highest_ring[j]], constructionHistory=False)[0])
 
     merged = cmds.polyUnite(faces, constructionHistory=False, name="rewardStar")[0]
     cmds.polyMergeVertex(merged, distance=0.001, constructionHistory=False)
+    # belt-and-suspenders: make sure every face's normal agrees with its neighbors before
+    # rounding it off, so polySmooth never rounds off a normal that's pointing the wrong way
+    cmds.polyNormal(merged, normalMode=2, constructionHistory=False)
+
+    if smooth_divisions > 0:
+        merged = cmds.polySmooth(merged, divisions=smooth_divisions, constructionHistory=False)[0]
+    cmds.polySoftEdge(merged, angle=180, constructionHistory=False)
+
     _assign_color(merged, color, "rewardStar_shd")
 
     group = cmds.group(merged, name=group_name)
