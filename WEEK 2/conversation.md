@@ -8,7 +8,7 @@ Speaker labels: **Me** is the student; **Claude** is the agent. Where Claude's t
 
 ### Me
 
-im still getting the plane and nothing else but I have an idea why don't we start again from scratch and instead a gui that is a sudoku puzzle you have to solve and once solved it generates a 3d star model as a result
+build me a gui that is a sudoku puzzle you have to solve and once solved it generates a 3d star model as a result this is to paste into the python script editor in maya
 
 ---
 
