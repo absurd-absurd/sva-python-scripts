@@ -18,6 +18,13 @@ The grid-size dropdown (4–9) adds a wrinkle: a classic sudoku's box regions on
 
 The tool also went through an earlier design that tried to draw the puzzle directly onto 3D geometry in the scene (first raised "7-segment" digits, then a hand-rendered image texture). Both were fighting the wrong problem — getting Maya to reliably display custom digit shapes turned out far more fragile across machines than the sudoku logic itself ever was. The fix was realizing Maya's own UI widgets already render numbers correctly everywhere, since that's the OS's native font — so the current version doesn't draw a single digit itself. The board is real Maya `textField` cells you type into; the only 3D geometry built is the reward star, which never needs to show text at all.
 
+## How this tool is helpful
+
+- **It's a genuinely playable game, not a demo.** You can hand this to someone with zero context and they can just play it — pick a size, fill in numbers, get a reward. That's a higher bar than most one-off Maya scripts, which usually just print something or move an object once.
+- **It teaches the underlying technique, not just the output.** The puzzle-generation approach here — build a full valid solution, then carve cells out one at a time while checking uniqueness by re-solving — is the standard real-world method for generating *any* constraint puzzle with a guaranteed single answer, not just sudoku. The grid-size/box-shape logic is reusable for other Latin-square-style puzzles too.
+- **It's a reusable pattern for "solve something, get a 3D reward" tools.** The reward-star logic is decoupled from the puzzle logic on purpose — `build_reward_star()` doesn't know or care that a sudoku triggered it. Swap in a different win condition (a quiz, a matching game, a timed challenge) and the same reward pipeline, undo-safety, and cleanup-by-exact-name habits carry over directly.
+- **It shows a low-risk way to build interactive UI in Maya.** Using Maya's own `textField`/`optionMenu` widgets instead of hand-drawn geometry or textures means the interface renders identically on every machine with no font or texture-display dependency — a pattern worth reusing anytime a tool needs to collect structured input from inside Maya rather than the Script Editor's command line.
+
 ## What it has to get right
 
 - The generated puzzle must be a fully valid sudoku (or, at 5x5/7x7, a fully valid Latin square) with exactly one solution, at whatever size is currently selected.
