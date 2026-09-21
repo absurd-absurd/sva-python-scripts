@@ -65,7 +65,6 @@ HOW TO USE IN MAYA
 5. "New Puzzle" starts over with a freshly generated one.
 """
 
-import colorsys
 import math
 import random
 
@@ -234,14 +233,21 @@ def _assign_color(transform, color, name):
     cmds.sets(transform, edit=True, forceElement=sg)
 
 
+_STAR_COLOR_PALETTE = {
+    "red":    (0.90, 0.16, 0.16),
+    "orange": (1.00, 0.55, 0.10),
+    "yellow": (1.00, 0.85, 0.15),
+    "green":  (0.25, 0.75, 0.30),
+    "blue":   (0.20, 0.45, 0.95),
+    "purple": (0.55, 0.25, 0.85),
+    "pink":   (0.95, 0.45, 0.70),
+}
+
+
 def _random_star_color():
-    """A fresh random color for each new star, kept inside a bright, saturated "toy" range
-    (via HSV rather than plain random RGB) so it never comes out muddy, too dark, or washed
-    out no matter which random hue it lands on."""
-    hue = random.random()
-    saturation = random.uniform(0.55, 0.8)
-    value = random.uniform(0.85, 1.0)
-    return colorsys.hsv_to_rgb(hue, saturation, value)
+    """Picks one of exactly the 7 allowed star colors at random -- never anything outside
+    that list, and (per the winding fix above) never unlit black regardless of which one."""
+    return random.choice(list(_STAR_COLOR_PALETTE.values()))
 
 
 def _dome_profile(rings_per_hemisphere):
@@ -298,32 +304,34 @@ def build_reward_star(num_points=5, outer_radius=2.6, inner_radius=1.15, puff_de
     faces = []
 
     # back-tip cap -- a fan of triangles closing off the back-most slice to a single point.
-    # order is (tip, j, i) -- the reverse of the "increasing" order used everywhere else --
-    # so this cap's normal faces backward and out, matching the winding the original flat
-    # star used for its cap that faced away from the shape (see the "reversed winding" note
-    # that used to live here).
+    #
+    # NOTE on winding: swapping the star's outline from the X/Z plane to the X/Y plane (to
+    # make it stand upright) flips handedness for this axis pair, so the winding order that
+    # was correct for the old flat-lying star is backwards here -- verified by computing
+    # actual face normals (via edge cross products) against the star's own center: every
+    # face came out facing inward, which is exactly what renders as flat black under normal
+    # lighting no matter what color the material is. Every point list below is reversed
+    # from the flat-star version to correct that.
     back_slice = slices[0]
     for i in range(n):
         j = (i + 1) % n
         faces.append(cmds.polyCreateFacet(
-            point=[back_tip, back_slice[j], back_slice[i]], constructionHistory=False)[0])
+            point=[back_tip, back_slice[i], back_slice[j]], constructionHistory=False)[0])
 
-    # side bands between every pair of consecutive slices, moving from back to front --
-    # same (lower[i], lower[j], upper[j], upper[i]) winding proven on the original star's
-    # single band and on the labyrinth walls, just repeated once per slice pair now
+    # side bands between every pair of consecutive slices, moving from back to front
     for slice_index in range(len(slices) - 1):
         lower, upper = slices[slice_index], slices[slice_index + 1]
         for i in range(n):
             j = (i + 1) % n
             faces.append(cmds.polyCreateFacet(
-                point=[lower[i], lower[j], upper[j], upper[i]], constructionHistory=False)[0])
+                point=[lower[j], lower[i], upper[i], upper[j]], constructionHistory=False)[0])
 
-    # front-tip cap -- increasing order, so its normal faces forward and out
+    # front-tip cap
     front_slice = slices[-1]
     for i in range(n):
         j = (i + 1) % n
         faces.append(cmds.polyCreateFacet(
-            point=[front_tip, front_slice[i], front_slice[j]], constructionHistory=False)[0])
+            point=[front_tip, front_slice[j], front_slice[i]], constructionHistory=False)[0])
 
     merged = cmds.polyUnite(faces, constructionHistory=False, name="rewardStar")[0]
     cmds.polyMergeVertex(merged, distance=0.001, constructionHistory=False)
@@ -331,8 +339,16 @@ def build_reward_star(num_points=5, outer_radius=2.6, inner_radius=1.15, puff_de
     # rounding it off, so polySmooth never rounds off a normal that's pointing the wrong way
     cmds.polyNormal(merged, normalMode=2, constructionHistory=False)
 
+    # IMPORTANT: unlike polyUnite/polyCreateFacet, polySmooth does not create a new
+    # transform -- it smooths the existing mesh in place and returns its (temporary)
+    # history-node name, not the transform. Capturing that into `merged` was the actual
+    # bug behind the star showing up uncolored/ungrouped: every step after it -- soft-edging,
+    # coloring, grouping -- was silently running on the wrong object, so the real mesh never
+    # got its color (looked black/default-gray) and never landed inside the exact-named
+    # group the "delete old star" check looks for, so it just piled up uncleaned. `merged`
+    # stays the polyUnite transform name the whole way through now.
     if smooth_divisions > 0:
-        merged = cmds.polySmooth(merged, divisions=smooth_divisions, constructionHistory=False)[0]
+        cmds.polySmooth(merged, divisions=smooth_divisions, constructionHistory=False)
     cmds.polySoftEdge(merged, angle=180, constructionHistory=False)
 
     _assign_color(merged, color, "rewardStar_shd")
