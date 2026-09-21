@@ -287,61 +287,89 @@ def _normal_bg(row, col, given):
     return (0.90, 0.90, 0.90) if _block_shade(row, col) else (1.0, 1.0, 1.0)
 
 
+_rebuild_state = {"in_progress": False}
+
+
 def _build_ui():
-    if cmds.window(_WINDOW_NAME, exists=True):
-        cmds.deleteUI(_WINDOW_NAME)
+    # guards against the window vanishing with nothing to replace it: a rapid double
+    # click firing this twice before the first rebuild finishes could otherwise tear
+    # the window down partway through a second, overlapping rebuild
+    if _rebuild_state["in_progress"]:
+        return
+    _rebuild_state["in_progress"] = True
 
-    # starting the window fresh always means starting a fresh puzzle, and clearing any
-    # star left over from a previous game -- habit 2: delete only our exact-named group
-    if cmds.objExists(_REWARD_GROUP_NAME):
-        cmds.delete(_REWARD_GROUP_NAME)
+    try:
+        # generate the puzzle FIRST, before touching any existing window. If puzzle
+        # generation ever raised here, doing it after deleteUI would leave the old
+        # window destroyed with nothing built to replace it -- exactly the "GUI just
+        # disappears" symptom. Doing the fallible work first means a failure here
+        # leaves whatever window was already open untouched.
+        puzzle, solved = generate_puzzle(difficulty=_settings["difficulty"],
+                                          seed=(_settings["seed"] if _settings["use_seed"] else None))
 
-    puzzle, solved = generate_puzzle(difficulty=_settings["difficulty"],
-                                      seed=(_settings["seed"] if _settings["use_seed"] else None))
-    _current_puzzle["puzzle"], _current_puzzle["solved"] = puzzle, solved
-    _ui["cells"] = {}
+        if cmds.window(_WINDOW_NAME, exists=True):
+            cmds.deleteUI(_WINDOW_NAME)
 
-    cell_px = 50
-    window_w = max(260, GRID_SIZE * cell_px + 40)
-    window = cmds.window(_WINDOW_NAME, title="Sudoku", widthHeight=(window_w, 320), sizeable=False)
-    main = cmds.columnLayout(adjustableColumn=True, rowSpacing=6, columnAttach=("both", 12))
+        # starting the window fresh always means starting a fresh puzzle, and clearing
+        # any star left over from a previous game -- habit 2: delete only our exact-named group
+        if cmds.objExists(_REWARD_GROUP_NAME):
+            cmds.delete(_REWARD_GROUP_NAME)
 
-    cmds.text(label=" ")
-    cmds.text(label="Sudoku", font="boldLabelFont")
-    cmds.text(label="Quick 4x4 puzzle -- fill in 1 to 4, then Check Solution.",
-              font="smallPlainLabelFont", wordWrap=True, align="left")
-    cmds.separator(height=8, style="in")
+        _current_puzzle["puzzle"], _current_puzzle["solved"] = puzzle, solved
+        _ui["cells"] = {}
 
-    _ui["difficulty"] = cmds.optionMenu(label="Difficulty", changeCommand=_on_difficulty_changed)
-    for level in ["Easy", "Medium", "Hard", "Expert"]:
-        cmds.menuItem(label=level, parent=_ui["difficulty"])
-    cmds.optionMenu(_ui["difficulty"], edit=True, value=_settings["difficulty"])
+        cell_px = 50
+        window_w = max(260, GRID_SIZE * cell_px + 40)
+        window = cmds.window(_WINDOW_NAME, title="Sudoku", widthHeight=(window_w, 320), sizeable=False)
+        main = cmds.columnLayout(adjustableColumn=True, rowSpacing=6, columnAttach=("both", 12))
 
-    cmds.separator(height=8, style="in")
+        cmds.text(label=" ")
+        cmds.text(label="Sudoku", font="boldLabelFont")
+        cmds.text(label="Quick 4x4 puzzle -- fill in 1 to 4, then Check Solution.",
+                  font="smallPlainLabelFont", wordWrap=True, align="left")
+        cmds.separator(height=8, style="in")
 
-    cmds.rowColumnLayout(numberOfColumns=GRID_SIZE, columnWidth=[(i + 1, cell_px) for i in range(GRID_SIZE)])
-    for row in range(GRID_SIZE):
-        for col in range(GRID_SIZE):
-            given_value = puzzle[row][col]
-            is_given = given_value != 0
-            field = cmds.textField(
-                text=(str(given_value) if is_given else ""),
-                editable=(not is_given),
-                font="boldLabelFont",
-                backgroundColor=_normal_bg(row, col, is_given),
-                width=cell_px, height=cell_px,
-                changeCommand=lambda val, r=row, c=col: _on_cell_edited(r, c),
-            )
-            _ui["cells"][(row, col)] = field
-    cmds.setParent(main)
+        _ui["difficulty"] = cmds.optionMenu(label="Difficulty", changeCommand=_on_difficulty_changed)
+        for level in ["Easy", "Medium", "Hard", "Expert"]:
+            cmds.menuItem(label=level, parent=_ui["difficulty"])
+        cmds.optionMenu(_ui["difficulty"], edit=True, value=_settings["difficulty"])
 
-    cmds.separator(height=10, style="in")
+        cmds.separator(height=8, style="in")
 
-    cmds.button(label="Check Solution", height=36, backgroundColor=(0.35, 0.55, 0.35), command=_on_check)
-    cmds.button(label="New Puzzle", height=28, command=_on_new_puzzle)
-    cmds.button(label="Close", height=24, command=lambda *_: cmds.deleteUI(_WINDOW_NAME))
+        cmds.rowColumnLayout(numberOfColumns=GRID_SIZE, columnWidth=[(i + 1, cell_px) for i in range(GRID_SIZE)])
+        for row in range(GRID_SIZE):
+            for col in range(GRID_SIZE):
+                given_value = puzzle[row][col]
+                is_given = given_value != 0
+                field = cmds.textField(
+                    text=(str(given_value) if is_given else ""),
+                    editable=(not is_given),
+                    font="boldLabelFont",
+                    backgroundColor=_normal_bg(row, col, is_given),
+                    width=cell_px, height=cell_px,
+                    changeCommand=lambda val, r=row, c=col: _on_cell_edited(r, c),
+                )
+                _ui["cells"][(row, col)] = field
+        cmds.setParent(main)
 
-    cmds.showWindow(window)
+        cmds.separator(height=10, style="in")
+
+        cmds.button(label="Check Solution", height=36, backgroundColor=(0.35, 0.55, 0.35), command=_on_check)
+        cmds.button(label="New Puzzle", height=28, command=_on_new_puzzle)
+        cmds.button(label="Close", height=24, command=lambda *_: cmds.deleteUI(_WINDOW_NAME))
+
+        cmds.showWindow(window)
+    except Exception:
+        # if something still goes wrong after the old window is already gone, at least
+        # make it loud and specific instead of silently vanishing -- paste this traceback
+        # back if it happens again and it pinpoints the exact line
+        import traceback
+        traceback.print_exc()
+        cmds.warning("Sudoku window failed to rebuild -- see the error above in the Script "
+                     "Editor history, then run the script again to reopen it.")
+        raise
+    finally:
+        _rebuild_state["in_progress"] = False
 
 
 def _on_difficulty_changed(value):
@@ -410,7 +438,16 @@ def _on_solved():
 
 
 def _on_new_puzzle(*_args):
-    _build_ui()
+    # THE likely real cause of the "sometimes the whole GUI disappears" bug: this callback
+    # is running *because* a button inside the window called it, so calling _build_ui()
+    # directly here asks Maya to delete the very window this callback is still executing
+    # inside of, then immediately recreate a new window with the same name in the same
+    # breath. That races Maya's own internal teardown of the old window -- sometimes it's
+    # finished in time and the rebuild works, sometimes it isn't and the rebuild silently
+    # fails, which is exactly the intermittent symptom reported. evalDeferred pushes the
+    # rebuild to run after this callback fully returns and Maya is back at its event loop,
+    # so the delete-then-recreate happens in a clean state instead of mid-teardown.
+    cmds.evalDeferred(_build_ui)
 
 
 # ---------------------------------------------------------------------------
