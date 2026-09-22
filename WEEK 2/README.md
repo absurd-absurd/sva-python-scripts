@@ -5,19 +5,17 @@ A playable mini-sudoku you actually use inside Maya. This game will run when pas
 
 ## Design problem
 
-A "make a sudoku" tool is trivial if you don't check that the result is an actual sudoku — you could just scatter random digits on a grid. A real one has to satisfy two much harder constraints: every row, column, and box contains each number exactly once, *and* the puzzle (with cells blanked out) has exactly ONE solution, which the tool verifies by actually re-solving it after every cell it removes rather than assuming.
+A "make a sudoku" tool is trivial if you don't check that the result is an actual sudoku. You could just scatter random digits on a grid. A real sudoku puzzle has to satisfy two much harder constraints: every row, column, and box contains each number exactly once, and the puzzle with cells blanked out has exactly ONE solution, which the tool verifies by actually re-solving it after you solved it yourself. 
 
-The grid-size dropdown (4–9) adds a wrinkle: a classic sudoku's box regions only work cleanly when the grid size factors into two roughly-equal numbers — 4 as 2x2 boxes, 6 as 2x3, 8 as 2x4, 9 as 3x3. 5 and 7 are prime, so there's no way to split them into real box regions at all. Rather than fake a box rule that wouldn't mean anything at those two sizes, a 5x5 or 7x7 puzzle here is a genuine Latin square instead — every row and column still has exactly one of each number, still carved down to a single unique solution the same rigorous way, just without the extra box constraint. That's a deliberate, documented tradeoff, not a bug.
+The grid-size dropdown (4–9) adds a wrinkle: when I decided to expand the amount of numbers that could be played in game from only 4 to 
+4-9 I came across the problem where the screen was not big enough to show the grid and would have to be manually resized each time. After trial and error it was changed to a fixed sized pop up for every size grid.
 
-The tool also went through an earlier design that tried to draw the puzzle directly onto 3D geometry in the scene (first raised "7-segment" digits, then a hand-rendered image texture). Both were fighting the wrong problem — getting Maya to reliably display custom digit shapes turned out far more fragile across machines than the sudoku logic itself ever was. The fix was realizing Maya's own UI widgets already render numbers correctly everywhere, since that's the OS's native font — so the current version doesn't draw a single digit itself. The board is real Maya `textField` cells you type into; the only 3D geometry built is the reward star, which never needs to show text at all.
+The tool also went through an earlier design that tried to draw the puzzle directly onto 3D geometry in the scene, but in practice that build didn't work and would not have been a clickable, typable, or playable game. 
 
 ## How this tool is helpful
 
-- **It's a genuinely playable game, not a demo.** You can hand this to someone with zero context and they can just play it — pick a size, fill in numbers, get a reward. That's a higher bar than most one-off Maya scripts, which usually just print something or move an object once.
-- **It teaches the underlying technique, not just the output.** The puzzle-generation approach here — build a full valid solution, then carve cells out one at a time while checking uniqueness by re-solving — is the standard real-world method for generating *any* constraint puzzle with a guaranteed single answer, not just sudoku. The grid-size/box-shape logic is reusable for other Latin-square-style puzzles too.
-- **It's a reusable pattern for "solve something, get a 3D reward" tools.** The reward-star logic is decoupled from the puzzle logic on purpose — `build_reward_star()` doesn't know or care that a sudoku triggered it. Swap in a different win condition (a quiz, a matching game, a timed challenge) and the same reward pipeline, undo-safety, and cleanup-by-exact-name habits carry over directly.
-- **It shows a low-risk way to build interactive UI in Maya.** Using Maya's own `textField`/`optionMenu` widgets instead of hand-drawn geometry or textures means the interface renders identically on every machine with no font or texture-display dependency — a pattern worth reusing anytime a tool needs to collect structured input from inside Maya rather than the Script Editor's command line.
-
+-It helps create a fun environment where solving puzzles can and using your brain can give you 3D modelling rewards. It makes the Maya experience more unique. You can hand this to someone with zero context and they can just play it — pick a size, fill in numbers, get a reward. 
+-It shows a low-risk way to build interactive UI in Maya.
 
 
 ## Habits followed
@@ -26,4 +24,4 @@ The tool also went through an earlier design that tried to draw the puzzle direc
 - **Delete only what the tool made** — the star always lives under one fixed, exact group name (`sudokuRewardStar_grp`). Every cleanup checks `cmds.objExists()` on that exact name before deleting it; nothing is ever deleted by a wildcard pattern that could catch someone else's objects.
 
 
-Recording: **[ADD YOUR RECORDING LINK HERE]**
+Recording: https://youtu.be/Wuwr2IC6-Wk
