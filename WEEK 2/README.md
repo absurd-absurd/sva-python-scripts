@@ -14,7 +14,7 @@ The tool also went through an earlier design that tried to draw the puzzle direc
 
 ## How this tool is helpful
 
--It helps create a fun environment where solving puzzles can and using your brain can give you 3D modelling rewards. It makes the Maya experience more unique. You can hand this to someone with zero context and they can just play it — pick a size, fill in numbers, get a reward. 
+-It helps create a fun environment where solving puzzles can and using your brain can give you 3D modelling rewards. It makes the Maya experience more unique. You can hand this to someone with zero context and they can just play it, pick a size, fill in numbers, get a reward. 
 -It shows a low-risk way to build interactive UI in Maya.
 
 
