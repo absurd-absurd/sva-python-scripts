@@ -1,8 +1,8 @@
 # Conversation with Claude — Sudoku Maya Tool (Route B)
 
-This is the working conversation with the agent (Claude) covering the build of the interactive Sudoku puzzle tool for Maya, from the first creation of the "a popup GUI that IS the sudoku game, with a 3D star built as the reward for solving it," through the star model design, the new puzzle, window-sizing bugs, adding the grid-size dropdown, and the final check that the two required habits (single-undo-chunk builds, exact-name-only deletes) are present in the script.
+This is the working conversation with the agent (Claude) covering the build of the interactive Sudoku puzzle tool for Maya, from the first creation of "a popup GUI that IS the sudoku game, with a 3D star built as the reward for solving it," through the star 3D model design, the new puzzle, window-sizing bugs, adding the grid-size dropdown, and the final check that the two required habits (single-undo-chunk builds, exact-name-only deletes) are present in the script.
 
-Speaker labels: me is the student; Claude is the agent. Where Claude's turn mostly consisted of file edits or terminal verification rather than a written reply, those actions are listed as short italic notes before its written response.
+Speaker labels: me is the author and Claude is the agent. Where Claude's turn mostly consisted of file edits or terminal verification rather than a written reply, those actions are listed as short italic notes before its written response.
 
 ---
 
