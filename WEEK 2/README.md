@@ -20,8 +20,8 @@ The tool also went through an earlier design that tried to draw the puzzle direc
 
 ## Habits followed
 
-- **Undo in one step** — building the reward star is wrapped in `cmds.undoInfo(openChunk=True)` / `closeChunk(True)` (with a `try/finally` so the chunk always closes even if something goes wrong mid-build), so one Ctrl+Z undoes the whole star instead of removing it piece by piece.
-- **Delete only what the tool made** — the star always lives under one fixed, exact group name (`sudokuRewardStar_grp`). Every cleanup checks `cmds.objExists()` on that exact name before deleting it; nothing is ever deleted by a wildcard pattern that could catch someone else's objects.
+- **Undo in one step** : building the reward star is wrapped in `cmds.undoInfo(openChunk=True)` / `closeChunk(True)` (with a `try/finally` so the chunk always closes even if something goes wrong mid-build), so one Ctrl+Z undoes the whole star instead of removing it piece by piece.
+- **Delete only what the tool made** : the star always lives under one fixed, exact group name (`sudokuRewardStar_grp`). Every cleanup checks `cmds.objExists()` on that exact name before deleting it; nothing is ever deleted by a wildcard pattern that could catch someone else's objects.
 
 
 Recording: https://youtu.be/Wuwr2IC6-Wk
