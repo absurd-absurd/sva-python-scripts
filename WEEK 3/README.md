@@ -1,6 +1,9 @@
 # 1.the command that helps Maya understand that you want to import python script into Maya 
 
-import maya.cmds as cmds
+    import maya.cmds as cmds
+    MAYA_AVAILABLE = True
+except ImportError:
+    MAYA_AVAILABLE = False
 
 
 
@@ -14,12 +17,14 @@ _STAR_COLOR_PALETTE = {
     "blue":   (0.20, 0.45, 0.95),
     "purple": (0.55, 0.25, 0.85),
     "pink":   (0.95, 0.45, 0.70),
-
+}
 
 
 # 3. Takes thoses colors that have been previously defined and randomly gives the 3D model one of those colors
 
 def _random_star_color():
+    """Picks one of exactly the 7 allowed star colors at random..."""
+    return random.choice(list(_STAR_COLOR_PALETTE.values()))
 
 
 
@@ -64,7 +69,7 @@ BOX_SHAPES = {
     7: None,
     8: (2, 4),
     9: (3, 3),
-
+}
 
 
 # 9.I believe this is setting up the size and dropdown sizes of the actual sudoku gui window 
