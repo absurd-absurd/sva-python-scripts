@@ -1,10 +1,10 @@
-#1.the command that helps Maya understand that you want to import python script into Maya 
+# 1.the command that helps Maya understand that you want to import python script into Maya 
 
 import maya.cmds as cmds
 
 
 
-#2.setting the parameters what what colors the star ward can be and there hue 
+# 2.setting the parameters what what colors the star ward can be and there hue 
 
 _STAR_COLOR_PALETTE = {
     "red":    (0.90, 0.16, 0.16),
@@ -17,14 +17,14 @@ _STAR_COLOR_PALETTE = {
 
 
 
-#3. Takes thoses colors that have been previously defined and randomly gives the 3D model one of those colors
+# 3. Takes thoses colors that have been previously defined and randomly gives the 3D model one of those colors
 
 def _random_star_color():
 
 
 
 
-#4.Builds the actual star 3D model and then places in in one clearly defined group so it can not be confused with other objects in the scene 
+# 4.Builds the actual star 3D model and then places in in one clearly defined group so it can not be confused with other objects in the scene 
 
 def build_reward_star(num_points=5, outer_radius=2.6, inner_radius=1.15, puff_depth=1.8,
                        rings_per_hemisphere=5, smooth_divisions=2,
@@ -33,7 +33,7 @@ def build_reward_star(num_points=5, outer_radius=2.6, inner_radius=1.15, puff_de
 
 
 
-#5.The naming and building of the actual sudoku puzzle window 
+# 5.The naming and building of the actual sudoku puzzle window 
 
 _WINDOW_NAME = "sudokuWindow"
 _ui = {"cells": {}}
@@ -41,13 +41,13 @@ _current_puzzle = {"puzzle": None, "solved": None, "grid_size": None, "box_shape
 _settings = {"difficulty": "Easy", "grid_size": 4, "use_seed": False, "seed": 1}
 
 
-#6.a line that ensures every time you generate a new puzzle your previous star reward gets deleted with it without deleting anything else in your scene
+# 6.a line that ensures every time you generate a new puzzle your previous star reward gets deleted with it without deleting anything else in your scene
 
  if cmds.objExists(_REWARD_GROUP_NAME):
             cmds.delete(_REWARD_GROUP_NAME)
 
 
-#7.setting up the difficultly drop down menu options 
+# 7.setting up the difficultly drop down menu options 
 
 _ui["difficulty"] = cmds.optionMenu(label="Difficulty", width=dropdown_w, changeCommand=_on_difficulty_changed)
         for level in ["Easy", "Medium", "Hard", "Expert"]:
@@ -55,7 +55,7 @@ _ui["difficulty"] = cmds.optionMenu(label="Difficulty", width=dropdown_w, change
         cmds.optionMenu(_ui["difficulty"], edit=True, value=_settings["difficulty"])
 
 
-#8.setting up grid size for the actual puzzle based on how many numbers will be present in the puzzle
+# 8.setting up grid size for the actual puzzle based on how many numbers will be present in the puzzle
 
 BOX_SHAPES = {
     4: (2, 2),
@@ -67,7 +67,7 @@ BOX_SHAPES = {
 
 
 
-#9.I believe this is setting up the size and dropdown sizes of the actual sudoku gui window 
+# 9.I believe this is setting up the size and dropdown sizes of the actual sudoku gui window 
 
   _ui["grid_size"] = cmds.optionMenu(label="Numbers", width=dropdown_w, changeCommand=_on_grid_size_changed)
         for size in GRID_SIZE_OPTIONS:
@@ -77,7 +77,7 @@ BOX_SHAPES = {
         cmds.separator(height=8, style="in")
 
 
-#10.I believe this is saying that if you were to place the script in terminal instead of Maya it would not say error but instead prove the the puzzles logic still works 
+# 10.I believe this is saying that if you were to place the script in terminal instead of Maya it would not say error but instead prove the the puzzles logic still works 
 
 if __name__ == "__main__":
     if MAYA_AVAILABLE:
