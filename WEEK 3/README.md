@@ -105,4 +105,9 @@ if __name__ == "__main__":
 
 ## The Loop 
 
-For my loop I. have the generate new puzzle button. This is in some ways a loop function. You paste the code in the script editor, it generates you the puzzle, then you solve it and get your reward. Once thats done you select new options in the gui for difficulty and the number on numbers you would like on the new puzzle and click generate. This will get rid of you solved puzzle and star reward and generate you the new puzzle in an endless loop. To end the loop you can simply click the x button on the top right corner of you can continue playing the puzzle on a loop. 
+For my loop I have the generate new puzzle button. This is in some ways a loop function. You paste the code in the script editor, it generates you the puzzle, then you solve it and get your reward. Once that's done you select new options in the gui for difficulty and the number of numbers you would like on the new puzzle and click generate. This will get rid of your previously solved puzzle and star reward and generate you the new puzzle in an endless loop. To end the loop you can simply click the x button on the top right corner of you can continue playing the puzzle on a loop. 
+
+
+## One Undo and One Changed Line in Class
+
+One thing I undid in my script was the color logic of the star. I originally had just asked for the star to generate random colors, but when I did that the color that it generated was always black. so I undid this command and gave it stricter parameters. Those parameters were, pick a random color for every new generation, but only from this list of colors; red, orange, yellow, green, blue, purple, pink. As for the line we hand rewrote in class I don't have anything because that was not done in class. 
