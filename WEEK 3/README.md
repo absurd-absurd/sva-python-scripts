@@ -5,7 +5,7 @@ Included is ten lines of code from the script explained in plain english, a para
 
 
 
-##The Code Explained
+## The Code Explained
 
 
 ### 1.the command that helps Maya understand that you want to import python script into Maya 
