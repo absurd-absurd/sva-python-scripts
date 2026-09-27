@@ -1,4 +1,4 @@
-## Explaining my Sudoku Puzzle Gui Code
+# Explaining my Sudoku Puzzle Gui Code
 
 Included is ten lines of code from the script explained in plain english, a paragraph on loops, and what was done, undone, or changed.
 
@@ -8,7 +8,7 @@ Included is ten lines of code from the script explained in plain english, a para
 
 
 
-# 1.the command that helps Maya understand that you want to import python script into Maya 
+## 1.the command that helps Maya understand that you want to import python script into Maya 
 
     import maya.cmds as cmds
     MAYA_AVAILABLE = True
@@ -17,7 +17,7 @@ except ImportError:
 
 
 
-# 2.setting the parameters what what colors the star ward can be and there hue 
+## 2.setting the parameters what what colors the star ward can be and there hue 
 
 _STAR_COLOR_PALETTE = {
     "red":    (0.90, 0.16, 0.16),
@@ -30,7 +30,7 @@ _STAR_COLOR_PALETTE = {
 }
 
 
-# 3. Takes thoses colors that have been previously defined and randomly gives the 3D model one of those colors
+### 3. Takes thoses colors that have been previously defined and randomly gives the 3D model one of those colors
 
 def _random_star_color():
     """Picks one of exactly the 7 allowed star colors at random..."""
