@@ -13,7 +13,7 @@ Included is ten lines of code from the script explained in plain english, a para
     import maya.cmds as cmds
     MAYA_AVAILABLE = True
 except ImportError:
-    MAYA_AVAILABLE = False
+    
 
 
 
