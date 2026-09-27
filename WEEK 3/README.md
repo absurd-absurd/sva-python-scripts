@@ -1,3 +1,13 @@
+## Explaining my Sudoku Puzzle Gui Code
+
+Included is ten lines of code from the script explained in plain english, a paragraph on loops, and what was done, undone, or changed.
+
+
+
+
+
+
+
 # 1.the command that helps Maya understand that you want to import python script into Maya 
 
     import maya.cmds as cmds
