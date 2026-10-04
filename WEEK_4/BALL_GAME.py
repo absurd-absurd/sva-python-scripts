@@ -24,6 +24,7 @@ FALL_RADIUS = 14
 FALL_SPEED = 3                  # pixels per frame a candy falls
 FALL_SPAWN_EVERY_MS = 900       # how often a new candy appears
 BALL_COLOR_CHANGE_EVERY_MS = 4000  # how often the ball's own color changes
+SCORE_PER_CATCH = 10
 
 CANDY_COLORS = [
     (255, 80, 80),    # red
@@ -97,15 +98,18 @@ def catch_matching_candies(x, y, ball_color, candies):
     return caught
 
 
-def draw(screen, font, x, y, ball_color, candies):
+def draw(screen, font, x, y, ball_color, candies, score):
     """Draw one frame: clear the screen, the candies, the ball, then the HUD text."""
     screen.fill(BACKGROUND_COLOR)
     for candy in candies:
         pygame.draw.circle(screen, candy["color"], (candy["x"], int(candy["y"])), FALL_RADIUS)
     pygame.draw.circle(screen, ball_color, (int(x), int(y)), BALL_RADIUS)
 
-    label = font.render(f"Your color: {COLOR_NAMES[ball_color]}", True, TEXT_COLOR)
-    screen.blit(label, (10, 10))
+    color_label = font.render(f"Your color: {COLOR_NAMES[ball_color]}", True, TEXT_COLOR)
+    screen.blit(color_label, (10, 10))
+
+    score_label = font.render(f"Score: {score}", True, TEXT_COLOR)
+    screen.blit(score_label, (WINDOW_WIDTH - score_label.get_width() - 10, 10))
 
     pygame.display.flip()
 
@@ -120,6 +124,7 @@ def main():
     x, y = WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2
     ball_color = random.choice(CANDY_COLORS)
     candies = []
+    score = 0
 
     pygame.time.set_timer(SPAWN_EVENT, FALL_SPAWN_EVERY_MS)
     pygame.time.set_timer(COLOR_CHANGE_EVENT, BALL_COLOR_CHANGE_EVERY_MS)
@@ -140,10 +145,9 @@ def main():
 
         update_falling_candies(candies)
         caught = catch_matching_candies(x, y, ball_color, candies)
-        if caught:
-            print(f"Caught {caught} matching candy!")
+        score += caught * SCORE_PER_CATCH
 
-        draw(screen, font, x, y, ball_color, candies)
+        draw(screen, font, x, y, ball_color, candies, score)
         clock.tick(FPS)
 
     pygame.quit()
