@@ -35,6 +35,8 @@ BUTTON_TEXT_COLOR = (20, 20, 20)
 HELP_BUTTON_SIZE = 36
 HELP_BUTTON_COLOR = (90, 90, 90)
 
+BACKGROUND_STAR_COUNT = 80
+
 INSTRUCTIONS = [
     "Move your sun with W A S D.",
     "Catch falling stars that match your sun's color to score.",
@@ -134,6 +136,166 @@ def resolve_candy_touches(x, y, ball_color, candies):
     return caught, wrong_hits
 
 
+def generate_background_stars(count):
+    """Create a fixed list of small background dots, placed once at startup.
+
+    Generating these once (instead of re-randomizing every frame) is what
+    keeps the night-sky background steady instead of flickering noise.
+    """
+    stars = []
+    for _ in range(count):
+        stars.append({
+            "x": random.randint(0, WINDOW_WIDTH),
+            "y": random.randint(0, WINDOW_HEIGHT),
+            "size": random.choice([1, 1, 2]),
+            "brightness": random.randint(120, 255),
+        })
+    return stars
+
+
+def draw_background(screen, background_stars):
+    """Fill the background, then scatter small dots like a night sky."""
+    screen.fill(BACKGROUND_COLOR)
+    for star in background_stars:
+        shade = star["brightness"]
+        pygame.draw.circle(screen, (shade, shade, shade), (star["x"], star["y"]), star["size"])
+
+
+def lighten_color(color, amount):
+    """Blend an RGB color toward white. amount 0 = no change, 1 = pure white."""
+    return tuple(int(c + (255 - c) * amount) for c in color)
+
+
+def darken_color(color, amount):
+    """Blend an RGB color toward black. amount 0 = no change, 1 = pure black."""
+    return tuple(int(c * (1 - amount)) for c in color)
+
+
+def star_points(center_x, center_y, radius):
+    """Compute the 10 corner points of a 5-pointed star at a given size."""
+    inner_radius = radius * 0.45
+    points = []
+    for i in range(10):
+        angle = math.pi / 2 + i * math.pi / 5
+        point_radius = radius if i % 2 == 0 else inner_radius
+        px = center_x + math.cos(angle) * point_radius
+        py = center_y - math.sin(angle) * point_radius
+        points.append((px, py))
+    return points
+
+
+def draw_star(screen, color, center_x, center_y, radius):
+    """Draw a 5-pointed star shaded like a lit 3D gem, not a flat cutout.
+
+    A dark full-size star sits underneath, a mid-tone star (shifted toward
+    the "light") sits on top of that, and a small bright highlight blob
+    caps it off -- the same light-from-one-side trick that makes a plain
+    circle read as a sphere instead of a flat disc.
+    """
+    pygame.draw.polygon(screen, darken_color(color, 0.35), star_points(center_x, center_y, radius))
+
+    offset = radius * 0.12
+    pygame.draw.polygon(
+        screen, color,
+        star_points(center_x - offset, center_y - offset, radius * 0.82),
+    )
+
+    highlight_offset = radius * 0.22
+    pygame.draw.circle(
+        screen, lighten_color(color, 0.6),
+        (int(center_x - highlight_offset), int(center_y - highlight_offset)),
+        max(1, int(radius * 0.28)),
+    )
+
+
+def sun_ray_points(center_x, center_y, base_radius, ray_length, ray_spread, num_rays=8):
+    """Compute the corner points of each triangular ray around a sun shape.
+
+    Takes base_radius/ray_length/ray_spread as arguments (instead of
+    hardcoding them) so the same function can draw the sun itself at one
+    size and a larger, fainter glow version of the same silhouette.
+    """
+    rays = []
+    for i in range(num_rays):
+        angle = (2 * math.pi / num_rays) * i
+        base_x = center_x + math.cos(angle) * base_radius
+        base_y = center_y + math.sin(angle) * base_radius
+        tip_x = center_x + math.cos(angle) * (base_radius + ray_length)
+        tip_y = center_y + math.sin(angle) * (base_radius + ray_length)
+        perp_angle = angle + math.pi / 2
+        side_a = (base_x + math.cos(perp_angle) * ray_spread, base_y + math.sin(perp_angle) * ray_spread)
+        side_b = (base_x - math.cos(perp_angle) * ray_spread, base_y - math.sin(perp_angle) * ray_spread)
+        rays.append([side_a, side_b, (tip_x, tip_y)])
+    return rays
+
+
+def draw_sun(screen, color, center_x, center_y, radius):
+    """Draw the sun shaded like a lit 3D sphere with rays, not a flat disc.
+
+    Same trick as draw_star(): a dark full-size circle underneath, a
+    mid-tone circle shifted toward the light on top, and a bright
+    highlight blob near the "lit" edge.
+    """
+    rays = sun_ray_points(center_x, center_y, radius, radius * 0.6, radius * 0.18)
+    for ray in rays:
+        pygame.draw.polygon(screen, lighten_color(color, 0.2), ray)
+
+    pygame.draw.circle(screen, darken_color(color, 0.4), (int(center_x), int(center_y)), radius)
+
+    offset = radius * 0.18
+    pygame.draw.circle(screen, color, (int(center_x - offset), int(center_y - offset)), int(radius * 0.8))
+
+    highlight_offset = radius * 0.32
+    pygame.draw.circle(
+        screen, lighten_color(color, 0.6),
+        (int(center_x - highlight_offset), int(center_y - highlight_offset)),
+        int(radius * 0.4),
+    )
+
+
+def draw_star_glow(screen, color, center_x, center_y, radius):
+    """Draw a soft glow shaped like the star itself, not a plain circle.
+
+    Layers several larger, fainter star outlines on a transparent surface
+    so the glow fades out following the star's own silhouette.
+    """
+    surface_size = int(radius * 6)
+    glow_surface = pygame.Surface((surface_size, surface_size), pygame.SRCALPHA)
+    glow_surface.fill((0, 0, 0, 0))
+    glow_center_x = glow_center_y = surface_size / 2
+
+    layers = 4
+    for i in range(layers, 0, -1):
+        layer_radius = radius + i * (radius * 0.5)
+        alpha = int(60 / i)
+        pygame.draw.polygon(glow_surface, (*color, alpha), star_points(glow_center_x, glow_center_y, layer_radius))
+
+    screen.blit(glow_surface, (center_x - surface_size / 2, center_y - surface_size / 2))
+
+
+def draw_sun_glow(screen, color, center_x, center_y, radius):
+    """Draw a soft glow shaped like the sun itself (circle + rays), not a plain circle.
+
+    Same idea as draw_star_glow(): layer larger, fainter copies of the
+    sun's own silhouette on a transparent surface.
+    """
+    surface_size = int(radius * 7)
+    glow_surface = pygame.Surface((surface_size, surface_size), pygame.SRCALPHA)
+    glow_surface.fill((0, 0, 0, 0))
+    glow_center_x = glow_center_y = surface_size / 2
+
+    layers = 4
+    for i in range(layers, 0, -1):
+        layer_radius = radius + i * (radius * 0.35)
+        alpha = int(60 / i)
+        rays = sun_ray_points(glow_center_x, glow_center_y, layer_radius, layer_radius * 0.6, layer_radius * 0.2)
+        for ray in rays:
+            pygame.draw.polygon(glow_surface, (*color, alpha), ray)
+        pygame.draw.circle(glow_surface, (*color, alpha), (glow_center_x, glow_center_y), int(layer_radius))
+
+    screen.blit(glow_surface, (center_x - surface_size / 2, center_y - surface_size / 2))
+
+
 def draw_help_button(screen, font, help_button):
     """Draw the small '?' button in the corner that reopens the instructions."""
     pygame.draw.circle(screen, HELP_BUTTON_COLOR, help_button.center, HELP_BUTTON_SIZE // 2)
@@ -142,12 +304,14 @@ def draw_help_button(screen, font, help_button):
                          help_button.centery - label.get_height() / 2))
 
 
-def draw(screen, font, x, y, ball_color, candies, score, misses, help_button):
+def draw(screen, font, background_stars, x, y, ball_color, candies, score, misses, help_button):
     """Draw one frame: clear the screen, the candies, the ball, then the HUD text."""
-    screen.fill(BACKGROUND_COLOR)
+    draw_background(screen, background_stars)
     for candy in candies:
-        pygame.draw.circle(screen, candy["color"], (candy["x"], int(candy["y"])), FALL_RADIUS)
-    pygame.draw.circle(screen, ball_color, (int(x), int(y)), BALL_RADIUS)
+        draw_star_glow(screen, candy["color"], candy["x"], candy["y"], FALL_RADIUS)
+        draw_star(screen, candy["color"], candy["x"], candy["y"], FALL_RADIUS)
+    draw_sun_glow(screen, ball_color, x, y, BALL_RADIUS)
+    draw_sun(screen, ball_color, x, y, BALL_RADIUS)
 
     color_label = font.render(f"Your color: {COLOR_NAMES[ball_color]}", True, TEXT_COLOR)
     screen.blit(color_label, (10, 10))
@@ -180,9 +344,9 @@ def draw_help_overlay(screen, font, title_font):
     screen.blit(hint, (WINDOW_WIDTH / 2 - hint.get_width() / 2, line_y + 20))
 
 
-def draw_start_screen(screen, title_font, font, start_button):
+def draw_start_screen(screen, title_font, font, background_stars, start_button):
     """Draw the title, how-to-play instructions, and the Start button."""
-    screen.fill(BACKGROUND_COLOR)
+    draw_background(screen, background_stars)
 
     title = title_font.render("WASD Candy Catch", True, TEXT_COLOR)
     screen.blit(title, (WINDOW_WIDTH / 2 - title.get_width() / 2, 40))
@@ -199,9 +363,9 @@ def draw_start_screen(screen, title_font, font, start_button):
                          start_button.centery - label.get_height() / 2))
 
 
-def draw_game_over(screen, font, score):
+def draw_game_over(screen, font, background_stars, score):
     """Draw the end-of-game screen with the final score."""
-    screen.fill(BACKGROUND_COLOR)
+    draw_background(screen, background_stars)
 
     title = font.render("Game Over", True, TEXT_COLOR)
     screen.blit(title, (WINDOW_WIDTH / 2 - title.get_width() / 2, WINDOW_HEIGHT / 2 - 40))
@@ -226,6 +390,8 @@ def main():
 
     help_button = pygame.Rect(0, 0, HELP_BUTTON_SIZE, HELP_BUTTON_SIZE)
     help_button.center = (WINDOW_WIDTH - 30, WINDOW_HEIGHT - 30)
+
+    background_stars = generate_background_stars(BACKGROUND_STAR_COUNT)
 
     x, y = WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2
     ball_color = random.choice(CANDY_COLORS)
@@ -252,13 +418,13 @@ def main():
                     show_help = not show_help
 
         if state == "start":
-            draw_start_screen(screen, title_font, font, start_button)
+            draw_start_screen(screen, title_font, font, background_stars, start_button)
             pygame.display.flip()
             clock.tick(FPS)
             continue
 
         if state == "game_over":
-            draw_game_over(screen, font, score)
+            draw_game_over(screen, font, background_stars, score)
             pygame.display.flip()
             clock.tick(FPS)
             continue
@@ -279,7 +445,7 @@ def main():
             if misses >= MAX_MISSES:
                 state = "game_over"
 
-        draw(screen, font, x, y, ball_color, candies, score, misses, help_button)
+        draw(screen, font, background_stars, x, y, ball_color, candies, score, misses, help_button)
         if show_help:
             draw_help_overlay(screen, font, title_font)
         pygame.display.flip()
