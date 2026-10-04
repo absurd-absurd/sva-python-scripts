@@ -348,7 +348,7 @@ def draw_start_screen(screen, title_font, font, background_stars, start_button):
     """Draw the title, how-to-play instructions, and the Start button."""
     draw_background(screen, background_stars)
 
-    title = title_font.render("WASD Candy Catch", True, TEXT_COLOR)
+    title = title_font.render("Falling Star Catch", True, TEXT_COLOR)
     screen.blit(title, (WINDOW_WIDTH / 2 - title.get_width() / 2, 40))
 
     line_y = 110
@@ -380,7 +380,7 @@ def draw_game_over(screen, font, background_stars, score):
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption("WASD Candy Catch")
+    pygame.display.set_caption("Falling Star Catch")
     clock = pygame.time.Clock()
     font = pygame.font.SysFont(None, 28)
     title_font = pygame.font.SysFont(None, 44)
