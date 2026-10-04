@@ -27,6 +27,22 @@ SCORE_PER_CATCH = 10
 SCORE_PENALTY_PER_WRONG_HIT = 5
 MAX_MISSES = 5          # misses are candies that reach the bottom uncaught
 
+BUTTON_WIDTH = 160
+BUTTON_HEIGHT = 50
+BUTTON_COLOR = (80, 220, 120)
+BUTTON_TEXT_COLOR = (20, 20, 20)
+
+HELP_BUTTON_SIZE = 36
+HELP_BUTTON_COLOR = (90, 90, 90)
+
+INSTRUCTIONS = [
+    "Move your sun with W A S D.",
+    "Catch falling stars that match your sun's color to score.",
+    "The ball changes to a new color each time you catch one.",
+    "Touching the WRONG color costs you points so try to dodge those.",
+    f"If {MAX_MISSES} matching falling stars hit the bottom it's game over.",
+]
+
 CANDY_COLORS = [
     (255, 80, 80),    # red
     (255, 200, 60),   # yellow
@@ -118,7 +134,15 @@ def resolve_candy_touches(x, y, ball_color, candies):
     return caught, wrong_hits
 
 
-def draw(screen, font, x, y, ball_color, candies, score, misses):
+def draw_help_button(screen, font, help_button):
+    """Draw the small '?' button in the corner that reopens the instructions."""
+    pygame.draw.circle(screen, HELP_BUTTON_COLOR, help_button.center, HELP_BUTTON_SIZE // 2)
+    label = font.render("?", True, TEXT_COLOR)
+    screen.blit(label, (help_button.centerx - label.get_width() / 2,
+                         help_button.centery - label.get_height() / 2))
+
+
+def draw(screen, font, x, y, ball_color, candies, score, misses, help_button):
     """Draw one frame: clear the screen, the candies, the ball, then the HUD text."""
     screen.fill(BACKGROUND_COLOR)
     for candy in candies:
@@ -134,7 +158,45 @@ def draw(screen, font, x, y, ball_color, candies, score, misses):
     misses_label = font.render(f"Missed: {misses}/{MAX_MISSES}", True, TEXT_COLOR)
     screen.blit(misses_label, (10, 40))
 
-    pygame.display.flip()
+    draw_help_button(screen, font, help_button)
+
+
+def draw_help_overlay(screen, font, title_font):
+    """Draw a semi-transparent overlay repeating the how-to-play instructions."""
+    overlay = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 190))
+    screen.blit(overlay, (0, 0))
+
+    title = title_font.render("How to Play", True, TEXT_COLOR)
+    screen.blit(title, (WINDOW_WIDTH / 2 - title.get_width() / 2, 60))
+
+    line_y = 130
+    for line in INSTRUCTIONS:
+        text = font.render(line, True, TEXT_COLOR)
+        screen.blit(text, (WINDOW_WIDTH / 2 - text.get_width() / 2, line_y))
+        line_y += 28
+
+    hint = font.render("Click the ? button again to close", True, TEXT_COLOR)
+    screen.blit(hint, (WINDOW_WIDTH / 2 - hint.get_width() / 2, line_y + 20))
+
+
+def draw_start_screen(screen, title_font, font, start_button):
+    """Draw the title, how-to-play instructions, and the Start button."""
+    screen.fill(BACKGROUND_COLOR)
+
+    title = title_font.render("WASD Candy Catch", True, TEXT_COLOR)
+    screen.blit(title, (WINDOW_WIDTH / 2 - title.get_width() / 2, 40))
+
+    line_y = 110
+    for line in INSTRUCTIONS:
+        text = font.render(line, True, TEXT_COLOR)
+        screen.blit(text, (WINDOW_WIDTH / 2 - text.get_width() / 2, line_y))
+        line_y += 28
+
+    pygame.draw.rect(screen, BUTTON_COLOR, start_button, border_radius=8)
+    label = font.render("Start", True, BUTTON_TEXT_COLOR)
+    screen.blit(label, (start_button.centerx - label.get_width() / 2,
+                         start_button.centery - label.get_height() / 2))
 
 
 def draw_game_over(screen, font, score):
@@ -150,8 +212,6 @@ def draw_game_over(screen, font, score):
     hint = font.render("Close the window to quit", True, TEXT_COLOR)
     screen.blit(hint, (WINDOW_WIDTH / 2 - hint.get_width() / 2, WINDOW_HEIGHT / 2 + 40))
 
-    pygame.display.flip()
-
 
 def main():
     pygame.init()
@@ -159,13 +219,21 @@ def main():
     pygame.display.set_caption("WASD Candy Catch")
     clock = pygame.time.Clock()
     font = pygame.font.SysFont(None, 28)
+    title_font = pygame.font.SysFont(None, 44)
+
+    start_button = pygame.Rect(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT)
+    start_button.center = (WINDOW_WIDTH / 2, WINDOW_HEIGHT - 70)
+
+    help_button = pygame.Rect(0, 0, HELP_BUTTON_SIZE, HELP_BUTTON_SIZE)
+    help_button.center = (WINDOW_WIDTH - 30, WINDOW_HEIGHT - 30)
 
     x, y = WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2
     ball_color = random.choice(CANDY_COLORS)
     candies = []
     score = 0
     misses = 0
-    game_over = False
+    state = "start"   # one of: "start", "playing", "game_over"
+    show_help = False  # when True, gameplay is paused and instructions show again
 
     pygame.time.set_timer(SPAWN_EVENT, FALL_SPAWN_EVERY_MS)
 
@@ -174,35 +242,51 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == SPAWN_EVENT and not game_over:
+            elif event.type == SPAWN_EVENT and state == "playing" and not show_help:
                 spawn_falling_candy(candies)
+            elif event.type == pygame.MOUSEBUTTONDOWN and state == "start":
+                if start_button.collidepoint(event.pos):
+                    state = "playing"
+            elif event.type == pygame.MOUSEBUTTONDOWN and state == "playing":
+                if help_button.collidepoint(event.pos):
+                    show_help = not show_help
 
-        if game_over:
-            draw_game_over(screen, font, score)
+        if state == "start":
+            draw_start_screen(screen, title_font, font, start_button)
+            pygame.display.flip()
             clock.tick(FPS)
             continue
 
-        keys = pygame.key.get_pressed()
-        x, y = handle_input(keys, x, y)
-        x, y = clamp_to_window(x, y)
+        if state == "game_over":
+            draw_game_over(screen, font, score)
+            pygame.display.flip()
+            clock.tick(FPS)
+            continue
 
-        misses += update_falling_candies(candies, ball_color)
-        caught, wrong_hits = resolve_candy_touches(x, y, ball_color, candies)
-        score += caught * SCORE_PER_CATCH
-        score -= wrong_hits * SCORE_PENALTY_PER_WRONG_HIT
-        if caught:
-            ball_color = pick_new_ball_color(ball_color)
+        # state == "playing" from here on
+        if not show_help:
+            keys = pygame.key.get_pressed()
+            x, y = handle_input(keys, x, y)
+            x, y = clamp_to_window(x, y)
 
-        if misses >= MAX_MISSES:
-            game_over = True
+            misses += update_falling_candies(candies, ball_color)
+            caught, wrong_hits = resolve_candy_touches(x, y, ball_color, candies)
+            score += caught * SCORE_PER_CATCH
+            score -= wrong_hits * SCORE_PENALTY_PER_WRONG_HIT
+            if caught:
+                ball_color = pick_new_ball_color(ball_color)
 
-        draw(screen, font, x, y, ball_color, candies, score, misses)
+            if misses >= MAX_MISSES:
+                state = "game_over"
+
+        draw(screen, font, x, y, ball_color, candies, score, misses, help_button)
+        if show_help:
+            draw_help_overlay(screen, font, title_font)
+        pygame.display.flip()
         clock.tick(FPS)
 
     pygame.quit()
 
 
-if __name__ == "__main__":
-    main()
 if __name__ == "__main__":
     main()
