@@ -6,6 +6,7 @@ Run it (inside the venv where pygame-ce is installed):
     python ball_game.py
 """
 
+import math
 import random
 
 import pygame
@@ -77,6 +78,25 @@ def update_falling_candies(candies):
     candies[:] = [c for c in candies if c["y"] - FALL_RADIUS <= WINDOW_HEIGHT]
 
 
+def catch_matching_candies(x, y, ball_color, candies):
+    """Remove any candy touching the ball whose color matches the ball's.
+
+    A touching candy of the WRONG color is left alone -- it keeps falling.
+    Returns how many candies were caught this frame.
+    """
+    catch_radius = BALL_RADIUS + FALL_RADIUS
+    still_falling = []
+    caught = 0
+    for candy in candies:
+        distance = math.hypot(candy["x"] - x, candy["y"] - y)
+        if distance <= catch_radius and candy["color"] == ball_color:
+            caught += 1
+        else:
+            still_falling.append(candy)
+    candies[:] = still_falling
+    return caught
+
+
 def draw(screen, font, x, y, ball_color, candies):
     """Draw one frame: clear the screen, the candies, the ball, then the HUD text."""
     screen.fill(BACKGROUND_COLOR)
@@ -119,6 +139,9 @@ def main():
         x, y = clamp_to_window(x, y)
 
         update_falling_candies(candies)
+        caught = catch_matching_candies(x, y, ball_color, candies)
+        if caught:
+            print(f"Caught {caught} matching candy!")
 
         draw(screen, font, x, y, ball_color, candies)
         clock.tick(FPS)
