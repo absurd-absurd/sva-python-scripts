@@ -23,7 +23,6 @@ FPS = 60
 FALL_RADIUS = 14
 FALL_SPEED = 3                  # pixels per frame a candy falls
 FALL_SPAWN_EVERY_MS = 900       # how often a new candy appears
-BALL_COLOR_CHANGE_EVERY_MS = 4000  # how often the ball's own color changes
 SCORE_PER_CATCH = 10
 SCORE_PENALTY_PER_WRONG_HIT = 5
 MAX_MISSES = 5          # misses are candies that reach the bottom uncaught
@@ -44,7 +43,6 @@ COLOR_NAMES = {
 }
 
 SPAWN_EVENT = pygame.USEREVENT + 1
-COLOR_CHANGE_EVENT = pygame.USEREVENT + 2
 
 
 def handle_input(keys, x, y):
@@ -74,17 +72,25 @@ def spawn_falling_candy(candies):
     candies.append({"x": x, "y": -FALL_RADIUS, "color": color})
 
 
-def update_falling_candies(candies):
+def update_falling_candies(candies, ball_color):
     """Move every candy down one step, and drop any that passed the bottom.
 
-    Returns how many candies passed the bottom edge uncaught -- these are
-    misses, and misses are the only thing that end the game.
+    Only a candy that MATCHES the ball's current color counts as a miss --
+    you were never supposed to catch the wrong-colored ones anyway, so
+    letting those fall off the bottom doesn't count against you. Misses
+    are the only thing that end the game.
     """
     for candy in candies:
         candy["y"] += FALL_SPEED
-    before = len(candies)
+    passed_bottom = [c for c in candies if c["y"] - FALL_RADIUS > WINDOW_HEIGHT]
     candies[:] = [c for c in candies if c["y"] - FALL_RADIUS <= WINDOW_HEIGHT]
-    return before - len(candies)
+    return sum(1 for c in passed_bottom if c["color"] == ball_color)
+
+
+def pick_new_ball_color(current_color):
+    """Pick a random candy color that's different from the current one."""
+    choices = [c for c in CANDY_COLORS if c != current_color]
+    return random.choice(choices)
 
 
 def resolve_candy_touches(x, y, ball_color, candies):
@@ -162,7 +168,6 @@ def main():
     game_over = False
 
     pygame.time.set_timer(SPAWN_EVENT, FALL_SPAWN_EVERY_MS)
-    pygame.time.set_timer(COLOR_CHANGE_EVENT, BALL_COLOR_CHANGE_EVERY_MS)
 
     running = True
     while running:
@@ -171,8 +176,6 @@ def main():
                 running = False
             elif event.type == SPAWN_EVENT and not game_over:
                 spawn_falling_candy(candies)
-            elif event.type == COLOR_CHANGE_EVENT and not game_over:
-                ball_color = random.choice(CANDY_COLORS)
 
         if game_over:
             draw_game_over(screen, font, score)
@@ -183,10 +186,12 @@ def main():
         x, y = handle_input(keys, x, y)
         x, y = clamp_to_window(x, y)
 
-        misses += update_falling_candies(candies)
+        misses += update_falling_candies(candies, ball_color)
         caught, wrong_hits = resolve_candy_touches(x, y, ball_color, candies)
         score += caught * SCORE_PER_CATCH
         score -= wrong_hits * SCORE_PENALTY_PER_WRONG_HIT
+        if caught:
+            ball_color = pick_new_ball_color(ball_color)
 
         if misses >= MAX_MISSES:
             game_over = True
@@ -199,7 +204,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
 if __name__ == "__main__":
     main()
