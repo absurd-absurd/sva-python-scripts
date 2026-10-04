@@ -25,6 +25,8 @@ FALL_SPEED = 3                  # pixels per frame a candy falls
 FALL_SPAWN_EVERY_MS = 900       # how often a new candy appears
 BALL_COLOR_CHANGE_EVERY_MS = 4000  # how often the ball's own color changes
 SCORE_PER_CATCH = 10
+SCORE_PENALTY_PER_WRONG_HIT = 5
+MAX_MISSES = 5          # misses are candies that reach the bottom uncaught
 
 CANDY_COLORS = [
     (255, 80, 80),    # red
@@ -73,32 +75,44 @@ def spawn_falling_candy(candies):
 
 
 def update_falling_candies(candies):
-    """Move every candy down one step, and drop any that passed the bottom."""
+    """Move every candy down one step, and drop any that passed the bottom.
+
+    Returns how many candies passed the bottom edge uncaught -- these are
+    misses, and misses are the only thing that end the game.
+    """
     for candy in candies:
         candy["y"] += FALL_SPEED
+    before = len(candies)
     candies[:] = [c for c in candies if c["y"] - FALL_RADIUS <= WINDOW_HEIGHT]
+    return before - len(candies)
 
 
-def catch_matching_candies(x, y, ball_color, candies):
-    """Remove any candy touching the ball whose color matches the ball's.
+def resolve_candy_touches(x, y, ball_color, candies):
+    """Remove any candy touching the ball, and score the touch.
 
-    A touching candy of the WRONG color is left alone -- it keeps falling.
-    Returns how many candies were caught this frame.
+    A matching-color touch is a catch (+score). A wrong-color touch is a
+    penalty (-score) -- but note it does NOT count as a miss, since the
+    candy never reached the bottom; only misses can end the game.
+    Returns (caught, wrong_hits) for this frame.
     """
     catch_radius = BALL_RADIUS + FALL_RADIUS
     still_falling = []
     caught = 0
+    wrong_hits = 0
     for candy in candies:
         distance = math.hypot(candy["x"] - x, candy["y"] - y)
-        if distance <= catch_radius and candy["color"] == ball_color:
-            caught += 1
+        if distance <= catch_radius:
+            if candy["color"] == ball_color:
+                caught += 1
+            else:
+                wrong_hits += 1
         else:
             still_falling.append(candy)
     candies[:] = still_falling
-    return caught
+    return caught, wrong_hits
 
 
-def draw(screen, font, x, y, ball_color, candies, score):
+def draw(screen, font, x, y, ball_color, candies, score, misses):
     """Draw one frame: clear the screen, the candies, the ball, then the HUD text."""
     screen.fill(BACKGROUND_COLOR)
     for candy in candies:
@@ -110,6 +124,25 @@ def draw(screen, font, x, y, ball_color, candies, score):
 
     score_label = font.render(f"Score: {score}", True, TEXT_COLOR)
     screen.blit(score_label, (WINDOW_WIDTH - score_label.get_width() - 10, 10))
+
+    misses_label = font.render(f"Missed: {misses}/{MAX_MISSES}", True, TEXT_COLOR)
+    screen.blit(misses_label, (10, 40))
+
+    pygame.display.flip()
+
+
+def draw_game_over(screen, font, score):
+    """Draw the end-of-game screen with the final score."""
+    screen.fill(BACKGROUND_COLOR)
+
+    title = font.render("Game Over", True, TEXT_COLOR)
+    screen.blit(title, (WINDOW_WIDTH / 2 - title.get_width() / 2, WINDOW_HEIGHT / 2 - 40))
+
+    final_score = font.render(f"Final score: {score}", True, TEXT_COLOR)
+    screen.blit(final_score, (WINDOW_WIDTH / 2 - final_score.get_width() / 2, WINDOW_HEIGHT / 2))
+
+    hint = font.render("Close the window to quit", True, TEXT_COLOR)
+    screen.blit(hint, (WINDOW_WIDTH / 2 - hint.get_width() / 2, WINDOW_HEIGHT / 2 + 40))
 
     pygame.display.flip()
 
@@ -125,6 +158,8 @@ def main():
     ball_color = random.choice(CANDY_COLORS)
     candies = []
     score = 0
+    misses = 0
+    game_over = False
 
     pygame.time.set_timer(SPAWN_EVENT, FALL_SPAWN_EVERY_MS)
     pygame.time.set_timer(COLOR_CHANGE_EVENT, BALL_COLOR_CHANGE_EVERY_MS)
@@ -134,23 +169,36 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == SPAWN_EVENT:
+            elif event.type == SPAWN_EVENT and not game_over:
                 spawn_falling_candy(candies)
-            elif event.type == COLOR_CHANGE_EVENT:
+            elif event.type == COLOR_CHANGE_EVENT and not game_over:
                 ball_color = random.choice(CANDY_COLORS)
+
+        if game_over:
+            draw_game_over(screen, font, score)
+            clock.tick(FPS)
+            continue
 
         keys = pygame.key.get_pressed()
         x, y = handle_input(keys, x, y)
         x, y = clamp_to_window(x, y)
 
-        update_falling_candies(candies)
-        caught = catch_matching_candies(x, y, ball_color, candies)
+        misses += update_falling_candies(candies)
+        caught, wrong_hits = resolve_candy_touches(x, y, ball_color, candies)
         score += caught * SCORE_PER_CATCH
+        score -= wrong_hits * SCORE_PENALTY_PER_WRONG_HIT
 
-        draw(screen, font, x, y, ball_color, candies, score)
+        if misses >= MAX_MISSES:
+            game_over = True
+
+        draw(screen, font, x, y, ball_color, candies, score, misses)
         clock.tick(FPS)
 
     pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
