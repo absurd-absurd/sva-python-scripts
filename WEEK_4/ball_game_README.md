@@ -44,3 +44,8 @@ Three of the game's functions, in my own words:
 **`update_falling_candies(candies, ball_color)`** A line that makes sure the stars continue to fall down the screen throughout the game if not matched to the proper color or if matched with the wrong color.
 
 **`draw_star(screen, color, center_x, center_y, radius)`** This line draws the shape of the falling stars and adds shading and tones so that the stars look 3D eveb though they are not. 
+
+
+## Recording
+
+(https://youtu.be/xNvTDiARaxQ)
