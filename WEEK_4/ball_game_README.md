@@ -17,7 +17,7 @@ python -m venv .venv
 ```
 
 A window opens on a Start screen. Click **Start** to play. Move with **W A S D**. Click the
-**?** button in the corner any time during play to pause and bring the instructions back up.
+**?** button in the corner any time during while playing to pause the game and bring the instructions back up.
 
 ## What I made better
 
@@ -39,9 +39,9 @@ From starting with just a ball that moves around an empty window with WASD, I ad
 
 Three of the game's functions, in my own words:
 
-**`resolve_candy_touches(x, y, ball_color, candies)`** This means that every star that touches the sun and matches it color will be removed from the screen and a points will be added and wrong color matches will remove points from your score.
+**`resolve_candy_touches(x, y, ball_color, candies)`** This means that every star that touches the sun and matches it color will be removed from the screen and a points will be added to the score while wrong color matches will remove points from your score.
 
-**`update_falling_candies(candies, ball_color)`** A line that makes sure the stars continue to fall down the screen throughout the game if not matched to the proper color or if matched with the wrong color.
+**`update_falling_candies(candies, ball_color)`** A line that makes sure the stars continue to fall down the screen throughout the game if not matched touched by the sun or if matched with the wrong color.
 
 **`draw_star(screen, color, center_x, center_y, radius)`** This line draws the shape of the falling stars and adds shading and tones so that the stars look 3D eveb though they are not. 
 
