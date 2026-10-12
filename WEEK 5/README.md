@@ -81,16 +81,34 @@ To stop the bridge, press `Ctrl+C` in the listener's terminal.
 
 ## What I asked for
 
-<!-- TODO: fill in after the recording -->
-
 **My exact words:**
 
-> ...
+> in photoshop make a 1920x1080 poster with a sunset gradient and my name, fayth elisa navarro,  in big white text
 
 **What happened:**
 
-...
+The agent wrote a Photoshop script (`poster.jsx`) and sent it through the
+bridge with `python send.py -f poster.jsx`. In the open Photoshop, a new
+1920x1080 document called "Sunset Poster" appeared with:
+
+- a gradient fill layer going from deep purple at the top, through pink and
+  orange, to a golden glow at the bottom
+- a text layer reading "FAYTH ELISA NAVARRO" in bold white Arial, centered and
+  scaled to fill most of the width (the agent chose capitals on its own)
+
+Photoshop answered back through the bridge:
+
+```
+Made 'Sunset Poster' 1920x1080, layers: 3, font: Arial-BoldMT, text spans x 134-1786, y 486-594
+```
+
+The agent then checked its own work by sending a second script that exported a
+copy of the poster and looking at it. The first try at that export failed with
+"the application is busy" because Photoshop was still finishing up; it waited a
+few seconds, sent it again, and it worked. The result:
+
+![The poster Photoshop made](poster.png)
 
 ## Recording
 
-<!-- TODO: link to the recording -->
+(https://youtu.be/O9jJtVn3Lms)
