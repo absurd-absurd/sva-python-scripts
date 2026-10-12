@@ -29,8 +29,8 @@ You need Windows, Photoshop, and Python 3.
 1. Get the code and install the one thing it depends on:
 
    ```
-   git clone <this repo>
-   cd photoshop-bridge
+   git clone https://github.com/absurd-absurd/sva-python-scripts
+   cd "sva-python-scripts/WEEK 5"
    pip install -r requirements.txt
    ```
 
