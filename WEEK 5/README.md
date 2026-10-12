@@ -92,9 +92,7 @@ bridge. In the open Photoshop, a new
 The agent then checked its own work by sending a second script that exported a
 copy of the poster and looking at it. The first try at that export failed with
 "the application is busy" because Photoshop was still finishing up; it waited a
-few seconds, sent it again, and it worked. The result:
-
-![The poster Photoshop made](poster.png)
+few seconds, sent it again, and it worked. 
 
 ## Recording
 
