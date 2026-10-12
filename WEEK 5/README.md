@@ -69,15 +69,7 @@ You need Windows, Photoshop, and Python 3.
 
 To stop the bridge, press `Ctrl+C` in the listener's terminal.
 
-### For the agent
 
-- Photoshop scripts are ExtendScript (old-style JavaScript: `var`, no `let`,
-  no arrow functions).
-- Short scripts: `python send.py "app.documents.length"`.
-- Longer scripts: write them to a `.jsx` file and run `python send.py -f file.jsx`.
-- The value of the script's last line is what gets printed back, so end a
-  script with something worth reading.
-- If Photoshop raises an error, `send.py` prints it and exits with code 1.
 
 ## What I asked for
 
@@ -87,20 +79,15 @@ To stop the bridge, press `Ctrl+C` in the listener's terminal.
 
 **What happened:**
 
-The agent wrote a Photoshop script (`poster.jsx`) and sent it through the
-bridge with `python send.py -f poster.jsx`. In the open Photoshop, a new
+The agent wrote a Photoshop script and sent it through the
+bridge. In the open Photoshop, a new
 1920x1080 document called "Sunset Poster" appeared with:
 
 - a gradient fill layer going from deep purple at the top, through pink and
   orange, to a golden glow at the bottom
 - a text layer reading "FAYTH ELISA NAVARRO" in bold white Arial, centered and
-  scaled to fill most of the width (the agent chose capitals on its own)
+  scaled to fill most of the width. 
 
-Photoshop answered back through the bridge:
-
-```
-Made 'Sunset Poster' 1920x1080, layers: 3, font: Arial-BoldMT, text spans x 134-1786, y 486-594
-```
 
 The agent then checked its own work by sending a second script that exported a
 copy of the poster and looking at it. The first try at that export failed with
