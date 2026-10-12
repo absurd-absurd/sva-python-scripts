@@ -6,9 +6,16 @@ handed to the open Photoshop through its scripting interface (the same one
 File > Scripts uses). The script's result, or its error, is sent back.
 
     python ps_listener.py
+
+With more than one Photoshop installed, Windows picks which one that talks
+to. To choose, add the version's number: 200 is Photoshop 2026, 190 is 2025,
+180 is 2024.
+
+    python ps_listener.py 200
 """
 import json
 import socket
+import sys
 
 import pythoncom
 import win32com.client
@@ -16,12 +23,16 @@ import win32com.client
 HOST = "127.0.0.1"  # local only: nothing outside this computer can connect
 PORT = 7008
 
+PROG_ID = "Photoshop.Application"
+if len(sys.argv) > 1:
+    PROG_ID += "." + sys.argv[1]
+
 
 def run_in_photoshop(script):
     """Run JavaScript in Photoshop and return a result dict."""
     try:
         # Connects to the open Photoshop, or starts it if it is closed.
-        app = win32com.client.Dispatch("Photoshop.Application")
+        app = win32com.client.Dispatch(PROG_ID)
         result = app.DoJavaScript(script)
         return {"ok": True, "output": "" if result is None else str(result)}
     except pythoncom.com_error as e:
