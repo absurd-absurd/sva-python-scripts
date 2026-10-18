@@ -8,26 +8,19 @@ can fill a scene in seconds instead of placing props by hand.
 
 ## Which app
 
-- **App:** Autodesk Maya (built and tested on Maya 2026, Windows 11)
-- No extra installs. It only uses Maya's own Python (`maya.cmds`).
+- **App:** Autodesk Maya 
+- No extra installs. It only uses Maya's own Python 
 
 ## How to run it
 
-1. Get the code. Either:
-   - on the GitHub page click **Code > Download ZIP** and unzip it, or
-   - `git clone https://github.com/absurd-absurd/sva-python-scripts`
+1. Get the code from the repo.
 
 2. Open Maya.
 
-3. Open the test scene: **File > Open Scene**, go into the `MIDTERM` folder and
-   pick `scatter_test_scene.ma`. It has a hilly `ground` and a small `rock`
-   off to the left. (You can also use your own scene. See "Using your own
-   objects" below.)
+3. Open the Maya's Script Editor and paste python import command into the python tab.
+4. Open the test scene by pasting the script into the python tab in Maya.
 
-4. Open the Script Editor: **Windows > General Editors > Script Editor**.
-
-5. In the Script Editor click the **Python** tab at the bottom, then
-   **File > Open Script** and pick `MIDTERM/scatter_tool.py`.
+5. In the Script Editor then paste the scatter tool script.
 
 6. Run it: press **Ctrl+Enter**, or click the **Execute All** button (the
    double play arrow) at the top of the Script Editor. The **Scatter Tool**
@@ -67,9 +60,6 @@ The line at the bottom of the window says what happened or what's wrong.
 ### Using your own objects
 
 - The surface must be a polygon mesh.
-- The point of the object that lands on the ground is its **origin** (where it
-  sits when its translate is 0, 0, 0). Model the prop with its base at the
-  grid's center, or it will float or sink.
 - Delete the original object afterwards, or move it away, if you don't want it
   in the scene.
 
