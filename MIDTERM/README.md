@@ -123,3 +123,7 @@ _Their three sentences (what they did, what happened, what confused them or
 broke):_
 
 _What I'll fix:_
+
+## Recording
+
+(https://youtu.be/2UrF8U327YE)
