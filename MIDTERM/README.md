@@ -107,12 +107,32 @@ From the pitch, with the teacher's feedback:
 
 ## Peer run
 
-_Classmate's name:_
+_Classmate's name:_ Alfredo (ALF-Mii)
 
 _Their three sentences (what they did, what happened, what confused them or
 broke):_
 
-_What I'll fix:_
+1. "I cloned the repo, opened scatter_test_scene.ma in Maya 2027, imported
+   and ran scatter_tool.py from the Script Editor, then set Object to rock and
+   Surface to ground with 'Use selected', hit Preview, raised Count to 200,
+   and hit New seed, Apply and Clear."
+2. "Everything your README promises worked — the window opened, the preview
+   drew 50 copies and redrew to 200 when I changed the count, the same seed
+   reproduced the same layout and a different seed didn't, one Ctrl+Z removed
+   all 200 copies in a single step, 'Use instances' shared one mesh across all
+   of them, and the copies sat at most 0.0403 units off the hill and leaned
+   0.000° off its slope, both inside the 0.06 / 3° numbers you claimed."
+3. "Nothing broke, but the two install steps were my only stumbling block: the
+   README asks me to 'paste python import command' and to 'open the test
+   scene by pasting the script' without ever showing the actual commands, so I
+   had to work out the sys.path.append + import scatter_tool lines and the
+   cmds.file(..., open=True) call myself, and it isn't clear whether step 3 is
+   still needed once step 5 has me paste the whole script anyway."
+
+_What I'll fix:_ Write the actual commands into the "How to run it" steps (the
+line that opens the test scene and the line that runs the tool), and drop the
+separate import step, since pasting or opening the whole script already runs
+it.
 
 ## Recording
 
