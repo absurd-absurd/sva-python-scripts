@@ -17,14 +17,30 @@ can fill a scene in seconds instead of placing props by hand.
 
 2. Open Maya.
 
-3. Open the Maya's Script Editor and paste python import command into the python tab.
-4. Open the test scene by pasting the script into the python tab in Maya.
+3. Open the Script Editor (**Windows > General Editors > Script Editor**) and
+   click the **Python** tab at the bottom.
 
-5. In the Script Editor then paste the scatter tool script.
+4. Paste these lines. Change the `folder` line to wherever your `MIDTERM`
+   folder is (use forward slashes):
 
-6. Run it: press **Ctrl+Enter**, or click the **Execute All** button (the
+   ```python
+   import maya.cmds as cmds
+   folder = "C:/Users/you/sva-python-scripts/MIDTERM"
+   cmds.file(folder + "/scatter_test_scene.ma", open=True, force=True)
+   exec(open(folder + "/scatter_tool.py").read())
+   ```
+
+   The third line opens the test scene, with a hilly `ground` and a small
+   `rock` off to the left. `force=True` throws away unsaved changes in the
+   scene you had open, so save first if you need to. Leave that line out to
+   use your own scene instead. The last line runs the tool. There's no
+   separate import step.
+
+5. Run it: press **Ctrl+Enter**, or click the **Execute All** button (the
    double play arrow) at the top of the Script Editor. The **Scatter Tool**
    window opens.
+
+Don't press Ctrl+S in the test scene, or you'll overwrite the repo's copy.
 
 ## How to use it
 
