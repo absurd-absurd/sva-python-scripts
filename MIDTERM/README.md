@@ -5,7 +5,9 @@ scatters many copies of them across a surface you pick, with random size, spin
 and tilt, so you can fill a scene in seconds instead of placing props by hand.
 Group objects into **networks** that share settings, e.g. five small rocks
 in one network and three kinds of large trees in another, and scatter them
-all at once. Give each object a weight to say how often it shows up.
+all at once. Give each object a weight to say how often it shows up, keep
+copies from overlapping, and let one network grow near another, like bushes
+crowding around trees.
 
 ![The Scatter Tool window](window.png)
 
@@ -110,6 +112,41 @@ When a spot is too close, the tool tries up to 30 other spots. If none of them
 fit, that copy is left out, and the status line says how many didn't fit.
 Lower the Count or the Min distance if that happens a lot.
 
+### Grow near
+
+In nature some things crowd together: bushes grow thicker around trees than
+out on open grass. **Grow near** does that. Pick another network in the menu
+(say "Large trees" while showing "Bushes"), and this network's copies gather
+around that network's copies.
+
+- **Within** is how far from a tree still counts as near. If the trees keep
+  copies apart, it's measured from the edge of the space they keep clear,
+  not from the trunk.
+- **In the open (%)** is how many copies still grow away from the trees.
+  0 means none; 100 means Grow near has no effect.
+- The pull fades smoothly from the tree out to Within, so there's no hard
+  ring around each tree.
+- **Size near (%)** changes the size of copies close to the trees. 100 means
+  no change, 200 makes copies right by a tree twice as big, and 50 makes them
+  half as big. It fades back to normal size at Within, so copies out in the
+  open keep their normal size. Scale min and max still apply on top.
+- Tick Keep copies apart on the bushes too, and they hug the trees without
+  landing inside the trunks. Copies made bigger by Size near keep more space
+  clear too, so they don't overlap.
+- **Get closer (%)** lets copies into the space the trees keep clear. With
+  the trees at Min distance 3, each tree keeps 1.5 clear around its trunk,
+  which normally holds bushes out at the edge of the canopy. 0 keeps them
+  outside that space, and 100 lets them right up to the trunk, keeping only
+  their own Min distance. The trees still keep apart from each other.
+
+The network you grow near is always placed first. A network can grow near one
+other network, and two networks can't grow near each other. If the network
+you grow near is switched off, this one spreads everywhere instead. Renaming
+or deleting a network updates the networks that grow near it.
+
+A copy that keeps landing out in the open tries up to 30 other spots, like
+with Keep copies apart, and the status line says if any found no spot.
+
 ### Several objects with weights
 
 Add more than one object to mix them. Each one starts with a weight of 1. To
@@ -164,6 +201,11 @@ to start fresh.
 | Keep copies apart | On: copies don't land closer than Min distance. Off: copies can overlap |
 | Min distance | How far apart this network's copies stay, center to center, along the ground |
 | Fit to size | Sets Min distance to the widest object at Scale max, so copies don't touch |
+| Grow near | Anywhere, or another network for this one to gather around |
+| Within | How far from the other network's copies counts as near |
+| In the open (%) | How many copies still grow away from the other network |
+| Size near (%) | How big copies are right by the other network, fading to normal size at Within |
+| Get closer (%) | How far copies may go into the space the other network keeps clear |
 | Seed | Picks the layout. Same seed + same settings = same layout |
 
 ### Using your own objects
@@ -191,6 +233,10 @@ to start fresh.
 - Clear.
 - Use instances.
 - Landing rules: max slope and min height (from the pitch feedback).
+- Grow near: one network gathers around another, with a distance and a share
+  that still grows in the open. With 7 trees, Within 2.5 and In the open 5%,
+  90% of 198 bushes landed near a tree. Size near: at 250%, bushes next to
+  trees came out 2.1 times the size of bushes in the open on average.
 - Keep copies apart, with a min distance per network, a Fit to size button,
   and spacing between networks too (from the pitch feedback).
 - Messages instead of errors when nothing is picked, an object can't be
@@ -224,6 +270,9 @@ From the pitch, with the teacher's feedback:
   several objects with weights. Done.
 - **Extra, added Oct 20:** networks, and minimum distance between copies (a
   stretch goal from the feedback). Done.
+- **Extra, added Oct 20:** Grow near, so one network gathers around another,
+  with Size near to make copies bigger or smaller close to it, and Get closer
+  to let them in toward the trunks.
 - **Stretch goal left:** a painted density mask.
 
 ## Peer run

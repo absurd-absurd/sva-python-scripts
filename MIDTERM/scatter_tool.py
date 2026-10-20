@@ -25,11 +25,13 @@ import maya.cmds as cmds
 
 WINDOW = "scatterToolWindow"
 PREVIEW_GROUP = "scatter_preview"
-WINDOW_HEIGHT = 740
+WINDOW_HEIGHT = 890
 NO_PRESET = "Pick a preset..."
+ANYWHERE = "Anywhere"
 
-# How many other spots to try when a copy lands too close to another one
-SPACING_TRIES = 30
+# How many other spots to try when a copy lands too close to another one,
+# or out in the open when its network grows near another
+SPOT_TRIES = 30
 
 # Presets and the last settings live here, e.g. Documents/maya/scatter_tool.json
 SETTINGS_FILE = os.path.join(cmds.internalVar(userAppDir=True), "scatter_tool.json")
@@ -38,7 +40,9 @@ SETTINGS_FILE = os.path.join(cmds.internalVar(userAppDir=True), "scatter_tool.js
 DEFAULT_CONTROLS = {"count": 50, "scale_min": 0.8, "scale_max": 1.2,
                     "spin": 360.0, "tilt": 0.0, "align": True, "instances": False,
                     "max_slope": 90.0, "min_height": -10000.0,
-                    "spacing": False, "min_distance": 1.0, "seed": 1}
+                    "spacing": False, "min_distance": 1.0,
+                    "near_range": 2.5, "open_share": 10.0, "near_size": 100.0,
+                    "near_into": 0.0, "seed": 1}
 
 # Presets you get the first time, before you've saved any of your own
 STARTER_PRESETS = {
@@ -57,6 +61,7 @@ ui = {}
 #   name     - shown in the Network menu
 #   use      - False leaves it out of Preview and Apply
 #   objects  - [name, weight] pairs
+#   near     - name of the network it grows near, or "" for anywhere
 #   controls - its slider and checkbox values (same keys as DEFAULT_CONTROLS)
 networks = []
 
@@ -79,6 +84,10 @@ CONTROLS = {
     "min_height": (cmds.floatFieldGrp, "value1"),
     "spacing": (cmds.checkBox, "value"),
     "min_distance": (cmds.floatSliderGrp, "value"),
+    "near_range": (cmds.floatSliderGrp, "value"),
+    "open_share": (cmds.floatSliderGrp, "value"),
+    "near_size": (cmds.floatSliderGrp, "value"),
+    "near_into": (cmds.floatSliderGrp, "value"),
     "seed": (cmds.intFieldGrp, "value1"),
 }
 
@@ -244,21 +253,29 @@ def grid_cell(grid, point):
             int(math.floor(point[2] / grid["cell"])))
 
 
-def too_close(grid, point, radius):
-    """True if a circle of 'radius' at point overlaps a copy already placed."""
+def too_close(grid, point, radius, near="", into=0.0):
+    """
+    True if a circle of 'radius' at point overlaps a copy already placed.
+    Copies of the 'near' network (the one this network grows near) only
+    count 1 - 'into' of their circle, so Get closer can let copies in
+    toward them.
+    """
     cx, cz = grid_cell(grid, point)
     for dx in (-1, 0, 1):
         for dz in (-1, 0, 1):
-            for x, z, other in grid["cells"].get((cx + dx, cz + dz), ()):
+            for x, z, other, owner in grid["cells"].get((cx + dx, cz + dz), ()):
+                if near and owner == near:
+                    other *= 1.0 - into
                 gap = radius + other
                 if (point[0] - x) ** 2 + (point[2] - z) ** 2 < gap * gap:
                     return True
     return False
 
 
-def mark_placed(grid, point, radius):
+def mark_placed(grid, point, radius, owner=""):
+    """Add a copy to the grid. 'owner' is the name of its network."""
     grid["cells"].setdefault(grid_cell(grid, point), []).append(
-        (point[0], point[2], radius))
+        (point[0], point[2], radius, owner))
 
 
 def lands(position, normal, settings):
@@ -267,12 +284,41 @@ def lands(position, normal, settings):
     return slope <= settings["max_slope"] and position[1] >= settings["min_height"]
 
 
-def build_scatter(settings, group, use_instances, grid):
+def near_closeness(near_grid, point, settings, radius):
+    """
+    How close this spot is to the network this one grows near: 1 right
+    next to one of its copies, fading smoothly to 0 at the 'Within'
+    distance, and 0 further out. Grow near uses it for the chance a copy
+    is kept here, and Size near for how much bigger or smaller it is.
+
+    Distance is measured from the edge of the space each copy keeps clear
+    (Keep copies apart), not its center. Otherwise a tree's clear space
+    would push the bushes out to where the pull has already faded.
+    """
+    within = settings["near_range"]
+    cx, cz = grid_cell(near_grid, point)
+    nearest = None
+    for dx in (-1, 0, 1):
+        for dz in (-1, 0, 1):
+            for x, z, other, _ in near_grid["cells"].get((cx + dx, cz + dz), ()):
+                d = math.sqrt((point[0] - x) ** 2 + (point[2] - z) ** 2)
+                d = max(0.0, d - other - radius)
+                if nearest is None or d < nearest:
+                    nearest = d
+    if nearest is None or nearest >= within:
+        return 0.0
+    t = nearest / within
+    return 1.0 - t * t * (3.0 - 2.0 * t)  # smooth, not a straight line
+
+
+def build_scatter(settings, group, use_instances, grid, near_points=None):
     """
     Make one network's copies inside 'group'. 'grid' holds every copy
-    placed so far, from any network. Returns how many spots were skipped
-    by the slope and height rules, how many copies didn't fit because of
-    the min distance, and how many copies of each object were made.
+    placed so far, from any network. 'near_points' are the copies of the
+    network this one grows near, as (position, clear radius), or None.
+    Returns how many spots were skipped by the slope and height rules, how
+    many copies found no spot that fit the min distance or grow-near rules,
+    how many copies of each object were made, and where the copies went.
     The same settings and seed always give the same layout.
     """
     names = [name for name, _ in settings["objects"]]
@@ -288,14 +334,52 @@ def build_scatter(settings, group, use_instances, grid):
     # A second random stream picks which object goes on each spot, so
     # changing the weights swaps objects but doesn't move any spots.
     object_rng = random.Random("objects %d" % settings["seed"])
-    # A third stream gives the extra spots tried when a copy is too close,
-    # so with Keep copies apart off, the layout is the same as without it.
+    # More streams for the extra spots tried when a copy doesn't fit, and
+    # for the grow-near dice, so with Keep copies apart off and Grow near
+    # set to Anywhere, the layout is the same as without them.
     retry_rng = random.Random("spacing %d" % settings["seed"])
+    near_rng = random.Random("near %d" % settings["seed"])
     world_up = (0.0, 1.0, 0.0)
     radius = settings["min_distance"] / 2.0 if settings["spacing"] else 0.0
+    # Get closer: how far into the clear space of the network this one grows near
+    near = settings["near"] if near_points is not None else ""
+    into = settings["near_into"] / 100.0 if near else 0.0
+
+    near_grid = None
+    if near_points is not None:
+        # Cells wide enough that the nearest copy within reach is always
+        # in one of the 9 cells around a spot
+        widest = max([other for _, other in near_points] or [0.0])
+        near_grid = spacing_grid(settings["near_range"] + widest + radius)
+        for point, other in near_points:
+            # Get closer shrinks the space they keep clear, so 'near' is
+            # measured from the smaller edge too
+            mark_placed(near_grid, point, other * (1.0 - into))
+
+    open_chance = settings["open_share"] / 100.0
+
+    def closeness(position):
+        if near_grid is None:
+            return 0.0
+        return near_closeness(near_grid, position, settings, radius)
+
+    def size_near(close):
+        """Size near: 1 out in the open, up to near_size% right by the other network."""
+        return 1.0 + (settings["near_size"] / 100.0 - 1.0) * close
+
+    def fits(position):
+        close = closeness(position)
+        # Bigger copies keep more space clear, so they don't overlap either
+        if settings["spacing"] and too_close(grid, position, radius * size_near(close),
+                                             near=near, into=into):
+            return False
+        if near_grid is not None:
+            return near_rng.random() < open_chance + (1.0 - open_chance) * close
+        return True
 
     skipped = 0
-    crowded = 0
+    no_room = 0
+    points = []
     counts = dict((name, 0) for name in names)
     for _ in range(settings["count"]):
         # Always draw every random number, in the same order, so changing
@@ -311,18 +395,21 @@ def build_scatter(settings, group, use_instances, grid):
         if not lands(position, normal, settings):
             skipped += 1
             continue
-        if settings["spacing"] and too_close(grid, position, radius):
-            for _ in range(SPACING_TRIES):
+        if not fits(position):
+            for _ in range(SPOT_TRIES):
                 position, normal = random_spot(triangles, running_area, retry_rng)
-                if lands(position, normal, settings) and not too_close(grid, position, radius):
+                if lands(position, normal, settings) and fits(position):
                     break
             else:
-                crowded += 1
+                no_room += 1
                 continue
-        mark_placed(grid, position, radius)
+        grow = size_near(closeness(position))
+        mark_placed(grid, position, radius * grow, settings["name"])
+        points.append((position, radius * grow))
 
         up = normal if settings["align"] else world_up
         up = tilt(up, tilt_angle, tilt_direction)
+        size *= grow
         base_scale = base_scales[obj]
         scale = (base_scale[0] * size, base_scale[1] * size, base_scale[2] * size)
 
@@ -334,7 +421,7 @@ def build_scatter(settings, group, use_instances, grid):
         cmds.xform(copy, worldSpace=True,
                    matrix=placement_matrix(position, up, spin, scale))
         counts[obj] += 1
-    return skipped, crowded, counts
+    return skipped, no_room, counts, points
 
 
 def group_name_for(network_name):
@@ -343,35 +430,65 @@ def group_name_for(network_name):
     return name if re.match(r"[A-Za-z_]", name) else "n_" + name
 
 
+def gap(settings):
+    """The most space a copy of this network can keep clear."""
+    if not settings["spacing"]:
+        return 0.0
+    if settings["near"]:
+        # Size near can make copies (and the space they keep) bigger
+        return settings["min_distance"] * max(1.0, settings["near_size"] / 100.0)
+    return settings["min_distance"]
+
+
+def build_order(all_settings):
+    """
+    The order to build the networks in. The ones with the most space around
+    their copies go first, so big things like trees get their room before
+    small rocks fill in. A network that grows near another always comes
+    after it, since it needs to know where those copies are.
+    """
+    names = [settings["name"] for settings in all_settings]
+    waiting = sorted(range(len(all_settings)), key=lambda i: -gap(all_settings[i]))
+    order = []
+    while waiting:
+        for i in waiting:
+            near = all_settings[i]["near"]
+            if not near or names.index(near) in order:
+                break
+        else:
+            i = waiting[0]  # networks growing near each other in a loop: just go
+        waiting.remove(i)
+        order.append(i)
+    return order
+
+
 def build_all(all_settings, group_name, preview):
     """
     Scatter every network into one new group, each network in its own
     group inside it. Returns the group, the total spots skipped by the
-    landing rules, the total copies that didn't fit, and
+    landing rules, the total copies that found no spot, and
     (network name, counts) for each network.
     """
-    def gap(settings):
-        return settings["min_distance"] if settings["spacing"] else 0.0
-
     top = cmds.group(empty=True, name=group_name)
     groups = [cmds.group(empty=True, parent=top, name=group_name_for(settings["name"]))
               for settings in all_settings]
     grid = spacing_grid(max(gap(settings) for settings in all_settings))
     skipped = 0
-    crowded = 0
+    no_room = 0
     counts_by_network = {}
-    # The networks with the most space around their copies go first, so
-    # big things like trees get their room before small rocks fill in.
-    order = sorted(range(len(all_settings)), key=lambda i: -gap(all_settings[i]))
-    for i in order:
+    points_by_name = {}
+    for i in build_order(all_settings):
         settings = all_settings[i]
-        net_skipped, net_crowded, counts = build_scatter(
-            settings, groups[i], use_instances=preview or settings["instances"], grid=grid)
+        near = settings["near"]
+        net_skipped, net_no_room, counts, points = build_scatter(
+            settings, groups[i], use_instances=preview or settings["instances"], grid=grid,
+            near_points=points_by_name.get(near, []) if near else None)
         skipped += net_skipped
-        crowded += net_crowded
+        no_room += net_no_room
         counts_by_network[i] = counts
+        points_by_name[settings["name"]] = points
     made = [(settings["name"], counts_by_network[i]) for i, settings in enumerate(all_settings)]
-    return top, skipped, crowded, made
+    return top, skipped, no_room, made
 
 
 # ---------------------------------------------------------------
@@ -458,16 +575,20 @@ def read_settings():
         settings["objects"] = [(name, weight) for name, weight in objects if weight > 0]
         settings["surface"] = surface
         settings["name"] = net["name"]
+        # Growing near a network that's switched off means growing anywhere
+        used_names = [other["name"] for other in used]
+        settings["near"] = net["near"] if net["near"] in used_names else ""
         all_settings.append(settings)
     return all_settings
 
 
-def skipped_note(skipped, crowded):
+def skipped_note(skipped, no_room):
     notes = []
     if skipped:
         notes.append("%d spots skipped by the slope/height rules" % skipped)
-    if crowded:
-        notes.append("%d copies didn't fit with the min distance" % crowded)
+    if no_room:
+        notes.append("%d copies found no spot that fit the min distance or grow near"
+                     % no_room)
     return " (%s)" % "; ".join(notes) if notes else ""
 
 
@@ -554,6 +675,7 @@ def restore_settings():
             for saved in last["networks"]:
                 net = make_network(str(saved["name"]))
                 net["use"] = bool(saved.get("use", True))
+                net["near"] = str(saved.get("near", ""))
                 net["controls"].update(saved.get("controls", {}))
                 net["objects"] = saved_objects(saved)
                 networks.append(net)
@@ -604,12 +726,12 @@ def on_preview(*_):
     try:
         if cmds.objExists(PREVIEW_GROUP):
             cmds.delete(PREVIEW_GROUP)
-        group, skipped, crowded, made = build_all(all_settings, PREVIEW_GROUP, preview=True)
+        group, skipped, no_room, made = build_all(all_settings, PREVIEW_GROUP, preview=True)
         restore_selection(selection)
     finally:
         cmds.undoInfo(stateWithoutFlush=True)
     set_status("Preview: %s%s. Press Apply to keep it."
-               % (made_note(made), skipped_note(skipped, crowded)))
+               % (made_note(made), skipped_note(skipped, no_room)))
 
 
 def refresh_preview(*_):
@@ -633,13 +755,13 @@ def on_apply(*_):
     # One undo chunk, so one Ctrl+Z removes the whole scatter.
     cmds.undoInfo(openChunk=True, chunkName="Scatter")
     try:
-        group, skipped, crowded, made = build_all(all_settings, "scatter_grp#", preview=False)
+        group, skipped, no_room, made = build_all(all_settings, "scatter_grp#", preview=False)
         restore_selection(selection)
     finally:
         cmds.undoInfo(closeChunk=True)
     last_scatter["group"] = group
     set_status("Made %s in '%s'%s. Ctrl+Z removes them all."
-               % (made_note(made), group, skipped_note(skipped, crowded)))
+               % (made_note(made), group, skipped_note(skipped, no_room)))
 
 
 def on_clear(*_):
@@ -706,7 +828,7 @@ def on_fit_distance(*_):
 def make_network(name, seed=1):
     controls = dict(DEFAULT_CONTROLS)
     controls["seed"] = seed
-    return {"name": name, "use": True, "objects": [], "controls": controls}
+    return {"name": name, "use": True, "objects": [], "near": "", "controls": controls}
 
 
 def network():
@@ -730,6 +852,7 @@ def show_network():
     set_controls(dict(DEFAULT_CONTROLS, **net["controls"]))
     cmds.checkBox(ui["use"], edit=True, value=net["use"])
     redraw_object_list()
+    redraw_near_menu()
 
 
 def redraw_network_menu():
@@ -791,6 +914,9 @@ def on_rename_network(*_):
     if name is None or name == old:
         return
     network()["name"] = name
+    for net in networks:
+        if net["near"] == old:
+            net["near"] = name
     redraw_network_menu()
     set_status("Renamed '%s' to '%s'." % (old, name))
     on_change()
@@ -808,6 +934,9 @@ def on_delete_network(*_):
     if answer != "Delete":
         return
     networks.pop(current["index"])
+    for net in networks:
+        if net["near"] == name:
+            net["near"] = ""
     current["index"] = min(current["index"], len(networks) - 1)
     redraw_network_menu()
     show_network()
@@ -817,6 +946,50 @@ def on_delete_network(*_):
 
 def on_use_network(value):
     network()["use"] = bool(value)
+    on_change()
+
+
+# ---------------------------------------------------------------
+# Grow near
+# ---------------------------------------------------------------
+
+def redraw_near_menu():
+    """'Anywhere' plus every other network, with this network's choice picked."""
+    for item in cmds.optionMenu(ui["near"], query=True, itemListLong=True) or []:
+        cmds.deleteUI(item)
+    others = [name for name in network_names() if name != network()["name"]]
+    for name in [ANYWHERE] + others:
+        cmds.menuItem(label=name, parent=ui["near"])
+    near = network()["near"]
+    cmds.optionMenu(ui["near"], edit=True, value=near if near in others else ANYWHERE)
+    sync_near()
+
+
+def sync_near():
+    """The Grow near sliders only matter when growing near another network."""
+    on = bool(network()["near"])
+    cmds.floatSliderGrp(ui["near_range"], edit=True, enable=on)
+    cmds.floatSliderGrp(ui["open_share"], edit=True, enable=on)
+    cmds.floatSliderGrp(ui["near_size"], edit=True, enable=on)
+    cmds.floatSliderGrp(ui["near_into"], edit=True, enable=on)
+
+
+def on_pick_near(name):
+    net = network()
+    if name == ANYWHERE:
+        net["near"] = ""
+        set_status("'%s' grows anywhere." % net["name"])
+    else:
+        target = networks[network_names().index(name)]
+        if target["near"] == net["name"]:
+            # Each would have to wait for the other to be placed first
+            set_status("'%s' already grows near '%s', so it can't go the other way too."
+                       % (name, net["name"]))
+            redraw_near_menu()
+            return
+        net["near"] = name
+        set_status("'%s' grows near '%s'." % (net["name"], name))
+    sync_near()
     on_change()
 
 
@@ -1061,6 +1234,22 @@ def show():
         value=1, precision=2, columnWidth3=(110, 60, 150), changeCommand=on_change)
     ui["fit_distance"] = cmds.button(label="Fit to size", width=86, command=on_fit_distance)
     cmds.setParent("..")
+
+    cmds.rowLayout(numberOfColumns=1, columnAttach=(1, "left", 46))
+    ui["near"] = cmds.optionMenu(label="Grow near", width=260, changeCommand=on_pick_near)
+    cmds.setParent("..")
+    ui["near_range"] = cmds.floatSliderGrp(
+        label="Within", field=True, minValue=0.1, maxValue=20, fieldMaxValue=1000,
+        value=2.5, precision=2, columnWidth3=(110, 60, 240), changeCommand=on_change)
+    ui["open_share"] = cmds.floatSliderGrp(
+        label="In the open (%)", field=True, minValue=0, maxValue=100, value=10,
+        precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
+    ui["near_size"] = cmds.floatSliderGrp(
+        label="Size near (%)", field=True, minValue=10, maxValue=300, fieldMaxValue=1000,
+        value=100, precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
+    ui["near_into"] = cmds.floatSliderGrp(
+        label="Get closer (%)", field=True, minValue=0, maxValue=100, value=0,
+        precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
 
     cmds.rowLayout(numberOfColumns=2, columnWidth2=(220, 100))
     ui["seed"] = cmds.intFieldGrp(label="Seed", value1=1, columnWidth2=(110, 80),
