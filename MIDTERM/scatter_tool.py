@@ -2,10 +2,12 @@
 Scatter Tool for Maya
 Fayth Elisa Navarro - SVA Python midterm
 
-Pick one or more objects and a surface, and the tool scatters copies
-of the objects across the surface with random size, spin and tilt.
-Objects with a bigger weight show up more often. Presets and your last
-settings are saved to scatter_tool.json in Maya's user folder.
+Pick a surface and set up one or more networks: a network is a set of
+objects (say five rocks) that share the same settings. The tool scatters
+copies of every network across the surface with random size, spin and
+tilt. Inside a network, objects with a bigger weight show up more often.
+Presets and your last settings are saved to scatter_tool.json in Maya's
+user folder.
 
 Run it from Maya's Script Editor (Python tab): File > Open Script,
 pick this file, then Execute All (Ctrl+Enter).
@@ -16,17 +18,27 @@ import json
 import math
 import os
 import random
+import re
 
 import maya.cmds as cmds
 
 
 WINDOW = "scatterToolWindow"
 PREVIEW_GROUP = "scatter_preview"
-WINDOW_HEIGHT = 650
+WINDOW_HEIGHT = 740
 NO_PRESET = "Pick a preset..."
+
+# How many other spots to try when a copy lands too close to another one
+SPACING_TRIES = 30
 
 # Presets and the last settings live here, e.g. Documents/maya/scatter_tool.json
 SETTINGS_FILE = os.path.join(cmds.internalVar(userAppDir=True), "scatter_tool.json")
+
+# The settings a new network starts with
+DEFAULT_CONTROLS = {"count": 50, "scale_min": 0.8, "scale_max": 1.2,
+                    "spin": 360.0, "tilt": 0.0, "align": True, "instances": False,
+                    "max_slope": 90.0, "min_height": -10000.0,
+                    "spacing": False, "min_distance": 1.0, "seed": 1}
 
 # Presets you get the first time, before you've saved any of your own
 STARTER_PRESETS = {
@@ -41,13 +53,20 @@ STARTER_PRESETS = {
 # Names of the UI controls, filled in by show()
 ui = {}
 
-# The objects to scatter, as [name, weight] pairs, in list order
-objects = []
+# The networks, in menu order. Each one is a dict:
+#   name     - shown in the Network menu
+#   use      - False leaves it out of Preview and Apply
+#   objects  - [name, weight] pairs
+#   controls - its slider and checkbox values (same keys as DEFAULT_CONTROLS)
+networks = []
+
+# Which network the window is showing
+current = {"index": 0}
 
 # Name of the last group made with Apply, so Clear can remove it
 last_scatter = {"group": None}
 
-# The controls a preset saves: name -> (Maya command, flag holding the value)
+# The controls a network or preset saves: name -> (Maya command, flag holding the value)
 CONTROLS = {
     "count": (cmds.intSliderGrp, "value"),
     "scale_min": (cmds.floatSliderGrp, "value"),
@@ -58,6 +77,8 @@ CONTROLS = {
     "instances": (cmds.checkBox, "value"),
     "max_slope": (cmds.floatSliderGrp, "value"),
     "min_height": (cmds.floatFieldGrp, "value1"),
+    "spacing": (cmds.checkBox, "value"),
+    "min_distance": (cmds.floatSliderGrp, "value"),
     "seed": (cmds.intFieldGrp, "value1"),
 }
 
@@ -203,11 +224,55 @@ def make_instance(obj, group):
     return holder
 
 
-def build_scatter(settings, group_name, use_instances):
+# ---------------------------------------------------------------
+# Keeping copies apart
+# ---------------------------------------------------------------
+# Every copy placed so far goes in a grid of square cells on the ground
+# (x and z), so checking a new spot only looks at the 9 cells around it
+# instead of every copy. Each copy keeps a circle of ground clear around it:
+# half its network's min distance. Two copies are too close when their
+# circles overlap.
+
+def spacing_grid(cell_size):
+    # A cell must be at least as wide as the biggest gap, so a too-close
+    # copy is always in one of the 9 cells around the new spot.
+    return {"cell": max(cell_size, 0.001), "cells": {}}
+
+
+def grid_cell(grid, point):
+    return (int(math.floor(point[0] / grid["cell"])),
+            int(math.floor(point[2] / grid["cell"])))
+
+
+def too_close(grid, point, radius):
+    """True if a circle of 'radius' at point overlaps a copy already placed."""
+    cx, cz = grid_cell(grid, point)
+    for dx in (-1, 0, 1):
+        for dz in (-1, 0, 1):
+            for x, z, other in grid["cells"].get((cx + dx, cz + dz), ()):
+                gap = radius + other
+                if (point[0] - x) ** 2 + (point[2] - z) ** 2 < gap * gap:
+                    return True
+    return False
+
+
+def mark_placed(grid, point, radius):
+    grid["cells"].setdefault(grid_cell(grid, point), []).append(
+        (point[0], point[2], radius))
+
+
+def lands(position, normal, settings):
+    """True if the landing rules (max slope, min height) allow this spot."""
+    slope = math.degrees(math.acos(max(-1.0, min(1.0, normal[1]))))
+    return slope <= settings["max_slope"] and position[1] >= settings["min_height"]
+
+
+def build_scatter(settings, group, use_instances, grid):
     """
-    Make the copies and put them in one new group. Returns the group,
-    how many spots were skipped by the slope and height rules, and how
-    many copies of each object were made.
+    Make one network's copies inside 'group'. 'grid' holds every copy
+    placed so far, from any network. Returns how many spots were skipped
+    by the slope and height rules, how many copies didn't fit because of
+    the min distance, and how many copies of each object were made.
     The same settings and seed always give the same layout.
     """
     names = [name for name, _ in settings["objects"]]
@@ -223,10 +288,14 @@ def build_scatter(settings, group_name, use_instances):
     # A second random stream picks which object goes on each spot, so
     # changing the weights swaps objects but doesn't move any spots.
     object_rng = random.Random("objects %d" % settings["seed"])
+    # A third stream gives the extra spots tried when a copy is too close,
+    # so with Keep copies apart off, the layout is the same as without it.
+    retry_rng = random.Random("spacing %d" % settings["seed"])
     world_up = (0.0, 1.0, 0.0)
+    radius = settings["min_distance"] / 2.0 if settings["spacing"] else 0.0
 
-    group = cmds.group(empty=True, name=group_name)
     skipped = 0
+    crowded = 0
     counts = dict((name, 0) for name in names)
     for _ in range(settings["count"]):
         # Always draw every random number, in the same order, so changing
@@ -239,11 +308,18 @@ def build_scatter(settings, group_name, use_instances):
         pick = object_rng.random() * total
         obj = names[min(bisect.bisect_right(running_weight, pick), len(names) - 1)]
 
-        # Landing rules
-        slope = math.degrees(math.acos(max(-1.0, min(1.0, normal[1]))))
-        if slope > settings["max_slope"] or position[1] < settings["min_height"]:
+        if not lands(position, normal, settings):
             skipped += 1
             continue
+        if settings["spacing"] and too_close(grid, position, radius):
+            for _ in range(SPACING_TRIES):
+                position, normal = random_spot(triangles, running_area, retry_rng)
+                if lands(position, normal, settings) and not too_close(grid, position, radius):
+                    break
+            else:
+                crowded += 1
+                continue
+        mark_placed(grid, position, radius)
 
         up = normal if settings["align"] else world_up
         up = tilt(up, tilt_angle, tilt_direction)
@@ -258,7 +334,44 @@ def build_scatter(settings, group_name, use_instances):
         cmds.xform(copy, worldSpace=True,
                    matrix=placement_matrix(position, up, spin, scale))
         counts[obj] += 1
-    return group, skipped, counts
+    return skipped, crowded, counts
+
+
+def group_name_for(network_name):
+    """'Small rocks' -> 'Small_rocks', since Maya names can't have spaces."""
+    name = re.sub(r"[^A-Za-z0-9_]", "_", network_name)
+    return name if re.match(r"[A-Za-z_]", name) else "n_" + name
+
+
+def build_all(all_settings, group_name, preview):
+    """
+    Scatter every network into one new group, each network in its own
+    group inside it. Returns the group, the total spots skipped by the
+    landing rules, the total copies that didn't fit, and
+    (network name, counts) for each network.
+    """
+    def gap(settings):
+        return settings["min_distance"] if settings["spacing"] else 0.0
+
+    top = cmds.group(empty=True, name=group_name)
+    groups = [cmds.group(empty=True, parent=top, name=group_name_for(settings["name"]))
+              for settings in all_settings]
+    grid = spacing_grid(max(gap(settings) for settings in all_settings))
+    skipped = 0
+    crowded = 0
+    counts_by_network = {}
+    # The networks with the most space around their copies go first, so
+    # big things like trees get their room before small rocks fill in.
+    order = sorted(range(len(all_settings)), key=lambda i: -gap(all_settings[i]))
+    for i in order:
+        settings = all_settings[i]
+        net_skipped, net_crowded, counts = build_scatter(
+            settings, groups[i], use_instances=preview or settings["instances"], grid=grid)
+        skipped += net_skipped
+        crowded += net_crowded
+        counts_by_network[i] = counts
+    made = [(settings["name"], counts_by_network[i]) for i, settings in enumerate(all_settings)]
+    return top, skipped, crowded, made
 
 
 # ---------------------------------------------------------------
@@ -285,22 +398,22 @@ def set_controls(values):
                 command(ui[key], edit=True, **{flag: values[key]})
             except (RuntimeError, TypeError):
                 print("Scatter: couldn't set %s to %r" % (key, values[key]))
+    sync_spacing()
+
+
+def sync_spacing(*_):
+    """Min distance can only be changed while Keep copies apart is ticked."""
+    on = cmds.checkBox(ui["spacing"], query=True, value=True)
+    cmds.floatSliderGrp(ui["min_distance"], edit=True, enable=on)
+    cmds.button(ui["fit_distance"], edit=True, enable=on)
 
 
 def read_settings():
-    """Read the window. Returns the settings, or None and shows why not."""
+    """
+    Read the window. Returns a list with the settings of each network
+    that's switched on, or None and shows why not.
+    """
     surface = cmds.textFieldButtonGrp(ui["surface"], query=True, text=True).strip()
-
-    if not objects:
-        set_status("Add an object to scatter first (select it, then 'Add selected').")
-        return None
-    for name, _ in objects:
-        if not cmds.objExists(name):
-            set_status("Can't find an object called '%s'. Remove it from the list." % name)
-            return None
-    if sum(weight for _, weight in objects) <= 0:
-        set_status("Every weight is 0. Give at least one object a weight above 0.")
-        return None
     if not surface:
         set_status("Pick a surface first (select it, then 'Use selected').")
         return None
@@ -310,24 +423,52 @@ def read_settings():
     if not cmds.listRelatives(surface, shapes=True, type="mesh", noIntermediate=True):
         set_status("'%s' isn't a polygon mesh, so it can't be a surface." % surface)
         return None
-    if surface in [name for name, _ in objects]:
-        set_status("'%s' is the surface and also in the object list. Remove it from the list."
-                   % surface)
+
+    store_controls()
+    used = [net for net in networks if net["use"]]
+    if not used:
+        set_status("Every network is switched off. Tick 'Include in scatter' on at least one.")
         return None
 
-    settings = read_controls()
-    scale_a, scale_b = settings["scale_min"], settings["scale_max"]
-    settings["scale_min"] = min(scale_a, scale_b)
-    settings["scale_max"] = max(scale_a, scale_b)
-    settings["objects"] = [(name, weight) for name, weight in objects if weight > 0]
-    settings["surface"] = surface
-    return settings
+    all_settings = []
+    for net in used:
+        # Say which network the problem is in, once there's more than one
+        where = "In '%s': " % net["name"] if len(networks) > 1 else ""
+        objects = net["objects"]
+        if not objects:
+            set_status(where + "Add an object to scatter first (select it, then 'Add selected').")
+            return None
+        for name, _ in objects:
+            if not cmds.objExists(name):
+                set_status(where + "Can't find an object called '%s'. Remove it from the list."
+                           % name)
+                return None
+        if sum(weight for _, weight in objects) <= 0:
+            set_status(where + "Every weight is 0. Give at least one object a weight above 0.")
+            return None
+        if surface in [name for name, _ in objects]:
+            set_status(where + "'%s' is the surface and also in the object list. "
+                       "Remove it from the list." % surface)
+            return None
+
+        settings = dict(DEFAULT_CONTROLS, **net["controls"])
+        scale_a, scale_b = settings["scale_min"], settings["scale_max"]
+        settings["scale_min"] = min(scale_a, scale_b)
+        settings["scale_max"] = max(scale_a, scale_b)
+        settings["objects"] = [(name, weight) for name, weight in objects if weight > 0]
+        settings["surface"] = surface
+        settings["name"] = net["name"]
+        all_settings.append(settings)
+    return all_settings
 
 
-def skipped_note(skipped):
+def skipped_note(skipped, crowded):
+    notes = []
     if skipped:
-        return " (%d spots skipped by the slope/height rules)" % skipped
-    return ""
+        notes.append("%d spots skipped by the slope/height rules" % skipped)
+    if crowded:
+        notes.append("%d copies didn't fit with the min distance" % crowded)
+    return " (%s)" % "; ".join(notes) if notes else ""
 
 
 def counts_note(counts):
@@ -336,6 +477,15 @@ def counts_note(counts):
     if len(counts) > 1:
         note += " (%s)" % ", ".join("%s %d" % (name, n) for name, n in counts.items())
     return note
+
+
+def made_note(made):
+    """counts_note for one network, '80 copies (Small rocks 60, Large trees 20)' for more."""
+    if len(made) == 1:
+        return counts_note(made[0][1])
+    total = sum(sum(counts.values()) for _, counts in made)
+    return "%d copies (%s)" % (total, ", ".join("%s %d" % (name, sum(counts.values()))
+                                                 for name, counts in made))
 
 
 # ---------------------------------------------------------------
@@ -374,29 +524,52 @@ def save_saved(data):
 
 def remember_settings(*_):
     """Save everything in the window, so it comes back next time."""
+    store_controls()
     data = load_saved()
-    data["last"] = read_controls()
-    data["last"]["objects"] = objects
-    data["last"]["surface"] = cmds.textFieldButtonGrp(ui["surface"], query=True,
-                                                      text=True).strip()
+    data["last"] = {
+        "surface": cmds.textFieldButtonGrp(ui["surface"], query=True, text=True).strip(),
+        "networks": networks,
+        "current": current["index"],
+    }
     save_saved(data)
 
 
+def saved_objects(saved):
+    """The [name, weight] pairs from the file that are in this scene."""
+    return [[name, float(weight)] for name, weight in saved.get("objects", [])
+            if cmds.objExists(name)]
+
+
 def restore_settings():
-    """Fill the window with the last settings. Returns True if there were any."""
+    """Load the last networks and surface. Returns True if there were any."""
     last = load_saved()["last"]
-    set_controls(last)
     surface = last.get("surface", "")
     if surface and cmds.objExists(surface):
         cmds.textFieldButtonGrp(ui["surface"], edit=True, text=surface)
-    # Only bring back objects that are in this scene.
-    del objects[:]
+
+    del networks[:]
+    current["index"] = 0
     try:
-        for name, weight in last.get("objects", []):
-            if cmds.objExists(name):
-                objects.append([name, float(weight)])
-    except (TypeError, ValueError):
-        pass
+        if "networks" in last:
+            for saved in last["networks"]:
+                net = make_network(str(saved["name"]))
+                net["use"] = bool(saved.get("use", True))
+                net["controls"].update(saved.get("controls", {}))
+                net["objects"] = saved_objects(saved)
+                networks.append(net)
+            current["index"] = min(max(int(last.get("current", 0)), 0), len(networks) - 1)
+        elif last:
+            # Saved before networks existed: those settings become the first network
+            net = make_network("Network 1")
+            net["controls"].update((key, last[key]) for key in DEFAULT_CONTROLS if key in last)
+            net["objects"] = saved_objects(last)
+            networks.append(net)
+    except (TypeError, ValueError, KeyError, AttributeError):
+        print("Scatter: the saved networks didn't make sense, starting fresh.")
+        del networks[:]
+        current["index"] = 0
+    if not networks:
+        networks.append(make_network("Network 1"))
     return bool(last)
 
 
@@ -422,8 +595,8 @@ def restore_selection(selection):
 
 
 def on_preview(*_):
-    settings = read_settings()
-    if not settings:
+    all_settings = read_settings()
+    if not all_settings:
         return
     selection = cmds.ls(selection=True)
     # The preview is temporary, so keep it out of the undo list.
@@ -431,13 +604,12 @@ def on_preview(*_):
     try:
         if cmds.objExists(PREVIEW_GROUP):
             cmds.delete(PREVIEW_GROUP)
-        group, skipped, counts = build_scatter(settings, PREVIEW_GROUP,
-                                               use_instances=True)
+        group, skipped, crowded, made = build_all(all_settings, PREVIEW_GROUP, preview=True)
         restore_selection(selection)
     finally:
         cmds.undoInfo(stateWithoutFlush=True)
     set_status("Preview: %s%s. Press Apply to keep it."
-               % (counts_note(counts), skipped_note(skipped)))
+               % (made_note(made), skipped_note(skipped, crowded)))
 
 
 def refresh_preview(*_):
@@ -453,22 +625,21 @@ def on_change(*_):
 
 
 def on_apply(*_):
-    settings = read_settings()
-    if not settings:
+    all_settings = read_settings()
+    if not all_settings:
         return
     delete_preview()
     selection = cmds.ls(selection=True)
     # One undo chunk, so one Ctrl+Z removes the whole scatter.
     cmds.undoInfo(openChunk=True, chunkName="Scatter")
     try:
-        group, skipped, counts = build_scatter(settings, "scatter_grp#",
-                                               use_instances=settings["instances"])
+        group, skipped, crowded, made = build_all(all_settings, "scatter_grp#", preview=False)
         restore_selection(selection)
     finally:
         cmds.undoInfo(closeChunk=True)
     last_scatter["group"] = group
     set_status("Made %s in '%s'%s. Ctrl+Z removes them all."
-               % (counts_note(counts), group, skipped_note(skipped)))
+               % (made_note(made), group, skipped_note(skipped, crowded)))
 
 
 def on_clear(*_):
@@ -502,8 +673,155 @@ def on_new_seed(*_):
     on_change()
 
 
+def on_spacing(*_):
+    sync_spacing()
+    on_change()
+
+
+def on_fit_distance(*_):
+    """Set Min distance to the widest object at Scale max, so copies don't touch."""
+    names = [name for name, _ in network()["objects"] if cmds.objExists(name)]
+    if not names:
+        set_status("Add objects to this network first, then Fit to size.")
+        return
+    widest, widest_name = 0.0, names[0]
+    for name in names:
+        box = cmds.exactWorldBoundingBox(name)  # xmin ymin zmin xmax ymax zmax
+        width = max(box[3] - box[0], box[5] - box[2])
+        if width > widest:
+            widest, widest_name = width, name
+    scale_max = max(cmds.floatSliderGrp(ui["scale_min"], query=True, value=True),
+                    cmds.floatSliderGrp(ui["scale_max"], query=True, value=True))
+    distance = round(widest * scale_max, 2)
+    cmds.floatSliderGrp(ui["min_distance"], edit=True, value=distance)
+    set_status("Min distance set to %g: '%s' is %.2f wide, times Scale max %g."
+               % (distance, widest_name, widest, scale_max))
+    on_change()
+
+
 # ---------------------------------------------------------------
-# The object list and weights
+# Networks
+# ---------------------------------------------------------------
+
+def make_network(name, seed=1):
+    controls = dict(DEFAULT_CONTROLS)
+    controls["seed"] = seed
+    return {"name": name, "use": True, "objects": [], "controls": controls}
+
+
+def network():
+    """The network the window is showing."""
+    return networks[current["index"]]
+
+
+def network_names():
+    return [net["name"] for net in networks]
+
+
+def store_controls():
+    """Copy the sliders into the network the window is showing."""
+    if networks and cmds.intSliderGrp(ui.get("count", ""), exists=True):
+        network()["controls"] = read_controls()
+
+
+def show_network():
+    """Fill the window with the current network's settings and objects."""
+    net = network()
+    set_controls(dict(DEFAULT_CONTROLS, **net["controls"]))
+    cmds.checkBox(ui["use"], edit=True, value=net["use"])
+    redraw_object_list()
+
+
+def redraw_network_menu():
+    for item in cmds.optionMenu(ui["network"], query=True, itemListLong=True) or []:
+        cmds.deleteUI(item)
+    for name in network_names():
+        cmds.menuItem(label=name, parent=ui["network"])
+    cmds.optionMenu(ui["network"], edit=True, select=current["index"] + 1)
+
+
+def ask_network_name(title, text):
+    """Ask for a network name. Returns it, or None if cancelled or taken."""
+    answer = cmds.promptDialog(
+        title=title, message="Network name:", text=text,
+        button=["OK", "Cancel"], defaultButton="OK",
+        cancelButton="Cancel", dismissString="Cancel")
+    if answer != "OK":
+        return None
+    name = cmds.promptDialog(query=True, text=True).strip()
+    if not name:
+        set_status("The network needs a name.")
+        return None
+    if name in network_names() and name != network()["name"]:
+        set_status("There's already a network called '%s'." % name)
+        return None
+    return name
+
+
+def on_pick_network(name):
+    store_controls()
+    current["index"] = network_names().index(name)
+    show_network()
+    set_status("Showing the network '%s'." % name)
+    remember_settings()
+
+
+def on_new_network(*_):
+    store_controls()
+    number = len(networks) + 1
+    while "Network %d" % number in network_names():
+        number += 1
+    name = ask_network_name("New network", "Network %d" % number)
+    if name is None or name in network_names():
+        if name is not None:
+            set_status("There's already a network called '%s'." % name)
+        return
+    # A new seed, so this network doesn't land on the same spots as the others
+    networks.append(make_network(name, seed=random.randint(1, 99999)))
+    current["index"] = len(networks) - 1
+    redraw_network_menu()
+    show_network()
+    set_status("Made the network '%s'. Add its objects, then set its sliders." % name)
+    on_change()
+
+
+def on_rename_network(*_):
+    old = network()["name"]
+    name = ask_network_name("Rename network", old)
+    if name is None or name == old:
+        return
+    network()["name"] = name
+    redraw_network_menu()
+    set_status("Renamed '%s' to '%s'." % (old, name))
+    on_change()
+
+
+def on_delete_network(*_):
+    if len(networks) == 1:
+        set_status("You need at least one network. Rename this one instead.")
+        return
+    name = network()["name"]
+    answer = cmds.confirmDialog(
+        title="Delete network", message="Delete the network '%s'?" % name,
+        button=["Delete", "Cancel"], defaultButton="Cancel",
+        cancelButton="Cancel", dismissString="Cancel")
+    if answer != "Delete":
+        return
+    networks.pop(current["index"])
+    current["index"] = min(current["index"], len(networks) - 1)
+    redraw_network_menu()
+    show_network()
+    set_status("Deleted the network '%s'." % name)
+    on_change()
+
+
+def on_use_network(value):
+    network()["use"] = bool(value)
+    on_change()
+
+
+# ---------------------------------------------------------------
+# The object list and weights (for the network the window is showing)
 # ---------------------------------------------------------------
 
 def selected_row():
@@ -514,6 +832,7 @@ def selected_row():
 
 def redraw_object_list(select=None):
     """Show each object with its weight and its share of the copies."""
+    objects = network()["objects"]
     total = sum(weight for _, weight in objects)
     cmds.textScrollList(ui["objects"], edit=True, removeAll=True)
     for name, weight in objects:
@@ -531,7 +850,8 @@ def show_row_weight(*_):
     if row is None:
         cmds.floatFieldGrp(ui["weight"], edit=True, enable=False, value1=1)
     else:
-        cmds.floatFieldGrp(ui["weight"], edit=True, enable=True, value1=objects[row][1])
+        cmds.floatFieldGrp(ui["weight"], edit=True, enable=True,
+                           value1=network()["objects"][row][1])
 
 
 def on_add_objects(*_):
@@ -540,6 +860,7 @@ def on_add_objects(*_):
         set_status("Nothing is selected. Click one or more objects in the viewport first.")
         return
     surface = cmds.textFieldButtonGrp(ui["surface"], query=True, text=True).strip()
+    objects = network()["objects"]
     in_list = [name for name, _ in objects]
     added = []
     for name in selection:
@@ -550,7 +871,8 @@ def on_add_objects(*_):
         set_status("Those are already in the list (or are the surface).")
         return
     redraw_object_list(select=len(objects) - 1)
-    set_status("Added %s. Click a row to change its weight." % ", ".join(added))
+    set_status("Added %s to '%s'. Click a row to change its weight."
+               % (", ".join(added), network()["name"]))
     on_change()
 
 
@@ -559,6 +881,7 @@ def on_remove_object(*_):
     if row is None:
         set_status("Click an object in the list first, then Remove.")
         return
+    objects = network()["objects"]
     name = objects.pop(row)[0]
     redraw_object_list(select=min(row, len(objects) - 1))
     set_status("Removed '%s' from the list." % name)
@@ -570,7 +893,7 @@ def on_weight_change(*_):
     if row is None:
         return
     weight = max(0.0, cmds.floatFieldGrp(ui["weight"], query=True, value1=True))
-    objects[row][1] = weight
+    network()["objects"][row][1] = weight
     redraw_object_list(select=row)
     on_change()
 
@@ -598,15 +921,15 @@ def on_pick_preset(name):
         redraw_preset_menu()
         return
     set_controls(preset)
-    set_status("Loaded the preset '%s'." % name)
+    set_status("Loaded the preset '%s' into '%s'." % (name, network()["name"]))
     on_change()
 
 
 def on_save_preset(*_):
-    current = cmds.optionMenu(ui["preset"], query=True, value=True)
+    current_preset = cmds.optionMenu(ui["preset"], query=True, value=True)
     answer = cmds.promptDialog(
         title="Save preset", message="Name for this preset:",
-        text="" if current == NO_PRESET else current,
+        text="" if current_preset == NO_PRESET else current_preset,
         button=["Save", "Cancel"], defaultButton="Save",
         cancelButton="Cancel", dismissString="Cancel")
     if answer != "Save":
@@ -654,9 +977,9 @@ def on_delete_preset(*_):
 def show():
     if cmds.window(WINDOW, exists=True):
         cmds.deleteUI(WINDOW)
-    # Maya reopens a window at its last size, which may be from before the
-    # object list was added. If that's too short, forget it. The saved size
-    # is in screen pixels, so it's doubled on a screen scaled to 200%.
+    # Maya reopens a window at its last size, which may be from an older,
+    # shorter version of this window. If that's too short, forget it. The
+    # saved size is in screen pixels, so it's doubled on a screen scaled to 200%.
     ui_scale = cmds.mayaDpiSetting(query=True, realScaleValue=True)
     if (cmds.windowPref(WINDOW, exists=True)
             and cmds.windowPref(WINDOW, query=True, height=True) < WINDOW_HEIGHT * ui_scale):
@@ -665,7 +988,23 @@ def show():
     cmds.columnLayout(adjustableColumn=True, rowSpacing=6, columnAttach=("both", 8))
 
     cmds.separator(height=6, style="none")
-    cmds.text(label="Objects to scatter", align="left", font="boldLabelFont")
+    ui["surface"] = cmds.textFieldButtonGrp(
+        label="Surface", buttonLabel="Use selected",
+        columnWidth3=(60, 260, 90), changeCommand=on_change,
+        buttonCommand=use_selected_surface)
+
+    cmds.separator(height=10)
+    cmds.rowLayout(numberOfColumns=4, columnWidth4=(200, 70, 70, 70))
+    ui["network"] = cmds.optionMenu(label="Network", width=192,
+                                    changeCommand=on_pick_network)
+    cmds.button(label="New", width=64, command=on_new_network)
+    cmds.button(label="Rename", width=64, command=on_rename_network)
+    cmds.button(label="Delete", width=64, command=on_delete_network)
+    cmds.setParent("..")
+    ui["use"] = cmds.checkBox(label="Include in scatter (Preview and Apply)", value=True,
+                              changeCommand=on_use_network)
+
+    cmds.text(label="Objects in this network", align="left", font="boldLabelFont")
     ui["objects"] = cmds.textScrollList(numberOfRows=4, allowMultiSelection=False,
                                         selectCommand=show_row_weight)
     cmds.rowLayout(numberOfColumns=3, columnWidth3=(110, 110, 200))
@@ -675,12 +1014,7 @@ def show():
                                       columnWidth2=(50, 70), enable=False,
                                       changeCommand=on_weight_change)
     cmds.setParent("..")
-    ui["surface"] = cmds.textFieldButtonGrp(
-        label="Surface", buttonLabel="Use selected",
-        columnWidth3=(110, 210, 90), changeCommand=on_change,
-        buttonCommand=use_selected_surface)
 
-    cmds.separator(height=10)
     cmds.rowLayout(numberOfColumns=3, columnWidth3=(220, 100, 100))
     ui["preset"] = cmds.optionMenu(label="Preset", width=210,
                                    changeCommand=on_pick_preset)
@@ -712,7 +1046,6 @@ def show():
                                     changeCommand=remember_settings)
     cmds.setParent("..")
 
-    cmds.separator(height=10)
     cmds.text(label="Landing rules", align="left", font="boldLabelFont")
     ui["max_slope"] = cmds.floatSliderGrp(
         label="Max slope", field=True, minValue=0, maxValue=90, value=90,
@@ -720,8 +1053,15 @@ def show():
     ui["min_height"] = cmds.floatFieldGrp(
         label="Min height", value1=-10000, precision=2,
         columnWidth2=(110, 80), changeCommand=on_change)
+    ui["spacing"] = cmds.checkBox(label="Keep copies apart (no overlapping)", value=False,
+                                  changeCommand=on_spacing)
+    cmds.rowLayout(numberOfColumns=2, columnWidth2=(330, 90))
+    ui["min_distance"] = cmds.floatSliderGrp(
+        label="Min distance", field=True, minValue=0, maxValue=10, fieldMaxValue=1000,
+        value=1, precision=2, columnWidth3=(110, 60, 150), changeCommand=on_change)
+    ui["fit_distance"] = cmds.button(label="Fit to size", width=86, command=on_fit_distance)
+    cmds.setParent("..")
 
-    cmds.separator(height=10)
     cmds.rowLayout(numberOfColumns=2, columnWidth2=(220, 100))
     ui["seed"] = cmds.intFieldGrp(label="Seed", value1=1, columnWidth2=(110, 80),
                                   changeCommand=on_change)
@@ -741,12 +1081,13 @@ def show():
     cmds.showWindow(WINDOW)
 
     had_settings = restore_settings()
-    redraw_object_list()
+    redraw_network_menu()
+    show_network()
     redraw_preset_menu()
     if had_settings:
         set_status("Your settings from last time are back.")
     else:
-        set_status("Add objects to scatter and pick a surface to start.")
+        set_status("Pick a surface, then add objects to the network to start.")
 
 
 if __name__ == "__main__":

@@ -3,7 +3,9 @@
 A Maya window that takes one or more objects (rocks, trees, props) and
 scatters many copies of them across a surface you pick, with random size, spin
 and tilt, so you can fill a scene in seconds instead of placing props by hand.
-Give each object a weight to say how often it shows up.
+Group objects into **networks** that share settings, e.g. five small rocks
+in one network and three kinds of large trees in another, and scatter them
+all at once. Give each object a weight to say how often it shows up.
 
 ![The Scatter Tool window](window.png)
 
@@ -45,10 +47,10 @@ Don't press Ctrl+S in the test scene, or you'll overwrite the repo's copy.
 
 ## How to use it
 
-1. Click the `rock` in the viewport, then click **Add selected** under
-   **Objects to scatter**. You can select several objects and add them at
-   once.
-2. Click the `ground`, then click **Use selected** next to **Surface**.
+1. Click the `ground`, then click **Use selected** next to **Surface**.
+2. Click the `rock` in the viewport, then click **Add selected** under
+   **Objects in this network**. You can select several objects and add them
+   at once.
 3. Click **Preview**. Copies appear on the ground in a group called
    `scatter_preview`.
 4. Move any slider or change any box. When you let go, the preview redraws.
@@ -60,6 +62,53 @@ Don't press Ctrl+S in the test scene, or you'll overwrite the repo's copy.
    scatter you applied.
 
 The line at the bottom of the window says what happened or what's wrong.
+
+### Networks
+
+A network is a set of objects that share the same settings. Say you want lots
+of small rocks and a few big trees: put five rocks in a "Small rocks" network
+(count 120, scale 0.4 to 1.0) and three trees in a "Large trees" network
+(count 20, scale 1.5 to 2.5, max slope 25, Align to surface off so they grow
+straight up).
+
+- The window starts with one network, "Network 1". **Rename** gives it a
+  better name.
+- **New** makes another network. It starts empty, with its own seed, so it
+  doesn't land on the same spots as the others.
+- The **Network** menu picks which network the window is showing. The object
+  list and everything below it (presets, sliders, landing rules, seed) belong
+  to that network.
+- **Delete** removes the network showing in the menu. There's always at least
+  one.
+- **Include in scatter** switches a network on or off without deleting it.
+
+The **Surface** is shared by every network. **Preview** and **Apply** scatter
+every network that's switched on, all at once. Apply makes one group with a
+group for each network inside it (`scatter_grp1|Small_rocks`,
+`scatter_grp1|Large_trees`), and one Ctrl+Z still removes everything.
+Changing one network's settings doesn't move the copies of any other network,
+unless Keep copies apart is on (see below).
+
+### Keeping copies apart
+
+By default copies can overlap. To stop that, tick **Keep copies apart** under
+the landing rules. Each network has its own setting.
+
+- **Min distance** is how far apart this network's copies stay, measured
+  center to center along the ground.
+- **Fit to size** sets Min distance to the width of the widest object in the
+  network at Scale max, so even the biggest copies don't touch.
+- A network with Keep copies apart on also stays clear of other networks'
+  copies. The gap is half of each network's Min distance added together. With
+  trees at 3 and rocks at 0.6, rocks stay 1.8 from a tree's center.
+- Untick it on one network to let that network overlap freely, e.g. let
+  rocks sit under trees, while the trees still keep apart from each other.
+- Networks with a bigger Min distance are placed first, so trees get their
+  space before the rocks fill in around them.
+
+When a spot is too close, the tool tries up to 30 other spots. If none of them
+fit, that copy is left out, and the status line says how many didn't fit.
+Lower the Count or the Min distance if that happens a lot.
 
 ### Several objects with weights
 
@@ -74,8 +123,8 @@ themselves stay where they were.
 
 ### Presets
 
-The **Preset** menu loads saved slider settings. It starts with two:
-"Sparse rocks" and "Dense grass".
+The **Preset** menu loads saved slider settings into the network that's
+showing. It starts with two: "Sparse rocks" and "Dense grass".
 
 - **Save preset** asks for a name and saves the sliders, checkboxes and seed
   under it. Use an existing name to replace that preset.
@@ -87,8 +136,9 @@ to scene.
 ### Remembered settings
 
 The window saves your settings every time you change something. Next time you
-open it, even after restarting Maya, everything comes back. The objects and
-surface come back too, if they're in the scene you have open.
+open it, even after restarting Maya, all your networks and their settings come
+back. The objects and surface come back too, if they're in the scene you have
+open.
 
 Presets and remembered settings are saved in `scatter_tool.json` in your Maya
 user folder (on Windows, `Documents/maya/scatter_tool.json`). Delete that file
@@ -98,9 +148,11 @@ to start fresh.
 
 | Control | What it does |
 | --- | --- |
-| Objects to scatter | The objects to copy, each with a weight for how often it shows up |
-| Surface | The mesh the copies land on |
-| Preset | Load, save or delete saved settings |
+| Surface | The mesh the copies land on, shared by every network |
+| Network | Pick, make, rename or delete a network |
+| Include in scatter | Whether this network is part of Preview and Apply |
+| Objects in this network | The objects to copy, each with a weight for how often it shows up |
+| Preset | Load, save or delete saved settings for this network |
 | Count | How many copies (1 to 500) |
 | Scale min / Scale max | Each copy gets a random size between these |
 | Random spin | Random turn around the copy's up direction, 0 to 360 degrees |
@@ -109,6 +161,9 @@ to start fresh.
 | Use instances | Copies share one mesh, which keeps heavy scenes light (only used by Apply; the preview always uses instances) |
 | Max slope | Nothing lands on ground steeper than this angle. 90 means no limit |
 | Min height | Nothing lands below this height, e.g. to keep a water's edge clear |
+| Keep copies apart | On: copies don't land closer than Min distance. Off: copies can overlap |
+| Min distance | How far apart this network's copies stay, center to center, along the ground |
+| Fit to size | Sets Min distance to the widest object at Scale max, so copies don't touch |
 | Seed | Picks the layout. Same seed + same settings = same layout |
 
 ### Using your own objects
@@ -120,6 +175,9 @@ to start fresh.
 ## What works now
 
 - The window, with every control from the pitch.
+- Networks: sets of objects with their own settings, all scattered at once,
+  each in its own group. Objects can be groups too (a tree made of a trunk
+  and a top).
 - Several objects with weights (from the pitch feedback). The status line
   says how many of each were made, e.g. `60 copies (rock 47, bush 13)`.
 - Presets saved to a file, with two starters.
@@ -133,6 +191,8 @@ to start fresh.
 - Clear.
 - Use instances.
 - Landing rules: max slope and min height (from the pitch feedback).
+- Keep copies apart, with a min distance per network, a Fit to size button,
+  and spacing between networks too (from the pitch feedback).
 - Messages instead of errors when nothing is picked, an object can't be
   found, the surface isn't a mesh, the surface is also in the object list, or
   every weight is 0.
@@ -146,7 +206,9 @@ so old seeds still give the same result.
 
 ## What doesn't work yet
 
-- **Copies can overlap.** There's no minimum distance between them yet.
+- **Min distance is measured from each copy's center**, not its real shape.
+  Fit to size uses the widest object, so long thin objects (logs) get more
+  room than they need in one direction.
 - Preview at 500 copies on a very dense mesh takes a few seconds, so it only
   redraws when you let go of a slider, not while you drag.
 - Copies land on whichever side of the mesh they're on. Skip a surface
@@ -160,8 +222,9 @@ From the pitch, with the teacher's feedback:
   and Clear. Done, plus the slope and height landing rules.
 - **By Oct 26:** presets saved to a file, remembered settings, and scattering
   several objects with weights. Done.
-- **Stretch goals:** minimum distance between copies, and a painted density
-  mask.
+- **Extra, added Oct 20:** networks, and minimum distance between copies (a
+  stretch goal from the feedback). Done.
+- **Stretch goal left:** a painted density mask.
 
 ## Peer run
 
