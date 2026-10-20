@@ -353,4 +353,11 @@ it.
 
 ## Recording
 
-(https://youtu.be/2UrF8U327YE)
+**Maya Scatter Tool Pt.2** (the finished tool, 1:13): https://youtu.be/w02uNIiQbCs
+
+It shows two networks, small rocks and large trees: weights, the placement
+sliders and New seed, Follow slope and Sink into slope, No overlapping with
+Fit to size, the rocks growing near the trees with Size near and Get closer,
+and Apply.
+
+Earlier version (Oct 18, one object at a time): https://youtu.be/2UrF8U327YE
