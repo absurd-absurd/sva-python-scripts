@@ -70,8 +70,27 @@ The line at the bottom of the window says what happened or what's wrong.
 A network is a set of objects that share the same settings. Say you want lots
 of small rocks and a few big trees: put five rocks in a "Small rocks" network
 (count 120, scale 0.4 to 1.0) and three trees in a "Large trees" network
-(count 20, scale 1.5 to 2.5, max slope 25, Align to surface off so they grow
-straight up).
+(count 20, scale 1.5 to 2.5, max slope 25, Follow slope 0% so they grow
+straight up, Sink into slope 100% so their trunks sit in the hill).
+
+### Leaning and sinking on slopes
+
+Real things don't all sit on a hill the same way. Rocks lie along the slope,
+bushes lean a little downhill, and trees grow straight up whatever the ground
+does.
+
+- **Follow slope (%)**: 100 leans copies fully with the ground, 0 stands
+  them straight up, and anything between leans them partway. Try rocks at
+  100, bushes at about 30, trees at 0.
+- **Sink into slope (%)**: a copy standing at an angle to the ground has one
+  edge of its base floating above it on the downhill side. This pushes each
+  copy down along its own up direction until that edge touches the ground at
+  100. 0 leaves copies where they are. The tool measures each object's base
+  from the bottom quarter of its height, so a tree's base is its trunk, not
+  its canopy.
+
+Settings saved before these existed had an on/off **Align to surface**; on
+becomes Follow slope 100% and off becomes 0%.
 
 - The window starts with one network, "Network 1". **Rename** gives it a
   better name.
@@ -194,7 +213,8 @@ to start fresh.
 | Scale min / Scale max | Each copy gets a random size between these |
 | Random spin | Random turn around the copy's up direction, 0 to 360 degrees |
 | Random tilt | Random lean, 0 to 45 degrees, so copies don't all stand perfectly straight |
-| Align to surface | On: copies lean with the slope of the ground. Off: copies stand straight up |
+| Follow slope (%) | 100: copies lean with the slope of the ground. 0: copies stand straight up. Between: partway |
+| Sink into slope (%) | Pushes copies down so the downhill edge of their base touches the ground (100) |
 | Use instances | Copies share one mesh, which keeps heavy scenes light (only used by Apply; the preview always uses instances) |
 | Max slope | Nothing lands on ground steeper than this angle. 90 means no limit |
 | Min height | Nothing lands below this height, e.g. to keep a water's edge clear |
@@ -226,6 +246,10 @@ to start fresh.
 - The window remembers your last settings, even after restarting Maya.
 - Copies land on the real surface, including hills, and lean with the slope.
   The lean blends between faces, so it stays smooth on low-poly ground.
+- Follow slope and Sink into slope. Tested in Maya 2026: at Follow slope 0,
+  50 and 100, trees leaned 0, 0.51 and 1.02 times the ground's slope; at Sink
+  100 the downhill edge of each trunk was within 0.035 of the ground. Old
+  Align to surface settings give exactly the same layout as before.
 - Random scale, spin and tilt, repeatable with the seed, and a New seed button.
 - Preview, which redraws when you change a control, and isn't added to the
   undo list.
@@ -273,6 +297,8 @@ From the pitch, with the teacher's feedback:
 - **Extra, added Oct 20:** Grow near, so one network gathers around another,
   with Size near to make copies bigger or smaller close to it, and Get closer
   to let them in toward the trunks.
+- **Extra, added Oct 20:** Follow slope and Sink into slope, so trees stand
+  straight on hills with their trunks sitting in the ground.
 - **Stretch goal left:** a painted density mask.
 
 ## Peer run

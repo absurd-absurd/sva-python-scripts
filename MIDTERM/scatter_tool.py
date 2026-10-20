@@ -25,7 +25,7 @@ import maya.cmds as cmds
 
 WINDOW = "scatterToolWindow"
 PREVIEW_GROUP = "scatter_preview"
-WINDOW_HEIGHT = 890
+WINDOW_HEIGHT = 820
 NO_PRESET = "Pick a preset..."
 ANYWHERE = "Anywhere"
 
@@ -38,8 +38,8 @@ SETTINGS_FILE = os.path.join(cmds.internalVar(userAppDir=True), "scatter_tool.js
 
 # The settings a new network starts with
 DEFAULT_CONTROLS = {"count": 50, "scale_min": 0.8, "scale_max": 1.2,
-                    "spin": 360.0, "tilt": 0.0, "align": True, "instances": False,
-                    "max_slope": 90.0, "min_height": -10000.0,
+                    "spin": 360.0, "tilt": 0.0, "follow": 100.0, "sink": 0.0,
+                    "instances": False, "max_slope": 90.0, "min_height": -10000.0,
                     "spacing": False, "min_distance": 1.0,
                     "near_range": 2.5, "open_share": 10.0, "near_size": 100.0,
                     "near_into": 0.0, "seed": 1}
@@ -47,10 +47,10 @@ DEFAULT_CONTROLS = {"count": 50, "scale_min": 0.8, "scale_max": 1.2,
 # Presets you get the first time, before you've saved any of your own
 STARTER_PRESETS = {
     "Sparse rocks": {"count": 30, "scale_min": 0.6, "scale_max": 1.6,
-                     "spin": 360.0, "tilt": 15.0, "align": True, "instances": False,
+                     "spin": 360.0, "tilt": 15.0, "follow": 100.0, "instances": False,
                      "max_slope": 35.0, "min_height": -10000.0, "seed": 1},
     "Dense grass": {"count": 400, "scale_min": 0.7, "scale_max": 1.1,
-                    "spin": 360.0, "tilt": 10.0, "align": True, "instances": True,
+                    "spin": 360.0, "tilt": 10.0, "follow": 100.0, "instances": True,
                     "max_slope": 50.0, "min_height": -10000.0, "seed": 1},
 }
 
@@ -78,7 +78,8 @@ CONTROLS = {
     "scale_max": (cmds.floatSliderGrp, "value"),
     "spin": (cmds.floatSliderGrp, "value"),
     "tilt": (cmds.floatSliderGrp, "value"),
-    "align": (cmds.checkBox, "value"),
+    "follow": (cmds.floatSliderGrp, "value"),
+    "sink": (cmds.floatSliderGrp, "value"),
     "instances": (cmds.checkBox, "value"),
     "max_slope": (cmds.floatSliderGrp, "value"),
     "min_height": (cmds.floatFieldGrp, "value1"),
@@ -217,6 +218,52 @@ def tilt(up, angle, direction):
     return normalize(add(mul(up, math.cos(a)), mul(side, math.sin(a))))
 
 
+def base_radius(obj):
+    """
+    How far the bottom of obj reaches out from its pivot, along the ground.
+    Only the points in the lowest quarter of its height count, so a tree's
+    base is its trunk, not its whole canopy.
+    """
+    origin = cmds.xform(obj, query=True, worldSpace=True, matrix=True)[12:15]
+    points = []
+    for mesh in cmds.listRelatives(obj, allDescendents=True, type="mesh",
+                                   noIntermediate=True, fullPath=True) or []:
+        flat = cmds.xform(mesh + ".vtx[*]", query=True, worldSpace=True, translation=True)
+        points += [flat[i:i + 3] for i in range(0, len(flat), 3)]
+    if not points:
+        return 0.0
+    bottom = min(p[1] for p in points)
+    top = max(p[1] for p in points)
+    band = max((top - bottom) * 0.25, 0.001)
+    return max(math.sqrt((p[0] - origin[0]) ** 2 + (p[2] - origin[2]) ** 2)
+               for p in points if p[1] <= bottom + band)
+
+
+def lean(normal, follow):
+    """
+    The up direction for a copy: straight up at 0% Follow slope, along the
+    ground's normal at 100%, and partway between in between.
+    """
+    if follow >= 100.0:
+        return normal
+    if follow <= 0.0:
+        return (0.0, 1.0, 0.0)
+    t = follow / 100.0
+    return normalize(add(mul((0.0, 1.0, 0.0), 1.0 - t), mul(normal, t)))
+
+
+def sink_depth(up, normal, radius, sink):
+    """
+    How far to push a copy down so its base doesn't float on a slope.
+    A base of 'radius' standing at an angle to the ground has one edge
+    radius * tan(angle) above it; 100% Sink into slope pushes the copy
+    down that much, so that edge just touches.
+    """
+    cos_angle = max(-1.0, min(1.0, up[0] * normal[0] + up[1] * normal[1] + up[2] * normal[2]))
+    angle = math.acos(cos_angle)
+    return radius * math.tan(min(angle, math.radians(80))) * sink / 100.0
+
+
 def make_instance(obj, group):
     """
     Make an instance of obj inside group. Maya's own cmds.instance gets
@@ -328,6 +375,8 @@ def build_scatter(settings, group, use_instances, grid, near_points=None):
         total += weight
         running_weight.append(total)
     base_scales = dict((name, cmds.getAttr(name + ".scale")[0]) for name in names)
+    sink = settings["sink"]
+    base_radii = dict((name, base_radius(name) if sink > 0 else 0.0) for name in names)
 
     triangles, running_area = surface_triangles(settings["surface"])
     rng = random.Random(settings["seed"])
@@ -339,7 +388,6 @@ def build_scatter(settings, group, use_instances, grid, near_points=None):
     # set to Anywhere, the layout is the same as without them.
     retry_rng = random.Random("spacing %d" % settings["seed"])
     near_rng = random.Random("near %d" % settings["seed"])
-    world_up = (0.0, 1.0, 0.0)
     radius = settings["min_distance"] / 2.0 if settings["spacing"] else 0.0
     # Get closer: how far into the clear space of the network this one grows near
     near = settings["near"] if near_points is not None else ""
@@ -407,11 +455,15 @@ def build_scatter(settings, group, use_instances, grid, near_points=None):
         mark_placed(grid, position, radius * grow, settings["name"])
         points.append((position, radius * grow))
 
-        up = normal if settings["align"] else world_up
+        up = lean(normal, settings["follow"])
         up = tilt(up, tilt_angle, tilt_direction)
         size *= grow
         base_scale = base_scales[obj]
         scale = (base_scale[0] * size, base_scale[1] * size, base_scale[2] * size)
+        if sink > 0:
+            # The copy is 'size' times the original, so its base is too
+            depth = sink_depth(up, normal, base_radii[obj] * size, sink)
+            position = sub(position, mul(up, depth))
 
         if use_instances:
             copy = make_instance(obj, group)
@@ -507,8 +559,20 @@ def read_controls():
                 for key, (command, flag) in CONTROLS.items())
 
 
+def upgrade_controls(values):
+    """
+    Settings saved before Follow slope had an on/off 'Align to surface'
+    instead. On becomes 100%, off becomes 0%.
+    """
+    if "align" in values and "follow" not in values:
+        values = dict(values)
+        values["follow"] = 100.0 if values["align"] else 0.0
+    return values
+
+
 def set_controls(values):
     """Put saved values back into the window. Missing or bad ones are skipped."""
+    values = upgrade_controls(values)
     for key, (command, flag) in CONTROLS.items():
         if key in values:
             try:
@@ -568,7 +632,7 @@ def read_settings():
                        "Remove it from the list." % surface)
             return None
 
-        settings = dict(DEFAULT_CONTROLS, **net["controls"])
+        settings = dict(DEFAULT_CONTROLS, **upgrade_controls(net["controls"]))
         scale_a, scale_b = settings["scale_min"], settings["scale_max"]
         settings["scale_min"] = min(scale_a, scale_b)
         settings["scale_max"] = max(scale_a, scale_b)
@@ -676,14 +740,15 @@ def restore_settings():
                 net = make_network(str(saved["name"]))
                 net["use"] = bool(saved.get("use", True))
                 net["near"] = str(saved.get("near", ""))
-                net["controls"].update(saved.get("controls", {}))
+                net["controls"].update(upgrade_controls(saved.get("controls", {})))
                 net["objects"] = saved_objects(saved)
                 networks.append(net)
             current["index"] = min(max(int(last.get("current", 0)), 0), len(networks) - 1)
         elif last:
             # Saved before networks existed: those settings become the first network
             net = make_network("Network 1")
-            net["controls"].update((key, last[key]) for key in DEFAULT_CONTROLS if key in last)
+            old = upgrade_controls(last)
+            net["controls"].update((key, old[key]) for key in DEFAULT_CONTROLS if key in old)
             net["objects"] = saved_objects(last)
             networks.append(net)
     except (TypeError, ValueError, KeyError, AttributeError):
@@ -1157,7 +1222,9 @@ def show():
     if (cmds.windowPref(WINDOW, exists=True)
             and cmds.windowPref(WINDOW, query=True, height=True) < WINDOW_HEIGHT * ui_scale):
         cmds.windowPref(WINDOW, remove=True)
-    cmds.window(WINDOW, title="Scatter Tool", widthHeight=(440, WINDOW_HEIGHT))
+    cmds.window(WINDOW, title="Scatter Tool", widthHeight=(460, WINDOW_HEIGHT))
+    # Scrolls when the window is shorter than everything in it
+    cmds.scrollLayout(childResizable=True, horizontalScrollBarThickness=0)
     cmds.columnLayout(adjustableColumn=True, rowSpacing=6, columnAttach=("both", 8))
 
     cmds.separator(height=6, style="none")
@@ -1211,10 +1278,14 @@ def show():
         label="Random tilt", field=True, minValue=0, maxValue=45, value=0,
         precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
 
-    cmds.rowLayout(numberOfColumns=2, columnWidth2=(250, 150),
-                   columnAttach=(1, "left", 114))
-    ui["align"] = cmds.checkBox(label="Align to surface", value=True,
-                                changeCommand=on_change)
+    ui["follow"] = cmds.floatSliderGrp(
+        label="Follow slope (%)", field=True, minValue=0, maxValue=100, value=100,
+        precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
+    ui["sink"] = cmds.floatSliderGrp(
+        label="Sink into slope (%)", field=True, minValue=0, maxValue=100,
+        fieldMaxValue=300, value=0, precision=0, columnWidth3=(110, 60, 240),
+        changeCommand=on_change)
+    cmds.rowLayout(numberOfColumns=1, columnAttach=(1, "left", 114))
     ui["instances"] = cmds.checkBox(label="Use instances", value=False,
                                     changeCommand=remember_settings)
     cmds.setParent("..")
