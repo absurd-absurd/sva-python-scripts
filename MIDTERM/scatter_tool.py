@@ -25,9 +25,45 @@ import maya.cmds as cmds
 
 WINDOW = "scatterToolWindow"
 PREVIEW_GROUP = "scatter_preview"
-WINDOW_HEIGHT = 820
+WINDOW_HEIGHT = 610
 NO_PRESET = "Pick a preset..."
 ANYWHERE = "Anywhere"
+
+# Window colors (red, green, blue from 0 to 1)
+COLORS = {
+    "title": (0.16, 0.40, 0.42),     # teal title bar
+    "objects": (0.30, 0.36, 0.48),   # section headers, one color per tab
+    "placement": (0.42, 0.34, 0.50),
+    "spacing": (0.50, 0.38, 0.24),
+    "near": (0.26, 0.44, 0.30),
+    "preview": (0.24, 0.40, 0.58),   # buttons
+    "apply": (0.26, 0.52, 0.32),
+    "clear": (0.55, 0.27, 0.27),
+    "button": (0.33, 0.34, 0.36),
+    "status": (0.22, 0.23, 0.25),    # status bar
+    "warning": (0.55, 0.38, 0.14),
+    "success": (0.20, 0.38, 0.26),
+}
+
+# Maya's own icons, used on the buttons
+ICONS = {
+    "use_selected": "selectObj.png",
+    "new": "newLayerSelected.png",
+    "rename": "rename.png",
+    "delete": "trash.png",
+    "add": "RS_create_layer_from_selection.png",
+    "remove": "smallTrash.png",
+    "save": "fileSave.png",
+    "seed": "polyRandomizeShell.png",
+    "fit": "distanceDim.png",
+    "preview": "eye.png",
+    "apply": "checkboxOn.png",
+    "clear": "Erase.png",
+    "tab_objects": "pickGeometryObj.png",
+    "tab_placement": "snapPlane.png",
+    "tab_spacing": "distanceDim.png",
+    "tab_near": "snapTogetherTool.png",
+}
 
 # How many other spots to try when a copy lands too close to another one,
 # or out in the open when its network grows near another
@@ -547,10 +583,22 @@ def build_all(all_settings, group_name, preview):
 # Reading and checking the window's controls
 # ---------------------------------------------------------------
 
-def set_status(message):
+def set_status(message, color=None):
+    """Show a message in the status bar at the bottom of the window."""
     if cmds.text(ui.get("status", ""), exists=True):
-        cmds.text(ui["status"], edit=True, label=message)
+        cmds.text(ui["status"], edit=True, label=message,
+                  backgroundColor=color or COLORS["status"])
     print("Scatter: " + message)
+
+
+def set_warning(message):
+    """A status message about something to fix, in orange."""
+    set_status(message, COLORS["warning"])
+
+
+def set_success(message):
+    """A status message after a preview or scatter is made, in green."""
+    set_status(message, COLORS["success"])
 
 
 def read_controls():
@@ -586,7 +634,7 @@ def sync_spacing(*_):
     """Min distance can only be changed while Keep copies apart is ticked."""
     on = cmds.checkBox(ui["spacing"], query=True, value=True)
     cmds.floatSliderGrp(ui["min_distance"], edit=True, enable=on)
-    cmds.button(ui["fit_distance"], edit=True, enable=on)
+    cmds.iconTextButton(ui["fit_distance"], edit=True, enable=on)
 
 
 def read_settings():
@@ -596,19 +644,19 @@ def read_settings():
     """
     surface = cmds.textFieldButtonGrp(ui["surface"], query=True, text=True).strip()
     if not surface:
-        set_status("Pick a surface first (select it, then 'Use selected').")
+        set_warning("Pick a surface first (select it, then 'Use selected').")
         return None
     if not cmds.objExists(surface):
-        set_status("Can't find a surface called '%s'." % surface)
+        set_warning("Can't find a surface called '%s'." % surface)
         return None
     if not cmds.listRelatives(surface, shapes=True, type="mesh", noIntermediate=True):
-        set_status("'%s' isn't a polygon mesh, so it can't be a surface." % surface)
+        set_warning("'%s' isn't a polygon mesh, so it can't be a surface." % surface)
         return None
 
     store_controls()
     used = [net for net in networks if net["use"]]
     if not used:
-        set_status("Every network is switched off. Tick 'Include in scatter' on at least one.")
+        set_warning("Every network is switched off. Tick 'Include in scatter' on at least one.")
         return None
 
     all_settings = []
@@ -617,19 +665,19 @@ def read_settings():
         where = "In '%s': " % net["name"] if len(networks) > 1 else ""
         objects = net["objects"]
         if not objects:
-            set_status(where + "Add an object to scatter first (select it, then 'Add selected').")
+            set_warning(where + "Add an object to scatter first (select it, then 'Add selected').")
             return None
         for name, _ in objects:
             if not cmds.objExists(name):
-                set_status(where + "Can't find an object called '%s'. Remove it from the list."
-                           % name)
+                set_warning(where + "Can't find an object called '%s'. Remove it from the list."
+                            % name)
                 return None
         if sum(weight for _, weight in objects) <= 0:
-            set_status(where + "Every weight is 0. Give at least one object a weight above 0.")
+            set_warning(where + "Every weight is 0. Give at least one object a weight above 0.")
             return None
         if surface in [name for name, _ in objects]:
-            set_status(where + "'%s' is the surface and also in the object list. "
-                       "Remove it from the list." % surface)
+            set_warning(where + "'%s' is the surface and also in the object list. "
+                        "Remove it from the list." % surface)
             return None
 
         settings = dict(DEFAULT_CONTROLS, **upgrade_controls(net["controls"]))
@@ -703,7 +751,7 @@ def save_saved(data):
             json.dump(data, f, indent=2, sort_keys=True)
         return True
     except (IOError, OSError) as error:
-        set_status("Couldn't save to %s: %s" % (SETTINGS_FILE, error))
+        set_warning("Couldn't save to %s: %s" % (SETTINGS_FILE, error))
         return False
 
 
@@ -716,6 +764,8 @@ def remember_settings(*_):
         "networks": networks,
         "current": current["index"],
     }
+    if cmds.tabLayout(ui.get("tabs", ""), exists=True):
+        data["last"]["tab"] = cmds.tabLayout(ui["tabs"], query=True, selectTabIndex=True)
     save_saved(data)
 
 
@@ -795,8 +845,8 @@ def on_preview(*_):
         restore_selection(selection)
     finally:
         cmds.undoInfo(stateWithoutFlush=True)
-    set_status("Preview: %s%s. Press Apply to keep it."
-               % (made_note(made), skipped_note(skipped, no_room)))
+    set_success("Preview: %s%s. Press Apply to keep it."
+                % (made_note(made), skipped_note(skipped, no_room)))
 
 
 def refresh_preview(*_):
@@ -825,8 +875,8 @@ def on_apply(*_):
     finally:
         cmds.undoInfo(closeChunk=True)
     last_scatter["group"] = group
-    set_status("Made %s in '%s'%s. Ctrl+Z removes them all."
-               % (made_note(made), group, skipped_note(skipped, no_room)))
+    set_success("Made %s in '%s'%s. Ctrl+Z removes them all."
+                % (made_note(made), group, skipped_note(skipped, no_room)))
 
 
 def on_clear(*_):
@@ -844,11 +894,11 @@ def on_clear(*_):
 def use_selected_surface(*_):
     selection = cmds.ls(selection=True, transforms=True)
     if not selection:
-        set_status("Nothing is selected. Click an object in the viewport first.")
+        set_warning("Nothing is selected. Click an object in the viewport first.")
         return
     name = selection[0]
     if not cmds.listRelatives(name, shapes=True, type="mesh", noIntermediate=True):
-        set_status("'%s' isn't a polygon mesh, so it can't be a surface." % name)
+        set_warning("'%s' isn't a polygon mesh, so it can't be a surface." % name)
         return
     cmds.textFieldButtonGrp(ui["surface"], edit=True, text=name)
     set_status("Surface set to '%s'." % name)
@@ -869,7 +919,7 @@ def on_fit_distance(*_):
     """Set Min distance to the widest object at Scale max, so copies don't touch."""
     names = [name for name, _ in network()["objects"] if cmds.objExists(name)]
     if not names:
-        set_status("Add objects to this network first, then Fit to size.")
+        set_warning("Add objects to this network first, then Fit to size.")
         return
     widest, widest_name = 0.0, names[0]
     for name in names:
@@ -938,10 +988,10 @@ def ask_network_name(title, text):
         return None
     name = cmds.promptDialog(query=True, text=True).strip()
     if not name:
-        set_status("The network needs a name.")
+        set_warning("The network needs a name.")
         return None
     if name in network_names() and name != network()["name"]:
-        set_status("There's already a network called '%s'." % name)
+        set_warning("There's already a network called '%s'." % name)
         return None
     return name
 
@@ -962,7 +1012,7 @@ def on_new_network(*_):
     name = ask_network_name("New network", "Network %d" % number)
     if name is None or name in network_names():
         if name is not None:
-            set_status("There's already a network called '%s'." % name)
+            set_warning("There's already a network called '%s'." % name)
         return
     # A new seed, so this network doesn't land on the same spots as the others
     networks.append(make_network(name, seed=random.randint(1, 99999)))
@@ -989,7 +1039,7 @@ def on_rename_network(*_):
 
 def on_delete_network(*_):
     if len(networks) == 1:
-        set_status("You need at least one network. Rename this one instead.")
+        set_warning("You need at least one network. Rename this one instead.")
         return
     name = network()["name"]
     answer = cmds.confirmDialog(
@@ -1048,8 +1098,8 @@ def on_pick_near(name):
         target = networks[network_names().index(name)]
         if target["near"] == net["name"]:
             # Each would have to wait for the other to be placed first
-            set_status("'%s' already grows near '%s', so it can't go the other way too."
-                       % (name, net["name"]))
+            set_warning("'%s' already grows near '%s', so it can't go the other way too."
+                        % (name, net["name"]))
             redraw_near_menu()
             return
         net["near"] = name
@@ -1095,7 +1145,7 @@ def show_row_weight(*_):
 def on_add_objects(*_):
     selection = cmds.ls(selection=True, transforms=True)
     if not selection:
-        set_status("Nothing is selected. Click one or more objects in the viewport first.")
+        set_warning("Nothing is selected. Click one or more objects in the viewport first.")
         return
     surface = cmds.textFieldButtonGrp(ui["surface"], query=True, text=True).strip()
     objects = network()["objects"]
@@ -1106,7 +1156,7 @@ def on_add_objects(*_):
             objects.append([name, 1.0])
             added.append(name)
     if not added:
-        set_status("Those are already in the list (or are the surface).")
+        set_warning("Those are already in the list (or are the surface).")
         return
     redraw_object_list(select=len(objects) - 1)
     set_status("Added %s to '%s'. Click a row to change its weight."
@@ -1117,7 +1167,7 @@ def on_add_objects(*_):
 def on_remove_object(*_):
     row = selected_row()
     if row is None:
-        set_status("Click an object in the list first, then Remove.")
+        set_warning("Click an object in the list first, then Remove.")
         return
     objects = network()["objects"]
     name = objects.pop(row)[0]
@@ -1155,7 +1205,7 @@ def on_pick_preset(name):
         return
     preset = load_saved()["presets"].get(name)
     if preset is None:
-        set_status("The preset '%s' is gone from the file." % name)
+        set_warning("The preset '%s' is gone from the file." % name)
         redraw_preset_menu()
         return
     set_controls(preset)
@@ -1174,7 +1224,7 @@ def on_save_preset(*_):
         return
     name = cmds.promptDialog(query=True, text=True).strip()
     if not name or name == NO_PRESET:
-        set_status("The preset needs a name. Nothing was saved.")
+        set_warning("The preset needs a name. Nothing was saved.")
         return
     data = load_saved()
     if name in data["presets"]:
@@ -1193,7 +1243,7 @@ def on_save_preset(*_):
 def on_delete_preset(*_):
     name = cmds.optionMenu(ui["preset"], query=True, value=True)
     if name == NO_PRESET:
-        set_status("Pick a preset in the menu first, then Delete preset.")
+        set_warning("Pick a preset in the menu first, then Delete preset.")
         return
     answer = cmds.confirmDialog(
         title="Delete preset", message="Delete the preset '%s'?" % name,
@@ -1212,138 +1262,197 @@ def on_delete_preset(*_):
 # The window
 # ---------------------------------------------------------------
 
+def icon_button(label, icon, command, width, color=None, height=26, tip=""):
+    """A button with one of Maya's icons next to its label."""
+    return cmds.iconTextButton(
+        style="iconAndTextHorizontal", image1=ICONS[icon], label=label,
+        width=width, height=height, command=command, annotation=tip or label,
+        backgroundColor=color or COLORS["button"])
+
+
+def tab_intro(icon, text):
+    """A line at the top of a tab saying what it's for."""
+    cmds.iconTextStaticLabel(style="iconAndTextHorizontal", image1=ICONS[icon],
+                             label=text, height=24)
+
+
+def section(label, color):
+    """Start a colored, foldable section. End it with end_section()."""
+    cmds.frameLayout(label=label, collapsable=True, backgroundColor=color,
+                     marginWidth=6, marginHeight=6)
+    cmds.columnLayout(adjustableColumn=True, rowSpacing=4)
+
+
+def end_section():
+    cmds.setParent("..")
+    cmds.setParent("..")
+
+
+def slider(key, label, low, high, value, precision=0, field_max=None, int_slider=False):
+    """A labeled slider with a number box, saved in ui[key]."""
+    kwargs = {"label": label, "field": True, "minValue": low, "maxValue": high,
+              "value": value, "columnWidth3": (120, 60, 210), "changeCommand": on_change}
+    if field_max is not None:
+        kwargs["fieldMaxValue"] = field_max
+    if int_slider:
+        ui[key] = cmds.intSliderGrp(**kwargs)
+    else:
+        ui[key] = cmds.floatSliderGrp(precision=precision, **kwargs)
+
+
 def show():
     if cmds.window(WINDOW, exists=True):
         cmds.deleteUI(WINDOW)
-    # Maya reopens a window at its last size, which may be from an older,
-    # shorter version of this window. If that's too short, forget it. The
-    # saved size is in screen pixels, so it's doubled on a screen scaled to 200%.
+    # Maya reopens a window at its last size, which may be from an older
+    # version of this window. If that's far off, forget it. The saved size
+    # is in screen pixels, so it's doubled on a screen scaled to 200%.
     ui_scale = cmds.mayaDpiSetting(query=True, realScaleValue=True)
-    if (cmds.windowPref(WINDOW, exists=True)
-            and cmds.windowPref(WINDOW, query=True, height=True) < WINDOW_HEIGHT * ui_scale):
-        cmds.windowPref(WINDOW, remove=True)
+    if cmds.windowPref(WINDOW, exists=True):
+        height = cmds.windowPref(WINDOW, query=True, height=True) / ui_scale
+        if not WINDOW_HEIGHT <= height <= WINDOW_HEIGHT * 1.25:
+            cmds.windowPref(WINDOW, remove=True)
     cmds.window(WINDOW, title="Scatter Tool", widthHeight=(460, WINDOW_HEIGHT))
-    # Scrolls when the window is shorter than everything in it
-    cmds.scrollLayout(childResizable=True, horizontalScrollBarThickness=0)
-    cmds.columnLayout(adjustableColumn=True, rowSpacing=6, columnAttach=("both", 8))
+    cmds.columnLayout(adjustableColumn=True, rowSpacing=6)
 
-    cmds.separator(height=6, style="none")
+    # Title bar
+    cmds.text(label="   SCATTER TOOL", align="left", font="boldLabelFont", height=34,
+              backgroundColor=COLORS["title"])
+
+    # Always visible: the surface and which network you're editing
+    cmds.columnLayout(adjustableColumn=True, rowSpacing=6, columnAttach=("both", 8))
     ui["surface"] = cmds.textFieldButtonGrp(
         label="Surface", buttonLabel="Use selected",
-        columnWidth3=(60, 260, 90), changeCommand=on_change,
+        columnWidth3=(60, 270, 90), changeCommand=on_change,
         buttonCommand=use_selected_surface)
-
-    cmds.separator(height=10)
-    cmds.rowLayout(numberOfColumns=4, columnWidth4=(200, 70, 70, 70))
-    ui["network"] = cmds.optionMenu(label="Network", width=192,
+    cmds.rowLayout(numberOfColumns=4, columnWidth4=(210, 72, 80, 72))
+    ui["network"] = cmds.optionMenu(label="Network", width=202,
                                     changeCommand=on_pick_network)
-    cmds.button(label="New", width=64, command=on_new_network)
-    cmds.button(label="Rename", width=64, command=on_rename_network)
-    cmds.button(label="Delete", width=64, command=on_delete_network)
+    icon_button("New", "new", on_new_network, 68, tip="Make a new network")
+    icon_button("Rename", "rename", on_rename_network, 76, tip="Rename this network")
+    icon_button("Delete", "delete", on_delete_network, 68, tip="Delete this network")
     cmds.setParent("..")
-    ui["use"] = cmds.checkBox(label="Include in scatter (Preview and Apply)", value=True,
+    ui["use"] = cmds.checkBox(label="Include this network in Preview and Apply", value=True,
                               changeCommand=on_use_network)
+    cmds.setParent("..")
 
-    cmds.text(label="Objects in this network", align="left", font="boldLabelFont")
-    ui["objects"] = cmds.textScrollList(numberOfRows=4, allowMultiSelection=False,
+    # The tabs: everything in them belongs to the network you're editing
+    ui["tabs"] = cmds.tabLayout(innerMarginWidth=6, innerMarginHeight=6,
+                                changeCommand=remember_settings)
+
+    objects_tab = cmds.columnLayout(adjustableColumn=True, rowSpacing=6)
+    tab_intro("tab_objects", "What this network scatters, and how often each one shows up")
+    section("Objects in this network", COLORS["objects"])
+    ui["objects"] = cmds.textScrollList(numberOfRows=5, allowMultiSelection=False,
                                         selectCommand=show_row_weight)
-    cmds.rowLayout(numberOfColumns=3, columnWidth3=(110, 110, 200))
-    cmds.button(label="Add selected", width=104, command=on_add_objects)
-    cmds.button(label="Remove", width=104, command=on_remove_object)
+    cmds.rowLayout(numberOfColumns=3, columnWidth3=(130, 110, 150))
+    icon_button("Add selected", "add", on_add_objects, 124,
+                tip="Add the objects selected in the viewport")
+    icon_button("Remove", "remove", on_remove_object, 104,
+                tip="Remove the clicked row from the list")
     ui["weight"] = cmds.floatFieldGrp(label="Weight", value1=1, precision=1,
                                       columnWidth2=(50, 70), enable=False,
                                       changeCommand=on_weight_change)
     cmds.setParent("..")
-
-    cmds.rowLayout(numberOfColumns=3, columnWidth3=(220, 100, 100))
-    ui["preset"] = cmds.optionMenu(label="Preset", width=210,
+    end_section()
+    section("Presets", COLORS["objects"])
+    cmds.rowLayout(numberOfColumns=3, columnWidth3=(200, 90, 90))
+    ui["preset"] = cmds.optionMenu(label="Preset", width=192,
                                    changeCommand=on_pick_preset)
-    cmds.button(label="Save preset", width=94, command=on_save_preset)
-    cmds.button(label="Delete preset", width=94, command=on_delete_preset)
+    icon_button("Save", "save", on_save_preset, 84, tip="Save these settings as a preset")
+    icon_button("Delete", "remove", on_delete_preset, 84, tip="Delete the preset in the menu")
+    cmds.setParent("..")
+    end_section()
     cmds.setParent("..")
 
-    ui["count"] = cmds.intSliderGrp(
-        label="Count", field=True, minValue=1, maxValue=500, value=50,
-        columnWidth3=(110, 60, 240), changeCommand=on_change)
-    ui["scale_min"] = cmds.floatSliderGrp(
-        label="Scale min", field=True, minValue=0.1, maxValue=5, value=0.8,
-        precision=2, columnWidth3=(110, 60, 240), changeCommand=on_change)
-    ui["scale_max"] = cmds.floatSliderGrp(
-        label="Scale max", field=True, minValue=0.1, maxValue=5, value=1.2,
-        precision=2, columnWidth3=(110, 60, 240), changeCommand=on_change)
-    ui["spin"] = cmds.floatSliderGrp(
-        label="Random spin", field=True, minValue=0, maxValue=360, value=360,
-        precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
-    ui["tilt"] = cmds.floatSliderGrp(
-        label="Random tilt", field=True, minValue=0, maxValue=45, value=0,
-        precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
-
-    ui["follow"] = cmds.floatSliderGrp(
-        label="Follow slope (%)", field=True, minValue=0, maxValue=100, value=100,
-        precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
-    ui["sink"] = cmds.floatSliderGrp(
-        label="Sink into slope (%)", field=True, minValue=0, maxValue=100,
-        fieldMaxValue=300, value=0, precision=0, columnWidth3=(110, 60, 240),
-        changeCommand=on_change)
-    cmds.rowLayout(numberOfColumns=1, columnAttach=(1, "left", 114))
+    placement_tab = cmds.columnLayout(adjustableColumn=True, rowSpacing=6)
+    tab_intro("tab_placement", "How many copies, how big, and how they stand")
+    section("How many and how big", COLORS["placement"])
+    slider("count", "Count", 1, 500, 50, int_slider=True)
+    slider("scale_min", "Scale min", 0.1, 5, 0.8, precision=2)
+    slider("scale_max", "Scale max", 0.1, 5, 1.2, precision=2)
+    end_section()
+    section("Turning and leaning", COLORS["placement"])
+    slider("spin", "Random spin", 0, 360, 360)
+    slider("tilt", "Random tilt", 0, 45, 0)
+    slider("follow", "Follow slope (%)", 0, 100, 100)
+    slider("sink", "Sink into slope (%)", 0, 100, 0, field_max=300)
+    end_section()
+    section("Layout", COLORS["placement"])
+    cmds.rowLayout(numberOfColumns=3, columnWidth3=(210, 110, 120))
+    ui["seed"] = cmds.intFieldGrp(label="Seed", value1=1, columnWidth2=(120, 80),
+                                  changeCommand=on_change)
+    icon_button("New seed", "seed", on_new_seed, 100, tip="A different random layout")
     ui["instances"] = cmds.checkBox(label="Use instances", value=False,
                                     changeCommand=remember_settings)
     cmds.setParent("..")
+    end_section()
+    cmds.setParent("..")
 
-    cmds.text(label="Landing rules", align="left", font="boldLabelFont")
-    ui["max_slope"] = cmds.floatSliderGrp(
-        label="Max slope", field=True, minValue=0, maxValue=90, value=90,
-        precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
+    spacing_tab = cmds.columnLayout(adjustableColumn=True, rowSpacing=6)
+    tab_intro("tab_spacing", "Where copies may land, and how much room they keep")
+    section("Landing rules", COLORS["spacing"])
+    slider("max_slope", "Max slope", 0, 90, 90)
     ui["min_height"] = cmds.floatFieldGrp(
         label="Min height", value1=-10000, precision=2,
-        columnWidth2=(110, 80), changeCommand=on_change)
-    ui["spacing"] = cmds.checkBox(label="Keep copies apart (no overlapping)", value=False,
+        columnWidth2=(120, 80), changeCommand=on_change)
+    end_section()
+    section("Keep copies apart", COLORS["spacing"])
+    ui["spacing"] = cmds.checkBox(label="No overlapping", value=False,
                                   changeCommand=on_spacing)
-    cmds.rowLayout(numberOfColumns=2, columnWidth2=(330, 90))
+    cmds.rowLayout(numberOfColumns=2, columnWidth2=(310, 100))
     ui["min_distance"] = cmds.floatSliderGrp(
         label="Min distance", field=True, minValue=0, maxValue=10, fieldMaxValue=1000,
-        value=1, precision=2, columnWidth3=(110, 60, 150), changeCommand=on_change)
-    ui["fit_distance"] = cmds.button(label="Fit to size", width=86, command=on_fit_distance)
+        value=1, precision=2, columnWidth3=(120, 60, 130), changeCommand=on_change)
+    ui["fit_distance"] = icon_button("Fit to size", "fit", on_fit_distance, 96,
+                                     tip="Space copies by the widest object")
+    cmds.setParent("..")
+    end_section()
     cmds.setParent("..")
 
-    cmds.rowLayout(numberOfColumns=1, columnAttach=(1, "left", 46))
+    near_tab = cmds.columnLayout(adjustableColumn=True, rowSpacing=6)
+    tab_intro("tab_near", "Gather this network around another one, like bushes around trees")
+    section("Grow near", COLORS["near"])
+    cmds.rowLayout(numberOfColumns=1, columnAttach=(1, "left", 56))
     ui["near"] = cmds.optionMenu(label="Grow near", width=260, changeCommand=on_pick_near)
     cmds.setParent("..")
-    ui["near_range"] = cmds.floatSliderGrp(
-        label="Within", field=True, minValue=0.1, maxValue=20, fieldMaxValue=1000,
-        value=2.5, precision=2, columnWidth3=(110, 60, 240), changeCommand=on_change)
-    ui["open_share"] = cmds.floatSliderGrp(
-        label="In the open (%)", field=True, minValue=0, maxValue=100, value=10,
-        precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
-    ui["near_size"] = cmds.floatSliderGrp(
-        label="Size near (%)", field=True, minValue=10, maxValue=300, fieldMaxValue=1000,
-        value=100, precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
-    ui["near_into"] = cmds.floatSliderGrp(
-        label="Get closer (%)", field=True, minValue=0, maxValue=100, value=0,
-        precision=0, columnWidth3=(110, 60, 240), changeCommand=on_change)
-
-    cmds.rowLayout(numberOfColumns=2, columnWidth2=(220, 100))
-    ui["seed"] = cmds.intFieldGrp(label="Seed", value1=1, columnWidth2=(110, 80),
-                                  changeCommand=on_change)
-    cmds.button(label="New seed", width=90, command=on_new_seed)
+    slider("near_range", "Within", 0.1, 20, 2.5, precision=2, field_max=1000)
+    slider("open_share", "In the open (%)", 0, 100, 10)
+    end_section()
+    section("Close to the other network", COLORS["near"])
+    slider("near_size", "Size near (%)", 10, 300, 100, field_max=1000)
+    slider("near_into", "Get closer (%)", 0, 100, 0)
+    end_section()
     cmds.setParent("..")
 
-    cmds.separator(height=10)
-    cmds.rowLayout(numberOfColumns=3, columnWidth3=(140, 140, 140))
-    cmds.button(label="Preview", width=134, command=on_preview)
-    cmds.button(label="Apply", width=134, command=on_apply,
-                backgroundColor=(0.35, 0.5, 0.35))
-    cmds.button(label="Clear", width=134, command=on_clear)
+    cmds.tabLayout(ui["tabs"], edit=True, tabLabel=[
+        (objects_tab, "Objects"), (placement_tab, "Placement"),
+        (spacing_tab, "Spacing"), (near_tab, "Grow near")])
     cmds.setParent("..")
 
-    cmds.separator(height=10)
-    ui["status"] = cmds.text(label="", align="left", wordWrap=True)
+    # Always visible: the big buttons and the status bar
+    cmds.columnLayout(adjustableColumn=True, rowSpacing=6, columnAttach=("both", 8))
+    cmds.rowLayout(numberOfColumns=3, columnWidth3=(148, 148, 148))
+    icon_button("Preview", "preview", on_preview, 142, COLORS["preview"], height=34,
+                tip="Show the scatter without keeping it")
+    icon_button("Apply", "apply", on_apply, 142, COLORS["apply"], height=34,
+                tip="Keep the scatter (one Ctrl+Z removes it)")
+    icon_button("Clear", "clear", on_clear, 142, COLORS["clear"], height=34,
+                tip="Remove the preview, or the last scatter")
+    cmds.setParent("..")
+    ui["status"] = cmds.text(label="", align="left", wordWrap=True, height=46,
+                             backgroundColor=COLORS["status"])
+    cmds.separator(height=4, style="none")
     cmds.showWindow(WINDOW)
 
     had_settings = restore_settings()
     redraw_network_menu()
     show_network()
     redraw_preset_menu()
+    try:
+        cmds.tabLayout(ui["tabs"], edit=True,
+                       selectTabIndex=int(load_saved()["last"].get("tab", 1)))
+    except (RuntimeError, TypeError, ValueError):
+        pass
     if had_settings:
         set_status("Your settings from last time are back.")
     else:

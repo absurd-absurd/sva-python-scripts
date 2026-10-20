@@ -49,21 +49,41 @@ Don't press Ctrl+S in the test scene, or you'll overwrite the repo's copy.
 
 ## How to use it
 
+### The window
+
+- **Top (always showing):** the **Surface**, and the **Network** menu with
+  New, Rename and Delete.
+- **Four tabs** for the network you're editing, each split into colored
+  sections you can fold away by clicking their header:
+  - **Objects** (blue): the objects and their weights, and presets.
+  - **Placement** (purple): count and size; spin, tilt, Follow slope and
+    Sink into slope; the seed and Use instances.
+  - **Spacing** (orange): the landing rules and Keep copies apart.
+  - **Grow near** (green): growing around another network, Size near and
+    Get closer.
+- **Bottom (always showing):** **Preview** (blue), **Apply** (green) and
+  **Clear** (red), and the status bar. It turns green when a scatter is made
+  and orange when something needs fixing.
+
+Hover over a button to see what it does. The window remembers which tab you
+were on.
+
+### Steps
+
 1. Click the `ground`, then click **Use selected** next to **Surface**.
-2. Click the `rock` in the viewport, then click **Add selected** under
-   **Objects in this network**. You can select several objects and add them
-   at once.
+2. Click the `rock` in the viewport, then on the **Objects** tab click **Add
+   selected**. You can select several objects and add them at once.
 3. Click **Preview**. Copies appear on the ground in a group called
    `scatter_preview`.
 4. Move any slider or change any box. When you let go, the preview redraws.
-5. Click **New seed** for a different layout with the same settings. The same
-   seed number always gives the same layout.
+5. On the **Placement** tab, click **New seed** for a different layout with
+   the same settings. The same seed number always gives the same layout.
 6. Click **Apply** to keep it. The copies go into one group (`scatter_grp1`,
    `scatter_grp2`, ...). One **Ctrl+Z** removes the whole scatter.
 7. **Clear** removes the preview. If there's no preview, it removes the last
    scatter you applied.
 
-The line at the bottom of the window says what happened or what's wrong.
+The status bar at the bottom of the window says what happened or what's wrong.
 
 ### Networks
 
@@ -112,8 +132,9 @@ unless Keep copies apart is on (see below).
 
 ### Keeping copies apart
 
-By default copies can overlap. To stop that, tick **Keep copies apart** under
-the landing rules. Each network has its own setting.
+By default copies can overlap. To stop that, go to the **Spacing** tab and
+tick **No overlapping** under **Keep copies apart**. Each network has its own
+setting.
 
 - **Min distance** is how far apart this network's copies stay, measured
   center to center along the ground.
