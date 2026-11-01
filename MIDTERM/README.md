@@ -35,8 +35,10 @@ crowding around trees.
    exec(open(folder + "/scatter_tool.py").read())
    ```
 
-   The third line opens the test scene, with a hilly `ground` and a small
-   `rock` off to the left. `force=True` throws away unsaved changes in the
+   The third line opens the test scene, with a hilly `ground` and, off to
+   the left, props to scatter: a `rock`, five small rocks (`rock_small1` to
+   `rock_small5`), three trees (`tree_pine`, `tree_oak`, `tree_birch`) and
+   two bushes (`bush1`, `bush2`). `force=True` throws away unsaved changes in the
    scene you had open, so save first if you need to. Leave that line out to
    use your own scene instead. The last line runs the tool. There's no
    separate import step.
@@ -88,10 +90,12 @@ The status bar at the bottom of the window says what happened or what's wrong.
 ### Networks
 
 A network is a set of objects that share the same settings. Say you want lots
-of small rocks and a few big trees: put five rocks in a "Small rocks" network
-(count 120, scale 0.4 to 1.0) and three trees in a "Large trees" network
-(count 20, scale 1.5 to 2.5, max slope 25, Follow slope 0% so they grow
-straight up, Sink into slope 100% so their trunks sit in the hill).
+of small rocks and a few big trees: put the five small rocks in a "Small
+rocks" network (count 150, scale 0.6 to 1.5, tilt 15) and the three trees in a
+"Large trees" network (count 14, scale 0.8 to 1.3, max slope 30, Follow slope
+0% so they grow straight up, Sink into slope 100% so their trunks sit in the
+hill). Add a "Bushes" network with the two bushes that grows near the trees
+(see Grow near below) for a little forest.
 
 ### Leaning and sinking on slopes
 
