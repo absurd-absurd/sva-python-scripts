@@ -322,6 +322,16 @@ From the pitch, with the teacher's feedback:
   straight on hills with their trunks sitting in the ground.
 - **Stretch goal left:** a painted density mask.
 
+## What I'd build next
+
+- **A painted density mask:** paint on the ground where copies should go
+  thick, thin or not at all, instead of only using slope and height.
+- **Spacing from the real shape:** keep copies apart by their actual outline,
+  not a circle around their center, so long thin objects like logs can sit
+  closer side by side.
+- **Surfaces with overhangs:** check which way each face points so copies
+  only land on the top side of cliffs and caves.
+
 ## Peer run
 
 _Classmate's name:_ Alfredo (ALF-Mii)
