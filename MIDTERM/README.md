@@ -356,10 +356,10 @@ broke):_
    cmds.file(..., open=True) call myself, and it isn't clear whether step 3 is
    still needed once step 5 has me paste the whole script anyway."
 
-_What I'll fix:_ Write the actual commands into the "How to run it" steps (the
-line that opens the test scene and the line that runs the tool), and drop the
-separate import step, since pasting or opening the whole script already runs
-it.
+_What I fixed:_ The "How to run it" steps now show the actual lines to paste
+(the one that opens the test scene and the one that runs the tool), and the
+separate import step is gone, since running the whole script already opens
+the window (fixed Oct 19).
 
 ## Recording
 
