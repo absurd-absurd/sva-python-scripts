@@ -79,6 +79,40 @@ def neon_material():
     return m
 
 
+LIGHT_FLICKER = "/Game/Horror/Materials/PS2/M_PS2_LightFlicker"
+DEAD_SEED = 3.0        # the dead M's neon and its light share this, so they die and sputter together
+
+
+def light_flicker_material():
+    """A light function: dims a light with the same flicker code as the dead neon."""
+    if lib.does_asset_exist(LIGHT_FLICKER):
+        m = unreal.load_asset(LIGHT_FLICKER)
+        MEL.delete_all_material_expressions(m)
+    else:
+        m = tools.create_asset("M_PS2_LightFlicker", LIGHT_FLICKER.rsplit("/", 1)[0], unreal.Material,
+                               unreal.MaterialFactoryNew())
+    m.set_editor_property("material_domain", unreal.MaterialDomain.MD_LIGHT_FUNCTION)
+    time = MEL.create_material_expression(m, unreal.MaterialExpressionTime, -700, 0)
+    flick = MEL.create_material_expression(m, unreal.MaterialExpressionCustom, -400, 0)
+    flick.set_editor_property("code", FLICKER_HLSL)
+    flick.set_editor_property("output_type", unreal.CustomMaterialOutputType.CMOT_FLOAT1)
+    pins = []
+    for n in ("T", "Flicker", "Seed"):
+        pin = unreal.CustomInput()
+        pin.set_editor_property("input_name", n)
+        pins.append(pin)
+    flick.set_editor_property("inputs", pins)
+    MEL.connect_material_expressions(time, "", flick, "T")
+    for n, v, y in (("Flicker", 1.0, 120), ("Seed", DEAD_SEED, 200)):
+        c = MEL.create_material_expression(m, unreal.MaterialExpressionConstant, -700, y)
+        c.set_editor_property("r", v)
+        MEL.connect_material_expressions(c, "", flick, n)
+    MEL.connect_material_property(flick, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m)
+    return m
+
+
 def instance(name, parent):
     path = f"{MAT_DIR}/{name}"
     mi = unreal.load_asset(path) if lib.does_asset_exist(path) else \
@@ -98,7 +132,8 @@ def materials(colors, table):
             MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
             MEL.set_material_instance_scalar_parameter_value(mi, "Strength", float(spec.get("strength", 4.0)))
             MEL.set_material_instance_scalar_parameter_value(mi, "Flicker", float(spec.get("flicker", 0.0)))
-            MEL.set_material_instance_scalar_parameter_value(mi, "Seed", float(i))
+            seed = DEAD_SEED if spec.get("flicker", 0) >= 1 else float(i)
+            MEL.set_material_instance_scalar_parameter_value(mi, "Seed", seed)
         else:
             mi = instance(f"MI_PS2_{name}", surface)
             MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
@@ -148,6 +183,7 @@ def main():
         a.set_actor_label(name)
         a.set_folder_path("Sets")
         a.tags = [TAG]
+    flicker = light_flicker_material()
     for l in data["lights"]:
         p = actors.spawn_actor_from_class(unreal.PointLight, unreal.Vector(*l["position"]))
         c = p.point_light_component
@@ -155,6 +191,8 @@ def main():
         c.set_light_color(unreal.LinearColor(*l["color"], 1))
         c.set_attenuation_radius(l["radius"])
         c.set_cast_shadows(False)                # cheap, soft, PS2-like
+        if l.get("flicker"):
+            c.set_light_function_material(flicker)   # dies and sputters with the dead neon
         p.set_actor_label(l["name"])
         p.set_folder_path("Sets/Lights")
         p.tags = [TAG]

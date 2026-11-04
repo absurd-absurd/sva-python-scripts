@@ -152,12 +152,12 @@ def block_word(text, left, y, z, height, mat, thick, depth=14):
             keep(b, mat)
 
 
-def light(name, x, y, z, color, intensity, radius):
-    """A locator that becomes a point light in Unreal."""
+def light(name, x, y, z, color, intensity, radius, flicker=False):
+    """A locator that becomes a point light in Unreal (flicker: dims in step with the dead neon)."""
     loc = cmds.spaceLocator(name=name)[0]
     cmds.move(x, z, y, loc)
     cmds.addAttr(loc, longName="ue_light", dataType="string")
-    cmds.setAttr(loc + ".ue_light", json.dumps({"color": color, "intensity": intensity, "radius": radius}), type="string")
+    cmds.setAttr(loc + ".ue_light", json.dumps({"color": color, "intensity": intensity, "radius": radius, "flicker": flicker}), type="string")
     return loc
 
 
@@ -260,38 +260,150 @@ def awning():
     box(xa, xb, y_front, FRONT, 0, 12, "concrete_mat")                           # walkway slab
 
 
-def text_width(text, height):
-    return (len(text) * 5.5 - 1.5) * height / 6.0
+# ---------- the rooftop sign: real font letters ----------
+
+SIGN_FONT = "Century Gothic|wt:75"     # round, clean sans-serif like the reference photo
+_font_scale = {}
+
+
+def _curves_of(group):
+    shapes = cmds.listRelatives(group, allDescendents=True, type="nurbsCurve", fullPath=True) or []
+    return [cmds.listRelatives(sh, parent=True, fullPath=True)[0] for sh in shapes]
+
+
+def _font_curves(ch, cap):
+    """Outline curves of one character, scaled so a capital letter is `cap` cm tall, baseline at 0."""
+    if cap not in _font_scale:
+        t = cmds.textCurves(font=SIGN_FONT, text="T", ch=False)[0]
+        bb = cmds.exactWorldBoundingBox(t)
+        _font_scale[cap] = cap / (bb[4] - bb[1])
+        cmds.delete(t)
+    g = cmds.textCurves(font=SIGN_FONT, text=ch, ch=False)[0]
+    cmds.scale(_font_scale[cap], _font_scale[cap], _font_scale[cap], g, pivot=(0, 0, 0))
+    cmds.makeIdentity(g, apply=True, t=True, r=True, s=True)
+    return g, _curves_of(g)
+
+
+def _outline_points(curve):
+    """Points around one outline: exact corners for straight (degree 1) curves,
+    dense samples for round ones, so an O is round and an E keeps sharp corners."""
+    if cmds.getAttr(curve + ".degree") == 1:
+        pts = cmds.xform(curve + ".cv[*]", q=True, translation=True, worldSpace=True)
+        pts = [(pts[i], pts[i + 1]) for i in range(0, len(pts), 3)]
+    else:
+        a, b = cmds.getAttr(curve + ".minValue"), cmds.getAttr(curve + ".maxValue")
+        n = cmds.getAttr(curve + ".spans") * 10
+        pts = [tuple(cmds.pointOnCurve(curve, pr=a + (b - a) * k / n, p=True)[:2]) for k in range(n)]
+    if len(pts) > 2 and math.dist(pts[0], pts[-1]) < 0.01:
+        pts = pts[:-1]
+    return pts
+
+
+def _area(pts):
+    return 0.5 * sum(pts[i][0] * pts[i - 1][1] - pts[i - 1][0] * pts[i][1] for i in range(len(pts)))
+
+
+def solid_letter(ch, cap, depth, mat):
+    """A solid letter with real depth (like a lit box letter), facing +z in its own space,
+    left edge at x=0. Returns (mesh, width)."""
+    g, curves = _font_curves(ch, cap)
+    loops = sorted((_outline_points(c) for c in curves), key=lambda p: -abs(_area(p)))
+    x_min = min(x for loop in loops for x, _ in loop)
+    x_max = max(x for loop in loops for x, _ in loop)
+    pts = []
+    for k, loop in enumerate(loops):           # first loop is the outside, the rest are holes
+        if k:
+            pts.append(())
+        pts += [(x - x_min, y, 0) for x, y in loop]
+    face = cmds.polyCreateFacet(p=pts, ch=False)[0]
+    n = cmds.polyInfo(face + ".f[0]", faceNormals=True)[0].split()
+    if float(n[-1]) < 0:
+        cmds.polyNormal(face, normalMode=0, ch=False)
+    cmds.polyExtrudeFacet(face + ".f[0]", localTranslateZ=depth)
+    cmds.delete(face, constructionHistory=True)
+    cmds.delete(g)
+    return face, x_max - x_min
+
+
+def tube_letter(ch, cap, r, inset):
+    """A letter drawn as neon tube along its outline, twice: the outline and a second line
+    `inset` cm inside it (the double-line dead M in the reference). Facing +z, left edge at 0."""
+    g, curves = _font_curves(ch, cap)
+    bb = cmds.exactWorldBoundingBox(g)
+    parts = []
+    for c in curves:
+        offs = cmds.offsetCurve(c, distance=inset, normal=(0, 0, 1), ch=False) + \
+            cmds.offsetCurve(c, distance=-inset, normal=(0, 0, 1), ch=False)
+        # keep the offset that lies inside the letter (the one with the smaller box)
+        def box_area(o):
+            b = cmds.exactWorldBoundingBox(o)
+            return (b[3] - b[0]) * (b[4] - b[1])
+        offs.sort(key=box_area)
+        cmds.delete(offs[1:])
+        for path in (c, offs[0]):
+            prof = cmds.circle(r=r, nr=(0, 0, 1), sections=8, ch=False)[0]
+            srf = cmds.extrude(prof, path, extrudeType=2, fixedPath=True, useComponentPivot=1, polygon=0, ch=False)[0]
+            mesh = cmds.nurbsToPoly(srf, f=2, pt=1, ut=1, un=1, vt=1, vn=1, ch=False)[0]
+            cmds.delete(prof, srf)
+            parts.append(mesh)
+    m = cmds.polyUnite(parts, ch=False)[0]
+    cmds.move(-bb[0], 0, r, m, relative=True)
+    cmds.makeIdentity(m, apply=True, t=True)
+    cmds.xform(m, pivots=(0, 0, 0), worldSpace=True)
+    cmds.delete(g)
+    return m, bb[3] - bb[0]
+
+
+def place_letter(mesh, left, y_wall, z_base, mat):
+    """Turn a letter (built facing +z) to face the road and put its left edge, as seen
+    from the road, at Unreal x = left (seen from the road, +x is to the left)."""
+    cmds.rotate(0, 180, 0, mesh, pivot=(0, 0, 0))
+    cmds.move(left, z_base, y_wall, mesh, relative=True)
+    return keep(mesh, mat)
+
+
+def sign_word(text, center_x, y_wall, z_base, cap, depth, mat, tracking, special=None):
+    """Lay out a word centred on center_x. special maps a letter index to a function that
+    builds that letter differently (the neon-tube M). Returns the centre x of each letter."""
+    built = []
+    for i, ch in enumerate(text):
+        if ch == " ":
+            built.append((None, cap * 0.45))
+            continue
+        built.append(special[i](ch) if special and i in special else solid_letter(ch, cap, depth, mat))
+    total = sum(w for _, w in built) + tracking * (len(built) - 1)
+    left = center_x + total / 2.0
+    centers = []
+    for k, (mesh, w) in enumerate(built):
+        if mesh:
+            place_letter(mesh, left, y_wall, z_base, "glow_neon_dead_mat" if special and k in special else mat)
+            centers.append(left - w / 2.0)
+        left -= w + tracking
+    return centers
 
 
 def rooftop_sign():
-    """Two-tier red neon on a steel frame on the roof: the town name over a big MOTEL
-    whose M is dead and flickers. The name comes from story.json."""
+    """Like the reference photo: a tall red-lit sign wall above the awning, big solid MOTEL
+    letters in a round sans-serif, the M a dead double neon tube that flickers. The town
+    name (from story.json) sits smaller on top. The red light comes FROM the letters:
+    one light at each letter (the M's light flickers with it)."""
     story = json.load(open(os.path.join(ROOT, "story.json")))
-    name = story["places"]["motel"].upper()                 # MARROW FALLS MOTEL
-    top_line = name.rsplit(" ", 1)[0]                        # MARROW FALLS
-    big, small = 170, 100
+    top_line = story["places"]["motel"].upper().rsplit(" ", 1)[0]      # MARROW FALLS
+    xa, xb = X0 - 40, X0 + ROOMS * ROOM_W + 40
+    y_wall = FRONT - WALK - 10
     cx = X0 + ROOMS * ROOM_W / 2.0
-    y = FRONT - 10
-    z = H + 60                                               # bottom of MOTEL
-    z_top = z + big + 45                                     # bottom of MARROW FALLS
-    w_big, w_small = text_width("MOTEL", big), text_width(top_line, small)
-    half = max(w_big, w_small) / 2.0 + 30
-    # frame: posts and crossbars behind the letters
-    for px in (cx - half + 60, cx, cx + half - 60):
-        tube((px, y + 30, H + 12), (px, y + 30, z_top + small + 10), 6, "metal_mat")
-    for bz in (z + 20, z + big - 10, z_top + 15, z_top + small - 10):
-        tube((cx - half, y + 30, bz), (cx + half, y + 30, bz), 5, "metal_mat")
-    # like the reference photo: the M is a thin double tube (dead, flickering), O T E L are thick lit letters
-    left = cx + w_big / 2.0
-    u = big / 6.0
-    neon_word("M", left, y, z, big, "glow_neon_dead_mat", r=4)
-    neon_word("M", left - u * 0.45, y - 2, z + u * 0.3, big - u * 0.6, "glow_neon_dead_mat", r=4)
-    block_word("OTEL", left - u * 5.5, y, z, big, "glow_neon_red_mat", thick=u * 1.05)
-    block_word(top_line, cx + w_small / 2.0, y, z_top, small, "glow_neon_red_mat", thick=small / 6.0 * 0.9)
-    for k, dx in enumerate((-900, 0, 900)):
-        light(f"light_sign_wash_{k + 1}", cx + dx, FRONT - 450, z, [1.0, 0.0, 0.0], 8000, 2200)
-    light("light_sign_lot", cx, FRONT - 1400, z + 200, [1.0, 0.0, 0.0], 9000, 3000)
+    box(xa, xb, y_wall, y_wall + 20, H - 30, H + 420, "plaster_mat")           # sign wall over the awning
+    box(xa, xb, y_wall - 6, y_wall + 20, H + 420, H + 432, "trim_mat")         # cap on top
+    big, small = 165, 62
+    z_big, z_small = H + 75, H + 300
+    centers = sign_word("MOTEL", cx, y_wall, z_big, big, 22, "glow_neon_red_mat", tracking=big * 0.42,
+                        special={0: lambda ch: tube_letter(ch, big * 1.05, 2.6, inset=big * 0.07)})
+    sign_word(top_line, cx, y_wall, z_small, small, 12, "glow_neon_red_mat", tracking=small * 0.28)
+    # a light just in front of and below each letter: the spill on the wall, awning and lot
+    # comes from the letters (closer than ~1 m it burns a hot spot into the wall)
+    for k, x in enumerate(centers):
+        light(f"light_sign_{'MOTEL'[k]}", x, y_wall - 150, z_big + big * 0.2, [1.0, 0.0, 0.0],
+              1400, 2600, flicker=(k == 0))
 
 
 def office():
@@ -309,7 +421,7 @@ def office():
     box(wx0 - 8, wx1 + 8, y0 - 6, y0, 95, 250, "trim_mat")
     box(wx0, wx1, y0 - 7, y0 - 2, 103, 242, "glass_mat")
     neon_word("OPEN", wx1 - 30, y0 - 12, 150, 40, "glow_neon_red_mat", r=3.5)
-    light("light_open", wx0 + 120, y0 - 120, 170, [1.0, 0.0, 0.0], 600, 500)
+    light("light_open", (wx0 + wx1) / 2.0, y0 - 25, 170, [1.0, 0.0, 0.0], 600, 600)
     # the neon cross: SIN above the bar, WILL / FIND on the bar, YOU OUT below. It stands in
     # front of the office on a post, rising above the roof, bottom high enough to walk under.
     cross(x0 + 300, y0 - 190, 38)
@@ -343,7 +455,7 @@ def cross(cx, y, letter_h):
     neon_word("YOUOUT", cx + u * 2, y, bar_z - step, letter_h, "glow_neon_red_mat", r=3.5, vertical=True)
     neon_word("WILL", cx + col_w + u + word_w, y, bar_z, letter_h, "glow_neon_red_mat", r=3.5)   # left of the column, seen from the road
     neon_word("FIND", cx - col_w - u, y, bar_z, letter_h, "glow_neon_red_mat", r=3.5)
-    light("light_cross", cx, y - 200, bar_z, [1.0, 0.0, 0.0], 3000, 1000)
+    light("light_cross", cx, y - 30, bar_z, [1.0, 0.0, 0.0], 2500, 1100)
     print(f"cross bottom at {v_bottom:.0f} cm, top at {top:.0f} cm")
 
 
