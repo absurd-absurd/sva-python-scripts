@@ -1,7 +1,8 @@
 """Bring the paper map into Unreal for the HUD's corner map.
 
 Run in the Unreal editor after tools/make_map.py. Imports export/map.png and
-export/map_marker.png as /Game/Horror/UI/T_Map and T_MapMarker, set up as UI textures
+export/map_marker.png / export/map_full.png as /Game/Horror/UI/T_Map, T_MapMarker
+and T_MapFull, set up as UI textures
 (no mipmaps, no streaming, clamped edges) so the map stays sharp and never smears at the border.
 """
 import unreal
@@ -31,4 +32,5 @@ def bring(png, name):
 
 bring("map.png", "T_Map")
 bring("map_marker.png", "T_MapMarker")
+bring("map_full.png", "T_MapFull")          # torn paper, with see-through edges
 print("map textures imported")

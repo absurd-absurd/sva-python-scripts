@@ -15,7 +15,7 @@ Makes, in /Game/Horror/Interact:
                    Components: DefaultSceneRoot > Hinge > Mesh, so a door turns on its edge.
   BP_HorrorHUD   - draws everything on screen (prompt, reading screen, journal, objective,
                    short messages) and handles E / Tab. Set as the game mode's HUD.
-Input actions IA_Interact (E) and IA_Journal (Tab) are added to IMC_Default.
+Input actions IA_Interact (E), IA_Journal (Tab) and IA_Map (M, works while paused) are added to IMC_Default.
 
 The Blueprint graphs (the logic) can't be made from Python; tools/make_interact_nodes.py
 writes them as text that gets pasted into the two graphs.
@@ -32,11 +32,12 @@ T = BPL.get_basic_type_by_name
 
 # ---------- input ----------
 
-def input_action(name, keys):
+def input_action(name, keys, when_paused=False):
     path = f"{INPUT_DIR}/{name}"
     ia = unreal.load_asset(path) if lib.does_asset_exist(path) else \
         tools.create_asset(name, INPUT_DIR, unreal.InputAction, unreal.InputAction_Factory())
     ia.set_editor_property("value_type", unreal.InputActionValueType.BOOLEAN)
+    ia.set_editor_property("trigger_when_paused", when_paused)
     lib.save_loaded_asset(ia, False)   # save even if Unreal did not mark it changed
     imc = unreal.load_asset("/Game/FirstPerson/Input/IMC_Default")
     have = {(m.action.get_name() if m.action else "", str(m.key.get_editor_property("key_name")))
@@ -128,6 +129,7 @@ def main():
     italic_font()
     input_action("IA_Interact", ["E", "Gamepad_FaceButton_Bottom"])
     input_action("IA_Journal", ["Tab", "Gamepad_Special_Right"])
+    input_action("IA_Map", ["M", "Gamepad_Special_Left"], when_paused=True)    # must work while the map pauses the game
 
     ex, _ = blueprint("BP_Examinable", unreal.Actor)
     components(ex)
@@ -145,7 +147,7 @@ def main():
     add_vars(hud, [("Focus", BPL.get_object_reference_type(BPL.generated_class(ex))),
                    ("Reading", b), ("JournalOpen", b), ("ReadTitle", s), ("ReadBody", s),
                    ("Journal", s), ("Keys", s), ("Objective", s), ("Toast", s), ("ToastTime", r),
-                   ("Gap", s)], editable=False)
+                   ("Gap", s), ("MapOpen", b)], editable=False)
     BPL.compile_blueprint(hud)
     defaults(hud, {"Gap": "\n\n", "ToastTime": -100.0, "Objective": ""})
     BPL.compile_blueprint(hud)

@@ -19,6 +19,7 @@ BP_HorrorHUD
          else -> open its page (Body), and the first time: journal line, key, objective;
                  doors swing open, pickups disappear
   Tab: open / close the journal (not while reading)
+  M:   open / close the full torn-paper map; pauses the game while it's open
   Movement and mouse look are frozen while a page or the journal is open.
 BP_Examinable
   Event Tick: once Opened, Hinge turns smoothly to OpenAngle (the door swings).
@@ -44,11 +45,14 @@ PROMPT_BOX = "(R=0.0,G=0.0,B=0.0,A=0.550000)"     # dark box behind "[E] Examine
 MAP = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "layout.json")))["map"]
 MAP_SIZE = MAP["x_max"] - MAP["x_min"]   # cm the whole map picture covers (it's square)
 MAP_VIEW = 4500.0              # cm of the world shown in the corner window
-MAP_SCREEN = 0.27              # corner window size, as a fraction of screen height
+MAP_SCREEN = 0.18              # corner window size, as a fraction of screen height (small, out of the way)
 MAP_TEX = "/Game/Horror/UI/T_Map.T_Map"
 MARKER_TEX = "/Game/Horror/UI/T_MapMarker.T_MapMarker"
 WHITE = "(R=1.0,G=1.0,B=1.0,A=1.0)"
-MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=0.92)"     # a little dim so it doesn't glare at night
+MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=0.5)"      # half see-through while you play
+MARKER_TINT = "(R=1.0,G=1.0,B=1.0,A=0.8)"
+MAP_FULL_TEX = "/Game/Horror/UI/T_MapFull.T_MapFull"
+MAP_FULL = 0.9                 # the M screen: torn-paper map this tall (fraction of screen height)
 TEXT_SCALE = 0.0032            # text size = screen height * this (3.2 at 1000 px tall)
 REACH, NEAR = 260.0, 40.0      # aim line from 40 cm in front of the eyes (outside the capsule) to 2.6 m
 STICKY = 300.0                 # a spotted clue keeps its prompt until used, within 3 m
@@ -354,18 +358,18 @@ def hud_graph():
     U = g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.mul(pX, -1.0 / MAP_SIZE)), ("B", "real", MAP["x_max"] / MAP_SIZE - half)])
     V = g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.mul(pY, -1.0 / MAP_SIZE)), ("B", "real", MAP["y_max"] / MAP_SIZE - half)])
     border = g.call(HUD, "DrawRect", after, [
-        ("RectColor", "color", "(R=0.02,G=0.015,B=0.01,A=0.9)"),
-        ("ScreenX", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MX), ("B", "real", 6.0)])),
-        ("ScreenY", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MY), ("B", "real", 6.0)])),
-        ("ScreenW", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", S), ("B", "real", 12.0)])),
-        ("ScreenH", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", S), ("B", "real", 12.0)]))]).then
+        ("RectColor", "color", "(R=0.02,G=0.015,B=0.01,A=0.3)"),
+        ("ScreenX", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MX), ("B", "real", 3.0)])),
+        ("ScreenY", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MY), ("B", "real", 3.0)])),
+        ("ScreenW", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", S), ("B", "real", 6.0)])),
+        ("ScreenH", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", S), ("B", "real", 6.0)]))]).then
     paper = g.call(HUD, "DrawTexture", border, [
         ("Texture", "texture", MAP_TEX), ("ScreenX", "float", MX), ("ScreenY", "float", MY),
         ("ScreenW", "float", S), ("ScreenH", "float", S),
         ("TextureU", "float", U), ("TextureV", "float", V),
         ("TextureUWidth", "float", 2 * half), ("TextureVHeight", "float", 2 * half),
         ("TintColor", "color", MAP_TINT)]).then
-    M = g.mul(S, 0.13)
+    M = g.mul(S, 0.16)
     centre = lambda base: g.pure(MATH, "Subtract_DoubleDouble", [
         ("A", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", base), ("B", "real", g.mul(S, 0.5))])),
         ("B", "real", g.mul(M, 0.5))])
@@ -378,7 +382,7 @@ def hud_graph():
         ("Texture", "texture", MARKER_TEX), ("ScreenX", "float", centre(MX)), ("ScreenY", "float", centre(MY)),
         ("ScreenW", "float", M), ("ScreenH", "float", M),
         ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
-        ("TintColor", "color", WHITE),
+        ("TintColor", "color", MARKER_TINT),
         ("Rotation", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", yaw_out), ("B", "real", 90.0)])),
         ("RotPivot", "vector2d", "(X=0.500000,Y=0.500000)")]).then
     fresh = g.pure(MATH, "Less_DoubleDouble", [("A", "real", g.pure(MATH, "Subtract_DoubleDouble", [
@@ -401,9 +405,37 @@ def hud_graph():
     a = draw(g.get("Journal", "string"), a, 0.2, 0.24)
     draw("[Tab]  Close", a, 0.2, 0.88, 0.75, DIM)
 
+    # the full map (M): the whole torn-paper map, opaque, with you on it; the game is paused
+    g.row(340 * 9, 1700)
+    m_yes, m_no = g.branch(g.get("MapOpen", "bool"), j_no)
+    FS = g.mul(H, MAP_FULL)
+    FX = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(FS, 0.5))])
+    FY = g.mul(H, (1 - MAP_FULL) / 2)
+    a = dark(m_yes)
+    a = g.call(HUD, "DrawTexture", a, [
+        ("Texture", "texture", MAP_FULL_TEX), ("ScreenX", "float", FX), ("ScreenY", "float", FY),
+        ("ScreenW", "float", FS), ("ScreenH", "float", FS),
+        ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
+        ("TintColor", "color", WHITE)]).then
+    FM = g.mul(FS, 0.035)
+    # where you are on the sheet: same flip as the corner map (+X is west = left)
+    on_sheet = lambda base, coord, top: g.pure(MATH, "Subtract_DoubleDouble", [
+        ("A", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", base), ("B", "real", g.pure(MATH, "Multiply_DoubleDouble", [
+            ("A", "real", FS), ("B", "real", g.pure(MATH, "Add_DoubleDouble", [
+                ("A", "real", g.mul(coord, -1.0 / MAP_SIZE)), ("B", "real", top / MAP_SIZE)]))]))])),
+        ("B", "real", g.mul(FM, 0.5))])
+    a = g.call(HUD, "DrawTexture", a, [
+        ("Texture", "texture", MARKER_TEX), ("ScreenX", "float", on_sheet(FX, pX, MAP["x_max"])),
+        ("ScreenY", "float", on_sheet(FY, pY, MAP["y_max"])), ("ScreenW", "float", FM), ("ScreenH", "float", FM),
+        ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
+        ("TintColor", "color", WHITE),
+        ("Rotation", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", yaw_out), ("B", "real", 90.0)])),
+        ("RotPivot", "vector2d", "(X=0.500000,Y=0.500000)")]).then
+    draw("[M]  Close", a, 0.04, 0.92, 0.75, DIM, True)
+
     # prompt
-    g.row(340 * 9, 2000)
-    v_yes, _ = g.branch(g.pure(SYS, "IsValid", [("Object", "object", g.get("Focus", "ex"))], ty="bool"), j_no)
+    g.row(340 * 9, 2400)
+    v_yes, _ = g.branch(g.pure(SYS, "IsValid", [("Object", "object", g.get("Focus", "ex"))], ty="bool"), m_no)
     o_yes, _ = g.branch(g.not_(fget("Opened", "bool")), v_yes)
     box = g.call(HUD, "DrawRect", o_yes, [
         ("RectColor", "color", PROMPT_BOX), ("ScreenX", "float", g.mul(W, 0.43)), ("ScreenY", "float", g.mul(H, 0.548)),
@@ -480,6 +512,16 @@ def hud_graph():
     unfreeze(g.set("JournalOpen", "bool", False, shut).then)
     g.row(340 * 2, 10700)
     freeze(g.set("JournalOpen", "bool", True, opn).then)
+
+    # ---- M: the full map, pauses the game (IA_Map works while paused) ----
+    g.row(0, 11400)
+    mkey = g.input_event("IA_Map")
+    _, free = g.branch(g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Reading", "bool")),
+                                                 ("B", "bool", g.get("JournalOpen", "bool"))], ty="bool"), mkey)
+    shut, opn = g.branch(g.get("MapOpen", "bool"), free)
+    g.call(STATICS, "SetGamePaused", g.set("MapOpen", "bool", False, shut).then, [("bPaused", "bool", False)])
+    g.row(340 * 2, 11900)
+    g.call(STATICS, "SetGamePaused", g.set("MapOpen", "bool", True, opn).then, [("bPaused", "bool", True)])
     return g
 
 

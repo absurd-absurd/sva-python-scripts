@@ -1,7 +1,8 @@
 """Draw the in-game map of Marrow Falls: an old paper map in ink, made from the level layout.
 
     python make_map.py            -> export/map.png (2048 x 2048) + export/map_marker.png,
-                                     then unreal/import_map.py brings both into Unreal
+                                     + export/map_full.png (torn paper, for the M screen);
+                                     then unreal/import_map.py brings them into Unreal
 
 Everything on it comes from the same data the level is built from:
   layout.json     trail, woods area, clearings (tower, cabins) and the map's world bounds
@@ -25,6 +26,7 @@ LAYOUT = json.load(open(os.path.join(ROOT, "layout.json")))
 SCATTER = os.path.join(ROOT, "export", "scatter.json")
 OUT = os.path.join(ROOT, "export", "map.png")
 MARKER = os.path.join(ROOT, "export", "map_marker.png")
+FULL = os.path.join(ROOT, "export", "map_full.png")      # the torn-paper version for the M screen
 B = LAYOUT["map"]                                   # world bounds of the picture (square)
 PX = B["px"]
 FONT = r"C:/Windows/Fonts/Inkfree.ttf"
@@ -168,7 +170,7 @@ def frame(d):
     d.polygon([(cx, cy - 80), (cx - 22, cy), (cx + 22, cy)], fill=INK)
     d.polygon([(cx, cy + 80), (cx - 22, cy), (cx + 22, cy)], outline=INK, width=3)
     d.text((cx, cy - 115), "N", font=font(56), fill=INK, anchor="mm")
-    d.text((PX - 60, PX - 50), "MARROW FALLS  - visitors' map -", font=font(40), fill=FADED, anchor="rs")
+    d.text((PX - 190, 330), "MARROW FALLS  - visitors' map -", font=font(40), fill=(200, 205, 200), anchor="rs")
 
 
 def marker():
@@ -177,6 +179,40 @@ def marker():
     d = ImageDraw.Draw(m)
     d.polygon([(64, 8), (110, 116), (64, 88), (18, 116)], fill=(170, 25, 20, 255), outline=(40, 10, 8, 255))
     m.save(MARKER)
+
+
+def torn(img):
+    """The full-screen map: the same map on a sheet torn out of something, ragged edges with
+    see-through bits (alpha), the paper scorched darker near the tears, one corner ripped off."""
+    w = h = PX
+    edge = []                                        # walk around the sheet with a jagged inset
+    steps = 220
+    for side in range(4):
+        for i in range(steps):
+            t = i / steps
+            inset = 40 + rng.uniform(0, 34) + 26 * math.sin(t * 19 + side * 2.1)
+            if rng.random() < 0.04:
+                inset += rng.uniform(25, 70)         # a deeper rip now and then
+            if side == 0:
+                edge.append((t * w, inset))
+            elif side == 1:
+                edge.append((w - inset, t * h))
+            elif side == 2:
+                edge.append((w - t * w, h - inset))
+            else:
+                edge.append((inset, h - t * h))
+    # rip off the top-right corner
+    cut = [(x, y) for x, y in edge if not (x > w * 0.83 and y < h * 0.15 and x - w * 0.83 > y * 1.1)]
+    mask = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mask).polygon(cut, fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(1.2))
+    burn = mask.filter(ImageFilter.GaussianBlur(28))  # darker paper near the torn edge
+    dark = Image.new("RGB", (w, h), (92, 66, 40))
+    shade = Image.eval(burn, lambda v: 255 - v if v < 255 else 0)
+    paper_img = Image.composite(dark, img, shade.point(lambda v: min(255, v * 2)))
+    out = paper_img.convert("RGBA")
+    out.putalpha(mask)
+    out.save(FULL)
 
 
 def main():
@@ -191,6 +227,7 @@ def main():
     img = img.filter(ImageFilter.GaussianBlur(0.6))  # soft, printed look
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     img.save(OUT)
+    torn(img)
     marker()
     print("map ->", OUT, "+", MARKER)
 
