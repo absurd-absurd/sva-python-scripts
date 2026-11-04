@@ -98,6 +98,33 @@ def ground():
     place("Lake", "Lake", PLANE, (0, 19000, 3), (24000, 9000, 1), color("Water", (0.005, 0.01, 0.015)))
 
 
+STORY = json.load(open(r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/story.json"))
+
+
+def sign_text(x, y, z):
+    """The motel's name on both faces of the roadside sign, with a dim red glow."""
+    name = STORY["places"]["motel"].upper()               # MARROW FALLS MOTEL
+    top, _, bottom = name.rpartition(" ")                 # "MARROW FALLS" / "MOTEL"
+    for side, yaw in ((1, 0), (-1, 180)):
+        t = actors.spawn_actor_from_class(unreal.TextRenderActor, unreal.Vector(x + side * 22, y, z), unreal.Rotator(0, 0, yaw))
+        c = t.text_render
+        c.set_text(f"{top}\n{bottom}")
+        c.set_horizontal_alignment(unreal.HorizTextAligment.EHTA_CENTER)
+        c.set_vertical_alignment(unreal.VerticalTextAligment.EVRTA_TEXT_CENTER)
+        c.set_world_size(55)
+        c.set_text_render_color(unreal.Color(r=255, g=225, b=190, a=255))
+        t.set_actor_label(f"MotelSign_Text{'' if side > 0 else '_Back'}")
+        t.set_folder_path("Blockout/Motel")
+        t.tags = [TAG]
+    glow = actors.spawn_actor_from_class(unreal.PointLight, unreal.Vector(x + 120, y, z))
+    glow.point_light_component.set_intensity(40)
+    glow.point_light_component.set_light_color(unreal.LinearColor(1.0, 0.25, 0.2, 1))
+    glow.point_light_component.set_attenuation_radius(600)
+    glow.set_actor_label("MotelSign_Glow")
+    glow.set_folder_path("Blockout/Lighting")
+    glow.tags = [TAG]
+
+
 def road_and_lot():
     asphalt = color("Asphalt", (0.03, 0.03, 0.03))
     strip("Road", "Motel", (-20000, -4500), (20000, -4500), 900, asphalt)
@@ -105,6 +132,7 @@ def road_and_lot():
     sign = color("Sign", (0.3, 0.05, 0.05))
     box("MotelSign_Pole", "Motel", -3400, -3800, 0, 30, 30, 700, color("Metal", (0.15, 0.15, 0.15)))
     box("MotelSign", "Motel", -3400, -3800, 600, 40, 400, 200, sign)
+    sign_text(-3400, -3800, 700)
     box("Car_Player", "Motel", -1800, -2600, 0, 450, 190, 140, color("Car", (0.1, 0.12, 0.15)))
 
 

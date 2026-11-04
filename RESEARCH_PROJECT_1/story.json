@@ -1,0 +1,12 @@
+{
+  "_about": "Names and story facts in one place. The quest/clue data and the title screen read from here.",
+  "game_title": "MARROW",
+  "friend": {"full_name": "Cassidy Bryne", "nickname": "Cas"},
+  "player": {"name": null, "nickname_from_cas": "Bug", "note": "Never named. Cas's notes call the player 'Bug'; everyone else says 'her friend'."},
+  "places": {
+    "motel": "Marrow Falls Motel",
+    "lake": "Black Hollow Lake",
+    "town": "Marrow Falls"
+  },
+  "premise": "A year ago, Cas disappeared. The Marrow Falls Motel was the last place she was seen. You're the only one who never stopped looking."
+}
