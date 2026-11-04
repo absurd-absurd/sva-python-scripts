@@ -147,9 +147,11 @@ def main():
     add_vars(hud, [("Focus", BPL.get_object_reference_type(BPL.generated_class(ex))),
                    ("Reading", b), ("JournalOpen", b), ("ReadTitle", s), ("ReadBody", s),
                    ("Journal", s), ("Keys", s), ("Objective", s), ("Toast", s), ("ToastTime", r),
-                   ("Gap", s), ("MapOpen", b)], editable=False)
+                   ("Gap", s), ("MapOpen", b),
+                   # flashlight flicker timer: mode 0 on / 1 flutter / 2 off, next start, end, hit on return
+                   ("FlMode", T("int")), ("FlNext", r), ("FlEnd", r), ("FlHit", b)], editable=False)
     BPL.compile_blueprint(hud)
-    defaults(hud, {"Gap": "\n\n", "ToastTime": -100.0, "Objective": ""})
+    defaults(hud, {"Gap": "\n\n", "ToastTime": -100.0, "Objective": "", "FlNext": 4.0})
     BPL.compile_blueprint(hud)
     lib.save_loaded_asset(hud, False)   # save even if Unreal did not mark it changed
 

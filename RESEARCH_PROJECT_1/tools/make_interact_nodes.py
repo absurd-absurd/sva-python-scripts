@@ -20,6 +20,8 @@ BP_HorrorHUD
                  doors swing open, pickups disappear
   Tab: open / close the journal (not while reading)
   M:   open / close the full torn-paper map; pauses the game while it's open
+  flashlight flicker (every frame, top of Draw HUD): flutters, short cut-outs, sometimes a hit to
+  bring it back (CS_FlashHit camera jolt); Fear in MPC_Horror makes it worse
   Movement and mouse look are frozen while a page or the journal is open.
 BP_Examinable
   Event Tick: once Opened, Hinge turns smoothly to OpenAngle (the door swings).
@@ -53,6 +55,17 @@ MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=0.5)"      # half see-through while you play
 MARKER_TINT = "(R=1.0,G=1.0,B=1.0,A=0.8)"
 MAP_FULL_TEX = "/Game/Horror/UI/T_MapFull.T_MapFull"
 MAP_FULL = 0.9                 # the M screen: torn-paper map this tall (fraction of screen height)
+import re as _re
+_FL = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "unreal", "flashlight.py"), encoding="utf-8").read()
+FLASH_INTENSITY = float(_re.search(r"^INTENSITY = ([0-9.]+)", _FL, _re.M).group(1))   # same as flashlight.py
+MPC_PATH = "/Game/Horror/Materials/MPC_Horror.MPC_Horror"
+HIT_SHAKE = "/Game/Horror/Player/CS_FlashHit.CS_FlashHit_C"
+# flashlight flicker, calm -> afraid (Fear 0 -> 1 in MPC_Horror)
+FLICK_GAP = ((2.5, 6.0), (0.2, 0.8))    # seconds between flickers (random in range)
+FLICK_OFF = (0.25, 0.55)                # share of flickers that are a full cut-out
+FLUTTER = (0.1, 0.4)                    # how long a flutter lasts (s)
+CUTOUT = (0.3, 0.8)                     # how long a cut-out lasts (s); under a second
+HIT_CHANCE = 0.5                        # share of cut-outs that end with a hit (camera jolt)
 TEXT_SCALE = 0.0032            # text size = screen height * this (3.2 at 1000 px tall)
 REACH, NEAR = 260.0, 40.0      # aim line from 40 cm in front of the eyes (outside the capsule) to 2.6 m
 STICKY = 300.0                 # a spotted clue keeps its prompt until used, within 3 m
@@ -85,7 +98,13 @@ TY = {
     "object": _t("object", obj=C("/Script/CoreUObject.Object")), "actor": _t("object", obj=C(ACTOR)),
     "pc": _t("object", obj=C(PC)), "ctrl": _t("object", obj=C(CTRL)), "cam": _t("object", obj=C(CAM)),
     "font": _t("object", obj=C("/Script/Engine.Font")), "texture": _t("object", obj=C("/Script/Engine.Texture")),
-    "vector2d": _s("/Script/CoreUObject.Vector2D"), "scene": _t("object", obj=C(SCENE)),
+    "vector2d": _s("/Script/CoreUObject.Vector2D"), "name": _t("name"),
+    "mpc": _t("object", obj=C("/Script/Engine.MaterialParameterCollection")),
+    "compclass": _t("class", obj=C("/Script/Engine.ActorComponent")),
+    "comp": _t("object", obj=C("/Script/Engine.ActorComponent")),
+    "spot": _t("object", obj=C("/Script/Engine.SpotLightComponent")),
+    "light": _t("object", obj=C("/Script/Engine.LightComponent")),
+    "shakeclass": _t("class", obj=C("/Script/Engine.CameraShakeBase")), "scene": _t("object", obj=C(SCENE)),
     "ex": _t("object", obj=EX_CLASS),
 }
 
@@ -97,9 +116,11 @@ class Pin:
 
 
 def fmt_default(ty, v):
+    if ty == "int":
+        return f'DefaultValue="{int(v)}"'
     if ty == "bool":
         return f'DefaultValue="{"true" if v else "false"}"'
-    if ty in ("font", "texture"):
+    if ty in ("font", "texture", "mpc", "compclass", "shakeclass"):
         return f'DefaultObject="{v}"'
     if isinstance(v, float) or isinstance(v, int):
         return f'DefaultValue="{float(v)}"'
@@ -338,8 +359,58 @@ def hud_graph():
     s_none = g.set("Focus", "ex", None, [f_no, k_no])        # nothing examinable any more
     g.row(340 * 7, 600)
 
+    # flashlight flicker: a small timer. Mode 0 = on, 1 = flutter, 2 = cut out. When an event
+    # ends, the next one is FLICK_GAP away; a cut-out sometimes ends with a hit (camera jolt).
+    # Fear (MPC_Horror) shortens the gaps and makes cut-outs more common.
+    g.row(340 * 7, -2400)
+    LIB = "/Script/Engine.KismetMaterialLibrary"
+    read_fear = g.call(LIB, "GetScalarParameterValue", [s_hit.then, k_yes, s_none.then],
+                       [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "Fear")], outs=[("ReturnValue", "float")])
+    fear = lambda: read_fear.o["ReturnValue"]          # read once per frame (it's an action node)
+    by_fear = lambda calm, afraid: g.pure(MATH, "Lerp", [("A", "real", calm), ("B", "real", afraid), ("Alpha", "real", fear())])
+    rnd = lambda lo, hi: g.pure(MATH, "RandomFloatInRange", [("Min", "real", lo), ("Max", "real", hi)])
+    mode_is = lambda k: g.pure(MATH, "EqualEqual_IntInt", [("A", "int", g.get("FlMode", "int")), ("B", "int", k)], ty="bool")
+    past = lambda var: g.pure(MATH, "GreaterEqual_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get(var, "real"))], ty="bool")
+    both = lambda a, b: g.pure(MATH, "BooleanAND", [("A", "bool", a), ("B", "bool", b)], ty="bool")
+    later = lambda dt: g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.now()), ("B", "real", dt)])
+    chance = lambda p: g.pure(MATH, "Less_DoubleDouble", [("A", "real", g.pure(MATH, "RandomFloat")), ("B", "real", p)], ty="bool")
+
+    ended, running = g.branch(both(g.not_(mode_is(0)), past("FlEnd")), read_fear.then)
+    hit, no_hit = g.branch(both(mode_is(2), g.get("FlHit", "bool")), ended)
+    cam_mgr = g.get("PlayerCameraManager", "cam", (g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc", C(PC)))
+    knock = g.call(CAM, "StartCameraShake", hit, [("ShakeClass", "shakeclass", HIT_SHAKE), ("Scale", "float", 1.0)],
+                   target=(cam_mgr, "cam"))
+    a = g.set("FlMode", "int", 0, [knock.then, no_hit]).then
+    a = g.set("FlNext", "real", later(rnd(by_fear(FLICK_GAP[0][0], FLICK_GAP[1][0]), by_fear(FLICK_GAP[0][1], FLICK_GAP[1][1]))), a).then
+    g.row(340 * 7, -1700)
+    start, idle = g.branch(both(mode_is(0), past("FlNext")), [a, running])
+    cut, flutter = g.branch(chance(by_fear(FLICK_OFF[0], FLICK_OFF[1])), start)
+    a = g.set("FlMode", "int", 2, cut).then
+    a = g.set("FlEnd", "real", later(rnd(*CUTOUT)), a).then
+    cut_done = g.set("FlHit", "bool", chance(HIT_CHANCE), a).then
+    g.row(340 * 9, -1300)
+    a = g.set("FlMode", "int", 1, flutter).then
+    flutter_done = g.set("FlEnd", "real", later(rnd(*FLUTTER)), a).then
+    g.row(340 * 12, -1700)
+    light = g._node(K2 + "K2Node_CallFunction", f'FunctionReference=(MemberParent="{C(ACTOR)}",MemberName="GetComponentByClass")')
+    light.inp("self", "actor", g.pure(HUD, "GetOwningPawn", ty="actor"))
+    light.inp("ComponentClass", "compclass", "/Script/Engine.SpotLightComponent")
+    light_out = light.out("ReturnValue", "comp")
+    as_spot = g._node(K2 + "K2Node_DynamicCast", f'TargetType="{C("/Script/Engine.SpotLightComponent")}"', True)
+    ex = as_spot.inp("execute", "exec")
+    for w_ in (cut_done, flutter_done, idle):
+        wire(w_, ex)
+    spot_ok, spot_fail = as_spot.out("then", "exec"), as_spot.out("CastFailed", "exec")
+    as_spot.inp("Object", "object", light_out)
+    spot = as_spot.out("AsSpot Light Component", "spot")
+    sel = lambda a_, b_, pick: g.pure(MATH, "SelectFloat", [("A", "real", a_), ("B", "real", b_), ("bPickA", "bool", pick)])
+    level = sel(0.0, sel(rnd(0.1, 0.8), 1.0, mode_is(1)), mode_is(2))     # off / flutter / on
+    lit = g.call("/Script/Engine.LightComponent", "SetIntensity", spot_ok, [("NewIntensity", "float", g.mul(level, FLASH_INTENSITY))],
+                 target=(spot, "light"))
+
     # objective + message
-    after = draw(g.get("Objective", "string"), [s_hit.then, k_yes, s_none.then], 0.04, 0.05, 0.8, DIM, True)
+    g.row(340 * 9, 0)
+    after = draw(g.get("Objective", "string"), [lit.then, spot_fail], 0.04, 0.05, 0.8, DIM, True)
 
     # corner map: a MAP_VIEW-wide window of the paper map centred on you, top right,
     # with the red arrow in the middle turned the way you face (north is always up)
