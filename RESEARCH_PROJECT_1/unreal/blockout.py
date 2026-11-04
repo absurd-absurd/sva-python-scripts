@@ -127,10 +127,11 @@ def motel():
         box(name + "_Back", "Motel/HerRoom", cx, back_y - t / 2, 0, room_w, t, h, wall)
         box(name + "_Left", "Motel/HerRoom", x0 + t / 2, mid_y, 0, t, depth, h, wall)
         box(name + "_Right", "Motel/HerRoom", x0 + room_w - t / 2, mid_y, 0, t, depth, h, wall)
-        # front wall split around a 110 cm doorway
-        box(name + "_FrontL", "Motel/HerRoom", x0 + 75, front_y + t / 2, 0, 150, t, h, wall)
-        box(name + "_FrontR", "Motel/HerRoom", x0 + 260 + 120, front_y + t / 2, 0, 240, t, h, wall)
-        box(name + "_FrontTop", "Motel/HerRoom", x0 + 205, front_y + t / 2, 230, 110, t, h - 230, wall)
+        # front wall split around a doorway (140 wide x 230 tall; the player is 70 wide)
+        d0, dw, dh = 140, 140, 230
+        box(name + "_FrontL", "Motel/HerRoom", x0 + d0 / 2, front_y + t / 2, 0, d0, t, h, wall)
+        box(name + "_FrontR", "Motel/HerRoom", (x0 + d0 + dw + x0 + room_w) / 2, front_y + t / 2, 0, room_w - d0 - dw, t, h, wall)
+        box(name + "_FrontTop", "Motel/HerRoom", x0 + d0 + dw / 2, front_y + t / 2, dh, dw, t, h - dh, wall)
         box(name + "_Floor", "Motel/HerRoom", cx, mid_y, 0, room_w, depth, 2, color("Carpet", (0.12, 0.06, 0.06)))
         box(name + "_Bed", "Motel/HerRoom", cx + 60, back_y - 160, 0, 200, 220, 55, color("Bed", (0.4, 0.38, 0.34)))
         box(name + "_Nightstand", "Motel/HerRoom", cx - 110, back_y - 60, 0, 60, 50, 60, door)
@@ -243,7 +244,7 @@ def night():
         p.point_light_component.set_light_color(unreal.LinearColor(*rgb, 1))
         p.point_light_component.set_attenuation_radius(radius)
         return p
-    lamp("Lamp_HerDoor", (-795, -1500, 280), (1.0, 0.75, 0.4), 800, 700)
+    lamp("Lamp_HerDoor", (-790, -1500, 280), (1.0, 0.75, 0.4), 800, 700)
     lamp("Lamp_HerRoom", (-750, -1050, 280), (1.0, 0.8, 0.55), 120, 450)
     box("ParkingLight_Pole", "Motel", 1500, -3500, 0, 25, 25, 650, color("Metal", (0.15, 0.15, 0.15)))
     lamp("Lamp_Parking", (1500, -3500, 620), (0.7, 0.85, 1.0), 4000, 1800)
