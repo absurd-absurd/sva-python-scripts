@@ -39,6 +39,8 @@ def neon_material():
     """Rebuilt on every run (it has no hand-made wires), so changes to the flicker take effect."""
     if lib.does_asset_exist(NEON):
         m = unreal.load_asset(NEON)
+        # a material open in an editor window can't be edited by script (nodes come back None)
+        unreal.get_editor_subsystem(unreal.AssetEditorSubsystem).close_all_editors_for_asset(m)
         MEL.delete_all_material_expressions(m)
     else:
         m = tools.create_asset("M_PS2_Neon", NEON.rsplit("/", 1)[0], unreal.Material, unreal.MaterialFactoryNew())
@@ -87,6 +89,8 @@ def light_flicker_material():
     """A light function: dims a light with the same flicker code as the dead neon."""
     if lib.does_asset_exist(LIGHT_FLICKER):
         m = unreal.load_asset(LIGHT_FLICKER)
+        # a material open in an editor window can't be edited by script (nodes come back None)
+        unreal.get_editor_subsystem(unreal.AssetEditorSubsystem).close_all_editors_for_asset(m)
         MEL.delete_all_material_expressions(m)
     else:
         m = tools.create_asset("M_PS2_LightFlicker", LIGHT_FLICKER.rsplit("/", 1)[0], unreal.Material,
