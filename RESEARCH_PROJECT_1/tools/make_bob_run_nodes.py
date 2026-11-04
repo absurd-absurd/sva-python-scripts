@@ -13,7 +13,7 @@ Unreal's Python can't add Blueprint nodes, but the graph editor accepts nodes pa
 """
 import uuid
 
-WALK, RUN, MAX_BOB = 300.0, 550.0, 1.6
+WALK, RUN, MAX_BOB = 300.0, 650.0, 1.6
 X0, Y0 = 3400, -2400                       # where the nodes land, right of the template's nodes
 BP = "/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter.BP_FirstPersonCharacter:EventGraph"
 

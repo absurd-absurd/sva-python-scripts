@@ -2,7 +2,7 @@
 
 Run in the Unreal editor. Makes /Game/FirstPerson/Input/Actions/IA_Run (a button) and maps
 it in IMC_Default, the template's input mapping. The character Blueprint uses IA_Run:
-pressed -> MaxWalkSpeed 550, released -> 300 (the careful walk).
+pressed -> MaxWalkSpeed 650, released -> 300 (the careful walk).
 """
 import unreal
 
