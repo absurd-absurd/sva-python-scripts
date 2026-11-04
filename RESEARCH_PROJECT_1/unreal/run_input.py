@@ -15,7 +15,7 @@ else:
     ia = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
         "IA_Run", ACTION.rsplit("/", 1)[0], unreal.InputAction, unreal.InputAction_Factory())
 ia.set_editor_property("value_type", unreal.InputActionValueType.BOOLEAN)
-lib.save_loaded_asset(ia)
+lib.save_loaded_asset(ia, False)   # save even if Unreal did not mark it changed
 
 imc = unreal.load_asset("/Game/FirstPerson/Input/IMC_Default")
 have = {(m.action.get_name() if m.action else "", str(m.key.get_editor_property("key_name"))) for m in imc.get_editor_property("mappings")}
@@ -24,5 +24,5 @@ for key in ("LeftShift", "Gamepad_LeftThumbstick"):
         k = unreal.Key()
         k.set_editor_property("key_name", key)
         imc.map_key(ia, k)
-lib.save_loaded_asset(imc)
+lib.save_loaded_asset(imc, False)   # save even if Unreal did not mark it changed
 print("IA_Run keys:", [str(m.key.get_editor_property("key_name")) for m in imc.get_editor_property("mappings") if m.action == ia])

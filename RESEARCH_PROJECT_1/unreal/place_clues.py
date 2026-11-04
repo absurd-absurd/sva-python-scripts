@@ -11,13 +11,14 @@ import unreal
 ROOT = r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1"
 DATA = json.load(open(ROOT + "/clues.json", encoding="utf-8"))
 TAG = "clue"
+HIT_MARGIN, HIT_UP = 10, 10   # cm the aim box sticks out around / above small clues
 WRAP = 44                     # characters per line on the reading screen
 MATS = "/Game/Horror/Materials/PS2/Props/"
 
 # shape: size in cm (x, y, z), material, and where the mesh sits from the actor's origin.
 # A door's origin is its hinge edge, so the Hinge component swings it like a real door.
 SHAPES = {
-    "paper": ((21, 28, 0.4), "MI_PS2_chair_mat", (0, 0, 0.2)),
+    "paper": ((21, 28, 0.4), "MI_PS2_curtain_mat", (0, 0, 0.2)),   # yellowed, shows up on a white bed
     "key":   ((10, 4, 1.2), "MI_PS2_brass_mat", (0, 0, 0.6)),
     "book":  ((30, 22, 4), "MI_PS2_door_mat", (0, 0, 2)),
     "door":  ((108, 5, 228), "MI_PS2_door_mat", (54, 0, 114)),
@@ -59,10 +60,18 @@ def main():
         mesh.set_relative_location(unreal.Vector(*offset), False, True)
         mesh.set_relative_scale3d(unreal.Vector(size[0] / 100, size[1] / 100, size[2] / 100))
         mesh.set_material(0, unreal.load_asset(MATS + mat))
+        # the invisible aim box: the object plus HIT_MARGIN all round (doors: just the door)
+        # it sits on the same surface and rises HIT_UP cm above the object, so the aim line
+        # meets it before the bed or table around it
+        margin, up = (0, 0) if "door" in c["shape"] else (HIT_MARGIN, HIT_UP)
+        hit = a.get_components_by_class(unreal.BoxComponent)[0]
+        hit.set_relative_location(unreal.Vector(offset[0], offset[1], (size[2] + up) / 2), False, True)
+        hit.set_box_extent(unreal.Vector(size[0] / 2 + margin, size[1] / 2 + margin, (size[2] + up) / 2), False)
+        hit.set_collision_profile_name("UI")
 
     hud = unreal.load_asset("/Game/Horror/Interact/BP_HorrorHUD")
     unreal.get_default_object(BPL.generated_class(hud)).set_editor_property("Objective", DATA["start_objective"])
-    unreal.EditorAssetLibrary.save_loaded_asset(hud)
+    unreal.EditorAssetLibrary.save_loaded_asset(hud, False)
     print(f"placed {len(DATA['clues'])} clues")
 
 

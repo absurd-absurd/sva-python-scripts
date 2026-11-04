@@ -37,7 +37,7 @@ def input_action(name, keys):
     ia = unreal.load_asset(path) if lib.does_asset_exist(path) else \
         tools.create_asset(name, INPUT_DIR, unreal.InputAction, unreal.InputAction_Factory())
     ia.set_editor_property("value_type", unreal.InputActionValueType.BOOLEAN)
-    lib.save_loaded_asset(ia)
+    lib.save_loaded_asset(ia, False)   # save even if Unreal did not mark it changed
     imc = unreal.load_asset("/Game/FirstPerson/Input/IMC_Default")
     have = {(m.action.get_name() if m.action else "", str(m.key.get_editor_property("key_name")))
             for m in imc.get_editor_property("mappings")}
@@ -46,7 +46,7 @@ def input_action(name, keys):
             k = unreal.Key()
             k.set_editor_property("key_name", key)
             imc.map_key(ia, k)
-    lib.save_loaded_asset(imc)
+    lib.save_loaded_asset(imc, False)   # save even if Unreal did not mark it changed
 
 
 # ---------- Blueprints ----------
@@ -61,8 +61,17 @@ def blueprint(name, parent):
 
 
 def add_vars(bp, spec, editable):
+    """Add member variables that aren't there yet (add_member_variable would add a second
+    copy named Var_0, so check the compiled class first)."""
+    BPL.compile_blueprint(bp)
+    cdo = unreal.get_default_object(BPL.generated_class(bp))
     for name, kind in spec:
-        BPL.add_member_variable(bp, name, kind)       # does nothing if it already exists
+        try:
+            cdo.get_editor_property(name)
+            continue                                  # already there
+        except Exception:
+            pass
+        BPL.add_member_variable(bp, name, kind)
         if editable:
             BPL.set_blueprint_variable_instance_editable(bp, name, True)
 
@@ -74,13 +83,13 @@ def defaults(bp, values):
 
 
 def components(bp):
-    """DefaultSceneRoot > Hinge (scene) > Mesh (static mesh)."""
+    """DefaultSceneRoot > Hinge (scene) > Mesh (static mesh) + HitBox (box).
+    HitBox is an invisible box a little bigger than the object that only the aim line hits
+    (collision preset "UI"), so a thin note or a small key is easy to look at."""
     sub = unreal.get_engine_subsystem(unreal.SubobjectDataSubsystem)
     lib_s = unreal.SubobjectDataBlueprintFunctionLibrary
     handles = sub.k2_gather_subobject_data_for_blueprint(bp)
     names = {str(lib_s.get_variable_name(lib_s.get_data(h))): h for h in handles}
-    if "Hinge" in names:
-        return
     root = handles[0]
 
     def add(parent, cls, name):
@@ -89,10 +98,14 @@ def components(bp):
         sub.rename_subobject(h, name)
         return h
 
-    hinge = add(root, unreal.SceneComponent, "Hinge")
-    mesh = add(hinge, unreal.StaticMeshComponent, "Mesh")
-    comp = lib_s.get_object(lib_s.get_data(mesh))
-    comp.set_editor_property("static_mesh", unreal.load_asset("/Engine/BasicShapes/Cube"))
+    if "Hinge" not in names:
+        names["Hinge"] = add(root, unreal.SceneComponent, "Hinge")
+        mesh = add(names["Hinge"], unreal.StaticMeshComponent, "Mesh")
+        comp = lib_s.get_object(lib_s.get_data(mesh))
+        comp.set_editor_property("static_mesh", unreal.load_asset("/Engine/BasicShapes/Cube"))
+    if "HitBox" not in names:
+        box = lib_s.get_object(lib_s.get_data(add(names["Hinge"], unreal.BoxComponent, "HitBox")))
+        box.set_collision_profile_name("UI")
 
 
 def italic_font():
@@ -108,7 +121,7 @@ def italic_font():
     fallback = text[text.index("FallbackTypeface="):]
     cf.import_text(f'(DefaultTypeface=(Fonts=((Name="Regular",Font=(FontFaceAsset="{face}")))),{fallback}')
     font.set_editor_property("composite_font", cf)
-    lib.save_loaded_asset(font)
+    lib.save_loaded_asset(font, False)   # save even if Unreal did not mark it changed
 
 
 def main():
@@ -126,7 +139,7 @@ def main():
     BPL.compile_blueprint(ex)
     defaults(ex, {"Prompt": "Examine", "LockedText": "It's locked.", "OpenAngle": 95.0})
     BPL.compile_blueprint(ex)
-    lib.save_loaded_asset(ex)
+    lib.save_loaded_asset(ex, False)   # save even if Unreal did not mark it changed
 
     hud, _ = blueprint("BP_HorrorHUD", unreal.HUD)
     add_vars(hud, [("Focus", BPL.get_object_reference_type(BPL.generated_class(ex))),
@@ -134,14 +147,14 @@ def main():
                    ("Journal", s), ("Keys", s), ("Objective", s), ("Toast", s), ("ToastTime", r),
                    ("Gap", s)], editable=False)
     BPL.compile_blueprint(hud)
-    defaults(hud, {"Gap": "\n\n", "ToastTime": -100.0, "Objective": "Find Room 4."})
+    defaults(hud, {"Gap": "\n\n", "ToastTime": -100.0, "Objective": ""})
     BPL.compile_blueprint(hud)
-    lib.save_loaded_asset(hud)
+    lib.save_loaded_asset(hud, False)   # save even if Unreal did not mark it changed
 
     gm = unreal.load_asset("/Game/FirstPerson/Blueprints/BP_FirstPersonGameMode")
     unreal.get_default_object(BPL.generated_class(gm)).set_editor_property("hud_class", BPL.generated_class(hud))
     BPL.compile_blueprint(gm)
-    lib.save_loaded_asset(gm)
+    lib.save_loaded_asset(gm, False)   # save even if Unreal did not mark it changed
     print("interaction assets ready")
 
 

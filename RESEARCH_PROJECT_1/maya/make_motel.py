@@ -219,10 +219,10 @@ def room_inside(x0, x1):
     box(x0 + 150, x0 + 210, BACK - 70, BACK - 25, 0, 60, "wood_mat")
     tube((x0 + 180, BACK - 47, 60), (x0 + 180, BACK - 47, 95), 3, "brass_mat")
     tube((x0 + 180, BACK - 47, 95), (x0 + 180, BACK - 47, 120), 16, "glow_lamp_mat", sides=8)
-    # dresser with an old TV across from the bed
-    box(x0 + 30, x0 + 200, FRONT + 25, FRONT + 80, 0, 80, "wood_mat")
-    box(x0 + 60, x0 + 160, FRONT + 30, FRONT + 75, 80, 150, "metal_mat")
-    box(x0 + 70, x0 + 150, FRONT + 76, FRONT + 78, 90, 140, "glass_mat")
+    # dresser with an old TV against the left wall, facing the bed (kept clear of the doorway)
+    box(x0 + t, x0 + t + 55, FRONT + 200, FRONT + 370, 0, 80, "wood_mat")
+    box(x0 + t + 5, x0 + t + 50, FRONT + 235, FRONT + 335, 80, 150, "metal_mat")
+    box(x0 + t + 50, x0 + t + 52, FRONT + 245, FRONT + 325, 90, 140, "glass_mat")
 
 
 def chair(x, y):

@@ -77,7 +77,7 @@ def neon_material():
     MEL.connect_material_expressions(flick, "", b, "B")
     MEL.connect_material_property(b, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     MEL.recompile_material(m)
-    lib.save_loaded_asset(m)
+    lib.save_loaded_asset(m, False)
     return m
 
 
@@ -113,7 +113,7 @@ def light_flicker_material():
         MEL.connect_material_expressions(c, "", flick, n)
     MEL.connect_material_property(flick, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     MEL.recompile_material(m)
-    lib.save_loaded_asset(m)
+    lib.save_loaded_asset(m, False)
     return m
 
 
@@ -148,7 +148,7 @@ def materials(colors, table):
                 MEL.set_material_instance_texture_parameter_value(mi, "Tex", tex)
                 MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*spec["tint"], 1))
                 MEL.set_material_instance_scalar_parameter_value(mi, "TexSize", float(spec["size"]))
-        lib.save_loaded_asset(mi)
+        lib.save_loaded_asset(mi, False)
         made[name] = mi
     return made
 
@@ -169,7 +169,7 @@ def import_set(name, fbx, mats):
         mi = mats.get(str(slot.material_slot_name))
         if mi:
             mesh.set_material(i, mi)
-    lib.save_loaded_asset(mesh)
+    lib.save_loaded_asset(mesh, False)
     return mesh
 
 

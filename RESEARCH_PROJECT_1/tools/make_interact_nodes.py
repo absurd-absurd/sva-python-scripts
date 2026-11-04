@@ -8,11 +8,12 @@ editor accepts nodes pasted as text. The assets and variables come from unreal/i
 
 BP_HorrorHUD
   Event Draw HUD (every frame):
-    trace 2.3 m from the camera -> Focus = the BP_Examinable you look at (or nothing)
+    aim line 2.6 m from the camera -> Focus (clues have a slightly bigger invisible HitBox) = the BP_Examinable you look at (or nothing)
+    (a clue you spotted keeps the prompt when you look away, until you use it or walk 3 m off)
     draw the objective (top left) and the latest message for 3 s (lower left)
     Reading?      -> dark screen with the page's title and text, "[E] Close"
     Journal open? -> dark screen with every journal line, "[Tab] Close"
-    otherwise     -> "[E] Examine" (or the object's own Prompt) when looking at something
+    otherwise     -> "[E] Examine" (or the object's own Prompt) on a dark box when looking at something
   E:   close the page / journal, or use Focus:
          locked (NeedsKey not in Keys) -> show LockedText
          else -> open its page (Body), and the first time: journal line, key, objective;
@@ -37,8 +38,10 @@ TEXT = "(R=0.78,G=0.75,B=0.68,A=1.000000)"                   # warm off-white
 DIM = "(R=0.55,G=0.53,B=0.5,A=1.000000)"
 DARK = "(R=0.004,G=0.004,B=0.006,A=0.930000)"
 SHADOW = "(R=0.0,G=0.0,B=0.0,A=0.850000)"
+PROMPT_BOX = "(R=0.0,G=0.0,B=0.0,A=0.550000)"     # dark box behind "[E] Examine"
 TEXT_SCALE = 0.0032            # text size = screen height * this (3.2 at 1000 px tall)
-REACH, NEAR = 230.0, 40.0      # trace from 40 cm in front of the eyes (outside the capsule) to 2.3 m
+REACH, NEAR = 260.0, 40.0      # aim line from 40 cm in front of the eyes (outside the capsule) to 2.6 m
+STICKY = 300.0                 # a spotted clue keeps its prompt until used, within 3 m
 
 
 def gid():
@@ -306,10 +309,22 @@ def hud_graph():
     cast.inp("Object", "object", hit_actor)
     as_ex = cast.out("AsBP Examinable", "ex")
     s_hit = g.set("Focus", "ex", as_ex, cast_ok)
-    s_none = g.set("Focus", "ex", None, cast_fail)          # looking at nothing examinable
+    # looking away: a clue you already spotted stays picked (sticky) until you've used it,
+    # unless it's a door or you walk more than STICKY cm away from it
+    g.row(340 * 4, 300)
+    f_yes, f_no = g.branch(g.pure(SYS, "IsValid", [("Object", "object", g.get("Focus", "ex"))], ty="bool"), cast_fail)
+    near = g.pure(MATH, "Less_DoubleDouble", [
+        ("A", "real", g.pure(ACTOR, "GetDistanceTo", [("OtherActor", "actor", g.pure(HUD, "GetOwningPawn", ty="actor"))],
+                             ty="float", target=(g.get("Focus", "ex"), "actor"))),
+        ("B", "real", STICKY)], ty="bool")
+    fresh_clue = g.pure(MATH, "BooleanAND", [("A", "bool", g.not_(fget("Done", "bool"))),
+                                             ("B", "bool", g.not_(fget("IsDoor", "bool")))], ty="bool")
+    k_yes, k_no = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", fresh_clue), ("B", "bool", near)], ty="bool"), f_yes)
+    s_none = g.set("Focus", "ex", None, [f_no, k_no])        # nothing examinable any more
+    g.row(340 * 7, 600)
 
     # objective + message
-    after = draw(g.get("Objective", "string"), [s_hit.then, s_none.then], 0.04, 0.05, 0.8, DIM, True)
+    after = draw(g.get("Objective", "string"), [s_hit.then, k_yes, s_none.then], 0.04, 0.05, 0.8, DIM, True)
     fresh = g.pure(MATH, "Less_DoubleDouble", [("A", "real", g.pure(MATH, "Subtract_DoubleDouble", [
         ("A", "real", g.now()), ("B", "real", g.get("ToastTime", "real"))])), ("B", "real", 3.0)], ty="bool")
     t_yes, t_no = g.branch(fresh, after)
@@ -334,7 +349,10 @@ def hud_graph():
     g.row(340 * 9, 2000)
     v_yes, _ = g.branch(g.pure(SYS, "IsValid", [("Object", "object", g.get("Focus", "ex"))], ty="bool"), j_no)
     o_yes, _ = g.branch(g.not_(fget("Opened", "bool")), v_yes)
-    draw(g.concat("[E]  ", fget("Prompt")), o_yes, 0.45, 0.56, 0.8, TEXT, True)
+    box = g.call(HUD, "DrawRect", o_yes, [
+        ("RectColor", "color", PROMPT_BOX), ("ScreenX", "float", g.mul(W, 0.43)), ("ScreenY", "float", g.mul(H, 0.548)),
+        ("ScreenW", "float", g.mul(W, 0.15)), ("ScreenH", "float", g.mul(H, 0.06))]).then
+    draw(g.concat("[E]  ", fget("Prompt")), box, 0.45, 0.556, 0.8, TEXT, True)
 
     def freeze(after):
         a = g.call(CTRL, "SetIgnoreMoveInput", after, [("bNewMoveInput", "bool", True)], target=pc()).then

@@ -68,7 +68,7 @@ def instance(name, parent):
     mi = unreal.load_asset(path) if lib.does_asset_exist(path) else \
         assets.create_asset(name, DIR, unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
     mi.set_editor_property("parent", parent)
-    lib.save_loaded_asset(mi)
+    lib.save_loaded_asset(mi, False)
     return mi
 
 
@@ -106,7 +106,7 @@ def build_screen():
     MEL.connect_material_expressions(st, "Color", c, "Unused")
     MEL.connect_material_property(c, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     MEL.recompile_material(m)
-    lib.save_loaded_asset(m)
+    lib.save_loaded_asset(m, False)
     return instance("MI_PS2_Screen", m)
 
 
@@ -138,7 +138,7 @@ def build_surface():
     note = MEL.create_material_expression(m, unreal.MaterialExpressionComment, -340, 150)
     note.set_editor_property("text", "WOBBLE: drag this node's output to World Position Offset")
     MEL.recompile_material(m)
-    lib.save_loaded_asset(m)
+    lib.save_loaded_asset(m, False)
     return m
 
 
@@ -152,7 +152,7 @@ def update_wobble(surface):
                 if p.get_outer() == surface and str(p.get_editor_property("parameter_name")) == "Wobble":
                     p.set_editor_property("default_value", 0.0012)
             MEL.recompile_material(surface)
-            lib.save_loaded_asset(surface)
+            lib.save_loaded_asset(surface, False)
             return True
     return False
 
@@ -164,7 +164,7 @@ def switch_blockout(surface):
         mi = a.get_asset()
         if isinstance(mi, unreal.MaterialInstanceConstant):
             mi.set_editor_property("parent", surface)
-            lib.save_loaded_asset(mi)
+            lib.save_loaded_asset(mi, False)
             n += 1
     return n
 

@@ -47,5 +47,5 @@ loc.set_editor_property("z", wave(0.5, STEP))                # cm: head rises an
 loc.set_editor_property("y", wave(0.25, STRIDE))              # cm: weight shifts side to side
 shake.set_editor_property("loc_oscillation", loc)
 unreal.BlueprintEditorLibrary.compile_blueprint(bp)
-lib.save_loaded_asset(bp)
+lib.save_loaded_asset(bp, False)
 print("CS_WalkBob ready:", shake.get_editor_property("rot_oscillation"))

@@ -53,7 +53,7 @@ def ps2_materials(colors):
         mi.set_editor_property("parent", parent)
         unreal.MaterialEditingLibrary.set_material_instance_vector_parameter_value(
             mi, "Color", unreal.LinearColor(rgb[0], rgb[1], rgb[2], 1))
-        unreal.EditorAssetLibrary.save_loaded_asset(mi)
+        unreal.EditorAssetLibrary.save_loaded_asset(mi, False)
         made[name] = mi
     return made
 
@@ -87,7 +87,7 @@ def import_props(props, colors):
             mi = mats.get(str(slot.material_slot_name))
             if mi:
                 mesh.set_material(i, mi)
-        unreal.EditorAssetLibrary.save_loaded_asset(mesh)
+        unreal.EditorAssetLibrary.save_loaded_asset(mesh, False)
         meshes[asset] = mesh
     return meshes
 

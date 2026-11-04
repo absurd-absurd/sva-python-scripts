@@ -58,7 +58,7 @@ def color(name, rgb):
         mi.set_editor_property("parent", unreal.load_asset("/Engine/BasicShapes/BasicShapeMaterial"))
     unreal.MaterialEditingLibrary.set_material_instance_vector_parameter_value(
         mi, "Color", unreal.LinearColor(rgb[0], rgb[1], rgb[2], 1))
-    unreal.EditorAssetLibrary.save_loaded_asset(mi)
+    unreal.EditorAssetLibrary.save_loaded_asset(mi, False)
     _mats[name] = mi
     return mi
 

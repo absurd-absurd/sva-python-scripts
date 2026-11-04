@@ -41,7 +41,7 @@ def import_textures():
         name = os.path.basename(t.filename)[:-4]
         tex = unreal.load_asset(f"{TEX_DIR}/T_{name}")
         tex.set_editor_property("max_texture_size", PS2_SIZE)   # shrink to PS2 size
-        lib.save_loaded_asset(tex)
+        lib.save_loaded_asset(tex, False)
         made[name] = tex
     return made
 
@@ -73,7 +73,7 @@ def add_projection():
     MEL.connect_material_expressions(color, "", mul, "B")
     MEL.connect_material_property(mul, "", unreal.MaterialProperty.MP_BASE_COLOR)
     MEL.recompile_material(m)
-    lib.save_loaded_asset(m)
+    lib.save_loaded_asset(m, False)
     return m
 
 
@@ -102,7 +102,7 @@ def main():
         MEL.set_material_instance_texture_parameter_value(mi, "Tex", tex)
         MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*spec["tint"], 1))
         MEL.set_material_instance_scalar_parameter_value(mi, "TexSize", float(spec["size"]))
-        lib.save_loaded_asset(mi)
+        lib.save_loaded_asset(mi, False)
         done += 1
     print(f"Textures: {len(textures)} imported, {done} materials textured" +
           (f", not found: {missing}" if missing else ""))

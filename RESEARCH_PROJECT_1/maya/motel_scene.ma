@@ -1,6 +1,6 @@
 //Maya ASCII 2026 scene
 //Name: motel_scene.ma
-//Last modified: Wed, Nov 04, 2026 08:51:54 AM
+//Last modified: Wed, Nov 04, 2026 09:01:12 AM
 //Codeset: 1252
 requires maya "2026";
 currentUnit -l centimeter -a degree -t film;
@@ -9,14 +9,14 @@ fileInfo "product" "Maya 2026";
 fileInfo "version" "2026";
 fileInfo "cutIdentifier" "202507081222-4d6919b75c";
 fileInfo "osv" "Windows 11 Home v2009 (Build: 26200)";
-fileInfo "UUID" "51BB116B-4FB9-62C4-093C-45B2DCE623EB";
+fileInfo "UUID" "DF85C439-431E-DF54-8760-D8BC097DEF89";
 createNode transform -s -n "persp";
-	rename -uid "CBC4AF43-4C85-7CE1-ADB5-06A06AD43A08";
+	rename -uid "A2641941-4E7C-610B-F0CF-8C9B3D2D4FAB";
 	setAttr ".v" no;
 	setAttr ".t" -type "double3" 28 21 28 ;
 	setAttr ".r" -type "double3" -27.938352729602379 44.999999999999972 -5.172681101354183e-14 ;
 createNode camera -s -n "perspShape" -p "persp";
-	rename -uid "AD7D3F9F-43E5-A3E1-DDAD-69998643E9CC";
+	rename -uid "BF3E6841-459D-7588-22B0-B9B913311D96";
 	setAttr -k off ".v" no;
 	setAttr ".fl" 34.999999999999993;
 	setAttr ".fcp" 200000;
@@ -26,12 +26,12 @@ createNode camera -s -n "perspShape" -p "persp";
 	setAttr ".man" -type "string" "persp_mask";
 	setAttr ".hc" -type "string" "viewSet -p %camera";
 createNode transform -s -n "top";
-	rename -uid "B22B764B-4C64-08C7-A9EF-26AD7B50C01D";
+	rename -uid "4BDE4407-4C96-DAD5-287A-1AA0788F2763";
 	setAttr ".v" no;
 	setAttr ".t" -type "double3" 0 1000.1 0 ;
 	setAttr ".r" -type "double3" -90 0 0 ;
 createNode camera -s -n "topShape" -p "top";
-	rename -uid "1ECFB3F6-4961-AE29-E30D-7BB7E3251E8D";
+	rename -uid "8271E905-4116-C1C2-3692-378AFCE49D21";
 	setAttr -k off ".v" no;
 	setAttr ".rnd" no;
 	setAttr ".coi" 1000.1;
@@ -42,11 +42,11 @@ createNode camera -s -n "topShape" -p "top";
 	setAttr ".hc" -type "string" "viewSet -t %camera";
 	setAttr ".o" yes;
 createNode transform -s -n "front";
-	rename -uid "555CD8F1-4348-29CF-BAED-7B9E93470819";
+	rename -uid "5ED3B51E-4204-DD13-D2AF-5A81880B906C";
 	setAttr ".v" no;
 	setAttr ".t" -type "double3" 0 0 1000.1 ;
 createNode camera -s -n "frontShape" -p "front";
-	rename -uid "DEF5B54F-40B5-C4C9-2411-C9BF352E37FC";
+	rename -uid "A995CC6F-4491-3A16-E8EE-BD9D45BF256D";
 	setAttr -k off ".v" no;
 	setAttr ".rnd" no;
 	setAttr ".coi" 1000.1;
@@ -57,12 +57,12 @@ createNode camera -s -n "frontShape" -p "front";
 	setAttr ".hc" -type "string" "viewSet -f %camera";
 	setAttr ".o" yes;
 createNode transform -s -n "side";
-	rename -uid "FCC30F63-4E71-0681-743A-1F9861573BCD";
+	rename -uid "A63E0554-4849-926A-B4EB-7CA9226C29AF";
 	setAttr ".v" no;
 	setAttr ".t" -type "double3" 1000.1 0 0 ;
 	setAttr ".r" -type "double3" 0 90 0 ;
 createNode camera -s -n "sideShape" -p "side";
-	rename -uid "C76987AD-4061-6C4B-1C61-CAA26D136A48";
+	rename -uid "84181E2F-410A-43A5-9CB1-E6927D9C7DAD";
 	setAttr -k off ".v" no;
 	setAttr ".rnd" no;
 	setAttr ".coi" 1000.1;
@@ -73,9 +73,9 @@ createNode camera -s -n "sideShape" -p "side";
 	setAttr ".hc" -type "string" "viewSet -s %camera";
 	setAttr ".o" yes;
 createNode transform -n "offsetNurbsCurve2";
-	rename -uid "6F70800B-4431-F9C5-B53F-12BF3700F8A5";
+	rename -uid "426D54AD-4166-6EE7-22BC-07AB0A6DDA5B";
 createNode nurbsCurve -n "offsetNurbsCurveShape2" -p "offsetNurbsCurve2";
-	rename -uid "B2D726AC-406D-663E-8F39-4F93771480FC";
+	rename -uid "85DD9A3F-408D-5001-E402-608CBC69E02B";
 	setAttr -k off ".v";
 	setAttr ".cc" -type "nurbsCurve" 
 		1 13 2 no 3
@@ -99,9 +99,9 @@ createNode nurbsCurve -n "offsetNurbsCurveShape2" -p "offsetNurbsCurve2";
 		46.237439225696683 161.69999999999999 0
 		;
 createNode transform -n "set_motel";
-	rename -uid "DB6B7B80-4847-9CFD-0C63-728AB20ED603";
+	rename -uid "A1F4651A-4C66-E3ED-94E8-4C82457A0C6F";
 createNode mesh -n "set_motelShape" -p "set_motel";
-	rename -uid "E68D2C11-4392-AD00-07FA-47BA6F8B020B";
+	rename -uid "E6EE8527-4BC4-76E1-4675-4C976360DBA6";
 	setAttr -k off ".v";
 	setAttr -s 20 ".iog[0].og";
 	setAttr ".iog[0].og[0].gcl" -type "componentList" 7 "f[0:41]" "f[514:555]" "f[1306:1347]" "f[2244:2285]" "f[2730:2771]" "f[3608:3649]" "f[7902:7943]";
@@ -5974,11 +5974,11 @@ createNode mesh -n "set_motelShape" -p "set_motel";
 		 -2336 95 -747 -2331.3137207 95 -735.6862793 -2320 95 -731 -2308.6862793 95 -735.6862793
 		 -2304 95 -747 -2308.6862793 120 -758.3137207 -2320 120 -763 -2331.3137207 120 -758.3137207
 		 -2336 120 -747 -2331.3137207 120 -735.6862793 -2320 120 -731 -2308.6862793 120 -735.6862793
-		 -2304 120 -747 -2470 0 -1320 -2300 0 -1320 -2470 80 -1320 -2300 80 -1320 -2470 80 -1375
-		 -2300 80 -1375 -2470 0 -1375 -2300 0 -1375 -2440 80 -1325 -2340 80 -1325 -2440 150 -1325
-		 -2340 150 -1325 -2440 150 -1370 -2340 150 -1370 -2440 80 -1370 -2340 80 -1370 -2430 90 -1322
-		 -2350 90 -1322 -2430 140 -1322 -2350 140 -1322 -2430 140 -1324 -2350 140 -1324 -2430 90 -1324
-		 -2350 90 -1324 -2500 0 -1400 -2368 0 -1400 -2500 100 -1400 -2368 100 -1400 -2500 100 -1403
+		 -2304 120 -747 -2480 0 -1030 -2425 0 -1030 -2480 80 -1030 -2425 80 -1030 -2480 80 -1200
+		 -2425 80 -1200 -2480 0 -1200 -2425 0 -1200 -2475 80 -1065 -2430 80 -1065 -2475 150 -1065
+		 -2430 150 -1065 -2475 150 -1165 -2430 150 -1165 -2475 80 -1165 -2430 80 -1165 -2430 90 -1075
+		 -2428 90 -1075 -2430 140 -1075 -2428 140 -1075 -2430 140 -1155 -2428 140 -1155 -2430 90 -1155
+		 -2428 90 -1155 -2500 0 -1400 -2368 0 -1400 -2500 100 -1400 -2368 100 -1400 -2500 100 -1403
 		 -2368 100 -1403 -2500 0 -1403 -2368 0 -1403 -2212 0 -1400 -2000 0 -1400;
 	setAttr ".vt[166:331]" -2212 100 -1400 -2000 100 -1400 -2212 100 -1403 -2000 100 -1403
 		 -2212 0 -1403 -2000 0 -1403 -2188 100 -1400 -2022 100 -1400 -2188 222 -1400 -2022 222 -1400
@@ -6224,11 +6224,11 @@ createNode mesh -n "set_motelShape" -p "set_motel";
 	setAttr ".vt[996:1161]" -1831.3137207 95 -735.6862793 -1820 95 -731 -1808.6862793 95 -735.6862793
 		 -1804 95 -747 -1808.6862793 120 -758.3137207 -1820 120 -763 -1831.3137207 120 -758.3137207
 		 -1836 120 -747 -1831.3137207 120 -735.6862793 -1820 120 -731 -1808.6862793 120 -735.6862793
-		 -1804 120 -747 -1970 0 -1320 -1800 0 -1320 -1970 80 -1320 -1800 80 -1320 -1970 80 -1375
-		 -1800 80 -1375 -1970 0 -1375 -1800 0 -1375 -1940 80 -1325 -1840 80 -1325 -1940 150 -1325
-		 -1840 150 -1325 -1940 150 -1370 -1840 150 -1370 -1940 80 -1370 -1840 80 -1370 -1930 90 -1322
-		 -1850 90 -1322 -1930 140 -1322 -1850 140 -1322 -1930 140 -1324 -1850 140 -1324 -1930 90 -1324
-		 -1850 90 -1324 -2000 0 -1400 -1868 0 -1400 -2000 100 -1400 -1868 100 -1400 -2000 100 -1403
+		 -1804 120 -747 -1980 0 -1030 -1925 0 -1030 -1980 80 -1030 -1925 80 -1030 -1980 80 -1200
+		 -1925 80 -1200 -1980 0 -1200 -1925 0 -1200 -1975 80 -1065 -1930 80 -1065 -1975 150 -1065
+		 -1930 150 -1065 -1975 150 -1165 -1930 150 -1165 -1975 80 -1165 -1930 80 -1165 -1930 90 -1075
+		 -1928 90 -1075 -1930 140 -1075 -1928 140 -1075 -1930 140 -1155 -1928 140 -1155 -1930 90 -1155
+		 -1928 90 -1155 -2000 0 -1400 -1868 0 -1400 -2000 100 -1400 -1868 100 -1400 -2000 100 -1403
 		 -1868 100 -1403 -2000 0 -1403 -1868 0 -1403 -1712 0 -1400 -1500 0 -1400 -1712 100 -1400
 		 -1500 100 -1400 -1712 100 -1403 -1500 100 -1403 -1712 0 -1403 -1500 0 -1403 -1688 100 -1400
 		 -1522 100 -1400 -1688 222 -1400 -1522 222 -1400 -1688 222 -1406 -1522 222 -1406 -1688 100 -1406
@@ -6675,11 +6675,11 @@ createNode mesh -n "set_motelShape" -p "set_motel";
 		 -1336 95 -747 -1331.3137207 95 -735.6862793 -1320 95 -731 -1308.6862793 95 -735.6862793
 		 -1304 95 -747 -1308.6862793 120 -758.3137207 -1320 120 -763 -1331.3137207 120 -758.3137207
 		 -1336 120 -747 -1331.3137207 120 -735.6862793 -1320 120 -731 -1308.6862793 120 -735.6862793
-		 -1304 120 -747 -1470 0 -1320 -1300 0 -1320 -1470 80 -1320 -1300 80 -1320 -1470 80 -1375
-		 -1300 80 -1375 -1470 0 -1375 -1300 0 -1375 -1440 80 -1325 -1340 80 -1325 -1440 150 -1325
-		 -1340 150 -1325 -1440 150 -1370 -1340 150 -1370 -1440 80 -1370 -1340 80 -1370 -1430 90 -1322
-		 -1350 90 -1322 -1430 140 -1322 -1350 140 -1322 -1430 140 -1324 -1350 140 -1324 -1430 90 -1324
-		 -1350 90 -1324 -1500 0 -1400 -1368 0 -1400;
+		 -1304 120 -747 -1480 0 -1030 -1425 0 -1030 -1480 80 -1030 -1425 80 -1030 -1480 80 -1200
+		 -1425 80 -1200 -1480 0 -1200 -1425 0 -1200 -1475 80 -1065 -1430 80 -1065 -1475 150 -1065
+		 -1430 150 -1065 -1475 150 -1165 -1430 150 -1165 -1475 80 -1165 -1430 80 -1165 -1430 90 -1075
+		 -1428 90 -1075 -1430 140 -1075 -1428 140 -1075 -1430 140 -1155 -1428 140 -1155 -1430 90 -1155
+		 -1428 90 -1155 -1500 0 -1400 -1368 0 -1400;
 	setAttr ".vt[2490:2655]" -1500 100 -1400 -1368 100 -1400 -1500 100 -1403 -1368 100 -1403
 		 -1500 0 -1403 -1368 0 -1403 -1212 0 -1400 -1000 0 -1400 -1212 100 -1400 -1000 100 -1400
 		 -1212 100 -1403 -1000 100 -1403 -1212 0 -1403 -1000 0 -1403 -1188 100 -1400 -1022 100 -1400
@@ -7209,11 +7209,11 @@ createNode mesh -n "set_motelShape" -p "set_motel";
 		 -836 95 -747 -831.3137207 95 -735.6862793 -820 95 -731 -808.6862793 95 -735.6862793
 		 -804 95 -747 -808.6862793 120 -758.3137207 -820 120 -763 -831.3137207 120 -758.3137207
 		 -836 120 -747 -831.3137207 120 -735.6862793 -820 120 -731 -808.6862793 120 -735.6862793
-		 -804 120 -747 -970 0 -1320 -800 0 -1320 -970 80 -1320 -800 80 -1320 -970 80 -1375
-		 -800 80 -1375 -970 0 -1375 -800 0 -1375 -940 80 -1325 -840 80 -1325 -940 150 -1325
-		 -840 150 -1325 -940 150 -1370 -840 150 -1370 -940 80 -1370 -840 80 -1370 -930 90 -1322
-		 -850 90 -1322 -930 140 -1322 -850 140 -1322 -930 140 -1324 -850 140 -1324 -930 90 -1324
-		 -850 90 -1324 -1000 0 -1400 -868 0 -1400 -1000 100 -1400 -868 100 -1400 -1000 100 -1403
+		 -804 120 -747 -980 0 -1030 -925 0 -1030 -980 80 -1030 -925 80 -1030 -980 80 -1200
+		 -925 80 -1200 -980 0 -1200 -925 0 -1200 -975 80 -1065 -930 80 -1065 -975 150 -1065
+		 -930 150 -1065 -975 150 -1165 -930 150 -1165 -975 80 -1165 -930 80 -1165 -930 90 -1075
+		 -928 90 -1075 -930 140 -1075 -928 140 -1075 -930 140 -1155 -928 140 -1155 -930 90 -1155
+		 -928 90 -1155 -1000 0 -1400 -868 0 -1400 -1000 100 -1400 -868 100 -1400 -1000 100 -1403
 		 -868 100 -1403 -1000 0 -1403 -868 0 -1403 -712 0 -1400 -500 0 -1400 -712 100 -1400
 		 -500 100 -1400 -712 100 -1403 -500 100 -1403 -712 0 -1403 -500 0 -1403 -688 100 -1400
 		 -522 100 -1400 -688 222 -1400 -522 222 -1400 -688 222 -1406 -522 222 -1406 -688 100 -1406
@@ -7452,11 +7452,11 @@ createNode mesh -n "set_motelShape" -p "set_motel";
 		 -336 95 -747 -331.3137207 95 -735.6862793 -320 95 -731 -308.6862793 95 -735.6862793
 		 -304 95 -747 -308.6862793 120 -758.3137207 -320 120 -763 -331.3137207 120 -758.3137207
 		 -336 120 -747 -331.3137207 120 -735.6862793 -320 120 -731 -308.6862793 120 -735.6862793
-		 -304 120 -747 -470 0 -1320 -300 0 -1320 -470 80 -1320 -300 80 -1320 -470 80 -1375
-		 -300 80 -1375 -470 0 -1375 -300 0 -1375 -440 80 -1325 -340 80 -1325 -440 150 -1325
-		 -340 150 -1325 -440 150 -1370 -340 150 -1370 -440 80 -1370 -340 80 -1370 -430 90 -1322
-		 -350 90 -1322 -430 140 -1322 -350 140 -1322 -430 140 -1324 -350 140 -1324 -430 90 -1324
-		 -350 90 -1324 -500 0 -1400 -368 0 -1400 -500 100 -1400 -368 100 -1400 -500 100 -1403
+		 -304 120 -747 -480 0 -1030 -425 0 -1030 -480 80 -1030 -425 80 -1030 -480 80 -1200
+		 -425 80 -1200 -480 0 -1200 -425 0 -1200 -475 80 -1065 -430 80 -1065 -475 150 -1065
+		 -430 150 -1065 -475 150 -1165 -430 150 -1165 -475 80 -1165 -430 80 -1165 -430 90 -1075
+		 -428 90 -1075 -430 140 -1075 -428 140 -1075 -430 140 -1155 -428 140 -1155 -430 90 -1155
+		 -428 90 -1155 -500 0 -1400 -368 0 -1400 -500 100 -1400 -368 100 -1400 -500 100 -1403
 		 -368 100 -1403 -500 0 -1403 -368 0 -1403 -212 0 -1400 0 0 -1400 -212 100 -1400 0 100 -1400
 		 -212 100 -1403 0 100 -1403 -212 0 -1403 0 0 -1403 -188 100 -1400 -22 100 -1400 -188 222 -1400
 		 -22 222 -1400 -188 222 -1406 -22 222 -1406 -188 100 -1406 -22 100 -1406 -180 108 -1402
@@ -7942,11 +7942,11 @@ createNode mesh -n "set_motelShape" -p "set_motel";
 		 164 95 -747 168.68629456 95 -735.6862793 180 95 -731 191.31370544 95 -735.6862793
 		 196 95 -747 191.31370544 120 -758.3137207 180 120 -763 168.68629456 120 -758.3137207
 		 164 120 -747 168.68629456 120 -735.6862793 180 120 -731 191.31370544 120 -735.6862793
-		 196 120 -747 30 0 -1320 200 0 -1320 30 80 -1320 200 80 -1320;
-	setAttr ".vt[6640:6805]" 30 80 -1375 200 80 -1375 30 0 -1375 200 0 -1375 60 80 -1325
-		 160 80 -1325 60 150 -1325 160 150 -1325 60 150 -1370 160 150 -1370 60 80 -1370 160 80 -1370
-		 70 90 -1322 150 90 -1322 70 140 -1322 150 140 -1322 70 140 -1324 150 140 -1324 70 90 -1324
-		 150 90 -1324 0 0 -1400 132 0 -1400 0 100 -1400 132 100 -1400 0 100 -1403 132 100 -1403
+		 196 120 -747 20 0 -1030 75 0 -1030 20 80 -1030 75 80 -1030;
+	setAttr ".vt[6640:6805]" 20 80 -1200 75 80 -1200 20 0 -1200 75 0 -1200 25 80 -1065
+		 70 80 -1065 25 150 -1065 70 150 -1065 25 150 -1165 70 150 -1165 25 80 -1165 70 80 -1165
+		 70 90 -1075 72 90 -1075 70 140 -1075 72 140 -1075 70 140 -1155 72 140 -1155 70 90 -1155
+		 72 90 -1155 0 0 -1400 132 0 -1400 0 100 -1400 132 100 -1400 0 100 -1403 132 100 -1403
 		 0 0 -1403 132 0 -1403 288 0 -1400 500 0 -1400 288 100 -1400 500 100 -1400 288 100 -1403
 		 500 100 -1403 288 0 -1403 500 0 -1403 312 100 -1400 478 100 -1400 312 222 -1400 478 222 -1400
 		 312 222 -1406 478 222 -1406 312 100 -1406 478 100 -1406 320 108 -1402 470 108 -1402
@@ -40163,365 +40163,365 @@ createNode mesh -n "set_motelShape" -p "set_motel";
 	setAttr ".hfd" -type "dataPolyComponent" Index_Data Face 0 ;
 	setAttr ".ndt" 0;
 createNode transform -n "motel_lights";
-	rename -uid "EF7907AE-4CF4-2220-E40A-00A3A3CFA1B5";
+	rename -uid "D3B57284-4198-72EE-E38F-9AB3DD975F97";
 	setAttr ".rp" -type "double3" 1101.5713616906016 377.66666666666669 -2435 ;
 	setAttr ".sp" -type "double3" 1101.5713616906016 377.66666666666669 -2435 ;
 createNode transform -n "light_cross" -p "motel_lights";
-	rename -uid "84F8157D-4CDB-50E7-76B9-E7B41A5AE03E";
+	rename -uid "29458DE8-4AED-A906-0ACD-78ABA2AD70F1";
 	addAttr -ci true -sn "ue_light" -ln "ue_light" -dt "string";
 	setAttr ".t" -type "double3" 3350 615.33333333333337 -1970 ;
 	setAttr ".ue_light" -type "string" "{\"color\": [1.0, 0.0, 0.0], \"intensity\": 2500, \"radius\": 1100, \"flicker\": false}";
 createNode locator -n "light_crossShape" -p "light_cross";
-	rename -uid "E80A752B-46FD-B443-73F0-A39F0606C1AF";
+	rename -uid "E75CAF94-45EB-7420-AD9F-EE876AF903BA";
 	setAttr -k off ".v";
 createNode transform -n "light_ice" -p "motel_lights";
-	rename -uid "560121C9-4E06-E529-6AD0-FE83B59CCAB6";
+	rename -uid "77F73CC6-486C-1524-2A56-439463D097AA";
 	addAttr -ci true -sn "ue_light" -ln "ue_light" -dt "string";
 	setAttr ".t" -type "double3" 620 140 -1590 ;
 	setAttr ".ue_light" -type "string" "{\"color\": [0.5, 0.8, 1.0], \"intensity\": 200, \"radius\": 400, \"flicker\": false}";
 createNode locator -n "light_iceShape" -p "light_ice";
-	rename -uid "05CC7D5C-4D10-F1AA-70B5-0BBDD967D594";
+	rename -uid "4061662C-4397-DA76-10F2-62B7643E315B";
 	setAttr -k off ".v";
 createNode transform -n "light_office" -p "motel_lights";
-	rename -uid "2DC48A87-4C31-A744-9DDF-FBADBB9BEB6B";
+	rename -uid "F28F3636-40F1-8FD4-0FE3-96AD755F31F9";
 	addAttr -ci true -sn "ue_light" -ln "ue_light" -dt "string";
 	setAttr ".t" -type "double3" 3620 200 -1370 ;
 	setAttr ".ue_light" -type "string" "{\"color\": [1.0, 0.75, 0.45], \"intensity\": 300, \"radius\": 700, \"flicker\": false}";
 createNode locator -n "light_officeShape" -p "light_office";
-	rename -uid "0AA28AB9-406E-5EB5-859E-85B1562983F0";
+	rename -uid "4F4CCA40-4343-9EF4-6187-B78EEEEE985D";
 	setAttr -k off ".v";
 createNode transform -n "light_open" -p "motel_lights";
-	rename -uid "FDCBF567-4618-F3B6-F6CE-2E9AB08FA4EC";
+	rename -uid "6EE436EB-4C9E-C6C0-D98D-128889A3C1CA";
 	addAttr -ci true -sn "ue_light" -ln "ue_light" -dt "string";
 	setAttr ".t" -type "double3" 3600 170 -1775 ;
 	setAttr ".ue_light" -type "string" "{\"color\": [1.0, 0.0, 0.0], \"intensity\": 600, \"radius\": 600, \"flicker\": false}";
 createNode locator -n "light_openShape" -p "light_open";
-	rename -uid "5BD491D1-4D83-548E-D78A-A9AFA1703C58";
+	rename -uid "F84D9B8C-4D6A-5810-40F5-95BD170F88FC";
 	setAttr -k off ".v";
 createNode transform -n "light_sign_E" -p "motel_lights";
-	rename -uid "5C42405F-41B2-3834-EA03-9A984FD9134A";
+	rename -uid "22FAFC98-4152-828E-1077-80967FDFD885";
 	addAttr -ci true -sn "ue_light" -ln "ue_light" -dt "string";
 	setAttr ".t" -type "double3" -1263.9355906908568 428 -1560 ;
 	setAttr ".ue_light" -type "string" "{\"color\": [1.0, 0.0, 0.0], \"intensity\": 1400, \"radius\": 2600, \"flicker\": false}";
 createNode locator -n "light_sign_EShape" -p "light_sign_E";
-	rename -uid "52664E38-4721-70E4-C975-86BAF0E10D17";
+	rename -uid "1A9D93D1-418A-76D7-1384-EDA9EB25B7B5";
 	setAttr -k off ".v";
 createNode transform -n "light_sign_L" -p "motel_lights";
-	rename -uid "FE6120F9-428E-B5EC-D840-89B805652249";
+	rename -uid "5706AB6D-444B-7CFC-ECFE-4788DFC4242E";
 	addAttr -ci true -sn "ue_light" -ln "ue_light" -dt "string";
 	setAttr ".t" -type "double3" -1416.8572766187967 428 -1560 ;
 	setAttr ".ue_light" -type "string" "{\"color\": [1.0, 0.0, 0.0], \"intensity\": 1400, \"radius\": 2600, \"flicker\": false}";
 createNode locator -n "light_sign_LShape" -p "light_sign_L";
-	rename -uid "4689B438-4DC5-03AC-14B3-3699DBB2126C";
+	rename -uid "B8872053-4053-836C-82F2-AE8ADA807406";
 	setAttr -k off ".v";
 createNode transform -n "light_sign_M" -p "motel_lights";
-	rename -uid "F23745B5-49D5-23BB-188F-C2985C8D0112";
+	rename -uid "DAFC7ECC-42B0-8735-2B84-7C8BDA08D90B";
 	addAttr -ci true -sn "ue_light" -ln "ue_light" -dt "string";
 	setAttr ".t" -type "double3" -646.49274037644466 428 -1560 ;
 	setAttr ".ue_light" -type "string" "{\"color\": [1.0, 0.0, 0.0], \"intensity\": 1400, \"radius\": 2600, \"flicker\": true}";
 createNode locator -n "light_sign_MShape" -p "light_sign_M";
-	rename -uid "0BEBD4F5-4752-999C-CC5B-C2B1DEC5EAF6";
+	rename -uid "CA1C3FF1-4976-B298-FEBC-21BCCF5C6AF2";
 	setAttr -k off ".v";
 createNode transform -n "light_sign_O" -p "motel_lights";
-	rename -uid "012A3E00-4833-5F8B-CB96-1891323C5B97";
+	rename -uid "7F7A39F7-420F-2A32-5010-35A018C35BE6";
 	addAttr -ci true -sn "ue_light" -ln "ue_light" -dt "string";
 	setAttr ".t" -type "double3" -903.41779401767508 428 -1560 ;
 	setAttr ".ue_light" -type "string" "{\"color\": [1.0, 0.0, 0.0], \"intensity\": 1400, \"radius\": 2600, \"flicker\": false}";
 createNode locator -n "light_sign_OShape" -p "light_sign_O";
-	rename -uid "F2ED4C03-4196-C84D-3069-7C8EE89AD50E";
+	rename -uid "DA7FA74A-44BF-0CF3-8F54-7ABA39F7E55F";
 	setAttr -k off ".v";
 createNode transform -n "light_sign_T" -p "motel_lights";
-	rename -uid "1E81351F-4BEE-7645-9BC2-6FA5E66E6047";
+	rename -uid "389D1DDA-4843-F337-DC60-4FA2671F278D";
 	addAttr -ci true -sn "ue_light" -ln "ue_light" -dt "string";
 	setAttr ".t" -type "double3" -1104.0033677132906 428 -1560 ;
 	setAttr ".ue_light" -type "string" "{\"color\": [1.0, 0.0, 0.0], \"intensity\": 1400, \"radius\": 2600, \"flicker\": false}";
 createNode locator -n "light_sign_TShape" -p "light_sign_T";
-	rename -uid "CAEBAE6C-4DAA-23D8-63F8-4094776406FD";
+	rename -uid "C7CA823E-4F7E-9D5E-9AEE-2C92F6070717";
 	setAttr -k off ".v";
 createNode transform -n "light_street" -p "motel_lights";
-	rename -uid "99AD74A9-42FF-AF93-D76F-1E9D8C241C52";
+	rename -uid "EA18B78A-4ECE-43EE-8164-1FB5021CCAA4";
 	addAttr -ci true -sn "ue_light" -ln "ue_light" -dt "string";
 	setAttr ".t" -type "double3" 1630 600 -3500 ;
 	setAttr ".ue_light" -type "string" "{\"color\": [0.45, 1.0, 0.7], \"intensity\": 4000, \"radius\": 1800, \"flicker\": false}";
 createNode locator -n "light_streetShape" -p "light_street";
-	rename -uid "6DF0B478-40AC-30B5-B70F-70B24EAE2C60";
+	rename -uid "701D79F4-4BBD-4D99-2EDE-CEB01B7A1B13";
 	setAttr -k off ".v";
 createNode lightLinker -s -n "lightLinker1";
-	rename -uid "44271EDF-48A2-9E4E-97F7-2A827E6B7586";
+	rename -uid "B358DACE-43D7-E019-2256-B98D179EB61A";
 	setAttr -s 23 ".lnk";
 	setAttr -s 23 ".slnk";
 createNode displayLayerManager -n "layerManager";
-	rename -uid "EE264120-4139-E056-C153-A783B990B635";
+	rename -uid "4C051D03-4FCF-C7F2-2439-3CB6D162835C";
 createNode displayLayer -n "defaultLayer";
-	rename -uid "F55141A8-4D81-23CB-E61B-19989671B98C";
+	rename -uid "692BEBF9-4BB7-E5D3-5BC7-608A2B084188";
 	setAttr ".ufem" -type "stringArray" 0  ;
 createNode renderLayerManager -n "renderLayerManager";
-	rename -uid "0A6C6F79-46FC-B770-8C3A-709D6BA9F5EE";
+	rename -uid "99F9998E-4E6C-F929-4092-86898870D2AA";
 createNode renderLayer -n "defaultRenderLayer";
-	rename -uid "28DE8B91-48CB-F045-87B9-68A69489C06F";
+	rename -uid "F3638B85-40D9-23F4-C2AA-43B021E68521";
 	setAttr ".g" yes;
 createNode lambert -n "brick_mat";
-	rename -uid "B67CA49C-474D-4857-EDE8-E09482071B6B";
+	rename -uid "E08CF37D-493C-6C3C-CA45-26B024CF8C3A";
 	setAttr ".c" -type "float3" 0.44999999 0.25 0.2 ;
 createNode shadingEngine -n "brick_matSG";
-	rename -uid "7B3FB62F-4FF4-A1FF-CC65-95A1BF1DA6FF";
+	rename -uid "DD02A154-4CEC-AC44-D942-588420379FEA";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo1";
-	rename -uid "6200E0E9-4CEF-1D8C-B4BD-9CB8AB69C0FF";
+	rename -uid "89F8607E-4DE3-C1D8-DAEF-13A7DCF740C6";
 createNode lambert -n "plaster_mat";
-	rename -uid "39267F9A-4B4A-AE7A-DFBF-0B974611ABF3";
+	rename -uid "CE8D7ED6-4894-AA07-E0A7-3FB317660FC1";
 	setAttr ".c" -type "float3" 0.75 0.69999999 0.60000002 ;
 createNode shadingEngine -n "plaster_matSG";
-	rename -uid "E4A4D3B8-4E85-E5AB-14A7-458A995953AB";
+	rename -uid "0C608342-4DF7-587F-71E0-B99015EF854D";
 	setAttr ".ihi" 0;
 	setAttr -s 2 ".dsm";
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo2";
-	rename -uid "4D3EE0DF-4D87-CAB7-6604-75B9E8F9A379";
+	rename -uid "BAAB13BB-490D-B32F-510B-9BB539F4744C";
 createNode lambert -n "trim_mat";
-	rename -uid "660C4349-4E99-BCC2-C517-528912783FF3";
+	rename -uid "C1A246E3-4E3F-1136-49F7-16ACB951D91F";
 	setAttr ".c" -type "float3" 0.25 0.22 0.2 ;
 createNode shadingEngine -n "trim_matSG";
-	rename -uid "67080506-4C75-602B-8AB0-549F9BD9FC0E";
+	rename -uid "2BB12353-4F07-38A2-7C99-DCB069CE4537";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo3";
-	rename -uid "AD19AAFF-4E80-E50A-8F4F-2BA32C3A8AAC";
+	rename -uid "9AB5F920-45FA-4EF3-4E4C-85ACE9C3C442";
 createNode lambert -n "door_mat";
-	rename -uid "87A002E4-4BF5-CE13-5D48-0F88A90F3CF1";
+	rename -uid "8D42F428-44A2-B6BD-BABA-E49448642640";
 	setAttr ".c" -type "float3" 0.34999999 0.15000001 0.12 ;
 createNode shadingEngine -n "door_matSG";
-	rename -uid "CF23503D-4D6E-47EA-AEBC-4D97F13BABB7";
+	rename -uid "A82B8AA2-4786-8143-8CEA-3C86275A74EA";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo4";
-	rename -uid "09DB8059-4532-7DCF-4278-918B0F23FD54";
+	rename -uid "2CF0A9B0-4C06-9D6C-42F6-47ABC7F6E11C";
 createNode lambert -n "brass_mat";
-	rename -uid "78AD9F20-4FED-7A7F-68D3-A7B9AEA540FC";
+	rename -uid "3266E452-42FC-5E7A-B72F-808190A9F355";
 	setAttr ".c" -type "float3" 0.60000002 0.5 0.25 ;
 createNode shadingEngine -n "brass_matSG";
-	rename -uid "C522777E-473E-D948-1D66-2E8C49337B02";
+	rename -uid "AA083623-4654-F665-002F-6381C4019B03";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo5";
-	rename -uid "81BB2049-4F32-F0D5-E9C2-42AECC80B0B8";
+	rename -uid "B03B18DD-4B95-59FC-11D9-EC86FA4746B1";
 createNode lambert -n "glass_mat";
-	rename -uid "846A071B-43A2-505E-2301-D4BF828C7F8F";
+	rename -uid "AA5B4098-4707-49EB-EE89-08A37653C7A0";
 	setAttr ".c" -type "float3" 0.029999999 0.039999999 0.050000001 ;
 createNode shadingEngine -n "glass_matSG";
-	rename -uid "2862E19A-48EA-C516-BDCB-01A8F6FD9339";
+	rename -uid "DCA4CA57-4057-2E46-8090-C08AF1C5BF5A";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo6";
-	rename -uid "DD76E8F9-4A3A-4AFA-B1C9-E99962BE7732";
+	rename -uid "B04CC3AD-4C7E-F66E-676E-78BD9C775121";
 createNode lambert -n "curtain_mat";
-	rename -uid "6C41F2E6-4912-01D6-6C5F-68814568A668";
+	rename -uid "6172B1E1-4952-A4F6-207E-45B117E319E8";
 	setAttr ".c" -type "float3" 0.55000001 0.44999999 0.30000001 ;
 createNode shadingEngine -n "curtain_matSG";
-	rename -uid "3B3098D1-4D93-60E2-8195-AAA263E9E522";
+	rename -uid "21E7760F-485B-6555-F184-92BB4386C207";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo7";
-	rename -uid "6834CF3A-4752-D3C4-3C28-75AD557BD6CB";
+	rename -uid "F50E95AB-4FDC-7487-C6FD-4F8F4D292C9C";
 createNode lambert -n "roof_metal_mat";
-	rename -uid "5193CAF1-4331-CD5D-0FF0-E8B66DE626DF";
+	rename -uid "88BC7C2C-4EB7-6525-DF25-CBA187EA405E";
 	setAttr ".c" -type "float3" 0.34999999 0.33000001 0.30000001 ;
 createNode shadingEngine -n "roof_metal_matSG";
-	rename -uid "F472E833-4F84-97AF-5DCA-73A6A0A8ADDF";
+	rename -uid "FE619148-41CD-E381-0EEF-648EB3ACDAB3";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo8";
-	rename -uid "A8FA4B80-4EA3-0FDB-CEC3-8FA5E88EF84D";
+	rename -uid "D23DFF27-49B1-985D-24A0-2C84B690AC69";
 createNode lambert -n "concrete_mat";
-	rename -uid "3027C5D3-44E1-827F-E8F4-20830C794F87";
+	rename -uid "FEF7CBB1-4D04-2E65-2C2A-698D42297E8F";
 	setAttr ".c" -type "float3" 0.5 0.5 0.47999999 ;
 createNode shadingEngine -n "concrete_matSG";
-	rename -uid "A9940286-4337-8245-277B-41959E150A04";
+	rename -uid "896FBB7E-4785-BD5E-F9DE-9283239BF5F2";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo9";
-	rename -uid "94AA81E0-4BF9-9E87-54C4-A691D2A73082";
+	rename -uid "F9A53D03-498B-BDC6-392D-16B46182D06A";
 createNode lambert -n "carpet_mat";
-	rename -uid "FFA929CE-4ED7-CB3B-4664-F29FA3AA2995";
+	rename -uid "4EB27335-4C43-CC43-616E-508C9EB3B24F";
 	setAttr ".c" -type "float3" 0.44999999 0.2 0.2 ;
 createNode shadingEngine -n "carpet_matSG";
-	rename -uid "9C1C5EE8-4AE7-EFDD-941A-D586ECF9493D";
+	rename -uid "35568E1B-45C0-7C53-1B8F-42A89EFF420A";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo10";
-	rename -uid "7F722BE0-4045-6471-7293-8EA38D3D85FC";
+	rename -uid "00111C71-4506-F940-F004-BAA62400ECB5";
 createNode lambert -n "bed_mat";
-	rename -uid "6515B3CC-4DE2-3CE2-2A9A-BF98380514B4";
+	rename -uid "6046DCED-4125-0468-F7F4-F6829FA434C0";
 	setAttr ".c" -type "float3" 0.69999999 0.68000001 0.60000002 ;
 createNode shadingEngine -n "bed_matSG";
-	rename -uid "021EE0B1-460A-FD89-72B9-739A6F8FB0AF";
+	rename -uid "CF5C9B3F-4437-E51C-7AA9-35AF6195D98C";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo11";
-	rename -uid "EB1C176C-4ED0-B707-0323-2ABEC79E618E";
+	rename -uid "C44219C6-4816-9226-6A25-1B80FA177879";
 createNode lambert -n "wood_mat";
-	rename -uid "0BDFAAFF-46C7-68DF-F2CD-C59A15C4AA40";
+	rename -uid "ECF12428-4461-D6BD-2469-40BD093E8C6B";
 	setAttr ".c" -type "float3" 0.34999999 0.22 0.12 ;
 createNode shadingEngine -n "wood_matSG";
-	rename -uid "952A6ADA-4709-CBB9-0E09-3BBE066B38F1";
+	rename -uid "E8F07008-40D0-469A-2734-CA98C0DAB6B5";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo12";
-	rename -uid "D21C76D8-465D-774D-F82F-A791CC2F28A3";
+	rename -uid "958B2F46-4620-664E-18F9-F094BFEE7C44";
 createNode lambert -n "chair_mat";
-	rename -uid "4ABB2212-4BEC-823B-D7F3-C0887FB188AE";
+	rename -uid "39A97958-4B5B-4191-729D-1EBDE9D9D5F3";
 	setAttr ".c" -type "float3" 0.85000002 0.85000002 0.80000001 ;
 createNode shadingEngine -n "chair_matSG";
-	rename -uid "8929CDBC-4A86-0D69-DF68-7ABBE4F6D406";
+	rename -uid "B2911104-45D7-12CE-18CF-36AE43B96138";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo13";
-	rename -uid "8CD18C01-4ED4-871E-CBBB-769B079880DD";
+	rename -uid "A7FD18E5-45AB-E19C-810C-9A8112275C1F";
 createNode lambert -n "metal_mat";
-	rename -uid "0AE5931E-46AB-4859-90EE-42843E6021F7";
+	rename -uid "1C358B68-43D8-B6BB-1E2C-29A64E75B707";
 	setAttr ".c" -type "float3" 0.30000001 0.30000001 0.30000001 ;
 createNode shadingEngine -n "metal_matSG";
-	rename -uid "F407CA4B-46FD-6CEA-552D-B881BFCE7ADF";
+	rename -uid "0A59F596-4FA3-6E42-2E92-C1886B72A431";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo14";
-	rename -uid "1F08BF79-41FB-3E92-FD56-4E9577D577A8";
+	rename -uid "E89D8E59-4BE5-0707-C1B1-FEBEF2C250D8";
 createNode lambert -n "ice_mat";
-	rename -uid "BC77A066-4FAD-25C5-2950-85A8D0D2BB81";
+	rename -uid "9694FF7F-4085-BA6C-F2B4-0A92642DB29B";
 	setAttr ".c" -type "float3" 0.80000001 0.81999999 0.85000002 ;
 createNode shadingEngine -n "ice_matSG";
-	rename -uid "F262952E-45F3-8715-3E9A-8E89E61B390F";
+	rename -uid "94C9747F-4709-7597-F512-489372B6FC1B";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo15";
-	rename -uid "21780B01-4DC8-A89B-CF3D-9596BCFA7D86";
+	rename -uid "687EBE5B-4267-922E-F42C-A4A41398CA0A";
 createNode lambert -n "glow_neon_red_mat";
-	rename -uid "9343C1E3-46B6-48CB-75B8-CABE2EDD4131";
+	rename -uid "90AB755E-4F37-37F1-0938-90A9AD9D71FC";
 	setAttr ".c" -type "float3" 1 0 0 ;
 createNode shadingEngine -n "glow_neon_red_matSG";
-	rename -uid "CB13A92F-4644-E9ED-5E01-5CA07DEADA08";
+	rename -uid "C15810B3-452E-ACBB-F27A-0AA8258827B5";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo16";
-	rename -uid "49381097-484F-51DE-9796-65ADADDD23E8";
+	rename -uid "4AE7E69C-4E87-E782-55D2-99AEC7C9F4C3";
 createNode lambert -n "glow_neon_dead_mat";
-	rename -uid "111E1DDF-4E96-F743-9C8E-0BB4B6BB5D81";
+	rename -uid "341EADF5-494C-6944-6502-A99C0A3DFFF7";
 	setAttr ".c" -type "float3" 1 0 0 ;
 createNode shadingEngine -n "glow_neon_dead_matSG";
-	rename -uid "9A018848-405E-0068-4290-F294338CB49E";
+	rename -uid "9E316DB0-4BA8-003A-714D-B4B37CB2F2A7";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo17";
-	rename -uid "7EE0D6E5-4BFB-BA33-8BFF-8298F6F854F5";
+	rename -uid "D7190810-4A1F-C8D6-A7EE-51BD8BA98209";
 createNode lambert -n "glow_window_mat";
-	rename -uid "C3852C95-4D06-328E-62CD-03A58091B7CD";
+	rename -uid "E9DEB6D1-44C3-B2F4-B13F-1CA58A074C82";
 	setAttr ".c" -type "float3" 1 0.69999999 0.40000001 ;
 createNode shadingEngine -n "glow_window_matSG";
-	rename -uid "7CDD38C1-47B0-254C-A75B-AD8F037F59D4";
+	rename -uid "48944002-4F4F-2AE2-2F16-E49E3484E9C6";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo18";
-	rename -uid "E5DC3B17-496A-0CDC-938A-10965CF0A4F2";
+	rename -uid "10C16510-4E4E-2756-C36C-9AB0A0A42219";
 createNode lambert -n "glow_ice_mat";
-	rename -uid "75187932-403F-9D44-1124-05A17731744F";
+	rename -uid "CCFC5026-4299-BEB0-E8EB-D296B9A5C3E2";
 	setAttr ".c" -type "float3" 0.5 0.80000001 1 ;
 createNode shadingEngine -n "glow_ice_matSG";
-	rename -uid "8A3C47FD-4FB7-4285-768C-46BC0EE55784";
+	rename -uid "2C53E8ED-4F9F-6FA1-6B10-D0BC7BC16948";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo19";
-	rename -uid "F51DAB7F-4E12-FA5B-9FAA-7B89E36146D4";
+	rename -uid "0AFF7ACD-47B1-3EB3-B27E-D5805174ACF9";
 createNode lambert -n "glow_street_mat";
-	rename -uid "8A0CA70C-4E31-685E-345F-6CBD0B5A1203";
+	rename -uid "38525397-444E-B8DF-1AF9-42BBB6EEA6C8";
 	setAttr ".c" -type "float3" 0.44999999 1 0.69999999 ;
 createNode shadingEngine -n "glow_street_matSG";
-	rename -uid "0808C7C5-44DF-7914-4E9F-F1A57557C773";
+	rename -uid "5C450930-470B-871D-1363-6D96B8AC3CF4";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo20";
-	rename -uid "9788490A-42D5-DE66-5BD5-BFBD7BFD3C10";
+	rename -uid "896CFC96-4BD3-3C5A-0FAB-79B51272F1A2";
 createNode lambert -n "glow_lamp_mat";
-	rename -uid "CB1380B4-4FA4-5E8A-0CC4-E7AF3C43E022";
+	rename -uid "C375E415-4E41-5731-AA13-B5A483CCF73B";
 	setAttr ".c" -type "float3" 1 0.75 0.44999999 ;
 createNode shadingEngine -n "glow_lamp_matSG";
-	rename -uid "0859E85D-4F6C-F91A-AE4C-59A37F55E434";
+	rename -uid "34D40EE2-4D2D-2ECC-E6BB-A1B2FB82C45A";
 	setAttr ".ihi" 0;
 	setAttr ".ro" yes;
 createNode materialInfo -n "materialInfo21";
-	rename -uid "E1D7DB29-4463-237F-657E-64928EA2FB34";
+	rename -uid "B12E147E-4E23-0A40-5F1B-E8A9CB8FB67E";
 createNode groupId -n "groupId6";
-	rename -uid "C4D00390-47B5-DF36-121C-7A9BDD322FFE";
+	rename -uid "540BACF9-421F-F8BE-C1EE-358269298FC4";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1241";
-	rename -uid "4405BB99-42AB-25CA-BFC2-2B86FD3A3B0B";
+	rename -uid "FDC6C6FA-41B6-C2E9-8472-039BA22499B2";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1242";
-	rename -uid "C88E4995-4733-32AE-BDD1-C7B74DEDEABC";
+	rename -uid "72ACBE24-4E09-B8D2-757F-EB8DB88B1B84";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1243";
-	rename -uid "B904A25F-4B43-1819-30C3-1999379D60E0";
+	rename -uid "4BB9A919-41FA-2372-10A7-D48FCEA8F393";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1244";
-	rename -uid "E66618EA-483F-1403-98FF-748EE5F9E452";
+	rename -uid "4D3AE35B-4237-FF62-F86A-1498C2C54854";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1245";
-	rename -uid "2BA43DD5-45A3-EE97-F322-B8AEF16AEB54";
+	rename -uid "3A1A1D90-4B3D-8F2F-7924-A08785E7D9F2";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1246";
-	rename -uid "16980093-4FF6-6ADA-6A6B-2B92057456D0";
+	rename -uid "AA2DE630-4383-00B0-82EA-FAB3F80A3E0E";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1247";
-	rename -uid "3FFF9BFC-473D-044B-6B2A-2B87E8A4404C";
+	rename -uid "93785604-4ABF-5607-1ED0-5694F2374C9C";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1248";
-	rename -uid "4F72CB0D-43D8-85EC-70F9-1AB3FE1DE029";
+	rename -uid "9381936A-42DD-C64C-CCB3-4DAE5F18A8DA";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1249";
-	rename -uid "7FB6E804-4C4D-588C-8C7D-DF92DDA51E5C";
+	rename -uid "E476A67B-4869-CE37-F9D3-6E9DA5C74AF4";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1250";
-	rename -uid "9FCCACB2-4952-2207-153D-4393FFDC0324";
+	rename -uid "2ABF3207-4E87-9119-38A0-54B8B20D7B78";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1251";
-	rename -uid "C13A7F1E-4A46-4FB7-11A5-44A9ED8464C1";
+	rename -uid "5A0E2CCA-4CFB-6DE0-A26B-6AAC216678D7";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1252";
-	rename -uid "9748EDA6-4F0A-316F-D079-FBB66510E492";
+	rename -uid "2F7CDDFF-4852-71D3-1808-70A6D5A266C3";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1253";
-	rename -uid "D4A43400-4720-1C27-1B47-D3BD690A0D27";
+	rename -uid "63B0AC1D-405B-B199-DB0A-9195D14DB868";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1254";
-	rename -uid "CDD63D36-49F2-AC27-9185-F39EB09CE068";
+	rename -uid "742AFA6A-45E4-9CC5-1B5D-8896729F9455";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1255";
-	rename -uid "7680C8D8-4CDE-0A37-13F7-4785B6B8205E";
+	rename -uid "F0098FC1-4426-99D0-2D49-61ABE9E25C17";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1256";
-	rename -uid "A87246E7-4E4D-2E03-EFA5-9D8BD83DEC06";
+	rename -uid "2C6B7634-429C-88D5-21F7-3CAC9F36C446";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1257";
-	rename -uid "4DDA6AAA-413D-3548-8091-F7891367A43C";
+	rename -uid "1341EC92-49EF-9B28-D6B7-FA8334A3491E";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1258";
-	rename -uid "9D8CBF04-4DF5-4F15-5C14-1CBF99BC6897";
+	rename -uid "F502A2D9-4B43-60A6-5038-7E8E61871235";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1259";
-	rename -uid "9D0E60DA-4D55-1245-6161-9CA2FD70E929";
+	rename -uid "DFE7652F-41F9-9D5A-7413-E3863CFBF09A";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1260";
-	rename -uid "B9A624A1-4040-8AC7-0608-A9A58E24CADF";
+	rename -uid "B4FF94E5-4524-6842-9E5A-FD88832AEC4B";
 	setAttr ".ihi" 0;
 createNode groupId -n "groupId1261";
-	rename -uid "C8506CE5-4E59-C6DD-17C1-9F887C8BD5A0";
+	rename -uid "8F1F325B-48CD-46AF-70E7-EB973F052F02";
 	setAttr ".ihi" 0;
 createNode script -n "uiConfigurationScriptNode";
-	rename -uid "EEE2CDD0-4360-2113-7724-5B8C3421E3DD";
+	rename -uid "B89CAB70-41B2-501D-26A0-42ABCA39732C";
 	setAttr ".b" -type "string" "// Maya Mel UI Configuration File.\n// No UI generated in batch mode.\n";
 	setAttr ".st" 3;
 createNode script -n "sceneConfigurationScriptNode";
-	rename -uid "326C03DF-4185-3B63-5FFC-E3AFDD031B9C";
+	rename -uid "4314BA6E-41E6-7A0F-5A5A-C3BE48F37CB8";
 	setAttr ".b" -type "string" "playbackOptions -min 1 -max 120 -ast 1 -aet 200 ";
 	setAttr ".st" 6;
 select -ne :time1;

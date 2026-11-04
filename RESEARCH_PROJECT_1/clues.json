@@ -59,11 +59,11 @@
     {
       "id": "key_office",
       "shape": "key",
-      "at": [-815, -1347, 80], "yaw": 70,
+      "at": [-952, -1182, 80], "yaw": 70,
       "prompt": "Take",
       "title": "Office key",
       "body": "[TEST KEY]\n\nA brass key on a cracked plastic tag.\n\nOFFICE - DO NOT REMOVE FROM PREMISES",
-      "journal": "Found the office key on the dresser.",
+      "journal": "Found the office key on the dresser next to the TV.",
       "gives_key": "office",
       "objective": "Open the motel office.",
       "pickup": true
