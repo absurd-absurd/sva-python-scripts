@@ -235,8 +235,9 @@ def placeholder_trees():
 
 
 def weather():
-    """Foggy overcast day, like the Silent Hill 2 reference: flat grey light, no hard
-    shadows, white-grey fog, milky low-contrast colors with grain."""
+    """Almost night under heavy overcast: flat grey-blue light, no hard shadows, a dim
+    blue-grey fog wall, washed-out low-contrast colors with grain. (Picked from test
+    shots: brighter versions read as daytime.)"""
     def spawn(cls, label, loc=(0, 0, 0), rot=(0, 0, 0)):
         a = actors.spawn_actor_from_class(cls, unreal.Vector(*loc), unreal.Rotator(*rot))
         a.set_actor_label(label)
@@ -258,9 +259,9 @@ def weather():
 
     fog = spawn(unreal.ExponentialHeightFog, "Fog", (0, 0, 0))
     fc = fog.component
-    fc.set_fog_density(0.12)
+    fc.set_fog_density(0.18)
     fc.set_fog_height_falloff(0.25)
-    fc.set_fog_inscattering_color(unreal.LinearColor(0.35, 0.35, 0.37, 1))   # white-grey
+    fc.set_fog_inscattering_color(unreal.LinearColor(0.22, 0.24, 0.3, 1))    # blue-grey
     fc.set_editor_property("start_distance", 200)
 
     pp = spawn(unreal.PostProcessVolume, "PostProcess_Look", (0, 0, 0))
@@ -268,9 +269,9 @@ def weather():
     s = pp.settings
     for name, value in (
         ("auto_exposure_method", unreal.AutoExposureMethod.AEM_MANUAL),
-        ("auto_exposure_bias", 10.6),                # raise to brighten, lower to darken
-        ("color_saturation", unreal.Vector4(0.6, 0.6, 0.6, 1)),   # washed-out colors
-        ("color_contrast", unreal.Vector4(0.85, 0.85, 0.85, 1)),  # milky, low contrast
+        ("auto_exposure_bias", 7.3),                 # raise to brighten, lower to darken
+        ("color_saturation", unreal.Vector4(0.5, 0.5, 0.5, 1)),   # washed-out colors
+        ("color_contrast", unreal.Vector4(0.9, 0.9, 0.9, 1)),    # milky, low contrast
         ("vignette_intensity", 0.35),
         ("film_grain_intensity", 0.5),
     ):
@@ -283,7 +284,7 @@ def weather():
             array=[unreal.WeightedBlendable(weight=1.0, object=unreal.load_asset(screen))]))
     pp.set_editor_property("settings", s)
 
-    # a dim lamp inside her room; the parking lot light pole stays, switched off for the day
+    # a dim lamp inside her room (the parking lot light pole is dead)
     lamp = spawn(unreal.PointLight, "Lamp_HerRoom", (-750, -1050, 280))
     lamp.point_light_component.set_intensity(60)
     lamp.point_light_component.set_light_color(unreal.LinearColor(1.0, 0.8, 0.55, 1))

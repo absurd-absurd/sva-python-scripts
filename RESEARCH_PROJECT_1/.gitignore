@@ -1,2 +1,4 @@
 # made by maya/export_to_unreal.py; re-export to recreate
 export/
+# CC0 photo textures: downloaded by tools/fetch_textures.py (credits.json is kept)
+textures/*.jpg

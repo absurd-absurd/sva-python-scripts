@@ -1,0 +1,87 @@
+{
+ "asphalt": {
+  "asset": "Road013A",
+  "url": "https://ambientcg.com/view?id=Road013A",
+  "license": "CC0"
+ },
+ "concrete": {
+  "asset": "Concrete048",
+  "url": "https://ambientcg.com/view?id=Concrete048",
+  "license": "CC0"
+ },
+ "plaster": {
+  "asset": "Concrete034",
+  "url": "https://ambientcg.com/view?id=Concrete034",
+  "license": "CC0"
+ },
+ "bricks": {
+  "asset": "Bricks113A",
+  "url": "https://ambientcg.com/view?id=Bricks113A",
+  "license": "CC0"
+ },
+ "wood_siding": {
+  "asset": "WoodSiding008",
+  "url": "https://ambientcg.com/view?id=WoodSiding008",
+  "license": "CC0"
+ },
+ "planks": {
+  "asset": "WoodFloor064",
+  "url": "https://ambientcg.com/view?id=WoodFloor064",
+  "license": "CC0"
+ },
+ "painted_wood": {
+  "asset": "PaintedWood008C",
+  "url": "https://ambientcg.com/view?id=PaintedWood008C",
+  "license": "CC0"
+ },
+ "roof": {
+  "asset": "RoofingTiles013A",
+  "url": "https://ambientcg.com/view?id=RoofingTiles013A",
+  "license": "CC0"
+ },
+ "bark": {
+  "asset": "Bark016",
+  "url": "https://ambientcg.com/view?id=Bark016",
+  "license": "CC0"
+ },
+ "forest_floor": {
+  "asset": "Ground106",
+  "url": "https://ambientcg.com/view?id=Ground106",
+  "license": "CC0"
+ },
+ "dirt": {
+  "asset": "Ground111",
+  "url": "https://ambientcg.com/view?id=Ground111",
+  "license": "CC0"
+ },
+ "rock": {
+  "asset": "Rock064",
+  "url": "https://ambientcg.com/view?id=Rock064",
+  "license": "CC0"
+ },
+ "rust": {
+  "asset": "Metal063",
+  "url": "https://ambientcg.com/view?id=Metal063",
+  "license": "CC0"
+ },
+ "painted_metal": {
+  "asset": "Metal027",
+  "url": "https://ambientcg.com/view?id=Metal027",
+  "license": "CC0"
+ },
+ "carpet": {
+  "asset": "Carpet016",
+  "url": "https://ambientcg.com/view?id=Carpet016",
+  "license": "CC0"
+ },
+ "fabric": {
+  "asset": "Fabric086",
+  "url": "https://ambientcg.com/view?id=Fabric086",
+  "license": "CC0"
+ },
+ "grass": {
+  "asset": "Grass005",
+  "url": "https://ambientcg.com/view?id=Grass005",
+  "license": "CC0"
+ }
+}
