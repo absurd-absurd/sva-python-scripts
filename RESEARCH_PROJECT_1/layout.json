@@ -11,5 +11,6 @@
     {"name": "cabin2",    "x": 5000,  "y": 13000, "r": 650},
     {"name": "cabin3",    "x": 7500,  "y": 12400, "r": 650},
     {"name": "boathouse", "x": -3500, "y": 14000, "r": 700}
-  ]
+  ],
+  "map": {"_about": "world area the in-game map covers (square, cm); tools/make_map.py draws it, the HUD reads it", "x_min": -13000, "x_max": 13000, "y_min": -6000, "y_max": 20000, "px": 2048}
 }

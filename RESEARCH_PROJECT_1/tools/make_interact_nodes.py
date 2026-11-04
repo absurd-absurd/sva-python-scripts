@@ -10,7 +10,7 @@ BP_HorrorHUD
   Event Draw HUD (every frame):
     aim line 2.6 m from the camera -> Focus (clues have a slightly bigger invisible HitBox) = the BP_Examinable you look at (or nothing)
     (a clue you spotted keeps the prompt when you look away, until you use it or walk 3 m off)
-    draw the objective (top left) and the latest message for 3 s (lower left)
+    draw the objective (top left), the corner map (top right) and the latest message for 3 s (lower left)
     Reading?      -> dark screen with the page's title and text, "[E] Close"
     Journal open? -> dark screen with every journal line, "[Tab] Close"
     otherwise     -> "[E] Examine" (or the object's own Prompt) on a dark box when looking at something
@@ -23,6 +23,8 @@ BP_HorrorHUD
 BP_Examinable
   Event Tick: once Opened, Hinge turns smoothly to OpenAngle (the door swings).
 """
+import json
+import os
 import sys
 import uuid
 
@@ -39,6 +41,14 @@ DIM = "(R=0.55,G=0.53,B=0.5,A=1.000000)"
 DARK = "(R=0.004,G=0.004,B=0.006,A=0.930000)"
 SHADOW = "(R=0.0,G=0.0,B=0.0,A=0.850000)"
 PROMPT_BOX = "(R=0.0,G=0.0,B=0.0,A=0.550000)"     # dark box behind "[E] Examine"
+MAP = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "layout.json")))["map"]
+MAP_SIZE = MAP["x_max"] - MAP["x_min"]   # cm the whole map picture covers (it's square)
+MAP_VIEW = 4500.0              # cm of the world shown in the corner window
+MAP_SCREEN = 0.27              # corner window size, as a fraction of screen height
+MAP_TEX = "/Game/Horror/UI/T_Map.T_Map"
+MARKER_TEX = "/Game/Horror/UI/T_MapMarker.T_MapMarker"
+WHITE = "(R=1.0,G=1.0,B=1.0,A=1.0)"
+MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=0.92)"     # a little dim so it doesn't glare at night
 TEXT_SCALE = 0.0032            # text size = screen height * this (3.2 at 1000 px tall)
 REACH, NEAR = 260.0, 40.0      # aim line from 40 cm in front of the eyes (outside the capsule) to 2.6 m
 STICKY = 300.0                 # a spotted clue keeps its prompt until used, within 3 m
@@ -70,7 +80,8 @@ TY = {
     "color": _s("/Script/CoreUObject.LinearColor"), "hit": _s("/Script/Engine.HitResult"),
     "object": _t("object", obj=C("/Script/CoreUObject.Object")), "actor": _t("object", obj=C(ACTOR)),
     "pc": _t("object", obj=C(PC)), "ctrl": _t("object", obj=C(CTRL)), "cam": _t("object", obj=C(CAM)),
-    "font": _t("object", obj=C("/Script/Engine.Font")), "scene": _t("object", obj=C(SCENE)),
+    "font": _t("object", obj=C("/Script/Engine.Font")), "texture": _t("object", obj=C("/Script/Engine.Texture")),
+    "vector2d": _s("/Script/CoreUObject.Vector2D"), "scene": _t("object", obj=C(SCENE)),
     "ex": _t("object", obj=EX_CLASS),
 }
 
@@ -84,7 +95,7 @@ class Pin:
 def fmt_default(ty, v):
     if ty == "bool":
         return f'DefaultValue="{"true" if v else "false"}"'
-    if ty in ("font",):
+    if ty in ("font", "texture"):
         return f'DefaultObject="{v}"'
     if isinstance(v, float) or isinstance(v, int):
         return f'DefaultValue="{float(v)}"'
@@ -325,6 +336,51 @@ def hud_graph():
 
     # objective + message
     after = draw(g.get("Objective", "string"), [s_hit.then, k_yes, s_none.then], 0.04, 0.05, 0.8, DIM, True)
+
+    # corner map: a MAP_VIEW-wide window of the paper map centred on you, top right,
+    # with the red arrow in the middle turned the way you face (north is always up)
+    g.row(340 * 9, 600)
+    S = g.mul(H, MAP_SCREEN)
+    MX = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.pure(MATH, "Subtract_DoubleDouble", [
+        ("A", "real", W), ("B", "real", S)])), ("B", "real", g.mul(W, 0.025))])
+    MY = g.mul(H, 0.04)
+    pawn_loc = g.pure(ACTOR, "K2_GetActorLocation", ty="vector",
+                      target=(g.pure(HUD, "GetOwningPawn", ty="actor"), "actor"))
+    px = g._node(K2 + "K2Node_CallFunction", f'FunctionReference=(MemberParent="{C(MATH)}",MemberName="BreakVector")')
+    px.inp("InVec", "vector", pawn_loc)
+    pX, pY = px.out("X", "real"), px.out("Y", "real")
+    half = MAP_VIEW / MAP_SIZE / 2
+    # +X is west (left on the map), so U grows as X shrinks
+    U = g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.mul(pX, -1.0 / MAP_SIZE)), ("B", "real", MAP["x_max"] / MAP_SIZE - half)])
+    V = g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.mul(pY, -1.0 / MAP_SIZE)), ("B", "real", MAP["y_max"] / MAP_SIZE - half)])
+    border = g.call(HUD, "DrawRect", after, [
+        ("RectColor", "color", "(R=0.02,G=0.015,B=0.01,A=0.9)"),
+        ("ScreenX", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MX), ("B", "real", 6.0)])),
+        ("ScreenY", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MY), ("B", "real", 6.0)])),
+        ("ScreenW", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", S), ("B", "real", 12.0)])),
+        ("ScreenH", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", S), ("B", "real", 12.0)]))]).then
+    paper = g.call(HUD, "DrawTexture", border, [
+        ("Texture", "texture", MAP_TEX), ("ScreenX", "float", MX), ("ScreenY", "float", MY),
+        ("ScreenW", "float", S), ("ScreenH", "float", S),
+        ("TextureU", "float", U), ("TextureV", "float", V),
+        ("TextureUWidth", "float", 2 * half), ("TextureVHeight", "float", 2 * half),
+        ("TintColor", "color", MAP_TINT)]).then
+    M = g.mul(S, 0.13)
+    centre = lambda base: g.pure(MATH, "Subtract_DoubleDouble", [
+        ("A", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", base), ("B", "real", g.mul(S, 0.5))])),
+        ("B", "real", g.mul(M, 0.5))])
+    yaw = g._node(K2 + "K2Node_CallFunction", f'FunctionReference=(MemberParent="{C(MATH)}",MemberName="BreakRotator")')
+    yaw.inp("InRot", "rotator", g.pure(CTRL, "GetControlRotation", ty="rotator",
+                                       target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "ctrl")))
+    yaw_out = yaw.out("Yaw", "float")
+    # facing +Y (yaw 90) is map-up, facing +X (yaw 0) is map-left: screen turn = yaw - 90
+    after = g.call(HUD, "DrawTexture", paper, [
+        ("Texture", "texture", MARKER_TEX), ("ScreenX", "float", centre(MX)), ("ScreenY", "float", centre(MY)),
+        ("ScreenW", "float", M), ("ScreenH", "float", M),
+        ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
+        ("TintColor", "color", WHITE),
+        ("Rotation", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", yaw_out), ("B", "real", 90.0)])),
+        ("RotPivot", "vector2d", "(X=0.500000,Y=0.500000)")]).then
     fresh = g.pure(MATH, "Less_DoubleDouble", [("A", "real", g.pure(MATH, "Subtract_DoubleDouble", [
         ("A", "real", g.now()), ("B", "real", g.get("ToastTime", "real"))])), ("B", "real", 3.0)], ty="bool")
     t_yes, t_no = g.branch(fresh, after)
