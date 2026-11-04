@@ -21,7 +21,7 @@ creature/rattle only sets that value (Set Scalar Parameter Value on MPC_Horror, 
 """
 import unreal
 
-INTENSITY = 400.0      # unitless (this falloff mode has no physical units)
+INTENSITY = 560.0      # unitless (this falloff mode has no physical units); 400 felt a bit dim
 FALLOFF = 3.0          # how quickly it fades toward RADIUS (higher = more of the light near you)
 RADIUS = 1200.0        # cm: the beam reaches 12 m
 POSITION = (30, 20, -15)   # cm from the camera: a little forward, right and down, like a held light
@@ -57,7 +57,8 @@ def osc(amplitude, frequency):
 
 
 def hit_shake():
-    """CS_FlashHit: a quick knock, like smacking a dying flashlight against your hand (0.3 s)."""
+    """CS_FlashHit: a knock, like smacking a dying flashlight against your hand (0.5 s).
+    First try (1 degree, 0.3 s) was too small to notice."""
     if lib.does_asset_exist(HIT):
         bp = unreal.load_asset(HIT)
     else:
@@ -65,16 +66,16 @@ def hit_shake():
         f.set_editor_property("parent_class", unreal.LegacyCameraShake)
         bp = tools.create_asset(HIT.rsplit("/", 1)[1], HIT.rsplit("/", 1)[0], unreal.Blueprint, f)
     shake = unreal.get_default_object(bp.generated_class())
-    shake.set_editor_property("oscillation_duration", 0.3)
+    shake.set_editor_property("oscillation_duration", 0.5)
     shake.set_editor_property("oscillation_blend_in_time", 0.02)
-    shake.set_editor_property("oscillation_blend_out_time", 0.2)
+    shake.set_editor_property("oscillation_blend_out_time", 0.3)
     rot = unreal.ROscillator()
-    rot.set_editor_property("pitch", osc(1.4, 45.0))     # degrees, fast
-    rot.set_editor_property("roll", osc(0.9, 38.0))
-    rot.set_editor_property("yaw", osc(0.5, 30.0))
+    rot.set_editor_property("pitch", osc(3.2, 24.0))     # degrees: a sharp nod down and back
+    rot.set_editor_property("roll", osc(2.0, 20.0))
+    rot.set_editor_property("yaw", osc(1.0, 17.0))
     shake.set_editor_property("rot_oscillation", rot)
     loc = unreal.VOscillator()
-    loc.set_editor_property("z", osc(0.8, 45.0))         # cm
+    loc.set_editor_property("z", osc(2.0, 24.0))         # cm
     shake.set_editor_property("loc_oscillation", loc)
     unreal.BlueprintEditorLibrary.compile_blueprint(bp)
     lib.save_loaded_asset(bp, False)

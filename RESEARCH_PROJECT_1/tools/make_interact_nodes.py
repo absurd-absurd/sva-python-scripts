@@ -65,7 +65,7 @@ FLICK_GAP = ((2.5, 6.0), (0.2, 0.8))    # seconds between flickers (random in ra
 FLICK_OFF = (0.25, 0.55)                # share of flickers that are a full cut-out
 FLUTTER = (0.1, 0.4)                    # how long a flutter lasts (s)
 CUTOUT = (0.3, 0.8)                     # how long a cut-out lasts (s); under a second
-HIT_CHANCE = 0.5                        # share of cut-outs that end with a hit (camera jolt)
+HIT_CHANCE = 0.75                       # share of cut-outs that end with a hit (camera jolt)
 TEXT_SCALE = 0.0032            # text size = screen height * this (3.2 at 1000 px tall)
 REACH, NEAR = 260.0, 40.0      # aim line from 40 cm in front of the eyes (outside the capsule) to 2.6 m
 STICKY = 300.0                 # a spotted clue keeps its prompt until used, within 3 m
