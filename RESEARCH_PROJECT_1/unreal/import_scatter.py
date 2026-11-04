@@ -82,9 +82,11 @@ def import_props(props, colors):
         body = mesh.get_editor_property("body_setup")
         body.set_editor_property("collision_trace_flag", unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE)
         mesh.set_editor_property("body_setup", body)
-        mi = mats.get(props[asset]["material"])
-        if mi:
-            mesh.set_material(0, mi)
+        # each material slot is named after the Maya material it came from
+        for i, slot in enumerate(mesh.static_materials):
+            mi = mats.get(str(slot.material_slot_name))
+            if mi:
+                mesh.set_material(i, mi)
         unreal.EditorAssetLibrary.save_loaded_asset(mesh)
         meshes[asset] = mesh
     return meshes

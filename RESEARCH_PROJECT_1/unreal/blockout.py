@@ -216,11 +216,11 @@ def night():
 
     moon = spawn(unreal.DirectionalLight, "Moonlight", (0, 0, 2000), (0, -35, 60))
     lc = moon.light_component
-    lc.set_intensity(0.15)
+    lc.set_intensity(0.35)
     lc.set_light_color(unreal.LinearColor(0.55, 0.65, 0.9, 1))
 
     sky = spawn(unreal.SkyLight, "SkyLight", (0, 0, 1500))
-    sky.light_component.set_intensity(0.08)
+    sky.light_component.set_intensity(0.3)
     sky.light_component.set_light_color(unreal.LinearColor(0.4, 0.45, 0.55, 1))
 
     fog = spawn(unreal.ExponentialHeightFog, "Fog", (0, 0, 0))
@@ -236,11 +236,16 @@ def night():
     s.set_editor_property("override_auto_exposure_method", True)
     s.set_editor_property("auto_exposure_method", unreal.AutoExposureMethod.AEM_MANUAL)
     s.set_editor_property("override_auto_exposure_bias", True)
-    s.set_editor_property("auto_exposure_bias", 9.0)     # raise this to see more, lower for darker
+    s.set_editor_property("auto_exposure_bias", 11.5)    # raise this to see more, lower for darker
     s.set_editor_property("override_vignette_intensity", True)
     s.set_editor_property("vignette_intensity", 0.8)
     s.set_editor_property("override_film_grain_intensity", True)
     s.set_editor_property("film_grain_intensity", 0.35)
+    # keep the PS2 screen effect if ps2_look.py has made it
+    screen = "/Game/Horror/Materials/PS2/MI_PS2_Screen"
+    if unreal.EditorAssetLibrary.does_asset_exist(screen):
+        s.set_editor_property("weighted_blendables", unreal.WeightedBlendables(
+            array=[unreal.WeightedBlendable(weight=1.0, object=unreal.load_asset(screen))]))
     pp.set_editor_property("settings", s)
 
     # a buzzing motel lamp over her door and one parking lot light
@@ -250,10 +255,10 @@ def night():
         p.point_light_component.set_light_color(unreal.LinearColor(*rgb, 1))
         p.point_light_component.set_attenuation_radius(radius)
         return p
-    lamp("Lamp_HerDoor", (-790, -1500, 280), (1.0, 0.75, 0.4), 800, 700)
-    lamp("Lamp_HerRoom", (-750, -1050, 280), (1.0, 0.8, 0.55), 120, 450)
+    lamp("Lamp_HerDoor", (-790, -1500, 280), (1.0, 0.75, 0.4), 250, 700)
+    lamp("Lamp_HerRoom", (-750, -1050, 280), (1.0, 0.8, 0.55), 60, 450)
     box("ParkingLight_Pole", "Motel", 1500, -3500, 0, 25, 25, 650, color("Metal", (0.15, 0.15, 0.15)))
-    lamp("Lamp_Parking", (1500, -3500, 620), (0.7, 0.85, 1.0), 4000, 1800)
+    lamp("Lamp_Parking", (1500, -3500, 620), (0.7, 0.85, 1.0), 2000, 1800)
 
     start = spawn(unreal.PlayerStart, "PlayerStart", (-1400, -3000, 120), (0, 0, 90))
 

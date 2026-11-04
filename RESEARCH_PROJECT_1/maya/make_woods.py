@@ -43,13 +43,15 @@ def ring(obj, index, sides):
     return f"{obj}.vtx[{index * sides}:{index * sides + sides - 1}]"
 
 
-def finish(parts, name, mat):
-    """Combine parts into one mesh named name, pivot at the origin, no history."""
+def finish(parts, name, mat=None):
+    """Combine parts into one mesh named name, pivot at the origin, no history.
+    mat=None keeps the materials already on the parts (e.g. bark trunk + green leaves)."""
     mesh = cmds.polyUnite(parts, name=name, constructionHistory=False)[0] if len(parts) > 1 else cmds.rename(parts[0], name)
     cmds.delete(mesh, constructionHistory=True)
     cmds.makeIdentity(mesh, apply=True, t=True, r=True, s=True)
     cmds.xform(mesh, pivots=(0, 0, 0), worldSpace=True)
-    assign(mesh, mat)
+    if mat:
+        assign(mesh, mat)
     cmds.addAttr(mesh, longName="ue_asset", dataType="string")
     cmds.setAttr(mesh + ".ue_asset", name, type="string")
     return mesh
@@ -179,6 +181,73 @@ def log(name, seed):
     return finish([l], name, MATS["bark_dark"])
 
 
+def blob(rng, center, radius, squash=0.8, sides=6, rows=4):
+    """A lumpy low-poly ball: a clump of leaves or a bush."""
+    b = cmds.polySphere(r=radius, sx=sides, sy=rows, ch=False)[0]
+    for i in range(cmds.polyEvaluate(b, vertex=True)):
+        p = cmds.pointPosition(f"{b}.vtx[{i}]", local=True)
+        k = rng.uniform(0.8, 1.2)
+        cmds.move(p[0] * k, p[1] * k * squash, p[2] * k, f"{b}.vtx[{i}]", absolute=True, objectSpace=True)
+    cmds.move(*center, b, absolute=True)
+    return b
+
+
+def pine(name, seed, height, tiers):
+    """A living pine: a thin trunk and stacked low-poly cones of needles."""
+    rng = random.Random(seed)
+    t, line = trunk(rng, height * 0.95, 22, segments=3, lean=0.02, taper=0.3)
+    assign(t, MATS["bark"])
+    parts = [t]
+    for i in range(tiers):
+        frac = i / tiers
+        base_y = height * (0.22 + 0.68 * frac)
+        r = (1.0 - frac * 0.75) * height * 0.24
+        h = height * (0.42 - 0.12 * frac)
+        c = cmds.polyCone(r=r, h=h, sx=7, sy=1, ch=False)[0]
+        for v in range(7):                       # ragged bottom edge
+            cmds.move(0, rng.uniform(-0.12, 0.05) * h, 0, f"{c}.vtx[{v}]", relative=True)
+        x, _, z, _ = point_on(line, base_y / height)
+        cmds.move(x, base_y + h / 2, z, c, absolute=True)
+        cmds.rotate(0, rng.uniform(0, 360), 0, c)
+        assign(c, MATS["needles"])
+        parts.append(c)
+    return finish(parts, name)
+
+
+def leafy_tree(name, seed, height, clumps):
+    """A living broadleaf tree: trunk, a few branches, and lumpy clumps of leaves on top."""
+    rng = random.Random(seed)
+    t, line = trunk(rng, height * 0.7, 30, segments=4)
+    assign(t, MATS["bark"])
+    parts = [t]
+    top = line[-1]
+    for k in range(clumps):
+        a = math.tau * k / clumps + rng.uniform(-0.4, 0.4)
+        out = rng.uniform(0.08, 0.18) * height
+        start = point_on(line, rng.uniform(0.6, 0.9))
+        tip = (start[0] + math.sin(a) * out, start[1] + height * rng.uniform(0.12, 0.22), start[2] + math.cos(a) * out)
+        br = limb(rng, start[:3], (tip[0] - start[0], tip[1] - start[1], tip[2] - start[2]),
+                  math.dist(start[:3], tip), start[3] * 0.5, segments=1)
+        assign(br, MATS["bark"])
+        parts.append(br)
+        leaves = blob(rng, tip, height * rng.uniform(0.14, 0.2))
+        assign(leaves, MATS["leaves"])
+        parts.append(leaves)
+    crown = blob(rng, (top[0], top[1] + height * 0.12, top[2]), height * 0.22)
+    assign(crown, MATS["leaves"])
+    parts.append(crown)
+    return finish(parts, name)
+
+
+def bush(name, seed, size):
+    rng = random.Random(seed)
+    parts = []
+    for _ in range(3):
+        a, d = rng.uniform(0, math.tau), rng.uniform(0, size * 0.5)
+        parts.append(blob(rng, (math.sin(a) * d, size * 0.45, math.cos(a) * d), size * rng.uniform(0.5, 0.7), squash=0.7, sides=5))
+    return finish(parts, name, MATS["leaves"])
+
+
 # ---------- the ground ----------
 
 def seg_dist(px, py, a, b):
@@ -224,6 +293,8 @@ def build():
         "bark_dark": material("bark_dark_mat", (0.12, 0.10, 0.08)),
         "rock": material("rock_mat", (0.30, 0.30, 0.28)),
         "ground": material("ground_mat", (0.10, 0.11, 0.07)),
+        "needles": material("needles_mat", (0.035, 0.08, 0.045)),
+        "leaves": material("leaves_mat", (0.06, 0.11, 0.04)),
     }
     props = [
         dead_tree("tree_dead_A", 1, 1200, 34, 6),
@@ -237,10 +308,15 @@ def build():
         rock("rock_C", 9, 40),
         stump("stump_A", 10),
         log("log_A", 11),
+        pine("tree_pine_A", 12, 1400, 4),
+        pine("tree_pine_B", 13, 1900, 5),
+        leafy_tree("tree_leafy_A", 14, 1100, 3),
+        leafy_tree("tree_leafy_B", 15, 1400, 4),
+        bush("bush_A", 16, 120),
     ]
     # line the props up off to the side, like the midterm test scene
     for i, p in enumerate(props):
-        cmds.move(-12000, 0, 1000 + i * 700, p, absolute=True)
+        cmds.move(-12000, 0, 1000 + i * 1000, p, absolute=True)
     cmds.group(props, name="props")
     ground, cut, total = woods_ground()
 
