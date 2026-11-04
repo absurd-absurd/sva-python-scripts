@@ -34,11 +34,35 @@ def maya_to_unreal(m):
     return unreal.Transform(position, rotation, scale)
 
 
-def import_props(props):
+PS2_SURFACE = "/Game/Horror/Materials/PS2/M_PS2_Surface"
+PS2_PROPS_DIR = "/Game/Horror/Materials/PS2/Props"
+
+
+def ps2_materials(colors):
+    """One instance of the PS2 surface material per Maya material, with the same color.
+    Returns {} if ps2_look.py hasn't been run yet (the props keep their FBX materials)."""
+    if not unreal.EditorAssetLibrary.does_asset_exist(PS2_SURFACE):
+        return {}
+    parent = unreal.load_asset(PS2_SURFACE)
+    tools = unreal.AssetToolsHelpers.get_asset_tools()
+    made = {}
+    for name, rgb in colors.items():
+        path = f"{PS2_PROPS_DIR}/MI_PS2_{name}"
+        mi = unreal.load_asset(path) if unreal.EditorAssetLibrary.does_asset_exist(path) else             tools.create_asset(f"MI_PS2_{name}", PS2_PROPS_DIR, unreal.MaterialInstanceConstant,
+                               unreal.MaterialInstanceConstantFactoryNew())
+        mi.set_editor_property("parent", parent)
+        unreal.MaterialEditingLibrary.set_material_instance_vector_parameter_value(
+            mi, "Color", unreal.LinearColor(rgb[0], rgb[1], rgb[2], 1))
+        unreal.EditorAssetLibrary.save_loaded_asset(mi)
+        made[name] = mi
+    return made
+
+
+def import_props(props, colors):
     tasks = []
-    for asset, path in props.items():
+    for asset, info in props.items():
         t = unreal.AssetImportTask()
-        t.filename = path
+        t.filename = info["fbx"]
         t.destination_path = PROPS_DIR
         t.destination_name = asset
         t.automated = True
@@ -46,6 +70,7 @@ def import_props(props):
         t.save = True
         tasks.append(t)
     unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
+    mats = ps2_materials(colors)
     meshes = {}
     for asset in props:
         mesh = unreal.load_asset(f"{PROPS_DIR}/{asset}")
@@ -57,6 +82,9 @@ def import_props(props):
         body = mesh.get_editor_property("body_setup")
         body.set_editor_property("collision_trace_flag", unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE)
         mesh.set_editor_property("body_setup", body)
+        mi = mats.get(props[asset]["material"])
+        if mi:
+            mesh.set_material(0, mi)
         unreal.EditorAssetLibrary.save_loaded_asset(mesh)
         meshes[asset] = mesh
     return meshes
@@ -77,7 +105,7 @@ def main():
     with unreal.ScopedSlowTask(len(copies) + 2, "Importing the woods") as task:
         task.make_dialog(True)
         task.enter_progress_frame(1, "Importing props")
-        meshes = import_props(data["props"])
+        meshes = import_props(data["props"], data.get("materials", {}))
         task.enter_progress_frame(1, "Removing the old scatter")
         removed = clear_old()
         made = 0

@@ -39,6 +39,16 @@ def asset_of(copy, sources):
     return base if base in sources else None
 
 
+def material_of(node):
+    """(material name, color) of the first material on node's mesh."""
+    shapes = cmds.listRelatives(node, shapes=True, fullPath=True, noIntermediate=True) or []
+    for sg in cmds.listConnections(shapes, type="shadingEngine") or []:
+        for mat in cmds.listConnections(sg + ".surfaceShader") or []:
+            if cmds.attributeQuery("color", node=mat, exists=True):
+                return mat, list(cmds.getAttr(mat + ".color")[0])
+    return None, [0.2, 0.2, 0.2]
+
+
 def export_prop(asset, node, path):
     dup = cmds.duplicate(node, name=asset + "_export")[0]
     if cmds.listRelatives(dup, parent=True):
@@ -73,13 +83,15 @@ def export():
 
     os.makedirs(OUT, exist_ok=True)
     used = sorted({c["asset"] for c in copies})
-    props = {}
+    props, materials = {}, {}
     for asset in used:
         path = os.path.join(OUT, asset + ".fbx")
         export_prop(asset, sources[asset], path)
-        props[asset] = path.replace("\\", "/")
+        mat, color = material_of(sources[asset])
+        props[asset] = {"fbx": path.replace("\\", "/"), "material": mat}
+        materials[mat] = color
     with open(os.path.join(OUT, "scatter.json"), "w") as f:
-        json.dump({"props": props, "copies": copies}, f, indent=1)
+        json.dump({"props": props, "materials": materials, "copies": copies}, f, indent=1)
     msg = "Exported {} copies of {} props to {}".format(len(copies), len(used), OUT)
     if unknown:
         msg += " ({} copies skipped: not made from a tagged prop)".format(unknown)
