@@ -7,8 +7,11 @@ before anything is modeled. Safe to run again: it deletes the old blockout first
 Unreal units are centimeters, Z is up. The road is south (negative Y),
 the lake is north (positive Y).
 """
+import json
 import math
 import unreal
+
+LAYOUT = json.load(open(r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/layout.json"))
 
 MAP_PATH = "/Game/Horror/Maps/MotelLake"
 MAT_DIR = "/Game/Horror/Materials/Blockout"
@@ -145,7 +148,7 @@ def motel():
     box("Fence_Behind", "Motel", 350, back_y + 600, 0, 6300, 15, 160, color("Fence", (0.15, 0.12, 0.08)))
 
 
-TRAIL = [(-3000, -1700), (-3000, 500), (-1200, 1600), (600, 3200), (-500, 5800), (900, 8400), (-300, 11000), (300, 13600), (1500, 14400)]
+TRAIL = [tuple(p) for p in LAYOUT["trail"]]   # shared with Maya
 
 
 def trail():
@@ -184,16 +187,19 @@ def lake():
 
 
 def placeholder_trees():
-    """Stand-in trunks so the woods read as woods until the Maya scatter replaces them."""
+    """Stand-in trunks so the woods read as woods. Skipped once the Maya scatter is imported."""
     import random
+    if any(a.actor_has_tag("scatter") for a in actors.get_all_level_actors()):
+        return
     rng = random.Random(7)
     bark = color("Bark", (0.07, 0.05, 0.04))
+    w, clear = LAYOUT["woods"], LAYOUT["clearings"]
     n = 0
     while n < 260:
-        x, y = rng.uniform(-9000, 9000), rng.uniform(300, 13000)
+        x, y = rng.uniform(w["x_min"], w["x_max"]), rng.uniform(w["y_min"], w["y_max"])
         if min(math.hypot(x - px, y - py) for px, py in TRAIL) < 450:
             continue    # keep the trail clear (rough check against trail points)
-        if any(abs(x - sx) < 500 and abs(y - sy) < 500 for sx, sy in [(2300, 4400), (-1700, 7300), (2800, 10000), (-6500, 13200), (5000, 13000), (7500, 12400), (-3500, 14000)]):
+        if any(math.hypot(x - c["x"], y - c["y"]) < c["r"] for c in clear):
             continue
         h = rng.uniform(800, 1600)
         place(f"TempTree{n}", "Woods/TempTrees", CYL, (x, y, h / 2), (rng.uniform(25, 50),) * 2 + (h,), bark)
