@@ -411,14 +411,35 @@ def rooftop_sign():
 
 def office():
     x0, x1, y0, y1, h = OFFICE
-    box(x0, x1, y0, y1, 0, h, "plaster_mat")
-    box(x0, x1, y0 - 3, y0, 0, 100, "brick_mat")
+    t = 20
+    d0, d1, dh = x0 + 50, x0 + 160, 230                  # doorway (the door itself is BP_Examinable)
+    # hollow shell you can walk into
+    box(x0, x1, y1 - t, y1, 0, h, "plaster_mat")                               # back
+    box(x0, x0 + t, y0, y1, 0, h, "plaster_mat")                               # left
+    box(x1 - t, x1, y0, y1, 0, h, "plaster_mat")                               # right
+    box(x0, d0, y0, y0 + t, 0, h, "plaster_mat")                               # front, left of door
+    box(d1, x1, y0, y0 + t, 0, h, "plaster_mat")                               # front, right of door
+    box(d0, d1, y0, y0 + t, dh, h, "plaster_mat")                              # above door
+    box(x0, x1, y0, y1, h - 10, h, "plaster_mat")                              # ceiling
+    box(x0 + t, x1 - t, y0 + t, y1 - t, 0, 2, "carpet_mat")                    # carpet
+    for a, b in ((x0, d0 - 10), (d1 + 10, x1)):
+        box(a, b, y0 - 3, y0, 0, 100, "brick_mat")
     box(x0 - 30, x1 + 30, y0 - 150, y1 + 30, h, h + 15, "roof_metal_mat")         # flat roof with overhang
     box(x0 - 30, x1 + 30, y0 - 158, y0 - 150, h - 25, h + 15, "trim_mat")
     tube((x0 - 30, y0 - 160, h - 21), (x1 + 30, y0 - 160, h - 21), 2.5, "glow_neon_red_mat")
-    # door (locked; the key comes later)
-    box(x0 + 40, x0 + 170, y0 - 5, y0, 0, 238, "trim_mat")
-    box(x0 + 55, x0 + 155, y0 - 8, y0 - 4, 0, 225, "door_mat")
+    # door frame (jambs + header, so the doorway stays open)
+    box(d0 - 10, d0, y0 - 5, y0, 0, dh + 8, "trim_mat")
+    box(d1, d1 + 10, y0 - 5, y0, 0, dh + 8, "trim_mat")
+    box(d0 - 10, d1 + 10, y0 - 5, y0, dh, dh + 8, "trim_mat")
+    # inside: front counter facing the door, a key board on the back wall, a desk lamp
+    box(x0 + 220, x1 - 80, y0 + 380, y0 + 440, 0, 105, "wood_mat")
+    box(x0 + 215, x1 - 75, y0 + 375, y0 + 445, 105, 109, "trim_mat")
+    box(x0 + 300, x0 + 420, y1 - t - 3, y1 - t, 140, 210, "wood_mat")
+    for k in range(6):                                                          # empty hooks
+        box(x0 + 312 + k * 19, x0 + 316 + k * 19, y1 - t - 7, y1 - t - 3, 190, 194, "brass_mat")
+    tube((x1 - 130, y0 + 410, 109), (x1 - 130, y0 + 410, 140), 2, "brass_mat")
+    tube((x1 - 130, y0 + 410, 140), (x1 - 130, y0 + 410, 158), 12, "glow_lamp_mat", sides=8)
+    light("light_office", x1 - 130, y0 + 380, 200, [1.0, 0.75, 0.45], 300, 700)
     # big front window with a neon OPEN sign
     wx0, wx1 = x0 + 430, x1 - 30
     box(wx0 - 8, wx1 + 8, y0 - 6, y0, 95, 250, "trim_mat")

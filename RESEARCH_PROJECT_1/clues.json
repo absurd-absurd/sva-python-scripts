@@ -1,0 +1,53 @@
+{
+  "_about": "Every clue, key and locked door in the game. unreal/place_clues.py puts them in the level as BP_Examinable actors. Coordinates are Unreal cm (z = height of the surface the thing sits on). TEST CLUES for now: the real story text replaces these later.",
+  "_fields": {
+    "title / body": "what the reading screen shows (no body = no reading screen)",
+    "journal": "line added to the Tab journal the first time",
+    "gives_key / needs_key": "key name; needs_key locks it until you have that key",
+    "objective": "new objective line after using it",
+    "pickup": "disappears after you take it",
+    "shape": "paper, key, book or door (see SHAPES in place_clues.py)"
+  },
+  "start_objective": "Find Room 4.",
+  "clues": [
+    {
+      "id": "note_bed",
+      "shape": "paper",
+      "at": [-660, -850, 58], "yaw": 20,
+      "title": "A note on the bed",
+      "body": "[TEST NOTE]\n\nBug,\n\nIf you're reading this, you came. I knew you would. The office key is still in this room. Don't let them see you take it.\n\n- Cas",
+      "journal": "Cas left a note on the bed in Room 4. The office key is somewhere in her room.",
+      "objective": "Find the office key."
+    },
+    {
+      "id": "key_office",
+      "shape": "key",
+      "at": [-815, -1347, 80], "yaw": 70,
+      "prompt": "Take",
+      "title": "Office key",
+      "body": "[TEST KEY]\n\nA brass key on a cracked plastic tag.\n\nOFFICE - DO NOT REMOVE FROM PREMISES",
+      "journal": "Found the office key on the dresser.",
+      "gives_key": "office",
+      "objective": "Open the motel office.",
+      "pickup": true
+    },
+    {
+      "id": "door_office",
+      "shape": "door",
+      "at": [3101, -1745, 0], "yaw": 0,
+      "prompt": "Open",
+      "needs_key": "office",
+      "locked_text": "Locked. There must be a key somewhere.",
+      "objective": "Search the office."
+    },
+    {
+      "id": "guest_book",
+      "shape": "book",
+      "at": [3450, -1340, 109], "yaw": -10,
+      "title": "Guest book",
+      "body": "[TEST GUEST BOOK]\n\nYears of names in different pens. One name in every year is circled in red.\n\nLast October: Room 4 - C. Byrne. Circled.",
+      "journal": "The guest book has Cas's name circled in red. One name is circled every year.",
+      "objective": "Find the trail behind the motel."
+    }
+  ]
+}
