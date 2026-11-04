@@ -234,7 +234,9 @@ def placeholder_trees():
         n += 1
 
 
-def night():
+def weather():
+    """Foggy overcast day, like the Silent Hill 2 reference: flat grey light, no hard
+    shadows, white-grey fog, milky low-contrast colors with grain."""
     def spawn(cls, label, loc=(0, 0, 0), rot=(0, 0, 0)):
         a = actors.spawn_actor_from_class(cls, unreal.Vector(*loc), unreal.Rotator(*rot))
         a.set_actor_label(label)
@@ -242,33 +244,38 @@ def night():
         a.tags = [TAG]
         return a
 
-    moon = spawn(unreal.DirectionalLight, "Moonlight", (0, 0, 2000), (0, -35, 60))
-    lc = moon.light_component
-    lc.set_intensity(0.35)
-    lc.set_light_color(unreal.LinearColor(0.55, 0.65, 0.9, 1))
+    sun = spawn(unreal.DirectionalLight, "Sun_Overcast", (0, 0, 2000), (0, -55, 60))
+    lc = sun.light_component
+    lc.set_intensity(3.0)
+    lc.set_light_color(unreal.LinearColor(0.9, 0.92, 1.0, 1))
+    lc.set_cast_shadows(False)                       # overcast: no hard shadows
 
     sky = spawn(unreal.SkyLight, "SkyLight", (0, 0, 1500))
-    sky.light_component.set_intensity(0.3)
-    sky.light_component.set_light_color(unreal.LinearColor(0.4, 0.45, 0.55, 1))
+    sc = sky.light_component
+    sc.set_editor_property("source_type", unreal.SkyLightSourceType.SLS_SPECIFIED_CUBEMAP)
+    sc.set_cubemap(unreal.load_asset("/Engine/EngineResources/GrayLightTextureCube"))   # plain grey sky
+    sc.set_intensity(1.0)
 
     fog = spawn(unreal.ExponentialHeightFog, "Fog", (0, 0, 0))
     fc = fog.component
-    fc.set_fog_density(0.22)
+    fc.set_fog_density(0.12)
     fc.set_fog_height_falloff(0.25)
-    fc.set_fog_inscattering_color(unreal.LinearColor(0.085, 0.08, 0.1, 1))   # pale grey-lavender (picked from 3 test shots)
+    fc.set_fog_inscattering_color(unreal.LinearColor(0.35, 0.35, 0.37, 1))   # white-grey
     fc.set_editor_property("start_distance", 200)
 
-    pp = spawn(unreal.PostProcessVolume, "PostProcess_Night", (0, 0, 0))
+    pp = spawn(unreal.PostProcessVolume, "PostProcess_Look", (0, 0, 0))
     pp.set_editor_property("unbound", True)
     s = pp.settings
-    s.set_editor_property("override_auto_exposure_method", True)
-    s.set_editor_property("auto_exposure_method", unreal.AutoExposureMethod.AEM_MANUAL)
-    s.set_editor_property("override_auto_exposure_bias", True)
-    s.set_editor_property("auto_exposure_bias", 11.5)    # raise this to see more, lower for darker
-    s.set_editor_property("override_vignette_intensity", True)
-    s.set_editor_property("vignette_intensity", 0.8)
-    s.set_editor_property("override_film_grain_intensity", True)
-    s.set_editor_property("film_grain_intensity", 0.35)
+    for name, value in (
+        ("auto_exposure_method", unreal.AutoExposureMethod.AEM_MANUAL),
+        ("auto_exposure_bias", 10.6),                # raise to brighten, lower to darken
+        ("color_saturation", unreal.Vector4(0.6, 0.6, 0.6, 1)),   # washed-out colors
+        ("color_contrast", unreal.Vector4(0.85, 0.85, 0.85, 1)),  # milky, low contrast
+        ("vignette_intensity", 0.35),
+        ("film_grain_intensity", 0.5),
+    ):
+        s.set_editor_property("override_" + name, True)
+        s.set_editor_property(name, value)
     # keep the PS2 screen effect if ps2_look.py has made it
     screen = "/Game/Horror/Materials/PS2/MI_PS2_Screen"
     if unreal.EditorAssetLibrary.does_asset_exist(screen):
@@ -276,26 +283,21 @@ def night():
             array=[unreal.WeightedBlendable(weight=1.0, object=unreal.load_asset(screen))]))
     pp.set_editor_property("settings", s)
 
-    # a buzzing motel lamp over her door and one parking lot light
-    def lamp(label, loc, rgb, intensity, radius):
-        p = spawn(unreal.PointLight, label, loc)
-        p.point_light_component.set_intensity(intensity)
-        p.point_light_component.set_light_color(unreal.LinearColor(*rgb, 1))
-        p.point_light_component.set_attenuation_radius(radius)
-        return p
-    lamp("Lamp_HerDoor", (-790, -1500, 280), (1.0, 0.75, 0.4), 250, 700)
-    lamp("Lamp_HerRoom", (-750, -1050, 280), (1.0, 0.8, 0.55), 60, 450)
+    # a dim lamp inside her room; the parking lot light pole stays, switched off for the day
+    lamp = spawn(unreal.PointLight, "Lamp_HerRoom", (-750, -1050, 280))
+    lamp.point_light_component.set_intensity(60)
+    lamp.point_light_component.set_light_color(unreal.LinearColor(1.0, 0.8, 0.55, 1))
+    lamp.point_light_component.set_attenuation_radius(450)
     box("ParkingLight_Pole", "Motel", 1500, -3500, 0, 25, 25, 650, color("Metal", (0.15, 0.15, 0.15)))
-    lamp("Lamp_Parking", (1500, -3500, 620), (0.7, 0.85, 1.0), 2000, 1800)
 
-    start = spawn(unreal.PlayerStart, "PlayerStart", (-1400, -3000, 120), (0, 0, 90))
+    spawn(unreal.PlayerStart, "PlayerStart", (-1000, -3300, 120), (0, 0, 90))
 
 
 def main():
     open_or_make_level()
     clear_old_blockout()
     with unreal.ScopedSlowTask(8, "Building blockout") as task:
-        for step in (ground, road_and_lot, motel, trail, structures, lake, placeholder_trees, night):
+        for step in (ground, road_and_lot, motel, trail, structures, lake, placeholder_trees, weather):
             task.enter_progress_frame(1, step.__name__)
             step()
     levels.save_current_level()

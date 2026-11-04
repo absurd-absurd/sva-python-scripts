@@ -3,7 +3,7 @@
 Run in the Unreal editor (Tools > Execute Python Script). Safe to run again.
 
 Makes two materials in /Game/Horror/Materials/PS2:
-  M_PS2_Screen  - a post-process effect: the picture is cut down to about 240 rows
+  M_PS2_Screen  - a post-process effect: the picture is cut down to about 448 rows (PS2 resolution)
                   of chunky pixels and a limited number of color levels, with a 4x4
                   ordered dither (the checker pattern the PS2 used to hide banding).
   M_PS2_Surface - the material every object uses: a flat color, fully matte, and a
@@ -14,7 +14,7 @@ One wire is connected by hand, once: in M_PS2_Surface, drag the wobble node's
 output to World Position Offset (Unreal's Python can't reach that pin).
 
 Then it switches the blockout materials over to M_PS2_Surface, adds the screen
-effect to the night post-process volume, and turns anti-aliasing off (PS2 edges were jagged).
+effect to the post-process volume, and turns anti-aliasing off (PS2 edges were jagged).
 
 Tweak without code: open MI_PS2_Screen (Height, Levels, Dither) or any material
 instance using M_PS2_Surface (Wobble).
@@ -89,9 +89,9 @@ def build_screen():
     m.set_editor_property("material_domain", unreal.MaterialDomain.MD_POST_PROCESS)
     m.set_editor_property("blendable_location", unreal.BlendableLocation.BL_SCENE_COLOR_AFTER_TONEMAPPING)
     c = custom(m, SCREEN_HLSL, ["Height", "Levels", "Dither", "Unused"], unreal.CustomMaterialOutputType.CMOT_FLOAT3, -300, 0)
-    MEL.connect_material_expressions(scalar(m, "Height", 240.0, -700, -150), "", c, "Height")
-    MEL.connect_material_expressions(scalar(m, "Levels", 24.0, -700, -50), "", c, "Levels")
-    MEL.connect_material_expressions(scalar(m, "Dither", 1.0, -700, 50), "", c, "Dither")
+    MEL.connect_material_expressions(scalar(m, "Height", 448.0, -700, -150), "", c, "Height")
+    MEL.connect_material_expressions(scalar(m, "Levels", 48.0, -700, -50), "", c, "Levels")
+    MEL.connect_material_expressions(scalar(m, "Dither", 0.25, -700, 50), "", c, "Dither")
     # the scene texture node makes Unreal bind the picture so the code can read it
     st = MEL.create_material_expression(m, unreal.MaterialExpressionSceneTexture, -700, 150)
     st.set_editor_property("scene_texture_id", unreal.SceneTextureId.PPI_POST_PROCESS_INPUT0)
@@ -148,7 +148,7 @@ def switch_blockout(surface):
 
 def hook_screen(mi):
     acts = unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_actors()
-    pp = next(a for a in acts if a.get_actor_label() == "PostProcess_Night")
+    pp = next(a for a in acts if a.get_actor_label() == "PostProcess_Look")
     s = pp.settings
     s.set_editor_property("weighted_blendables",
                           unreal.WeightedBlendables(array=[unreal.WeightedBlendable(weight=1.0, object=mi)]))
