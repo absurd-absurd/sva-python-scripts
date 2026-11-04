@@ -129,14 +129,17 @@ def road_and_lot():
     asphalt = color("Asphalt", (0.03, 0.03, 0.03))
     strip("Road", "Motel", (-20000, -4500), (20000, -4500), 900, asphalt)
     box("ParkingLot", "Motel", 0, -2600, 0, 8000, 2400, 3, asphalt)
-    sign = color("Sign", (0.3, 0.05, 0.05))
-    box("MotelSign_Pole", "Motel", -3400, -3800, 0, 30, 30, 700, color("Metal", (0.15, 0.15, 0.15)))
-    box("MotelSign", "Motel", -3400, -3800, 600, 40, 400, 200, sign)
-    sign_text(-3400, -3800, 700)
+    box("Fence_Behind", "Motel", 350, -100, 0, 6300, 15, 160, color("Fence", (0.15, 0.12, 0.08)))
     box("Car_Player", "Motel", -1800, -2600, 0, 450, 190, 140, color("Car", (0.1, 0.12, 0.15)))
 
 
+MOTEL_SET = "/Game/Horror/Sets/set_motel"
+
+
 def motel():
+    """Gray-box motel. Skipped once the detailed Maya motel (make_motel.py) has been imported."""
+    if unreal.EditorAssetLibrary.does_asset_exist(MOTEL_SET):
+        return
     wall = color("MotelWall", (0.35, 0.3, 0.22))
     roof = color("Roof", (0.12, 0.08, 0.06))
     door = color("Door", (0.2, 0.1, 0.05))
@@ -173,7 +176,6 @@ def motel():
         box(f"Walkway_Post{i}", "Motel", -2500 + i * room_w, front_y - 230, 0, 20, 20, h, roof)
     box("Office", "Motel", 3400, -1300, 0, 700, 900, 340, wall)
     box("Office_Door", "Motel", 3400, -1300 - 453, 0, 110, 6, 220, door)
-    box("Fence_Behind", "Motel", 350, back_y + 600, 0, 6300, 15, 160, color("Fence", (0.15, 0.12, 0.08)))
 
 
 TRAIL = [tuple(p) for p in LAYOUT["trail"]]   # shared with Maya
@@ -270,7 +272,7 @@ def weather():
     for name, value in (
         ("auto_exposure_method", unreal.AutoExposureMethod.AEM_MANUAL),
         ("auto_exposure_bias", 7.3),                 # raise to brighten, lower to darken
-        ("color_saturation", unreal.Vector4(0.5, 0.5, 0.5, 1)),   # washed-out colors
+        ("color_saturation", unreal.Vector4(0.85, 0.85, 0.85, 1)),   # washed-out colors
         ("color_contrast", unreal.Vector4(0.9, 0.9, 0.9, 1)),    # milky, low contrast
         ("vignette_intensity", 0.35),
         ("film_grain_intensity", 0.5),
@@ -284,12 +286,11 @@ def weather():
             array=[unreal.WeightedBlendable(weight=1.0, object=unreal.load_asset(screen))]))
     pp.set_editor_property("settings", s)
 
-    # a dim lamp inside her room (the parking lot light pole is dead)
+    # a dim lamp inside her room (the streetlight comes with the Maya motel)
     lamp = spawn(unreal.PointLight, "Lamp_HerRoom", (-750, -1050, 280))
     lamp.point_light_component.set_intensity(60)
     lamp.point_light_component.set_light_color(unreal.LinearColor(1.0, 0.8, 0.55, 1))
     lamp.point_light_component.set_attenuation_radius(450)
-    box("ParkingLight_Pole", "Motel", 1500, -3500, 0, 25, 25, 650, color("Metal", (0.15, 0.15, 0.15)))
 
     spawn(unreal.PlayerStart, "PlayerStart", (-1000, -3300, 120), (0, 0, 90))
 

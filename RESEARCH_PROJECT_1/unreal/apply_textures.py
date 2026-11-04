@@ -93,7 +93,7 @@ def main():
     instances = find_instances()
     done, missing = 0, []
     for name, spec in table.items():
-        if name.startswith("_"):
+        if name.startswith("_") or "texture" not in spec:     # notes and the "glow" section
             continue
         mi, tex = instances.get(name), textures.get(spec["texture"])
         if not mi or not tex:
