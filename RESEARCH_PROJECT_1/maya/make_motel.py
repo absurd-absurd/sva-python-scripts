@@ -383,22 +383,25 @@ def sign_word(text, center_x, y_wall, z_base, cap, depth, mat, tracking, special
 
 
 def rooftop_sign():
-    """Like the reference photo: a tall red-lit sign wall above the awning, big solid MOTEL
-    letters in a round sans-serif, the M a dead double neon tube that flickers. The town
-    name (from story.json) sits smaller on top. The red light comes FROM the letters:
-    one light at each letter (the M's light flickers with it)."""
+    """Big solid MOTEL letters in a round sans-serif standing on a thin steel frame on the
+    roof (the user preferred this to a sign wall), the M a dead double neon tube that
+    flickers. The town name (from story.json) sits smaller on top. The red light comes
+    FROM the letters: one light at each letter (the M's light flickers with it)."""
     story = json.load(open(os.path.join(ROOT, "story.json")))
     top_line = story["places"]["motel"].upper().rsplit(" ", 1)[0]      # MARROW FALLS
-    xa, xb = X0 - 40, X0 + ROOMS * ROOM_W + 40
-    y_wall = FRONT - WALK - 10
+    y_wall = FRONT - 10                      # letters' back face, just above the front wall
     cx = X0 + ROOMS * ROOM_W / 2.0
-    box(xa, xb, y_wall, y_wall + 20, H - 30, H + 420, "plaster_mat")           # sign wall over the awning
-    box(xa, xb, y_wall - 6, y_wall + 20, H + 420, H + 432, "trim_mat")         # cap on top
     big, small = 165, 62
     z_big, z_small = H + 75, H + 300
     centers = sign_word("MOTEL", cx, y_wall, z_big, big, 22, "glow_neon_red_mat", tracking=big * 0.42,
                         special={0: lambda ch: tube_letter(ch, big * 1.05, 2.6, inset=big * 0.07)})
     sign_word(top_line, cx, y_wall, z_small, small, 12, "glow_neon_red_mat", tracking=small * 0.28)
+    # thin steel frame behind the letters, standing on the roof
+    half = (centers[0] - centers[-1]) / 2.0 + big * 0.7
+    for px in (cx - half + 40, cx - half / 3.0, cx + half / 3.0, cx + half - 40):
+        tube((px, y_wall + 25, H + 12), (px, y_wall + 25, z_small + small + 15), 5, "metal_mat")
+    for bz in (z_big + 25, z_big + big - 20, z_small + 10, z_small + small - 5):
+        tube((cx - half, y_wall + 25, bz), (cx + half, y_wall + 25, bz), 4, "metal_mat")
     # a light just in front of and below each letter: the spill on the wall, awning and lot
     # comes from the letters (closer than ~1 m it burns a hot spot into the wall)
     for k, x in enumerate(centers):
