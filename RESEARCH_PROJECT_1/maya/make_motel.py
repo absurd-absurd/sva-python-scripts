@@ -18,6 +18,7 @@ Materials whose name starts with glow_ become neon (emissive) in Unreal.
 """
 import json
 import math
+import random
 import os
 
 import maya.cmds as cmds
@@ -40,10 +41,16 @@ MATS = {
     "curtain_mat": (0.55, 0.45, 0.3), "roof_metal_mat": (0.35, 0.33, 0.3), "concrete_mat": (0.5, 0.5, 0.48),
     "carpet_mat": (0.45, 0.2, 0.2), "bed_mat": (0.7, 0.68, 0.6), "wood_mat": (0.35, 0.22, 0.12),
     "chair_mat": (0.85, 0.85, 0.8), "metal_mat": (0.3, 0.3, 0.3), "ice_mat": (0.8, 0.82, 0.85),
+    # the lot and the car
+    "paint_mat": (0.55, 0.54, 0.48), "paint_yellow_mat": (0.55, 0.45, 0.12), "crack_mat": (0.015, 0.015, 0.015),
+    "patch_mat": (0.05, 0.05, 0.05), "stain_mat": (0.008, 0.008, 0.01), "car_paint_mat": (0.22, 0.035, 0.03),
+    "tire_mat": (0.025, 0.025, 0.025), "payphone_mat": (0.11, 0.13, 0.15), "dumpster_mat": (0.08, 0.16, 0.1),
+    "bag_mat": (0.02, 0.02, 0.022), "stop_mat": (0.18, 0.17, 0.15),
     # glowing materials (emissive in Unreal; strength and flicker are set in textures.json)
     "glow_neon_red_mat": (1.0, 0.0, 0.0), "glow_neon_dead_mat": (1.0, 0.0, 0.0),
     "glow_window_mat": (1.0, 0.7, 0.4), "glow_ice_mat": (0.5, 0.8, 1.0),
     "glow_street_mat": (0.45, 1.0, 0.7), "glow_lamp_mat": (1.0, 0.75, 0.45),
+    "glow_sodium_mat": (1.0, 0.55, 0.2), "glow_tail_mat": (1.0, 0.02, 0.0), "glow_phone_mat": (0.75, 0.85, 1.0),
 }
 
 # A tiny stroke font for neon: each letter is line segments on a 4 wide x 6 tall grid
@@ -489,6 +496,174 @@ def streetlight(x, y):
     light("light_street", x + 130, y, 600, [0.45, 1.0, 0.7], 4000, 1800)
 
 
+# ---------- the lot outside ----------
+
+LOT = (-4000, 4000, -3800, -1700)        # x0, x1, y0 (road side), y1 (walkway edge)
+rng = random.Random(41)                  # same cracks and stains every build
+
+
+def flat(x0, x1, y0, y1, mat, h=0.4, z=LOT_Z):
+    """A thin flat piece lying on the lot (paint, patches)."""
+    return box(x0, x1, y0, y1, z, z + h, mat)
+
+
+def seg(p0, p1, width, mat, z=LOT_Z, h=0.5):
+    """A thin strip from p0 to p1 on the ground, any angle (cracks, road lines)."""
+    dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+    length = math.hypot(dx, dy)
+    b = cmds.polyCube(w=length, h=h, d=width, ch=False)[0]
+    cmds.rotate(0, -math.degrees(math.atan2(dy, dx)), 0, b)      # Unreal x-y = Maya x-z
+    cmds.move((p0[0] + p1[0]) / 2.0, z + h / 2.0, (p0[1] + p1[1]) / 2.0, b)
+    return keep(b, mat)
+
+
+def blot(x, y, r, mat, z=LOT_Z, h=0.3):
+    """A round flat stain."""
+    c = cmds.polyCylinder(r=r, h=h, sx=10, sy=1, sz=0, ch=False)[0]
+    cmds.scale(1, 1, rng.uniform(0.6, 1.0), c)
+    cmds.rotate(0, rng.uniform(0, 180), 0, c)
+    cmds.move(x, z + h / 2.0, y, c)
+    return keep(c, mat)
+
+
+def crack(x, y, steps, length):
+    """A wandering crack: a few short kinked strips."""
+    ang = rng.uniform(0, math.pi)
+    for _ in range(steps):
+        ang += rng.uniform(-0.7, 0.7)
+        nx, ny = x + math.cos(ang) * length, y + math.sin(ang) * length
+        seg((x, y), (nx, ny), rng.uniform(2.5, 5), "crack_mat", h=0.6)
+        if rng.random() < 0.3:                               # a branch off the side
+            bx, by = x + math.cos(ang + 1.2) * length * 0.6, y + math.sin(ang + 1.2) * length * 0.6
+            seg((x, y), (bx, by), 2.5, "crack_mat", h=0.6)
+        x, y = nx, ny
+
+
+def parking_lot():
+    # stalls in front of the rooms: faded white lines (some worn away), a concrete stop in each
+    for k in range(13):
+        x = X0 + k * 250
+        y_top, y_end = FRONT - WALK - 60, FRONT - WALK - 620
+        if rng.random() < 0.25:                              # worn: only part of the line left
+            y_end = y_top - rng.uniform(150, 400)
+        flat(x - 6, x + 6, y_end, y_top, "paint_mat")
+        if k < 12:
+            cx = x + 125
+            box(cx - 85, cx + 85, FRONT - WALK - 160, FRONT - WALK - 140, LOT_Z, LOT_Z + 13, "stop_mat")
+    # a few stalls by the office, and a painted arrow toward the exit
+    for k in range(4):
+        x = 2800 + k * 260
+        flat(x - 6, x + 6, -2700, -2150, "paint_mat")
+    seg((1200, -3050), (1200, -3350), 14, "paint_mat", h=0.4)
+    seg((1200, -3350), (1150, -3270), 14, "paint_mat", h=0.4)
+    seg((1200, -3350), (1250, -3270), 14, "paint_mat", h=0.4)
+    # cracks, patched holes and oil stains
+    for _ in range(26):
+        crack(rng.uniform(LOT[0] + 200, LOT[1] - 200), rng.uniform(LOT[2] + 100, LOT[3] - 100),
+              rng.randint(3, 7), rng.uniform(60, 160))
+    for _ in range(9):
+        x, y = rng.uniform(LOT[0] + 300, LOT[1] - 300), rng.uniform(LOT[2] + 200, LOT[3] - 300)
+        w, d = rng.uniform(120, 380), rng.uniform(80, 260)
+        flat(x, x + w, y, y + d, "patch_mat", h=0.35)
+    for k in range(12):
+        if rng.random() < 0.6:
+            blot(X0 + k * 250 + 125 + rng.uniform(-30, 30), FRONT - WALK - 380 + rng.uniform(-60, 60),
+                 rng.uniform(25, 55), "stain_mat")
+    # the lot's edge toward the road: a low concrete curb
+    box(LOT[0], LOT[1], LOT[2] - 15, LOT[2], 0, 15, "concrete_mat")
+
+
+def road_lines():
+    """Old Lake Road: dashed yellow centre line, faded white edge lines."""
+    y, z = -4500, 2.0
+    for x in range(-19800, 19800, 900):
+        seg((x, y), (x + 420, y), 12, "paint_yellow_mat", z=z, h=0.4)
+    for edge in (-4060, -4940):
+        for x in range(-19800, 19800, 1200):
+            if rng.random() < 0.8:
+                seg((x, edge), (x + rng.uniform(600, 1150), edge), 10, "paint_mat", z=z, h=0.4)
+
+
+def lot_lamp(x, y, working):
+    """A tall sodium lamp. The working one throws an orange pool; the dead one is just dark."""
+    tube((x, y, 0), (x, y, 720), 10, "metal_mat", sides=8)
+    tube((x, y, 700), (x - 170, y + 30, 735), 5, "metal_mat")
+    box(x - 230, x - 140, y + 5, y + 55, 715, 740, "metal_mat")
+    box(x - 225, x - 145, y + 10, y + 50, 711, 715, "glow_sodium_mat" if working else "glass_mat")
+    box(x - 25, x + 25, y - 25, y + 25, 0, 60, "concrete_mat")             # base
+    if working:
+        light("light_lot", x - 185, y + 30, 690, [1.0, 0.55, 0.22], 3500, 1700)
+
+
+def payphone(x, y):
+    """A payphone on a post by the office, with a cold lit strip under its hood."""
+    tube((x, y, 0), (x, y, 110), 5, "metal_mat")
+    box(x - 32, x + 32, y - 22, y + 22, 100, 185, "payphone_mat")           # housing
+    box(x - 38, x + 38, y - 30, y + 26, 185, 192, "payphone_mat")           # hood
+    box(x - 34, x + 34, y - 30, y - 24, 192, 200, "glow_phone_mat")         # lit strip
+    box(x - 14, x + 14, y - 25, y - 22, 140, 172, "metal_mat")              # keypad
+    box(x - 28, x - 18, y - 30, y - 22, 120, 175, "trim_mat")               # handset
+    tube((x - 23, y - 28, 120), (x - 5, y - 26, 104), 1, "trim_mat", sides=4)   # cord
+    # no real light here: with the night exposure this high, even 1.5 cd this close lit the
+    # phone brighter than the whole office wall. The glowing strip is enough.
+
+
+def dumpster(x, y):
+    box(x - 100, x + 100, y - 75, y + 75, 15, 125, "dumpster_mat")
+    box(x - 104, x + 104, y - 79, y + 79, 125, 130, "dumpster_mat")         # lid (shut)
+    for dx in (-80, 80):
+        for dy in (-55, 55):
+            tube((x + dx, y + dy, 0), (x + dx, y + dy, 15), 6, "tire_mat")  # castors
+    for bx, by, r in ((x - 150, y - 60, 28), (x - 175, y + 10, 22), (x + 140, y - 90, 25)):
+        b = cmds.polySphere(r=r, sx=8, sy=6, ch=False)[0]
+        cmds.scale(1, 0.75, 1, b)
+        cmds.move(bx, r * 0.7, by, b)
+        keep(b, "bag_mat")
+
+
+def trapezoid(x0, x1, y0, y1, z0, z1, inset_x, inset_front, inset_back, mat):
+    """A box whose top face is pulled in: a car's cabin (windscreen and rear window slope)."""
+    b = box(x0, x1, y0, y1, z0, z1, mat)
+    cx = (x0 + x1) / 2.0
+    for v in cmds.ls(b + ".vtx[*]", flatten=True):
+        px, py, pz = cmds.pointPosition(v, world=True)                       # Maya: y is up, z is Unreal y
+        if py > (z0 + z1) / 2.0:
+            nx = cx + (px - cx) * (1 - 2.0 * inset_x / (x1 - x0))
+            nz = pz - inset_front if pz > (y0 + y1) / 2.0 else pz + inset_back
+            cmds.move(nx, py, nz, v, absolute=True, worldSpace=True)
+    return b
+
+
+def car(cx, cy):
+    """Your car: a tired early-90s sedan, dark red, nose toward the motel (+y)."""
+    w, front, back = 180, cy + 235, cy - 235
+    x0, x1 = cx - w / 2, cx + w / 2
+    box(x0, x1, back + 15, front - 15, 30, 82, "car_paint_mat")                     # body
+    trapezoid(x0, x1, front - 135, front - 10, 82, 92, 6, 25, 0, "car_paint_mat")   # hood
+    trapezoid(x0, x1, back + 10, back + 105, 82, 95, 6, 0, 15, "car_paint_mat")     # trunk
+    trapezoid(x0 + 8, x1 - 8, back + 105, front - 135, 82, 138, 12, 45, 40, "glass_mat")   # cabin glass
+    trapezoid(x0 + 20, x1 - 20, back + 150, front - 180, 136, 141, 2, 0, 0, "car_paint_mat")  # roof
+    box(x0 - 2, x1 + 2, front - 18, front, 32, 50, "metal_mat")                     # bumpers
+    box(x0 - 2, x1 + 2, back, back + 18, 32, 50, "metal_mat")
+    for sx in (x0 + 18, x1 - 48):
+        box(sx, sx + 30, front - 4, front + 1, 58, 72, "glass_mat")                 # headlights (off)
+        box(sx, sx + 30, back - 1, back + 4, 60, 74, "glow_tail_mat")               # tail lights: red
+    for wx in (x0 - 4, x1 - 18):
+        for wy in (front - 75, back + 75):
+            tube((wx, wy, 33), (wx + 22, wy, 33), 33, "tire_mat", sides=10)
+    light("light_car_tail", cx, back - 60, 60, [1.0, 0.03, 0.0], 160, 380)         # red glow on the asphalt
+
+
+def lot_dressing():
+    parking_lot()
+    road_lines()
+    lot_lamp(-3500, -2500, True)
+    lot_lamp(-150, -3650, False)
+    payphone(2930, -1830)
+    dumpster(3960, -1150)
+    car(-725, FRONT - WALK - 420)          # in front of Room 104
+
+
 # ---------- build and export ----------
 
 def build():
@@ -501,6 +676,7 @@ def build():
     rooftop_sign()
     office()
     streetlight(1500, -3500)
+    lot_dressing()
     motel = cmds.polyUnite(PARTS, name="set_motel", constructionHistory=False)[0]
     cmds.delete(motel, constructionHistory=True)
     cmds.xform(motel, pivots=(0, 0, 0), worldSpace=True)

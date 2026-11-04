@@ -130,7 +130,8 @@ def road_and_lot():
     strip("Road", "Motel", (-20000, -4500), (20000, -4500), 900, asphalt)
     box("ParkingLot", "Motel", 0, -2600, 0, 8000, 2400, 3, asphalt)
     box("Fence_Behind", "Motel", 350, -100, 0, 6300, 15, 160, color("Fence", (0.15, 0.12, 0.08)))
-    box("Car_Player", "Motel", -1800, -2600, 0, 450, 190, 140, color("Car", (0.1, 0.12, 0.15)))
+    if not unreal.EditorAssetLibrary.does_asset_exist(MOTEL_SET):      # the Maya motel has the real car
+        box("Car_Player", "Motel", -1800, -2600, 0, 450, 190, 140, color("Car", (0.1, 0.12, 0.15)))
 
 
 MOTEL_SET = "/Game/Horror/Sets/set_motel"

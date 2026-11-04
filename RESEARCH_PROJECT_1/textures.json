@@ -41,6 +41,6 @@
     "glow_window_mat": {"strength": 0.5, "flicker": 0.0},
     "glow_lamp_mat": {"strength": 2.0, "flicker": 0.0},
     "glow_ice_mat": {"strength": 1.5, "flicker": 0.0},
-    "glow_street_mat": {"strength": 4.0, "flicker": 0.15}
+    "glow_street_mat": {"strength": 4.0, "flicker": 0.15}, "glow_sodium_mat": {"strength": 6.0, "flicker": 0.05}, "glow_tail_mat": {"strength": 10.0, "flicker": 0.0}, "glow_phone_mat": {"strength": 3.0, "flicker": 0.0}
   }
 }
