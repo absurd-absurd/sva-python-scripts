@@ -132,7 +132,7 @@ def build_surface():
     wp.set_editor_property("world_position_shader_offset", unreal.WorldPositionIncludedOffsets.WPT_CAMERA_RELATIVE_NO_OFFSETS)
     c = custom(m, WOBBLE_HLSL, ["Rel", "Amount"], unreal.CustomMaterialOutputType.CMOT_FLOAT3, -300, 200)
     MEL.connect_material_expressions(wp, "", c, "Rel")
-    MEL.connect_material_expressions(scalar(m, "Wobble", 0.0012, -700, 320), "", c, "Amount")
+    MEL.connect_material_expressions(scalar(m, "Wobble", 0.0018, -700, 320), "", c, "Amount")
     # Unreal's Python has no name for the World Position Offset pin, so this one wire
     # is connected by hand: drag from this node's output to World Position Offset.
     note = MEL.create_material_expression(m, unreal.MaterialExpressionComment, -340, 150)
@@ -150,7 +150,7 @@ def update_wobble(surface):
             e.set_editor_property("code", WOBBLE_HLSL)
             for p in unreal.ObjectIterator(unreal.MaterialExpressionScalarParameter):
                 if p.get_outer() == surface and str(p.get_editor_property("parameter_name")) == "Wobble":
-                    p.set_editor_property("default_value", 0.0012)
+                    p.set_editor_property("default_value", 0.0018)
             MEL.recompile_material(surface)
             lib.save_loaded_asset(surface)
             return True
