@@ -253,9 +253,9 @@ def night():
 
     fog = spawn(unreal.ExponentialHeightFog, "Fog", (0, 0, 0))
     fc = fog.component
-    fc.set_fog_density(0.12)
+    fc.set_fog_density(0.22)
     fc.set_fog_height_falloff(0.25)
-    fc.set_fog_inscattering_color(unreal.LinearColor(0.035, 0.04, 0.04, 1))
+    fc.set_fog_inscattering_color(unreal.LinearColor(0.085, 0.08, 0.1, 1))   # pale grey-lavender (picked from 3 test shots)
     fc.set_editor_property("start_distance", 200)
 
     pp = spawn(unreal.PostProcessVolume, "PostProcess_Night", (0, 0, 0))
