@@ -38,13 +38,13 @@ shake.set_editor_property("oscillation_duration", -1.0)      # loop forever; the
 shake.set_editor_property("oscillation_blend_in_time", 0.25)
 shake.set_editor_property("oscillation_blend_out_time", 0.25)
 rot = unreal.ROscillator()
-rot.set_editor_property("pitch", wave(0.15, STEP))           # degrees: a small nod each step
-rot.set_editor_property("roll", wave(0.2, STRIDE))           # sway, left foot / right foot
-rot.set_editor_property("yaw", wave(0.06, STRIDE))
+rot.set_editor_property("pitch", wave(0.1, STEP))           # degrees: a small nod each step
+rot.set_editor_property("roll", wave(0.13, STRIDE))           # sway, left foot / right foot
+rot.set_editor_property("yaw", wave(0.04, STRIDE))
 shake.set_editor_property("rot_oscillation", rot)
 loc = unreal.VOscillator()
-loc.set_editor_property("z", wave(0.7, STEP))                # cm: head rises and falls each step
-loc.set_editor_property("y", wave(0.35, STRIDE))              # cm: weight shifts side to side
+loc.set_editor_property("z", wave(0.5, STEP))                # cm: head rises and falls each step
+loc.set_editor_property("y", wave(0.25, STRIDE))              # cm: weight shifts side to side
 shake.set_editor_property("loc_oscillation", loc)
 unreal.BlueprintEditorLibrary.compile_blueprint(bp)
 lib.save_loaded_asset(bp)
