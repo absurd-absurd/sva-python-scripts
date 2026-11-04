@@ -41,7 +41,15 @@ return saturate(c) + Unused * 0;
 """
 
 WOBBLE_HLSL = """
-float g = max(length(Rel) * Amount, 0.01);
+// PS2 vertex snapping, only toward the edges and corners of the screen.
+// edge = 0 for anything within ~15 degrees of where the camera looks, 1 in the corners
+// (the field of view is 65 degrees, so a corner is ~38 degrees off-center).
+float d = length(Rel);
+float off = 1.0 - dot(Rel / max(d, 1.0), ResolvedView.ViewForward);
+float edge = saturate((off - 0.035) / 0.17);
+edge *= edge;
+if (edge < 0.01) return float3(0, 0, 0);
+float g = max(d * Amount * edge, 0.01);
 return floor(Rel / g + 0.5) * g - Rel;
 """
 
@@ -124,7 +132,7 @@ def build_surface():
     wp.set_editor_property("world_position_shader_offset", unreal.WorldPositionIncludedOffsets.WPT_CAMERA_RELATIVE_NO_OFFSETS)
     c = custom(m, WOBBLE_HLSL, ["Rel", "Amount"], unreal.CustomMaterialOutputType.CMOT_FLOAT3, -300, 200)
     MEL.connect_material_expressions(wp, "", c, "Rel")
-    MEL.connect_material_expressions(scalar(m, "Wobble", 0.004, -700, 320), "", c, "Amount")
+    MEL.connect_material_expressions(scalar(m, "Wobble", 0.0025, -700, 320), "", c, "Amount")
     # Unreal's Python has no name for the World Position Offset pin, so this one wire
     # is connected by hand: drag from this node's output to World Position Offset.
     note = MEL.create_material_expression(m, unreal.MaterialExpressionComment, -340, 150)
@@ -132,6 +140,21 @@ def build_surface():
     MEL.recompile_material(m)
     lib.save_loaded_asset(m)
     return m
+
+
+def update_wobble(surface):
+    """Put the current WOBBLE_HLSL into the existing wobble node, without rebuilding the
+    material (its World Position Offset wire was connected by hand)."""
+    for e in unreal.ObjectIterator(unreal.MaterialExpressionCustom):
+        if e.get_outer() == surface and "Amount" in [str(i.get_editor_property("input_name")) for i in e.get_editor_property("inputs")]:
+            e.set_editor_property("code", WOBBLE_HLSL)
+            for p in unreal.ObjectIterator(unreal.MaterialExpressionScalarParameter):
+                if p.get_outer() == surface and str(p.get_editor_property("parameter_name")) == "Wobble":
+                    p.set_editor_property("default_value", 0.0025)
+            MEL.recompile_material(surface)
+            lib.save_loaded_asset(surface)
+            return True
+    return False
 
 
 def switch_blockout(surface):
@@ -166,6 +189,7 @@ def main():
     unreal.EditorAssetLibrary.make_directory(DIR)
     screen = build_screen()
     surface = build_surface()
+    update_wobble(surface)
     n = switch_blockout(surface)
     hook_screen(screen)
     no_antialiasing()
