@@ -28,7 +28,7 @@ SCENE = os.path.join(ROOT, "maya", "motel_scene.ma")
 OUT = os.path.join(ROOT, "export")
 
 # The layout the rest of the game expects (same as blockout.py)
-X0, ROOM_W, ROOMS, HER_ROOM = -2500, 500, 6, 3        # rooms run x -2500..500; Room 4 is hers
+X0, ROOM_W, ROOMS, HER_ROOM = -2500, 500, 6, 3        # rooms 101-106 run x -2500..500; 104 is hers
 FRONT, BACK, H = -1400, -700, 320                     # front wall y, back wall y, wall height
 WALK = 300                                            # covered walkway depth
 OFFICE = (3050, 3750, -1750, -850, 340)               # x0, x1, y0 (front), y1, height
@@ -164,18 +164,16 @@ def light(name, x, y, z, color, intensity, radius, flicker=False):
 # ---------- the building ----------
 
 def room_row():
-    mid = (FRONT + BACK) / 2.0
+    """Six rooms, 101-106, all hollow with a doorway you can walk through. The doors
+    themselves are BP_Examinable actors in Unreal (clues.json), so they swing open on E."""
     for i in range(ROOMS):
         x0 = X0 + i * ROOM_W
         x1 = x0 + ROOM_W
         number = 101 + i
-        if i != HER_ROOM:
-            box(x0, x1, FRONT, BACK, 0, H, "plaster_mat")          # closed room: solid
-        else:
-            her_room(x0, x1)
+        room_inside(x0, x1)
         # brick lower wall, sticking out 3 cm
-        door_x0, door_x1 = x0 + 140, x0 + 280                       # same doorway as her room
-        for a, b in ((x0, door_x0), (door_x1, x1)):
+        door_x0, door_x1 = x0 + 140, x0 + 280                       # doorway, 140 wide x 230 tall
+        for a, b in ((x0, door_x0 - 8), (door_x1 + 8, x1)):
             box(a, b, FRONT - 3, FRONT, 0, 100, "brick_mat")
         # window: frame, dark glass, curtains (some lit)
         wx0, wx1 = x0 + 320, x0 + 470
@@ -185,22 +183,22 @@ def room_row():
         box(wx0 + 4, wx0 + 70, FRONT - 9, FRONT - 7, 110, 212, curtain)
         box(wx1 - 70, wx1 - 4, FRONT - 9, FRONT - 7, 110, 212, curtain)
         box(wx0 - 12, wx1 + 12, FRONT - 14, FRONT, 96, 104, "trim_mat")     # sill
-        # door frame and door (her door hangs open, into the room)
-        box(door_x0 - 8, door_x1 + 8, FRONT - 5, FRONT, 0, 238, "trim_mat")
-        if i != HER_ROOM:
-            box(door_x0 + 15, door_x1 - 15, FRONT - 8, FRONT - 4, 0, 225, "door_mat")
-            box(door_x1 - 35, door_x1 - 28, FRONT - 12, FRONT - 8, 100, 108, "brass_mat")   # knob
+        # door frame: two jambs and a header, so the doorway stays open
+        box(door_x0 - 8, door_x0, FRONT - 5, FRONT, 0, 238, "trim_mat")
+        box(door_x1, door_x1 + 8, FRONT - 5, FRONT, 0, 238, "trim_mat")
+        box(door_x0 - 8, door_x1 + 8, FRONT - 5, FRONT, 230, 238, "trim_mat")
+        # room number: brass digits on a dark plate above the door
         plate_x = (door_x0 + door_x1) / 2.0
-        box(plate_x - 20, plate_x + 20, FRONT - 10, FRONT - 5, 245, 262, "brass_mat")    # number plate
+        box(plate_x - 32, plate_x + 32, FRONT - 8, FRONT - 5, 244, 270, "trim_mat")
+        sign_word(str(number), plate_x, FRONT - 8, 250, 14, 1.5, "brass_mat", 2.5)
         # plastic chair by some doors
         if i in (0, 2, 4):
             chair(x0 + 60, FRONT - 120)
-    # back and end walls are part of the solid rooms; her room adds its own
-    box(X0 - 20, X0, FRONT, BACK, 0, H, "plaster_mat")
-    box(X0 + ROOMS * ROOM_W, X0 + ROOMS * ROOM_W + 20, FRONT, BACK, 0, H, "plaster_mat")
 
 
-def her_room(x0, x1):
+def room_inside(x0, x1):
+    """One motel room: walls, ceiling, carpet, bed, nightstand + lamp, dresser + TV.
+    Every room has the same layout; Room 104 (Cas's) gets its clues from clues.json."""
     t = 20
     mid = (FRONT + BACK) / 2.0
     box(x0, x1, BACK - t, BACK, 0, H, "plaster_mat")                         # back
@@ -211,14 +209,6 @@ def her_room(x0, x1):
     box(x0 + 140, x0 + 280, FRONT, FRONT + t, 230, H, "plaster_mat")         # above door
     box(x0, x1, FRONT, BACK, H - 10, H, "plaster_mat")                       # ceiling
     box(x0 + t, x1 - t, FRONT + t, BACK - t, 0, 2, "carpet_mat")             # carpet
-    # door hanging open into the room
-    d = cmds.polyCube(w=110, h=225, d=5, ch=False)[0]
-    cmds.move(55, 112.5, 0, d)
-    cmds.makeIdentity(d, apply=True, t=True)
-    cmds.xform(d, pivots=(0, 0, 0), worldSpace=True)
-    cmds.rotate(0, -75, 0, d)
-    cmds.move(x0 + 142, 0, FRONT + t + 3, d)
-    keep(d, "door_mat")
     # bed: frame, mattress, pillow, headboard
     bx0, bx1 = x0 + 220, x1 - 40
     box(bx0, bx1, BACK - 250, BACK - 20, 0, 35, "wood_mat")

@@ -32,12 +32,12 @@ ACTOR, HUD, PC, CAM, CTRL, SCENE = ("/Script/Engine.Actor", "/Script/Engine.HUD"
                                     "/Script/Engine.PlayerCameraManager", "/Script/Engine.Controller",
                                     "/Script/Engine.SceneComponent")
 EX_CLASS = "/Script/Engine.BlueprintGeneratedClass'/Game/Horror/Interact/BP_Examinable.BP_Examinable_C'"
-FONT = "/Engine/EngineFonts/DroidSansMono.DroidSansMono"      # typewriter-like, fits the notes
+FONT = "/Game/Horror/UI/F_HUD_Italic.F_HUD_Italic"            # Roboto Italic (made by interact_setup.py)
 TEXT = "(R=0.78,G=0.75,B=0.68,A=1.000000)"                   # warm off-white
 DIM = "(R=0.55,G=0.53,B=0.5,A=1.000000)"
 DARK = "(R=0.004,G=0.004,B=0.006,A=0.930000)"
 SHADOW = "(R=0.0,G=0.0,B=0.0,A=0.850000)"
-TEXT_SCALE = 0.0026            # text size = screen height * this (2.6 at 1000 px tall)
+TEXT_SCALE = 0.0032            # text size = screen height * this (3.2 at 1000 px tall)
 REACH, NEAR = 230.0, 40.0      # trace from 40 cm in front of the eyes (outside the capsule) to 2.3 m
 
 

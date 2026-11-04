@@ -95,7 +95,24 @@ def components(bp):
     comp.set_editor_property("static_mesh", unreal.load_asset("/Engine/BasicShapes/Cube"))
 
 
+def italic_font():
+    """/Game/Horror/UI/F_HUD_Italic: a copy of the engine's Roboto whose regular style is the
+    italic face. The HUD draws all its text with it (the canvas always uses the first style)."""
+    path = "/Game/Horror/UI/F_HUD_Italic"
+    if not lib.does_asset_exist(path):
+        lib.duplicate_asset("/Engine/EngineFonts/Roboto", path)
+    font = unreal.load_asset(path)
+    face = "/Script/Engine.FontFace'/Engine/EngineFonts/Faces/RobotoItalic.RobotoItalic'"
+    cf = font.get_editor_property("composite_font")
+    text = cf.export_text()
+    fallback = text[text.index("FallbackTypeface="):]
+    cf.import_text(f'(DefaultTypeface=(Fonts=((Name="Regular",Font=(FontFaceAsset="{face}")))),{fallback}')
+    font.set_editor_property("composite_font", cf)
+    lib.save_loaded_asset(font)
+
+
 def main():
+    italic_font()
     input_action("IA_Interact", ["E", "Gamepad_FaceButton_Bottom"])
     input_action("IA_Journal", ["Tab", "Gamepad_Special_Right"])
 

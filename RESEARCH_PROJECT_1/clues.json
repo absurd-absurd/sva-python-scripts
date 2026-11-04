@@ -6,17 +6,54 @@
     "gives_key / needs_key": "key name; needs_key locks it until you have that key",
     "objective": "new objective line after using it",
     "pickup": "disappears after you take it",
-    "shape": "paper, key, book or door (see SHAPES in place_clues.py)"
+    "open_angle": "how far a door swings (default 95; negative swings the other way)",
+    "shape": "paper, key, book, door or room_door (see SHAPES in place_clues.py)"
   },
-  "start_objective": "Find Room 4.",
+  "start_objective": "Find Room 104.",
   "clues": [
+    {
+      "id": "door_101",
+      "shape": "room_door",
+      "at": [-2221, -1395, 0], "yaw": 180, "open_angle": -95,
+      "prompt": "Open"
+    },
+    {
+      "id": "door_102",
+      "shape": "room_door",
+      "at": [-1721, -1395, 0], "yaw": 180, "open_angle": -95,
+      "prompt": "Open"
+    },
+    {
+      "id": "door_103",
+      "shape": "room_door",
+      "at": [-1221, -1395, 0], "yaw": 180, "open_angle": -95,
+      "prompt": "Open"
+    },
+    {
+      "id": "door_104",
+      "shape": "room_door",
+      "at": [-721, -1395, 0], "yaw": 180, "open_angle": -95,
+      "prompt": "Open"
+    },
+    {
+      "id": "door_105",
+      "shape": "room_door",
+      "at": [-221, -1395, 0], "yaw": 180, "open_angle": -95,
+      "prompt": "Open"
+    },
+    {
+      "id": "door_106",
+      "shape": "room_door",
+      "at": [279, -1395, 0], "yaw": 180, "open_angle": -95,
+      "prompt": "Open"
+    },
     {
       "id": "note_bed",
       "shape": "paper",
       "at": [-660, -850, 58], "yaw": 20,
       "title": "A note on the bed",
       "body": "[TEST NOTE]\n\nBug,\n\nIf you're reading this, you came. I knew you would. The office key is still in this room. Don't let them see you take it.\n\n- Cas",
-      "journal": "Cas left a note on the bed in Room 4. The office key is somewhere in her room.",
+      "journal": "Cas left a note on the bed in Room 104. The office key is somewhere in her room.",
       "objective": "Find the office key."
     },
     {
@@ -45,7 +82,7 @@
       "shape": "book",
       "at": [3450, -1340, 109], "yaw": -10,
       "title": "Guest book",
-      "body": "[TEST GUEST BOOK]\n\nYears of names in different pens. One name in every year is circled in red.\n\nLast October: Room 4 - C. Byrne. Circled.",
+      "body": "[TEST GUEST BOOK]\n\nYears of names in different pens. One name in every year is circled in red.\n\nLast October: Room 104 - C. Byrne. Circled.",
       "journal": "The guest book has Cas's name circled in red. One name is circled every year.",
       "objective": "Find the trail behind the motel."
     }

@@ -11,7 +11,7 @@ import unreal
 ROOT = r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1"
 DATA = json.load(open(ROOT + "/clues.json", encoding="utf-8"))
 TAG = "clue"
-WRAP = 52                     # characters per line on the reading screen
+WRAP = 44                     # characters per line on the reading screen
 MATS = "/Game/Horror/Materials/PS2/Props/"
 
 # shape: size in cm (x, y, z), material, and where the mesh sits from the actor's origin.
@@ -21,10 +21,12 @@ SHAPES = {
     "key":   ((10, 4, 1.2), "MI_PS2_brass_mat", (0, 0, 0.6)),
     "book":  ((30, 22, 4), "MI_PS2_door_mat", (0, 0, 2)),
     "door":  ((108, 5, 228), "MI_PS2_door_mat", (54, 0, 114)),
+    "room_door": ((138, 5, 228), "MI_PS2_door_mat", (69, 0, 114)),
 }
 FIELDS = {"prompt": "Prompt", "title": "Title", "body": "Body", "journal": "Journal",
           "gives_key": "GivesKey", "needs_key": "NeedsKey", "locked_text": "LockedText",
-          "objective": "Objective", "pickup": "PickUp"}
+          "objective": "Objective", "pickup": "PickUp",
+          "open_angle": "OpenAngle"}
 
 actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 BPL = unreal.BlueprintEditorLibrary
@@ -50,7 +52,7 @@ def main():
         for key, var in FIELDS.items():
             if key in c:
                 a.set_editor_property(var, wrap(c[key]) if key in ("body", "journal") else c[key])
-        a.set_editor_property("IsDoor", c["shape"] == "door")
+        a.set_editor_property("IsDoor", c["shape"] in ("door", "room_door"))
         size, mat, offset = SHAPES[c["shape"]]
         mesh = a.get_components_by_class(unreal.StaticMeshComponent)[0]
         mesh.set_static_mesh(CUBE)
