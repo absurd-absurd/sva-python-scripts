@@ -385,15 +385,16 @@ def hud_graph():
         ("TintColor", "color", MARKER_TINT),
         ("Rotation", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", yaw_out), ("B", "real", 90.0)])),
         ("RotPivot", "vector2d", "(X=0.500000,Y=0.500000)")]).then
-    # how to open it, under the corner map: "[M] Map" (black copy first, so it reads on anything)
-    under = g.pure(MATH, "Add_DoubleDouble", [("A", "real", MY), ("B", "real", g.pure(MATH, "Add_DoubleDouble", [
-        ("A", "real", S), ("B", "real", g.mul(H, 0.008))]))])
+    # how to open it, inside the corner map at the bottom left: "[M] Map" (black copy first)
+    under = g.pure(MATH, "Add_DoubleDouble", [("A", "real", MY), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [
+        ("A", "real", S), ("B", "real", g.mul(H, 0.03))]))])
+    inside = g.pure(MATH, "Add_DoubleDouble", [("A", "real", MX), ("B", "real", g.mul(H, 0.008))])
     for dx, dy, col in ((1.5, 2.0, SHADOW), (0.0, 0.0, DIM)):
         after = g.call(HUD, "DrawText", after, [
-            ("Text", "string", "[M]  Map"), ("TextColor", "color", col),
-            ("ScreenX", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", MX), ("B", "real", dx)])),
+            ("Text", "string", "[M]  Map"), ("TextColor", "color", col if dx else TEXT),
+            ("ScreenX", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", inside), ("B", "real", dx)])),
             ("ScreenY", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", under), ("B", "real", dy)])),
-            ("Font", "font", FONT), ("Scale", "float", g.mul(TS, 0.6))]).then
+            ("Font", "font", FONT), ("Scale", "float", g.mul(TS, 0.5))]).then
     fresh = g.pure(MATH, "Less_DoubleDouble", [("A", "real", g.pure(MATH, "Subtract_DoubleDouble", [
         ("A", "real", g.now()), ("B", "real", g.get("ToastTime", "real"))])), ("B", "real", 3.0)], ty="bool")
     t_yes, t_no = g.branch(fresh, after)
