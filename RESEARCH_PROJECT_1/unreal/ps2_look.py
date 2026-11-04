@@ -42,11 +42,11 @@ return saturate(c) + Unused * 0;
 
 WOBBLE_HLSL = """
 // PS2 vertex snapping, only toward the edges and corners of the screen.
-// edge = 0 for anything within ~15 degrees of where the camera looks, 1 in the corners
-// (the field of view is 65 degrees, so a corner is ~38 degrees off-center).
+// edge = 0 everywhere except the very corners: it starts past the middle of the side edges
+// (~33 degrees off-center with the 65 degree field of view) and is full only in the corners (~38).
 float d = length(Rel);
 float off = 1.0 - dot(Rel / max(d, 1.0), ResolvedView.ViewForward);
-float edge = saturate((off - 0.035) / 0.17);
+float edge = saturate((off - 0.165) / 0.05);
 edge *= edge;
 if (edge < 0.01) return float3(0, 0, 0);
 float g = max(d * Amount * edge, 0.01);
@@ -132,7 +132,7 @@ def build_surface():
     wp.set_editor_property("world_position_shader_offset", unreal.WorldPositionIncludedOffsets.WPT_CAMERA_RELATIVE_NO_OFFSETS)
     c = custom(m, WOBBLE_HLSL, ["Rel", "Amount"], unreal.CustomMaterialOutputType.CMOT_FLOAT3, -300, 200)
     MEL.connect_material_expressions(wp, "", c, "Rel")
-    MEL.connect_material_expressions(scalar(m, "Wobble", 0.0025, -700, 320), "", c, "Amount")
+    MEL.connect_material_expressions(scalar(m, "Wobble", 0.0012, -700, 320), "", c, "Amount")
     # Unreal's Python has no name for the World Position Offset pin, so this one wire
     # is connected by hand: drag from this node's output to World Position Offset.
     note = MEL.create_material_expression(m, unreal.MaterialExpressionComment, -340, 150)
@@ -150,7 +150,7 @@ def update_wobble(surface):
             e.set_editor_property("code", WOBBLE_HLSL)
             for p in unreal.ObjectIterator(unreal.MaterialExpressionScalarParameter):
                 if p.get_outer() == surface and str(p.get_editor_property("parameter_name")) == "Wobble":
-                    p.set_editor_property("default_value", 0.0025)
+                    p.set_editor_property("default_value", 0.0012)
             MEL.recompile_material(surface)
             lib.save_loaded_asset(surface)
             return True
