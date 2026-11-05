@@ -24,8 +24,8 @@ _src = open(os.path.join(ROOT, "maya", "make_motel.py"), encoding="utf-8").read(
 exec(_src[:_src.rindex("\nbuild()")])              # the helpers (box, tube, rsoft, sphere, ...)
 
 COLORS = {
-    "critter_moth_mat": (0.55, 0.48, 0.36), "critter_firefly_mat": (0.75, 0.85, 0.3),
-    "critter_gnat_mat": (0.5, 0.5, 0.48), "critter_bat_mat": (0.06, 0.05, 0.05),
+    "critter_moth_mat": (0.3, 0.26, 0.2), "critter_firefly_mat": (0.22, 0.2, 0.12),
+    "critter_gnat_mat": (0.12, 0.12, 0.11), "critter_bat_mat": (0.06, 0.05, 0.05),
     "critter_flock_mat": (0.03, 0.03, 0.035),
     "critter_crow_mat": (0.028, 0.028, 0.034), "critter_crow_beak_mat": (0.06, 0.055, 0.05),
     "critter_owl_mat": (0.26, 0.2, 0.14), "critter_owl_face_mat": (0.5, 0.44, 0.34),

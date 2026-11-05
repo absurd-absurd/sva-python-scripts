@@ -409,3 +409,12 @@ more swarms in the sky, and birds must fly away when you get close.
 - Fly-away: perched crows lift off from ~12 m (was 9), and any flying bird you walk under climbs away.
 Shots: specks in the lot and woods, the lake flock, two moths and a bat at the lot lamp; bottom: two
 crows on the trail from 18 m, gone when you walk up.
+
+### Smaller bugs, hardly any glow
+
+![Small dim bugs](2026-11-05_bugs_small_dim.png)
+
+Your notes: make all the bugs smaller and not glow; only a few with light, and very dim. Moths and
+fireflies are half size, gnats 60%, the floating specks a third of before; moths, gnats and specks are
+darker so they don't read as glowing dots. Only about 1 firefly in 8 (26 of 192) still glows, at a
+twentieth of the old brightness; the rest are plain dark bugs.

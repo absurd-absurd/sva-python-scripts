@@ -167,9 +167,10 @@ return pow(saturate(sin(T * Speed * 1.3 + R * 40.0) * 0.5 + 0.5), 6.0);
 
 # kind: color comes from Maya; motion and look per kind
 KIND = {
-    "moth":    dict(Mode=0, Speed=2.4, Radius=45, Height=18, Flap=45, Body=0.7, Glow=0, Bounds=60),
-    "firefly": dict(Mode=1, Speed=0.6, Radius=70, Height=35, Flap=0, Body=9, Glow=90, Bounds=60),
-    "gnat":    dict(Mode=1, Speed=1.6, Radius=28, Height=22, Flap=0, Body=9, Glow=0, Bounds=40),
+    "moth":    dict(Mode=0, Speed=2.4, Radius=45, Height=18, Flap=45, Body=0.35, Glow=0, Bounds=120, Size=0.5),
+    "firefly": dict(Mode=1, Speed=0.6, Radius=70, Height=35, Flap=0, Body=9, Glow=0, Bounds=120, Size=0.5),
+    "firefly_lit": dict(Mode=1, Speed=0.6, Radius=70, Height=35, Flap=0, Body=9, Glow=4, Bounds=120, Size=0.5),   # 1 in 8, a faint glow
+    "gnat":    dict(Mode=1, Speed=1.6, Radius=28, Height=22, Flap=0, Body=9, Glow=0, Bounds=80, Size=0.6),
     "bat":     dict(Mode=0, Speed=0.9, Radius=420, Height=60, Flap=26, Body=2.5, Glow=0, Bounds=300),
     "flock":   dict(Mode=2, Speed=0.07, Radius=1300, Height=120, Flap=5, Body=3, Glow=0, Bounds=900),
     "crow":    dict(Mode=3, Speed=1, Radius=1200, Height=700, Flap=24, Body=3.4, Glow=0, Bounds=400),
@@ -177,8 +178,8 @@ KIND = {
     "flock2":  dict(Mode=2, Speed=0.11, Radius=800, Height=90, Flap=6, Body=3, Glow=0, Bounds=600),
     "glider":  dict(Mode=2, Speed=0.16, Radius=1500, Height=150, Flap=4, Body=3, Glow=0, Bounds=1000),
     # bugs around the screen: specks and a few moths in a field that always surrounds you
-    "speck":   dict(Mode=7, Speed=0.5, Radius=350, Height=120, Flap=0, Body=9, Glow=0, Bounds=300000),
-    "nearmoth": dict(Mode=7, Speed=0.9, Radius=450, Height=110, Flap=45, Body=0.7, Glow=0, Bounds=12000),
+    "speck":   dict(Mode=7, Speed=0.5, Radius=350, Height=120, Flap=0, Body=9, Glow=0, Bounds=900000, Size=1.0),
+    "nearmoth": dict(Mode=7, Speed=0.9, Radius=450, Height=110, Flap=45, Body=0.35, Glow=0, Bounds=24000, Size=0.5),
     "owl":     dict(Mode=4, Speed=1, Radius=0, Height=25, Flap=0, Body=0, Glow=0, Bounds=3),
     "snag":    dict(Mode=9, Speed=0, Radius=0, Height=0, Flap=0, Body=0, Glow=0, Bounds=1),
     # cat: Speed cm/s, Radius / Height = half size of the rectangle it walks round the motel
@@ -342,7 +343,7 @@ def instance(kind, slot, mat, rgb):
     mi.set_editor_property("parent", mat)
     MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
     for k, v in dict(KIND[kind], **SLOT.get(slot, {})).items():
-        if k != "Bounds":
+        if k not in ("Bounds", "Size"):
             MEL.set_material_instance_scalar_parameter_value(mi, k, float(v))
     if slot in TEXTURE and lib.does_asset_exist(f"/Game/Horror/Textures/{TEXTURE[slot][0]}"):
         MEL.set_material_instance_texture_parameter_value(mi, "Tex", unreal.load_asset(f"/Game/Horror/Textures/{TEXTURE[slot][0]}"))
@@ -383,8 +384,9 @@ def fab_cat(mat):
     return mesh, mis
 
 
-def place(kind, mesh, mis, at, yaw=0.0, scale=1.0):
+def place(kind, mesh, mis, at, yaw=0.0, scale=None):
     a = actors.spawn_actor_from_object(mesh, unreal.Vector(*at), unreal.Rotator(0, 0, yaw))
+    scale = KIND[kind].get("Size", 1.0) if scale is None else scale     # bugs are drawn smaller
     a.set_actor_scale3d(unreal.Vector(scale, scale, scale))
     a.set_actor_label(f"{kind}_{len(PLACED.setdefault(kind, []))}")
     a.set_folder_path(f"Critters/{kind}")
@@ -417,13 +419,18 @@ def main():
                         data["materials"].get(str(sl.material_slot_name), (0.2, 0.2, 0.2))) for sl in mesh.static_materials]
         assets[kind] = (mesh, mis)
     rng = random.Random(13)
+
+    def mis_for_kind(kind, base, rgb):
+        return [instance(kind, str(sl.material_slot_name), mat, rgb) for sl in assets[base][0].static_materials]
     # moths around the outside lights
     for name in ("light_lot", "light_street", "light_open", "light_ice", "light_cross", "light_car_tail"):
         if name in lights:
             x, y, z = lights[name]
             for _ in range(rng.choice((2, 2, 3))):                # just two or three at each light
                 place("moth", *assets["moth"], (x + rng.uniform(-25, 25), y + rng.uniform(-25, 25), z + rng.uniform(-30, 10)))
-    # fireflies along the trail and the lake shore
+    # fireflies along the trail and the lake shore: only about one in eight glows, and faintly
+    lit = mis_for_kind("firefly_lit", "firefly", (0.75, 0.85, 0.3))
+    firefly = lambda: (("firefly_lit", assets["firefly"][0], lit) if rng.random() < 0.125 else ("firefly", *assets["firefly"]))
     trail = layout["trail"]
     for _ in range(140):
         i = rng.randrange(len(trail) - 1)
@@ -431,9 +438,9 @@ def main():
         px = trail[i][0] + (trail[i + 1][0] - trail[i][0]) * t + rng.uniform(-700, 700)
         py = trail[i][1] + (trail[i + 1][1] - trail[i][1]) * t + rng.uniform(-700, 700)
         if py > -900:                                             # not in the motel lot
-            place("firefly", *assets["firefly"], (px, py, rng.uniform(40, 170)))
+            place(*firefly(), (px, py, rng.uniform(40, 170)))
     for _ in range(60):
-        place("firefly", *assets["firefly"], (rng.uniform(-7000, 8000), rng.uniform(14000, 14600), rng.uniform(30, 140)))
+        place(*firefly(), (rng.uniform(-7000, 8000), rng.uniform(14000, 14600), rng.uniform(30, 140)))
     # gnat clouds: along the trail, at the motel walkway, at the dock
     clouds = [(-3000, -1200), (-2950, 300), (-1600, 1500), (800, 3400), (1800, 8600), (1500, 14200), (-1200, -1550), (300, -1600)]
     for cx, cy in clouds:
@@ -464,7 +471,7 @@ def main():
     speck = mis_for("speck", "gnat")
     nearmoth = mis_for("nearmoth", "moth")
     for _ in range(45):
-        place("speck", assets["gnat"][0], speck, (rng.uniform(-350, 350), rng.uniform(-350, 350), rng.uniform(0, 240)), scale=3.0)
+        place("speck", assets["gnat"][0], speck, (rng.uniform(-350, 350), rng.uniform(-350, 350), rng.uniform(0, 240)))
     for _ in range(4):
         place("nearmoth", assets["moth"][0], nearmoth, (rng.uniform(-450, 450), rng.uniform(-450, 450), rng.uniform(20, 240)))
     # crows: on the lot lamps, the streetlight, the payphone, the dumpster, the motel roof, the fence.
