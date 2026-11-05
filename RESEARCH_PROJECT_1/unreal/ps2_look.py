@@ -48,8 +48,11 @@ float d = length(Rel);
 float off = 1.0 - dot(Rel / max(d, 1.0), ResolvedView.ViewForward);
 float edge = saturate((off - 0.165) / 0.05);
 edge *= edge;
-if (edge < 0.01) return float3(0, 0, 0);
-float g = max(d * Amount * edge, 0.01);
+// only vertices in front of you: ones behind the camera counted as "corner" and snapped the
+// huge ground plane's far corners by ~12 cm, tilting it up through floors and the lot
+if (edge < 0.01 || dot(Rel, ResolvedView.ViewForward) <= 0) return float3(0, 0, 0);
+// and never more than half a centimetre, so nothing can poke through a surface 1 cm above it
+float g = clamp(d * Amount * edge, 0.01, 0.5);
 return floor(Rel / g + 0.5) * g - Rel;
 """
 

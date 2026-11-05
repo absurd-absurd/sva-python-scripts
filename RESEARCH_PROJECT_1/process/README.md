@@ -148,3 +148,15 @@ in front and they flash between each other as you move. Found and fixed:
 
 Test: two screenshots 2 cm apart. White = pixels that changed a lot: only outlines moving by a
 pixel and the dead "M" (it flickers on purpose). Nothing flashes on the lot or the walls.
+
+### Last flashing: the ground under Room 104 and the lot
+
+![Wobble ground fix](2026-11-05_wobble_ground_fix.png)
+
+Your note: "it worked except in Room 104 I still see flashing of the ground underneath, and sometimes
+the parking lot too." Cause: the PS2 vertex wobble snaps vertices to a grid that gets coarser with
+distance. The ground is one giant flat piece whose corners are up to 200 m away, and vertices behind
+the camera counted as "corner", so they were snapped by up to ~12 cm. That tilted the whole ground a
+little, enough to poke up through the carpet (2 cm above it) and the lot (3 cm) now and then.
+Fix: the wobble only moves vertices in front of you, by at most half a centimetre. Test: turning in
+Room 104 and on the lot, no ground shows through.

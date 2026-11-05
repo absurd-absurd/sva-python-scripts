@@ -350,7 +350,7 @@ def room_104(x0, x1):
     for _ in range(4):                                                                    # dead leaves
         rbox(tx + rng.uniform(-5, 38), ty + rng.uniform(-10, 30), tz + 2.2, 4, 2.5, 0.3, "leaf_dead_mat", yaw=rng.uniform(0, 180))
     for i, (px, py, pz, yw) in enumerate(((tx - 20, ty + 18, tz + 0.6, 18), (tx - 5, ty + 26, tz + 1.4, -25),
-                                          (tx - 40, ty + 60, 2.6, 40))):                  # torn diary pages
+                                          (tx - 40, ty + 60, 3.0, 40))):                  # torn diary pages
         rbox(px, py, pz, 15, 20, 0.4, "page_mat", yaw=yw)
     # chair at the table with her jacket over the back
     cx_, cy_ = tx, ty + 70
