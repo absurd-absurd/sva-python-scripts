@@ -397,10 +397,16 @@ def place(kind, mesh, mis, at, yaw=0.0, scale=None):
     c.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
     c.set_editor_property("cast_shadow", False)
     c.set_editor_property("bounds_scale", float(KIND[kind]["Bounds"]))   # it wanders far from where it stands
+    if kind in BUGS:                     # lighting channel 2 only: the flashlight (channels 0 and 1)
+        c.set_editor_property("lighting_channels", BUG_LIGHT)   # doesn't light them, so they never shine in the beam
     PLACED[kind].append(a)
 
 
 PLACED = {}
+BUGS = ("moth", "firefly", "firefly_lit", "gnat", "speck", "nearmoth")
+BUG_LIGHT = unreal.LightingChannels()
+BUG_LIGHT.set_editor_property("channel0", False)
+BUG_LIGHT.set_editor_property("channel2", True)
 
 
 def main():

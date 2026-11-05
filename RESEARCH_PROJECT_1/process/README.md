@@ -418,3 +418,11 @@ Your notes: make all the bugs smaller and not glow; only a few with light, and v
 fireflies are half size, gnats 60%, the floating specks a third of before; moths, gnats and specks are
 darker so they don't read as glowing dots. Only about 1 firefly in 8 (26 of 192) still glows, at a
 twentieth of the old brightness; the rest are plain dark bugs.
+
+### Bugs don't shine in the flashlight
+
+![Bugs in the beam](2026-11-05_bugs_no_flashlight.png)
+
+Your note: "make them unaffected by the flashlight, it's making them glow." The bugs (moths, fireflies,
+gnats, the floating specks) are on lighting channel 2 only; the flashlight lights channels 0 and 1, so
+the beam passes over them and they stay dark little shapes in the night light. Birds are unchanged.
