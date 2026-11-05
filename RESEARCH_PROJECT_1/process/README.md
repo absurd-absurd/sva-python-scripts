@@ -289,3 +289,16 @@ Your notes: make the clothes better, get rid of the weird circles on the ceiling
   waistband, belt loops, button and fly stitching; an oatmeal knit sweater folded with its sleeves
   crossed and a ribbed hem. (Flannel redrawn once: the first version was mostly black.)
 - Outside re-checked after the rebuild: unchanged.
+
+### The diary, pillows, closed curtains
+
+![Diary, pillows, curtains](2026-11-05_room104_diary_pillows_curtains.png)
+
+Your notes: fix the journal (wonky), make the pillows look better, close the curtains so you only see
+a little out of Room 104, and close every other room's curtains.
+- Diary: the spine was placed on the wrong side once the book was turned, and the pages weren't turned
+  with it. Rebuilt in the book's own frame: covers, page block, rounded spine, torn-out stubs, an
+  elastic strap and a red ribbon bookmark.
+- Pillows (every bed): plump in the middle, pinched at the seam and corners, a soft head dent.
+- Curtains drawn in every room (102 and 106 still glow); Room 104's leave a 16 cm crack to look out.
+- Also: stacked parts of the lamp base and fan housing no longer share faces.

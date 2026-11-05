@@ -128,8 +128,7 @@ def bed(x0, x1, made=True):
         bevel_box(bx0 + 1.5, bx1 - 1.5, by0 + 1.5, by1 - 55, 26, 58.5, "bedspread_mat", r=5, seg=3)
         rsoft(mid, by1 - 58, 60, bx1 - bx0 - 6, 24, 10, "bedspread_mat", jitter=0.6, seed=int(x0))   # fold
         for k, px in enumerate((bx0 + 60, bx1 - 60)):
-            rsoft(px, by1 - 34, 63, 88, 40, 15, "pillow_mat", sag=3, jitter=0.5, seed=int(x0) + k,
-                  yaw=(-3, 4)[k], tilt_y=-12)
+            pillow(px, by1 - 34, 57.5, 70, 44, 14, int(x0) + k, yaw=(-3, 4)[k], tilt_y=-10, dent=1.5)
 
 
 def nightstand(x0):
@@ -149,7 +148,7 @@ def lamp(lx, ly, shade="glow_lamp_mat", bulb="glow_lamp_mat"):
     """Brass base and stem, a bulb you can see under the shade, a tapered shade (with a
     lining so it isn't see-through from inside) and a little finial on top."""
     frustum(lx, ly, 60.4, 62.6, 8, 6.5, "brass_mat", sides=16)
-    frustum(lx, ly, 62.6, 64.2, 6.5, 3, "brass_mat", sides=16)
+    frustum(lx, ly, 62.3, 64.2, 6.3, 3, "brass_mat", sides=16)      # overlaps the base: no shared face
     tube((lx, ly, 64.2), (lx, ly, 92), 1.0, "brass_mat", sides=8)
     sphere(lx, ly, 92.5, 1.8, "brass_mat", sides=8)
     sphere(lx, ly, 98.5, 3.6, bulb, sides=10, scale=(1, 1, 1.25))
@@ -218,12 +217,21 @@ def crt_tv(x0):
 # ---------- Cas's things (Room 104) ----------
 
 def diary(cx, cy, cz, yaw):
-    """A small hardback: two covers, the page block (pages torn out: a ragged edge), a spine."""
-    rbevel(cx, cy, cz + 0.3, 15, 20, 0.6, "diary_mat", r=0.25, yaw=yaw)
-    rbox(cx + 0.4, cy, cz + 1.6, 14, 19, 2.0, "page_mat", yaw=yaw)
-    rbevel(cx, cy, cz + 2.9, 15, 20, 0.6, "diary_mat", r=0.25, yaw=yaw)
+    """Her diary lying shut on the nightstand: two hard covers, the page block (a few torn-out
+    stubs sticking out at the spine), a rounded spine, an elastic strap and a red ribbon
+    bookmark hanging out. Every part is placed in the book's own frame, then turned by yaw."""
     a = math.radians(yaw)
-    rbevel(cx - 7.3 * math.cos(a), cy + 7.3 * math.sin(a), cz + 1.6, 1.2, 20, 3.2, "diary_mat", r=0.5, yaw=yaw)
+    def at(dx, dy):                                    # book frame (x across, y up the page) -> world
+        return cx + dx * math.cos(a) - dy * math.sin(a), cy + dx * math.sin(a) + dy * math.cos(a)
+    W, D = 15.0, 20.0
+    rbevel(*at(0, 0), cz + 0.3, W, D, 0.6, "diary_mat", r=0.25, yaw=yaw)                     # back cover
+    rbox(*at(0.6, 0), cz + 1.65, W - 1.6, D - 1.2, 2.1, "page_mat", yaw=yaw)                  # pages
+    rbevel(*at(0, 0), cz + 3.0, W, D, 0.6, "diary_mat", r=0.25, yaw=yaw)                     # front cover
+    rsoft(*at(-W / 2 + 0.2, 0), cz + 1.65, 1.6, D, 3.3, "diary_mat", smooth=2, yaw=yaw)       # rounded spine
+    for k, dy in enumerate((-4.5, 1.0, 5.5)):                                                 # torn stubs
+        rbox(*at(-W / 2 + 1.9, dy), cz + 1.0 + k * 0.6, 1.4, 2.8, 0.15, "page_mat", yaw=yaw + 8 * (k - 1))
+    rbox(*at(W / 2 - 3.0, 0), cz + 1.65, 0.8, D + 0.3, 3.6, "strap_mat", yaw=yaw)            # elastic strap
+    rbox(*at(2.0, D / 2 + 2.5), cz + 0.85, 0.7, 5.5, 0.12, "pin_mat", yaw=yaw + 6)           # ribbon
 
 
 def _sneaker_top(u):
@@ -489,7 +497,7 @@ def pen(cx, cy, z, yaw):
     rbox(*p(-4.8)[:2], z + 1.05, 3.4, 0.35, 0.25, "metal_mat", yaw=yaw)                # clip
 
 
-def window_inside(wx0, wx1, lit=False):
+def window_inside(wx0, wx1, lit=False, gap=0.0):
     """The inside of a room's window: a wooden sill and casing, a curtain rod, and curtains.
     lit=True: closed and glowing (a lamp on behind them, seen from the lot); otherwise pulled
     back to the sides so you can see out."""
@@ -502,12 +510,13 @@ def window_inside(wx0, wx1, lit=False):
     tube((wx0 - 32, y + 12.5, z1 + 14), (wx1 + 32, y + 12.5, z1 + 14), 0.9, "brass_mat", sides=8)   # rod
     for ex in (wx0 - 32, wx1 + 32):
         tube((ex, y + 0.2, z1 + 14), (ex, y + 12.5, z1 + 14), 0.6, "brass_mat", sides=6)            # brackets
-    if lit:                                               # closed, lit from behind
-        for k, (a, b) in enumerate(((wx0 - 26, (wx0 + wx1) / 2.0 + 2), ((wx0 + wx1) / 2.0 - 2, wx1 + 8))):
-            curtain((a + b) / 2.0, y + 10, 2.5, z1 + 13, b - a, "glow_window_mat", seed=int(a) + k, pleats=5)
-    else:                                                 # pulled back to the sides
-        for k, (cx, w) in enumerate(((wx0 - 14, 30), (wx1 - 9, 20))):
-            curtain(cx, y + 10, 2.5, z1 + 13, w, "curtain_mat", seed=int(cx) + k, pleats=3, depth=3.2)
+    # curtains drawn shut (lit ones glow: a lamp on behind them, seen from the lot). gap: how far
+    # apart they are in the middle (Room 104: a crack to look out of). The right panel hangs
+    # 3 cm in front of the left so where they overlap they never fight.
+    mid = (wx0 + wx1) / 2.0
+    mat = "glow_window_mat" if lit else "curtain_mat"
+    for k, (a, b, dy) in enumerate(((wx0 - 26, mid + 2 - gap / 2.0, 0.0), (mid - 2 + gap / 2.0, wx1 + 8, 3.0))):
+        curtain((a + b) / 2.0, y + 10 + dy, 2.5, z1 + 13, b - a, mat, seed=int(a) + k, pleats=5)
 
 
 def ceiling_fan(cx, cy, ceiling_z, lit=False):
@@ -518,17 +527,17 @@ def ceiling_fan(cx, cy, ceiling_z, lit=False):
     frustum(cx, cy, top - 4, top, 4.5, 7.5, "brass_mat", sides=20)                  # canopy
     tube((cx, cy, top - 4), (cx, cy, top - 30), 1.1, "brass_mat", sides=10)          # downrod
     mz = top - 36
-    frustum(cx, cy, mz + 4, mz + 7, 9.5, 5, "fan_mat", sides=24)                     # motor housing
+    frustum(cx, cy, mz + 3.7, mz + 7, 9.3, 5, "fan_mat", sides=24)                   # motor housing
     frustum(cx, cy, mz - 2, mz + 4, 10, 9.5, "fan_mat", sides=24)
     ring(cx, cy, mz + 1, 10.1, 0.6, "brass_mat", sides=24)
-    frustum(cx, cy, mz - 5, mz - 2, 7, 10, "fan_mat", sides=24)
+    frustum(cx, cy, mz - 5, mz - 1.7, 7, 9.8, "fan_mat", sides=24)   # (pieces overlap: no shared faces)
     for k in range(5):                                                               # blades
         a = math.radians(k * 72 + 12)
         ex, ey = math.cos(a), math.sin(a)
         tube((cx + ex * 7, cy + ey * 7, mz - 1), (cx + ex * 18, cy + ey * 18, mz - 2.5), 0.9, "brass_mat", sides=6)
         rbevel(cx + ex * 38, cy + ey * 38, mz - 2.8, 46, 13, 0.9, "wood_mat", r=0.35, yaw=math.degrees(a), tilt_x=6)
     bz = mz - 5
-    frustum(cx, cy, bz - 3, bz, 5.5, 7, "brass_mat", sides=20)                       # light kit fitter
+    frustum(cx, cy, bz - 3, bz + 0.3, 5.5, 6.8, "brass_mat", sides=20)               # light kit fitter
     sphere(cx, cy, bz - 9, 10, "glow_lamp_mat" if lit else "bowl_mat", sides=20, scale=(1, 1, 0.62))   # bowl
     sphere(cx, cy, bz - 15.4, 1.0, "brass_mat", sides=8)                             # finial
     tube((cx + 5, cy, bz - 3), (cx + 5, cy, bz - 26), 0.18, "brass_mat", sides=3)    # pull chain
@@ -645,3 +654,27 @@ def folded(cx, cy, z, w, d, mat, kind, seed):
                   seed=seed + 2 + side, yaw=side * 38)
         for k in range(8):                                                                              # ribbed hem
             rbox(cx - w / 2 + 2.5 + k * (w - 5) / 7, cy - d / 2 + 5, top - 0.2, 0.8, 6, 0.6, mat)
+
+
+def pillow(cx, cy, z, w, d, h, seed, yaw=0, tilt_y=0, dent=2.5):
+    """A real pillow: plump in the middle, pinched thin at the seam all round and at the four
+    corners, a soft head dent, slightly uneven. z = what it lies on."""
+    r = random.Random(seed)
+    c = cmds.polyCube(w=1, h=1, d=1, sx=10, sy=2, sz=7, ch=False)[0]
+    pts = []
+    for x, y, zz in _verts(c):
+        u, v = x * 2, zz * 2                                       # -1 .. 1 across / along
+        puff = (max(0.0, 1 - abs(u) ** 2.4)) ** 0.55 * (max(0.0, 1 - abs(v) ** 2.4)) ** 0.55
+        thick = 0.12 + 0.88 * puff                                 # seam stays ~12 % thick
+        yy = y * h * thick
+        if y > 0:
+            yy -= dent * max(0.0, 1 - (u / 0.6) ** 2) * max(0.0, 1 - (v / 0.7) ** 2)
+        cu = 1 + 0.06 * (abs(u) * abs(v)) ** 3                    # corners poke out a little
+        pts.append((x * w * cu + r.uniform(-0.3, 0.3), yy + h / 2.0 * 0.12 + r.uniform(-0.15, 0.15), zz * d * cu))
+    _set_verts(c, pts)
+    cmds.polySmooth(c, dv=2, ch=False)
+    bb = cmds.exactWorldBoundingBox(c)
+    cmds.move(0, -bb[1], 0, c, relative=True)                      # bottom on z
+    cmds.makeIdentity(c, apply=True, t=True)
+    cmds.xform(c, pivots=(0, 0, 0))
+    return _place(c, cx, cy, z, "pillow_mat", yaw=yaw, tilt_y=tilt_y)

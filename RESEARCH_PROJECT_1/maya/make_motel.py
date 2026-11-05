@@ -231,7 +231,7 @@ def room_row():
         box((wx0 + wx1) / 2.0 - 2.5, (wx0 + wx1) / 2.0 + 2.5, FRONT - 5, FRONT - 1, WIN[2], WIN[3], "trim_mat")
         box(wx0, wx1, FRONT - 3.6, FRONT - 3.0, WIN[2], WIN[3], "seeglass_window_mat")
         IN_ROOM[0] = True
-        window_inside(wx0, wx1, lit=i in (1, 5))
+        window_inside(wx0, wx1, lit=i in (1, 5), gap=16 if i == HER_ROOM else 0)
         IN_ROOM[0] = False
         box(wx0 - 12, wx1 + 12, FRONT - 14, FRONT, 96, 104, "trim_mat")     # sill
         # door frame: two jambs and a header, so the doorway stays open
@@ -342,8 +342,8 @@ def room_104(x0, x1):
     bevel_box(bx0 + 3, bx1 - 3, BACK - 247, BACK - 30, 44, 57.3, "sheet_mat", r=5.5, seg=3)
     # the bedspread, thrown back toward the foot; the note (clues.json) lies on it at (-708, -914)
     bedspread(bx0, bx1, BACK - 250, BACK - 150, 58.3, keep_flat=(-708, -914, 26), seed=3)
-    rsoft(bx0 + 70, BACK - 50, 64.5, 85, 38, 14, "pillow_mat", sag=4, jitter=0.8, seed=46, yaw=-8)
-    rsoft(bx1 - 60, BACK - 58, 64, 80, 36, 12, "pillow_mat", sag=3, jitter=0.8, seed=47, yaw=14, tilt_x=6)
+    pillow(bx0 + 66, BACK - 52, 57.5, 72, 44, 15, 46, yaw=-8, tilt_y=-8, dent=3.5)     # slept on
+    pillow(bx1 - 62, BACK - 58, 57.5, 70, 42, 13, 47, yaw=14, dent=1.0)
 
     # --- nightstand: red bulb in the lamp, her diary with pages torn out
     lx, ly = x0 + 180, BACK - 47
