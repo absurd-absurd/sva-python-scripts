@@ -30,6 +30,8 @@ COLORS = {
     "critter_crow_mat": (0.028, 0.028, 0.034), "critter_crow_beak_mat": (0.06, 0.055, 0.05),
     "critter_owl_mat": (0.26, 0.2, 0.14), "critter_owl_face_mat": (0.5, 0.44, 0.34),
     "critter_owl_eye_mat": (1.0, 0.72, 0.1), "critter_snag_mat": (0.2, 0.17, 0.14),
+    "critter_cat_mat": (0.022, 0.021, 0.024), "critter_cat_eye_mat": (0.55, 0.9, 0.25),
+    "critter_catsit_mat": (0.022, 0.021, 0.024), "critter_catsit_eye_mat": (0.55, 0.9, 0.25),
 }
 
 
@@ -130,7 +132,47 @@ def snag():
     tube((-2, 0, 40), (-30, 5, 0), 6, m, sides=6)                               # a root
 
 
-KINDS = {"crow": crow, "owl": owl, "snag": snag, "moth": moth, "firefly": firefly, "gnat": gnat, "bat": bat, "flock": flock_bird}
+def _cat_head(m, e, y, z):
+    """Head with ears, muzzle and eyes, centred at (0, y, z), facing +y."""
+    sphere(0, y, z, 6.2, m, sides=12, scale=(1.05, 0.95, 0.9))
+    rsoft(0, y + 4.8, z - 1.6, 5, 4, 3.6, m, smooth=1)                          # muzzle
+    for s_ in (-1, 1):
+        tube((s_ * 3.4, y - 0.5, z + 4.2), (s_ * 4.2, y - 0.2, z + 9.2), 1.7, m, sides=4)   # ears
+        sphere(s_ * 2.4, y + 5.4, z + 1.0, 1.45, e, sides=8, scale=(1, 0.6, 0.85))        # eyes (stand out of the head)
+
+
+def cat():
+    """A thin black cat walking (feet at the origin, facing +y): body, chest, head, a long tail
+    curving up, four legs with paws. The shader swings the legs (everything below 15 cm),
+    sways the tail (behind y -18) and turns the head (in front of y 14, above 22 cm)."""
+    m, e = "critter_cat_mat", "critter_cat_eye_mat"
+    rsoft(0, -2, 21, 11, 34, 12, m, smooth=2)                                  # body
+    rsoft(0, 12, 22, 10, 10, 12, m, smooth=2)                                  # chest
+    _cat_head(m, e, 21, 29)
+    pts = [(0, -18, 23), (0, -26, 26), (0, -31, 33), (0, -33, 42), (0, -31, 49)]
+    for a, b in zip(pts, pts[1:]):
+        tube(a, b, 1.5, m, sides=6)
+    for x in (-3.8, 3.8):
+        for y in (12, -13):
+            tube((x, y, 17), (x, y + 0.5, 1.6), 1.7 if y > 0 else 2.0, m, sides=6)       # legs
+            sphere(x, y + 1.0, 1.4, 1.7, m, sides=6, scale=(1, 1.3, 0.7))                # paws
+
+
+def catsit():
+    """The same cat sitting upright (feet at the origin, facing +y), tail curled round its feet."""
+    m, e = "critter_catsit_mat", "critter_catsit_eye_mat"
+    rsoft(0, -4, 10, 14, 18, 18, m, smooth=2)                                  # haunches
+    rsoft(0, 1, 21, 10, 11, 20, m, smooth=2, tilt_y=10)                         # chest, upright
+    _cat_head(m, e, 3, 34)
+    for x in (-2.6, 2.6):
+        tube((x, 5.5, 16), (x, 7, 1.4), 1.6, m, sides=6)                        # front legs
+        sphere(x, 7.6, 1.3, 1.6, m, sides=6, scale=(1, 1.3, 0.7))
+    pts = [(0, -12, 2), (7, -8, 1.6), (9, 0, 1.5), (6, 8, 1.5), (1, 10, 1.6)]
+    for a, b in zip(pts, pts[1:]):
+        tube(a, b, 1.5, m, sides=6)                                             # tail round the front
+
+
+KINDS = {"cat": cat, "catsit": catsit, "crow": crow, "owl": owl, "snag": snag, "moth": moth, "firefly": firefly, "gnat": gnat, "bat": bat, "flock": flock_bird}
 
 
 def export_one(kind):

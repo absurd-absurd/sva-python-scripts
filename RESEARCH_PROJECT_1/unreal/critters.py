@@ -35,6 +35,46 @@ float R = frac(sin(dot(OPos.xy, float2(12.9898, 78.233)) + OPos.z * 0.123) * 437
 float3 o = 0;
 float2 vel = float2(0, 1);
 if (Mode > 8.5) return float3(0, 0, 0);                    // still (the owl's dead tree)
+if (Mode > 5.5) {                                          // a cat sitting far off, watching you
+    float2 toP = PPos.xy - OPos.xy;
+    float d = length(toP);
+    float seen = step(Radius, d) * step(d, Height) * step(frac(T / 70.0 + R), 0.55);   // only now and then, only far off
+    float a = atan2(-toP.x, toP.y);                        // always faces you
+    float2 Lr = float2(L.x * cos(a) - L.y * sin(a), L.x * sin(a) + L.y * cos(a));
+    return float3(Lr - L.xy, 0) - L * (1.0 - seen);       // not there: shrunk to nothing
+}
+if (Mode > 4.5) {                                          // the black cat walking round the motel
+    float cyc = 25.0, walk = 18.0;                         // walks 18 s, sits 7 s
+    float k = floor(T / cyc), f = T - k * cyc;
+    float sitting = step(walk, f);
+    float dist = (k * walk + min(f, walk)) * Speed;
+    float hx = Radius, hy = Height, per = 4.0 * (hx + hy);
+    float s = fmod(dist, per);
+    float2 p, dir;                                         // a rectangle round the building
+    if (s < 2 * hx)               { p = float2(-hx + s, -hy); dir = float2(1, 0); }
+    else if (s < 2 * hx + 2 * hy) { p = float2(hx, -hy + (s - 2 * hx)); dir = float2(0, 1); }
+    else if (s < 4 * hx + 2 * hy) { p = float2(hx - (s - 2 * hx - 2 * hy), hy); dir = float2(-1, 0); }
+    else                          { p = float2(-hx, hy - (s - 4 * hx - 2 * hy)); dir = float2(0, -1); }
+    float2 toCat = OPos.xy + p - PPos.xy;
+    float d = length(toCat);
+    float2 away = toCat / max(d, 1.0);
+    float push = saturate((400.0 - d) / 250.0);            // you come close: it bolts away
+    p += away * push * 260.0;
+    float2 face = lerp(dir, -away, sitting * (1 - push));  // sitting: stares at you
+    face = lerp(face, away, push);
+    face = normalize(face + 1e-4);
+    float a = atan2(-face.x, face.y);
+    float moving = (1 - sitting) + push;
+    float3 l = L;
+    float leg = saturate((15.0 - L.z) / 15.0);             // legs: swing from the hips
+    float phase = T * (6.0 + push * 8.0) + (L.y > 0 ? 0.0 : 3.1416) + (L.x > 0 ? 3.1416 : 0.0);
+    l.y += sin(phase) * leg * 5.0 * saturate(moving);
+    if (L.y < -18.0) l.x += sin(T * 2.2) * (-L.y - 18.0) * 0.25;      // tail sways
+    l.z -= sitting * (1 - push) * saturate(-L.y / 20.0) * 7.0;       // sitting: hips down
+    float2 lr = float2(l.x * cos(a) - l.y * sin(a), l.x * sin(a) + l.y * cos(a));
+    float gone = saturate((d - 150.0) / 100.0);            // right next to you: it's gone
+    return float3(p, 0) + float3(lr, l.z) * gone - L;
+}
 if (Mode > 3.5) {                                          // owl: the head turns to watch you
     float2 toP = PPos.xy - OPos.xy;
     float a = clamp(atan2(-toP.x, toP.y), -2.9, 2.9);
@@ -79,6 +119,8 @@ return o + float3(Lr - L.xy, flap);
 """
 
 BLINK_HLSL = """
+// Steady 2 = eyeshine: lights up only when you look (and shine the flashlight) straight at it
+if (S > 1.5) return pow(saturate(dot(-Parameters.CameraVector, ResolvedView.ViewForward)), 80.0);
 float R = frac(sin(dot(OPos.xy, float2(12.9898, 78.233)) + OPos.z * 0.123) * 43758.5453);
 return pow(saturate(sin(T * Speed * 1.3 + R * 40.0) * 0.5 + 0.5), 6.0);
 """
@@ -93,9 +135,15 @@ KIND = {
     "crow":    dict(Mode=3, Speed=1, Radius=900, Height=700, Flap=24, Body=3.4, Glow=0, Bounds=400),
     "owl":     dict(Mode=4, Speed=1, Radius=0, Height=25, Flap=0, Body=0, Glow=0, Bounds=3),
     "snag":    dict(Mode=9, Speed=0, Radius=0, Height=0, Flap=0, Body=0, Glow=0, Bounds=1),
+    # cat: Speed cm/s, Radius / Height = half size of the rectangle it walks round the motel
+    "cat":     dict(Mode=5, Speed=55, Radius=1700, Height=625, Flap=0, Body=0, Glow=0, Bounds=120),
+    # watching cat: seen only between Radius and Height cm away (and only some of the time)
+    "catsit":  dict(Mode=6, Speed=0, Radius=1100, Height=4500, Flap=0, Body=0, Glow=0, Bounds=3),
 }
 SLOT = {    # per-part changes on top of the kind's settings
     "critter_owl_eye_mat": dict(Glow=5, Steady=1),
+    "critter_cat_eye_mat": dict(Glow=150, Steady=2),        # eyeshine when you look right at it
+    "critter_catsit_eye_mat": dict(Glow=150, Steady=2),
 }
 TEXTURE = {"critter_snag_mat": ("T_bark", 150)}
 
@@ -146,7 +194,7 @@ def critter_material():
     blink = _expr(m, unreal.MaterialExpressionCustom, -700, -500, code=BLINK_HLSL,
                   output_type=unreal.CustomMaterialOutputType.CMOT_FLOAT1)
     bp = []
-    for n in ("T", "OPos", "Speed"):
+    for n in ("T", "OPos", "Speed", "S"):
         p = unreal.CustomInput()
         p.set_editor_property("input_name", n)
         bp.append(p)
@@ -154,6 +202,7 @@ def critter_material():
     MEL.connect_material_expressions(t, "", blink, "T")
     MEL.connect_material_expressions(opos, "", blink, "OPos")
     MEL.connect_material_expressions(params["Speed"], "", blink, "Speed")
+    MEL.connect_material_expressions(params["Steady"], "", blink, "S")
     color = [e for e in unreal.ObjectIterator(unreal.MaterialExpressionVectorParameter)
              if e.get_outer() == m and str(e.get_editor_property("parameter_name")) == "Color"][0]
     a = _expr(m, unreal.MaterialExpressionMultiply, -450, -450)
@@ -163,7 +212,13 @@ def critter_material():
     MEL.connect_material_expressions(blink, "", steady, "A")
     one = _expr(m, unreal.MaterialExpressionConstant, -600, -330, r=1.0)
     MEL.connect_material_expressions(one, "", steady, "B")
-    MEL.connect_material_expressions(params["Steady"], "", steady, "Alpha")
+    sub = _expr(m, unreal.MaterialExpressionCustom, -750, -280, code="return saturate(1.0 - abs(S - 1.0));",   # Steady 2 -> 0
+                output_type=unreal.CustomMaterialOutputType.CMOT_FLOAT1)
+    sp = unreal.CustomInput()
+    sp.set_editor_property("input_name", "S")
+    sub.set_editor_property("inputs", [sp])
+    MEL.connect_material_expressions(params["Steady"], "", sub, "S")
+    MEL.connect_material_expressions(sub, "", steady, "Alpha")
     b = _expr(m, unreal.MaterialExpressionMultiply, -300, -450)
     MEL.connect_material_expressions(a, "", b, "A")
     MEL.connect_material_expressions(steady, "", b, "B")
@@ -271,13 +326,19 @@ def main():
     # crows: on the lot lamps, the streetlight, the payphone, the dumpster, the motel roof, the fence.
     # They lift off and fly away as you come within ~9 m, and drift back once you've gone.
     perches = [(-3685, -2470, 740.5), (-3500, -2500, 721), (-335, -3620, 740.5), (-150, -3650, 721), (1600, -3500, 655.5),
-               (2930, -1830, 185.5), (3925, -1150, 130.5), (3995, -1120, 130.5), (-2300, -1692, 337.5), (-1880, -1692, 337.5),
+               (2930, -1830, 192), (3925, -1150, 130.5), (3995, -1120, 130.5), (-2300, -1692, 337.5), (-1880, -1692, 337.5),
                (-420, -1692, 337.5), (180, -1692, 337.5), (-1500, -100, 160.5), (1200, -100, 160.5), (1260, -100, 160.5)]
     for (x, y, z) in perches:
         place("crow", *assets["crow"], (x, y, z), yaw=rng.uniform(0, 360))
     # the owl on a dead tree just off the trail (yaw 0: the head-turn assumes it faces +y)
     place("snag", *assets["snag"], (450, 4500, 0))
     place("owl", *assets["owl"], (450, 4500, 301))
+    # the black cat: walks a loop round the rooms (front along the lot, back by the fence)
+    place("cat", *assets["cat"], (-1000, -1175, 3))
+    # ...and sometimes it's out there, sitting, watching you (each spot shows up at its own times)
+    for (x, y, z) in ((-1500, 7000, 0), (2600, 9700, 0), (1500, 14650, 22), (4700, 12650, 0), (2050, 4150, 0),
+                      (-3200, 13800, 0), (-2800, 1200, 0)):
+        place("catsit", *assets["catsit"], (x, y, z))
     unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
     print("critters placed:", {k: len(v) for k, v in PLACED.items()})
 

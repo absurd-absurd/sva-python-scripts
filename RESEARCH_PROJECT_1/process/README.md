@@ -319,3 +319,21 @@ places 30 moths at the outside lights, ~190 fireflies along the trail and lake s
 Blueprint logic at all: `M_PS2_Critter` (a copy of the PS2 surface material) moves each one along its
 own looping path in the vertex shader, turns it to face where it's going and flaps its wings;
 fireflies blink. Shots: a bat moving between two frames by the lot lamp, the woods, the flock.
+
+## 2026-11-05: Life around the motel, stages 2 and 3 (crows, owl, the black cat)
+
+![Crows, owl, cat](2026-11-05_critters_crows_owl_cat.png)
+
+Row 1: the black cat on its walk along the front of the lot (walking, sitting and staring at you,
+walking). Row 2: the payphone crow from 13 m, then flying off when you get within ~5 m; the owl's spot.
+Row 3: a "watching" cat by the shack: there in one shot out of three (they only show up now and then).
+- The HUD now tells the materials where you are every frame (`MPC_Horror.PlayerPos`).
+- 15 crows on the lamps, streetlight, payphone, dumpster, roof and fence: they lift off and fly away
+  as you come within ~9 m and drift back after you leave.
+- An owl with glowing yellow eyes on a dead tree off the trail; its head turns in little jerks to watch you.
+- The black cat walks a loop round the rooms (18 s walking, 7 s sitting and staring at you), bolts
+  away if you come within 4 m, and is gone if you get right up to it. Seven more sitting cats wait at
+  the trail, the shack, the car, the tower, the dock, the cabins and the boathouse: each shows up only
+  part of the time, only when you're between 11 and 45 m away, always facing you; its eyes shine
+  green when you look straight at it.
+All of it runs in the vertex shader of `M_PS2_Critter` (no Blueprints).
