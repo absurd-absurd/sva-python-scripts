@@ -56,7 +56,7 @@ MATS = {
     "pic_lake_dusk": (1, 1, 1), "pic_lake_fog": (1, 1, 1), "pic_dock": (1, 1, 1), "pic_lake_night": (1, 1, 1),
     "pic_lanterns": (1, 1, 1),
     "camera_mat": (0.04, 0.04, 0.04), "string_mat": (0.4, 0.33, 0.22), "wallpaper_mat": (0.7, 0.64, 0.5),
-    "stain_wall_mat": (0.38, 0.3, 0.18), "stain_dark_mat": (0.22, 0.16, 0.09), "cobweb_mat": (0.55, 0.55, 0.55),
+    "stain_wall_mat": (0.38, 0.3, 0.18), "stain_dark_mat": (0.22, 0.16, 0.09), "cobweb_mat": (0.45, 0.44, 0.42),
     "glow_lamp_red_mat": (1.0, 0.05, 0.02),
     "chair_mat": (0.85, 0.85, 0.8), "metal_mat": (0.3, 0.3, 0.3), "ice_mat": (0.8, 0.82, 0.85),
     # the lot and the car
@@ -280,7 +280,7 @@ def rbox(cx, cy, cz, sx, sy, sz, mat, yaw=0, tilt_x=0, tilt_y=0):
 
 
 def tri(p0, p1, p2, mat):
-    """One flat triangle between three Unreal points (cobwebs)."""
+    """One flat triangle between three Unreal points."""
     f = cmds.polyCreateFacet(p=[(p[0], p[2], p[1]) for p in (p0, p1, p2)], ch=False)[0]
     return keep(f, mat)
 
@@ -325,7 +325,7 @@ def room_104(x0, x1):
 
     # --- nightstand: red bulb in the lamp, her diary with pages torn out
     lx, ly = x0 + 180, BACK - 47
-    tube((lx, ly, 95), (lx, ly, 120), 16.5, "glow_lamp_red_mat", sides=8)                 # shade over the old one
+    tube((lx, ly, 93.5), (lx, ly, 121.5), 17.2, "glow_lamp_red_mat", sides=8)             # shade over the old one (caps clear of it)
     # the bulb: real (inverse-square) falloff, so it's hot right at the lamp and fades across the room.
     # It sits just under the shade: inside it, it burnt a white spot into the shade. Kept dim on
     # purpose: bright red light on the cream walls reads as pink.
@@ -384,8 +384,10 @@ def room_104(x0, x1):
         rbox(inner_l + 0.6, py, pz, 1, 30, 23, "photo_border_mat", tilt_y=spin)
         picture(inner_l + 2.0, py, pz + 1, 26, 19.5, PHOTOS[i % len(PHOTOS)], spin=spin)
         rbox(inner_l + 3.0, py, pz + 11, 1, 8, 3, "tape_mat")
-    rbox(inner_l + 0.6, FRONT + 296, 206, 1, 30, 23, "photo_border_mat", tilt_y=4)
-    picture(inner_l + 2.0, FRONT + 296, 207, 26, 19.5, "pic_lanterns", spin=4)    # red lights out on the water
+    # the empty 4th spot of the top row (at FRONT + 296 it sat right on top of another photo)
+    rbox(inner_l + 0.6, FRONT + 336, 206, 1, 30, 23, "photo_border_mat", tilt_y=4)
+    picture(inner_l + 2.0, FRONT + 336, 207, 26, 19.5, "pic_lanterns", spin=4)    # red lights out on the water
+    rbox(inner_l + 3.0, FRONT + 336, 218, 1, 8, 3, "tape_mat")
     cam_x, cam_y = inner_l + 25, FRONT + 352
     rbox(cam_x, cam_y, 85, 9, 14, 9, "camera_mat", yaw=20)
     tube((cam_x + 4, cam_y + 1, 85), (cam_x + 11, cam_y + 3, 85), 3.2, "camera_mat", sides=8)
@@ -409,10 +411,24 @@ def room_104(x0, x1):
     rbox(inner_r - 0.6, BACK - 285, 260, 1, 30, 90, "stain_wall_mat")
     for py, pz, h_, lean in ((FRONT + 120, 240, 60, 14), (FRONT + 160, 250, 45, 22), (BACK - 120, 255, 50, 18)):
         rbox(inner_l + 1 + h_ * 0.12, py, pz, 0.6, 32, h_, "wallpaper_mat", tilt_x=lean)  # peeling off the wall
-    for cx, cy, sx_, sy_ in ((inner_l, BACK - t, 1, -1), (inner_r, BACK - t, -1, -1), (inner_l, FRONT + t, 1, 1)):
-        z = H - 10.5
-        tri((cx, cy, z), (cx + sx_ * 30, cy, z), (cx, cy + sy_ * 30, z), "cobweb_mat")
-        tri((cx, cy, z), (cx + sx_ * 26, cy, z - 22), (cx, cy, z - 34), "cobweb_mat")
+    # cobwebs: thin strands strung across three top corners, 1.5 cm off the walls and ceiling
+    # (flat triangles lying on the wall z-fought with it and read as "a weird white thing")
+    for cx, cy, sx_, sy_ in ((inner_l, BACK - t, 1, -1), (inner_r, BACK - t, -1, -1), (inner_l, FRONT + t + 2, 1, 1)):
+        top = H - 11.5
+        corner = (cx + sx_ * 1.5, cy + sy_ * 1.5, top)
+        a = (cx + sx_ * 38, cy + sy_ * 1.5, top)              # along one wall's top edge
+        b = (cx + sx_ * 1.5, cy + sy_ * 34, top)              # along the other
+        c = (cx + sx_ * 1.5, cy + sy_ * 1.5, top - 45)        # down the corner
+        sag = lambda p, q, k=0.3: ((p[0] + q[0]) / 2, (p[1] + q[1]) / 2, (p[2] + q[2]) / 2 - k * 10)
+        for p, q in ((a, b), (b, c), (c, a)):                 # the outer threads, sagging a little
+            m = sag(p, q)
+            tube(p, m, 0.25, "cobweb_mat", sides=3)
+            tube(m, q, 0.25, "cobweb_mat", sides=3)
+            tube(corner, m, 0.2, "cobweb_mat", sides=3)       # spokes from the corner
+        for f in (0.45, 0.75):                                # two rings of cross threads
+            pa, pb, pc = [tuple(corner[i] + (v[i] - corner[i]) * f for i in range(3)) for v in (a, b, c)]
+            for p, q in ((pa, pb), (pb, pc), (pc, pa)):
+                tube(p, q, 0.18, "cobweb_mat", sides=3)
 
 
 def chair(x, y):

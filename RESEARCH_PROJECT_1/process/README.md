@@ -160,3 +160,18 @@ the camera counted as "corner", so they were snapped by up to ~12 cm. That tilte
 little, enough to poke up through the carpet (2 cm above it) and the lot (3 cm) now and then.
 Fix: the wobble only moves vertices in front of you, by at most half a centimetre. Test: turning in
 Room 104 and on the lot, no ground shows through.
+
+### Room 104: last three flickering spots
+
+![Room 104 last flicker](2026-11-05_room104_last_flicker.png)
+
+Your note: "it's just on one of the photos in Room 104, the top of the lamp, and a weird white thing
+in the top right corner." All three were z-fighting:
+- **Photo:** the red-lanterns photo was placed exactly on top of another photo in the grid. Moved to
+  the empty fourth spot in the top row (now 8 photos, 4 + 4).
+- **Lamp top:** the red shade was built over the room's normal shade with the caps at the same height.
+  It's now a little bigger in every direction.
+- **White thing:** the cobwebs, flat triangles, one lying right on the wall. They didn't read as
+  cobwebs anyway, so they're now thin grey strands strung across three top corners, 1.5 cm off the walls.
+Test: two shots 1 cm apart; white = changed pixels, only outlines (the big circle in the middle top
+row is the flashlight flickering between the two shots).
