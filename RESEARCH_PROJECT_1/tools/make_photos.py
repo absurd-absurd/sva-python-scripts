@@ -205,6 +205,45 @@ def diary_page(name, words, seed):
     im.save(os.path.join(OUT, name + ".png"))
 
 
+def painting(name, seed):
+    """The motel's cheap framed landscape over the bed: a lake at sunset under mountains, dark
+    pines, a little rowboat. Soft, brushy, faded, like a mass-produced oil print."""
+    rng = random.Random(seed)
+    w, h = 220, 150
+    im = Image.new("RGB", (w, h))
+    d = ImageDraw.Draw(im)
+    for y in range(h):                                                   # sunset sky / lake
+        t = y / h
+        if t < 0.55:
+            c = mix((92, 96, 128), (214, 150, 96), (t / 0.55) ** 1.6)
+        else:
+            c = mix((150, 110, 84), (40, 52, 62), (t - 0.55) / 0.45)
+        d.line([(0, y), (w, y)], fill=c)
+    for k, (base, col) in enumerate(((70, (98, 92, 118)), (80, (70, 70, 88)))):   # two mountain ranges
+        pts = [(0, h)]
+        for x in range(0, w + 10, 10):
+            pts.append((x, base - 10 * k - rng.uniform(0, 26) * (1 - abs(x - w / 2) / w)))
+        pts.append((w, h))
+        d.polygon(pts, fill=col)
+    d.rectangle([0, 82, w, h], fill=None)
+    for y in range(83, h):                                               # lake again over the mountain feet
+        t = (y - 83) / (h - 83)
+        d.line([(0, y), (w, y)], fill=mix((170, 120, 90), (34, 44, 54), t ** 0.7))
+    d.ellipse([150, 50, 172, 72], fill=(240, 196, 120))                  # sun
+    d.line([(161, 84), (161, 120)], fill=(220, 170, 110), width=4)       # its reflection
+    for x in list(range(0, 70, 7)) + list(range(186, 224, 8)):           # dark pines on the shores
+        ht = rng.uniform(26, 50)
+        d.polygon([(x - 6, 92), (x, 92 - ht), (x + 6, 92)], fill=(26, 36, 30))
+    d.polygon([(98, 112), (120, 112), (116, 116), (102, 116)], fill=(60, 40, 30))   # rowboat
+    im = im.filter(ImageFilter.GaussianBlur(0.9))
+    px = im.load()
+    for y in range(h):                                                   # canvas weave + fading
+        for x in range(w):
+            g = rng.uniform(-8, 8) + (6 if (x + y) % 3 == 0 else 0)
+            px[x, y] = tuple(max(0, min(255, int(c * 0.86 + 22 + g))) for c in px[x, y])
+    im.save(os.path.join(OUT, name + ".png"))
+
+
 def notes():
     def arrow(d, im, rng):
         d.line([(20, im.height - 30), (im.width - 30, im.height - 50)], fill=RED, width=2)
@@ -227,6 +266,7 @@ def notes():
                                ["Bug -", "~", "~", "~", "I'm sorry", "~", "~"])):
         diary_page(f"pic_page_{k + 1}", words, seed=10 + k)
     clipping("pic_clipping", seed=6)
+    painting("pic_painting", seed=8)
     lake_map("pic_lake_map", seed=7)
     print("notes: names, night, lights, rattle, scrawl, clipping, lake map")
 

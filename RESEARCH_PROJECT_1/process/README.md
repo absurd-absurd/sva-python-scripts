@@ -222,3 +222,32 @@ a pattern on the carpet.
 - Carpet: `tools/make_carpet.py` draws a worn 70s motel pattern (mustard diamond lattice, rust
   centres, dots on dark olive-brown) woven into the photo carpet so it still looks like pile; tiles
   seamlessly, one repeat per 1.6 m, toned down so it looks worn. In every room.
+
+### Wallpaper, muted carpet, a real window, a painting
+
+![Carpet and wallpaper](2026-11-05_carpet_muted_wallpaper.png)
+![Room 104](2026-11-05_room104_wallpaper_window_painting.png)
+
+Your notes: carpet too intense, walls look like concrete, add a window over the parking lot, a painting
+on the left wall.
+- Carpet redrawn in faded colours. Walls: the inside of every room now has old motel wallpaper
+  (`tools/make_wallpaper.py`: cream, thin olive stripes, a small motif, water marks) and wooden
+  baseboards; the outside keeps its plaster (each wall is two halves).
+- Window: a real opening in every room's front wall (where the outside window was), see-through glass
+  (new translucent `M_PS2_Glass`), the outside frame opened up with a middle bar, and inside a sill,
+  casing, a brass rod and curtains: pulled back in most rooms, closed and glowing in 102 and 106.
+- Painting: a framed sunset-lake landscape over the bed on the left wall.
+
+### What broke the outside, and the fix
+
+![Nanite broke it](2026-11-05_nanite_broke_outside.png)
+
+Your note: "you just ruined the whole outside of the motel and parking lot." Left: how it looked;
+right: how it should look. The Maya model was fine (same faces as before). Cause: with the motel mesh
+now ~4x bigger, Unreal's import switched on **Nanite** (automatic mesh simplification), which
+crushed the thin sign letters, window frames and flat lot details (only 3,367 vertices were left).
+Fix: `import_sets.py` turns Nanite off on the motel meshes every import.
+
+![Outside fixed](2026-11-05_outside_fixed.png)
+
+Top: now. Bottom: earlier today. Motel front, lot and walkway match again (plus the new windows).

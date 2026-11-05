@@ -58,6 +58,8 @@ MATS = {
     "camera_mat": (0.04, 0.04, 0.04), "string_mat": (0.4, 0.33, 0.22), "wallpaper_mat": (0.7, 0.64, 0.5),
     "stain_wall_mat": (0.38, 0.3, 0.18), "stain_dark_mat": (0.22, 0.16, 0.09), "cobweb_mat": (0.62, 0.61, 0.58),
     "glow_lamp_red_mat": (1.0, 0.05, 0.02),
+    "room_wall_mat": (1, 1, 1), "seeglass_window_mat": (0.12, 0.14, 0.15), "frame_mat": (0.3, 0.22, 0.1),
+    "pic_painting": (1, 1, 1),
     "tv_mat": (0.09, 0.075, 0.06), "screen_mat": (0.035, 0.045, 0.045), "sole_mat": (0.62, 0.6, 0.55),
     "lining_mat": (0.3, 0.1, 0.09), "pin_mat": (0.6, 0.03, 0.02), "red_string_mat": (0.45, 0.03, 0.03),
     "shoe_inner_mat": (0.05, 0.05, 0.05), "jacket_cuff_mat": (0.08, 0.1, 0.08),
@@ -99,6 +101,7 @@ FONT = {
 }
 
 LAMP_104 = (9, 450)        # Room 104's red bulb: brightness, reach in cm
+WIN = (320, 470, 108, 214)  # window opening: x from the room's left edge, bottom and top height
 PHOTOS = ["pic_lake_dusk", "pic_lake_fog", "pic_dock", "pic_lake_night"]
 PARTS = []      # every mesh made, combined at the end
 ROOM_PARTS = []  # the insides of the rooms: exported as their own mesh on lighting channel 1
@@ -218,13 +221,17 @@ def room_row():
         door_x0, door_x1 = x0 + 140, x0 + 280                       # doorway, 140 wide x 230 tall
         for a, b in ((x0, door_x0 - 8), (door_x1 + 8, x1)):
             box(a, b, FRONT - 3, FRONT, 0, 100, "brick_mat")
-        # window: frame, dark glass, curtains (some lit)
-        wx0, wx1 = x0 + 320, x0 + 470
-        box(wx0 - 8, wx1 + 8, FRONT - 6, FRONT, 100, 222, "trim_mat")
-        box(wx0, wx1, FRONT - 7, FRONT - 2, 108, 214, "glass_mat")
-        curtain = "glow_window_mat" if i in (1, 5) else "curtain_mat"
-        box(wx0 + 4, wx0 + 70, FRONT - 9, FRONT - 7, 110, 212, curtain)
-        box(wx1 - 70, wx1 - 4, FRONT - 9, FRONT - 7, 110, 212, curtain)
+        # window: a real opening (room_inside cuts it), a trim frame with a middle bar,
+        # see-through glass; the curtains hang inside (closed and lit in 102 and 106)
+        wx0, wx1 = x0 + WIN[0], x0 + WIN[1]
+        for a, b, c_, d in ((wx0 - 8, wx0, 100, 222), (wx1, wx1 + 8, 100, 222),
+                            (wx0 - 8, wx1 + 8, WIN[3], 222), (wx0 - 8, wx1 + 8, 100, WIN[2])):
+            box(a, b, FRONT - 6, FRONT, c_, d, "trim_mat")
+        box((wx0 + wx1) / 2.0 - 2.5, (wx0 + wx1) / 2.0 + 2.5, FRONT - 5, FRONT - 1, WIN[2], WIN[3], "trim_mat")
+        box(wx0, wx1, FRONT - 3.6, FRONT - 3.0, WIN[2], WIN[3], "seeglass_window_mat")
+        IN_ROOM[0] = True
+        window_inside(wx0, wx1, lit=i in (1, 5))
+        IN_ROOM[0] = False
         box(wx0 - 12, wx1 + 12, FRONT - 14, FRONT, 96, 104, "trim_mat")     # sill
         # door frame: two jambs and a header, so the doorway stays open
         box(door_x0 - 8, door_x0, FRONT - 5, FRONT, 0, 238, "trim_mat")
@@ -245,19 +252,40 @@ def room_inside(x0, x1, her=False):
     t = 20
     mid = (FRONT + BACK) / 2.0
     # side walls stop 1 cm short of the front wall's outer face: flush, they flashed through it
-    box(x0, x1, BACK - t, BACK, 0, H, "plaster_mat")                         # back
-    box(x0, x0 + t, FRONT + 1, BACK, 0, H, "plaster_mat")                    # left
-    box(x1 - t, x1, FRONT + 1, BACK, 0, H, "plaster_mat")                    # right
+    # each wall: an outside half (plaster, in the outside mesh) and an inside half with the
+    # motel wallpaper (the outside plaster inside read as concrete)
+    h2 = t / 2.0
+    IN_ROOM[0] = False
+    box(x0, x1, BACK - h2, BACK, 0, H, "plaster_mat")                        # back
+    box(x0, x0 + h2, FRONT + 1, BACK, 0, H, "plaster_mat")                   # left
+    box(x1 - h2, x1, FRONT + 1, BACK, 0, H, "plaster_mat")                   # right
+    IN_ROOM[0] = True
+    box(x0, x1, BACK - t, BACK - h2, 0, H, "room_wall_mat")
+    box(x0 + h2, x0 + t, FRONT + 1, BACK - h2, 0, H, "room_wall_mat")
+    box(x1 - t, x1 - h2, FRONT + 1, BACK - h2, 0, H, "room_wall_mat")
     # the front wall is the motel's face, lit by the sign: it stays in the outside mesh, and a
     # thin lining on its inside face belongs to the room
     IN_ROOM[0] = False
     box(x0, x0 + 140, FRONT, FRONT + t, 0, H, "plaster_mat")                 # front, left of door
-    box(x0 + 280, x1, FRONT, FRONT + t, 0, H, "plaster_mat")                 # front, right of door
+    wx0, wx1, wz0, wz1 = x0 + WIN[0], x0 + WIN[1], WIN[2], WIN[3]
+    box(x0 + 280, wx0, FRONT, FRONT + t, 0, H, "plaster_mat")                # front, right of door,
+    box(wx1, x1, FRONT, FRONT + t, 0, H, "plaster_mat")                      # around the window
+    box(wx0, wx1, FRONT, FRONT + t, 0, wz0, "plaster_mat")
+    box(wx0, wx1, FRONT, FRONT + t, wz1, H, "plaster_mat")
     box(x0 + 140, x0 + 280, FRONT, FRONT + t, 230, H, "plaster_mat")         # above door
     IN_ROOM[0] = True
-    box(x0 + t, x0 + 140, FRONT + t + 1, FRONT + t + 2, 0, H - 10, "plaster_mat")
-    box(x0 + 280, x1 - t, FRONT + t + 1, FRONT + t + 2, 0, H - 10, "plaster_mat")
-    box(x0 + 140, x0 + 280, FRONT + t + 1, FRONT + t + 2, 230, H - 10, "plaster_mat")
+    box(x0 + t, x0 + 140, FRONT + t + 1, FRONT + t + 2, 0, H - 10, "room_wall_mat")
+    box(x0 + 280, wx0, FRONT + t + 1, FRONT + t + 2, 0, H - 10, "room_wall_mat")
+    box(wx1, x1 - t, FRONT + t + 1, FRONT + t + 2, 0, H - 10, "room_wall_mat")
+    box(wx0, wx1, FRONT + t + 1, FRONT + t + 2, 0, wz0, "room_wall_mat")
+    box(wx0, wx1, FRONT + t + 1, FRONT + t + 2, wz1, H - 10, "room_wall_mat")
+    box(x0 + 140, x0 + 280, FRONT + t + 1, FRONT + t + 2, 230, H - 10, "room_wall_mat")
+    # baseboards, 1.5 cm proud of the wall
+    for a, b in ((x0 + t, x0 + 140), (x0 + 280, x1 - t)):
+        bevel_box(a, b, FRONT + t + 2, FRONT + t + 3.5, 1, 12, "wood_mat", r=0.4)
+    bevel_box(x0 + t, x1 - t, BACK - t - 1.5, BACK - t, 1, 12, "wood_mat", r=0.4)
+    bevel_box(x0 + t, x0 + t + 1.5, FRONT + t + 2, BACK - t, 1, 12, "wood_mat", r=0.4)
+    bevel_box(x1 - t - 1.5, x1 - t, FRONT + t + 2, BACK - t, 1, 12, "wood_mat", r=0.4)
     box(x0 + 1, x1 - 1, FRONT + 1, BACK - 1, H - 10, H - 1, "plaster_mat")   # ceiling (clear of the awning and front wall)
     box(x0 + t, x1 - t, FRONT + t, BACK - t, 0, 2, "carpet_mat")             # carpet
     # furniture (maya/room_props.py): bed, nightstand + lamp, dresser with an old TV against the
@@ -284,12 +312,12 @@ def tri(p0, p1, p2, mat):
     return keep(f, mat)
 
 
-def picture(x_wall, y, z, w, h, mat, spin=0):
-    """A flat photo on a wall facing +x (into the room), its texture filling it once.
-    pic_* materials are pictures in Unreal (tools/make_photos.py draws them)."""
+def picture(x_wall, y, z, w, h, mat, spin=0, facing=1):
+    """A flat photo on a wall facing +x (facing=-1: -x) into the room, its texture filling it
+    once. pic_* materials are pictures in Unreal (tools/make_photos.py draws them)."""
     p = cmds.polyPlane(w=h, h=w, sx=1, sy=1, ch=False)[0]        # turned on its side below
-    cmds.xform(p, rotation=(spin, 0, -90), rotateOrder="zyx")
-    cmds.polyEditUV(p + ".map[*]", pivotU=0.5, pivotV=0.5, angle=-90)  # picture upright (+90 left them upside down)
+    cmds.xform(p, rotation=(spin, 0, -90 * facing), rotateOrder="zyx")
+    cmds.polyEditUV(p + ".map[*]", pivotU=0.5, pivotV=0.5, angle=-90 * facing)  # upright (+90 left them upside down)
     cmds.move(x_wall, z, y, p)
     return keep(p, mat)
 
@@ -362,6 +390,10 @@ def room_104(x0, x1):
     cam_x, cam_y = inner_l + 25, FRONT + 352
     camera(cam_x, cam_y, 80)
     investigation_wall(inner_l, FRONT)          # her notes, clipping, map and red string around the photos
+    # the motel's framed landscape over the bed, on the left wall as you walk in
+    py, pz, pw, ph = BACK - 135, 168, 84, 57
+    bevel_box(inner_r - 3.5, inner_r, py - pw / 2 - 5, py + pw / 2 + 5, pz - ph / 2 - 5, pz + ph / 2 + 5, "frame_mat", r=1.2)
+    picture(inner_r - 4.3, py, pz, pw, ph, "pic_painting", facing=-1)
 
     # --- twig figure on a string over the bed, turning slowly in the draft (still, here)
     fx, fy = x1 - 120, BACK - 160

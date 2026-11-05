@@ -1,4 +1,4 @@
-"""Draw the motel room carpet: an old 70s motel pattern (mustard and rust diamond lattice
+"""Draw the motel room carpet: an old 70s motel pattern (faded mustard and rust diamond lattice
 with dots on a dark olive-brown ground), worn and stained, woven into the photo carpet
 texture so it still looks like pile. Tiles seamlessly.
 
@@ -13,10 +13,10 @@ from PIL import Image, ImageDraw, ImageFilter, ImageChops
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 N = 256
-GROUND = (58, 50, 34)
-LATTICE = (150, 112, 44)        # mustard
-INNER = (120, 52, 30)           # rust
-DOT = (176, 150, 96)
+GROUND = (50, 45, 36)
+LATTICE = (104, 88, 58)         # faded mustard
+INNER = (86, 56, 42)            # faded rust
+DOT = (122, 110, 86)
 
 
 def pattern():
@@ -27,7 +27,7 @@ def pattern():
         for gx in range(-1, 5):
             cx, cy = gx * cell + cell / 2, gy * cell + cell / 2
             r = cell / 2
-            d.polygon([(cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy)], outline=LATTICE, width=5)
+            d.polygon([(cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy)], outline=LATTICE, width=3)
             r2 = r * 0.45
             d.polygon([(cx, cy - r2), (cx + r2, cy), (cx, cy + r2), (cx - r2, cy)], fill=INNER)
             d.ellipse([cx - 3, cy - 3, cx + 3, cy + 3], fill=DOT)
@@ -46,7 +46,7 @@ def wear(im, rng):
             for oy in (-N, 0, N):
                 d.ellipse([x + ox - r, y + oy - r, x + ox + r, y + oy + r], fill=rng.randint(25, 70))
     mask = mask.filter(ImageFilter.GaussianBlur(9))
-    faded = Image.blend(im, Image.new("RGB", (N, N), (96, 86, 64)), 0.55)
+    faded = Image.blend(im, Image.new("RGB", (N, N), (78, 70, 56)), 0.65)
     im = Image.composite(faded, im, mask)
     stains = Image.new("L", (N, N), 0)
     d = ImageDraw.Draw(stains)
@@ -65,7 +65,7 @@ def main():
     pile = Image.open(os.path.join(ROOT, "textures", "carpet.jpg")).convert("L").resize((N, N))
     pile = pile.point(lambda v: int(150 + (v - 128) * 0.9))        # fibres around mid-grey
     im = ImageChops.multiply(im, Image.merge("RGB", (pile, pile, pile)))
-    im = im.point(lambda v: min(255, int(v * 1.7)))                 # multiply darkens: bring it back
+    im = im.point(lambda v: min(255, int(v * 1.55)))                 # multiply darkens: bring it back
     im.save(os.path.join(ROOT, "textures", "carpet_pattern.jpg"), quality=92)
     print("carpet pattern -> textures/carpet_pattern.jpg")
 

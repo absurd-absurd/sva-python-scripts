@@ -487,3 +487,22 @@ def pen(cx, cy, z, yaw):
     frustum(*p(6.0)[:2], z + 0.32, z + 0.68, 0.18, 0.18, "metal_mat", sides=6)
     tube(p(-7.0), p(-3.0), 0.52, "pen_mat", sides=8)                                   # cap
     rbox(*p(-4.8)[:2], z + 1.05, 3.4, 0.35, 0.25, "metal_mat", yaw=yaw)                # clip
+
+
+def window_inside(wx0, wx1, lit=False):
+    """The inside of a room's window: a wooden sill and casing, a curtain rod, and curtains.
+    lit=True: closed and glowing (a lamp on behind them, seen from the lot); otherwise pulled
+    back to the sides so you can see out."""
+    y = FRONT + 20 + 2                                    # face of the inside wall lining
+    z0, z1 = WIN[2], WIN[3]
+    bevel_box(wx0 - 7, wx1 + 7, FRONT + 20, y + 8, z0 - 4, z0 + 0.5, "wood_mat", r=0.8)         # sill
+    for a, b, c_, d in ((wx0 - 6, wx0, z0, z1 + 6), (wx1, wx1 + 6, z0, z1 + 6), (wx0 - 6, wx1 + 6, z1, z1 + 6)):
+        bevel_box(a, b, y, y + 1.5, c_, d, "wood_mat", r=0.4)                                 # casing
+    tube((wx0 - 32, y + 7, z1 + 14), (wx1 + 32, y + 7, z1 + 14), 0.9, "brass_mat", sides=8)   # rod
+    if lit:
+        for a, b in ((wx0 - 26, (wx0 + wx1) / 2.0 + 2), ((wx0 + wx1) / 2.0 - 2, wx1 + 26)):
+            rsoft((a + b) / 2.0, y + 6, (z0 + z1) / 2.0 + 4, b - a, 3, z1 - z0 + 30, "glow_window_mat",
+                  jitter=0.4, seed=int(a))
+    else:
+        for k, (cx, w) in enumerate(((wx0 - 14, 30), (wx1 - 9, 20))):   # right one: the side wall is close
+            rsoft(cx, y + 6, (z0 + z1) / 2.0 + 4, w, 5, z1 - z0 + 30, "curtain_mat", jitter=1.0, seed=int(cx) + k)

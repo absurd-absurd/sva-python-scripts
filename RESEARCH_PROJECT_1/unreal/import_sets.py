@@ -132,6 +132,39 @@ def picture_texture(name):
     return tex
 
 
+GLASS = "/Game/Horror/Materials/PS2/M_PS2_Glass"
+
+
+def glass_material():
+    """M_PS2_Glass: see-through window glass (translucent, a dark tint, a bit glossy).
+    For Maya materials named seeglass_*. Rebuilt on every run."""
+    if lib.does_asset_exist(GLASS):
+        m = unreal.load_asset(GLASS)
+        unreal.get_editor_subsystem(unreal.AssetEditorSubsystem).close_all_editors_for_asset(m)
+        MEL.delete_all_material_expressions(m)
+    else:
+        m = tools.create_asset("M_PS2_Glass", GLASS.rsplit("/", 1)[0], unreal.Material, unreal.MaterialFactoryNew())
+    m.set_editor_property("blend_mode", unreal.BlendMode.BLEND_TRANSLUCENT)
+    m.set_editor_property("two_sided", True)
+    color = MEL.create_material_expression(m, unreal.MaterialExpressionVectorParameter, -500, 0)
+    color.set_editor_property("parameter_name", "Color")
+    MEL.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    for prop, v, y, name in ((unreal.MaterialProperty.MP_OPACITY, 0.28, 200, "Opacity"),
+                             (unreal.MaterialProperty.MP_ROUGHNESS, 0.15, 300, None),
+                             (unreal.MaterialProperty.MP_SPECULAR, 0.6, 400, None)):
+        if name:
+            c = MEL.create_material_expression(m, unreal.MaterialExpressionScalarParameter, -500, y)
+            c.set_editor_property("parameter_name", name)
+            c.set_editor_property("default_value", v)
+        else:
+            c = MEL.create_material_expression(m, unreal.MaterialExpressionConstant, -500, y)
+            c.set_editor_property("r", v)
+        MEL.connect_material_property(c, "", prop)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
+
+
 LIGHT_FLICKER = "/Game/Horror/Materials/PS2/M_PS2_LightFlicker"
 DEAD_SEED = 3.0        # the dead M's neon and its light share this, so they die and sputter together
 
@@ -191,6 +224,9 @@ def materials(colors, table):
                 MEL.set_material_instance_vector_parameter_value(mi, "Glass", unreal.LinearColor(*spec["glass"], 1))
             seed = DEAD_SEED if spec.get("flicker", 0) >= 1 else float(i)
             MEL.set_material_instance_scalar_parameter_value(mi, "Seed", seed)
+        elif name.startswith("seeglass_"):
+            mi = instance(f"MI_PS2_{name}", glass_material())
+            MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
         elif name.startswith("pic_"):
             pic = pic or picture_material()
             mi = instance(f"MI_PS2_{name}", pic)
@@ -236,6 +272,11 @@ def import_set(name, fbx, mats):
     body = mesh.get_editor_property("body_setup")
     body.set_editor_property("collision_trace_flag", unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE)
     mesh.set_editor_property("body_setup", body)
+    # no Nanite: Unreal switches it on for big meshes, and its simplification crushed the thin
+    # sign letters, window frames and the flat lot details (and fights the PS2 vertex wobble)
+    nanite = mesh.get_editor_property("nanite_settings")
+    nanite.set_editor_property("enabled", False)
+    mesh.set_editor_property("nanite_settings", nanite)
     for i, slot in enumerate(mesh.static_materials):
         mi = mats.get(str(slot.material_slot_name))
         if mi:
