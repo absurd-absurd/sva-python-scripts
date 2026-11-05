@@ -305,3 +305,17 @@ a little out of Room 104, and close every other room's curtains.
   other); it's now one smooth turned piece (`lathe()`), and the fan housing parts no longer share faces.
 
 ![Lamp base fixed](2026-11-05_lamp_base_fixed.png)
+
+## 2026-11-05: Life around the motel, stage 1 (bugs, bats, flock)
+
+![Critters stage 1](2026-11-05_critters_stage1.png)
+
+Your idea: a black cat around the motel (sometimes seen elsewhere), birds, little bugs in the air.
+You picked: the cat wanders and watches; crows, an owl, bats and a flock overhead; moths at the
+lights, fireflies in the woods, gnats/dust.
+Stage 1: `maya/make_critters.py` builds a moth, firefly, gnat, bat and flock bird; `unreal/critters.py`
+places 30 moths at the outside lights, ~190 fireflies along the trail and lake shore, 8 gnat clouds,
+10 bats (lot lamp, streetlight, over the lake) and a flock of 12 over the dock. They move with no
+Blueprint logic at all: `M_PS2_Critter` (a copy of the PS2 surface material) moves each one along its
+own looping path in the vertex shader, turns it to face where it's going and flaps its wings;
+fireflies blink. Shots: a bat moving between two frames by the lot lamp, the woods, the flock.
