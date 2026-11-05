@@ -175,3 +175,34 @@ in the top right corner." All three were z-fighting:
   cobwebs anyway, so they're now thin grey strands strung across three top corners, 1.5 cm off the walls.
 Test: two shots 1 cm apart; white = changed pixels, only outlines (the big circle in the middle top
 row is the flashlight flickering between the two shots).
+
+## 2026-11-05: Room 104 detail pass
+
+![Detail pass 1](2026-11-05_room104_detail_pass1.png)
+
+Your note: "all of the objects look way too low poly, I want them to have a lot more detail."
+New `maya/room_props.py` builds the furniture from richer shapes (bevelled boxes, smoothed soft
+shapes, tapered cylinders, spheres) for all six rooms: panelled bed on legs with a rounded mattress,
+nightstand with drawer and knob, lamp with base, bulb, tapered lined shade and finial, dresser with six
+drawers and bar handles, an old CRT TV (curved screen, knobs, grille, rabbit ears). Room 104: diary,
+mug, plant, table, slatted chair, suitcase, camera rebuilt. Motel: 39k -> ~160k triangles.
+
+![Her notes](2026-11-05_cas_notes.png)
+
+![Detail pass 2](2026-11-05_room104_detail_pass2.png)
+
+Your notes: the sneakers still looked weird, the jacket too, no coffee in the mug, the plant could be
+more detailed, the blank "pages" on the wall should have scribbles like she was investigating, a
+weird item on the left wall, and cobwebs more noticeable and not in every corner.
+- **Investigation wall:** the blank "pages" were my peeling-wallpaper strips; gone. Around her lake
+  photos are now her notes (drawn by `tools/make_photos.py`: years and names circled in red, "same
+  night every year", "red lights on the water", "the rattle stops when I stop"), a newspaper clipping
+  ("GUEST MISSING AT BLACK HOLLOW LAKE", 1997 circled), her hand-drawn lake map with red X's, red pins
+  and red string between them. Also fixed: all pictures had been upside down.
+- **Sneakers:** built from a real side profile (heel collar, tongue, low toe), dark canvas, white
+  sole, toe cap and laces.
+- **Jacket:** a two-sided draped cloth over the chair back with folds, a collar and two sleeves.
+- **Mug:** open top with a lining and rim, coffee 2 cm down. **Plant:** saucer, rolled rim, lumpy
+  soil, nine curving drooping stems with curled leaves.
+- **Left wall:** the "weird item" was the water streak (two flat slabs); removed.
+- **Cobwebs:** one big web in the back corner over the bed, one small one over the door.

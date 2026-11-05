@@ -46,7 +46,7 @@ MATS = {
     "carpet_mat": (0.3, 0.28, 0.2), "bed_mat": (0.5, 0.46, 0.38), "wood_mat": (0.35, 0.22, 0.12),   # bed: old, yellowed
     # Room 104 (Cas's room)
     "sheet_mat": (0.42, 0.38, 0.3), "bedspread_mat": (0.33, 0.2, 0.14), "pillow_mat": (0.46, 0.42, 0.34), "stain_sheet_mat": (0.16, 0.12, 0.07),
-    "shoe_mat": (0.3, 0.3, 0.32), "diary_mat": (0.18, 0.08, 0.06), "page_mat": (0.6, 0.56, 0.45),
+    "shoe_mat": (0.07, 0.075, 0.11), "diary_mat": (0.18, 0.08, 0.06), "page_mat": (0.6, 0.56, 0.45),
     "mug_mat": (0.55, 0.52, 0.46), "coffee_mat": (0.04, 0.02, 0.01), "pot_mat": (0.35, 0.17, 0.1),
     "soil_mat": (0.05, 0.04, 0.03), "twig_mat": (0.16, 0.11, 0.07), "leaf_dead_mat": (0.25, 0.17, 0.07),
     "jacket_mat": (0.12, 0.16, 0.12), "suitcase_mat": (0.2, 0.06, 0.05), "strap_mat": (0.1, 0.08, 0.06),
@@ -56,10 +56,13 @@ MATS = {
     "pic_lake_dusk": (1, 1, 1), "pic_lake_fog": (1, 1, 1), "pic_dock": (1, 1, 1), "pic_lake_night": (1, 1, 1),
     "pic_lanterns": (1, 1, 1),
     "camera_mat": (0.04, 0.04, 0.04), "string_mat": (0.4, 0.33, 0.22), "wallpaper_mat": (0.7, 0.64, 0.5),
-    "stain_wall_mat": (0.38, 0.3, 0.18), "stain_dark_mat": (0.22, 0.16, 0.09), "cobweb_mat": (0.45, 0.44, 0.42),
+    "stain_wall_mat": (0.38, 0.3, 0.18), "stain_dark_mat": (0.22, 0.16, 0.09), "cobweb_mat": (0.62, 0.61, 0.58),
     "glow_lamp_red_mat": (1.0, 0.05, 0.02),
     "tv_mat": (0.09, 0.075, 0.06), "screen_mat": (0.035, 0.045, 0.045), "sole_mat": (0.62, 0.6, 0.55),
-    "lining_mat": (0.3, 0.1, 0.09),
+    "lining_mat": (0.3, 0.1, 0.09), "pin_mat": (0.6, 0.03, 0.02), "red_string_mat": (0.45, 0.03, 0.03),
+    "shoe_inner_mat": (0.05, 0.05, 0.05), "jacket_cuff_mat": (0.08, 0.1, 0.08),
+    "pic_note_names": (1, 1, 1), "pic_note_night": (1, 1, 1), "pic_note_lights": (1, 1, 1), "pic_note_rattle": (1, 1, 1),
+    "pic_note_scrawl": (1, 1, 1), "pic_clipping": (1, 1, 1), "pic_lake_map": (1, 1, 1),
     "chair_mat": (0.85, 0.85, 0.8), "metal_mat": (0.3, 0.3, 0.3), "ice_mat": (0.8, 0.82, 0.85),
     # the lot and the car
     "paint_mat": (0.55, 0.54, 0.48), "paint_yellow_mat": (0.55, 0.45, 0.12), "crack_mat": (0.015, 0.015, 0.015),
@@ -285,7 +288,7 @@ def picture(x_wall, y, z, w, h, mat, spin=0):
     pic_* materials are pictures in Unreal (tools/make_photos.py draws them)."""
     p = cmds.polyPlane(w=h, h=w, sx=1, sy=1, ch=False)[0]        # turned on its side below
     cmds.xform(p, rotation=(spin, 0, -90), rotateOrder="zyx")
-    cmds.polyEditUV(p + ".map[*]", pivotU=0.5, pivotV=0.5, angle=90)   # picture upright
+    cmds.polyEditUV(p + ".map[*]", pivotU=0.5, pivotV=0.5, angle=-90)  # picture upright (+90 left them upside down)
     cmds.move(x_wall, z, y, p)
     return keep(p, mat)
 
@@ -361,6 +364,7 @@ def room_104(x0, x1):
     rbox(inner_l + 3.0, FRONT + 336, 218, 1, 8, 3, "tape_mat")
     cam_x, cam_y = inner_l + 25, FRONT + 352
     camera(cam_x, cam_y, 80)
+    investigation_wall(inner_l, FRONT)          # her notes, clipping, map and red string around the photos
 
     # --- twig figure on a string over the bed, turning slowly in the draft (still, here)
     fx, fy = x1 - 120, BACK - 160
@@ -372,33 +376,15 @@ def room_104(x0, x1):
     rbox(fx, fy, 200, 3.5, 3.5, 4, "string_mat")                                          # twine knots
     rbox(fx + 0.5, fy, 172, 3, 3, 4, "string_mat")
 
-    # --- a year of damp: ceiling stain with a drip streak, peeling wallpaper, cobwebs
+    # --- a year of damp: a water stain on the ceiling, cobwebs
     for r, ox, oy, mat in ((60, 0, 0, "stain_wall_mat"), (40, 25, 20, "stain_dark_mat"), (25, -20, 30, "stain_dark_mat")):
         zb = H - 11 - (60 - r) * 0.04                      # overlapping stains 8 mm apart, under the ceiling
         tube((x0 + 300 + ox, FRONT + 330 + oy, zb), (x0 + 300 + ox, FRONT + 330 + oy, zb + 0.5), r,
              mat, sides=10)
-    rbox(inner_r - 0.6, BACK - 300, 220, 1, 6, 170, "stain_wall_mat")                     # streak down the wall
-    rbox(inner_r - 0.6, BACK - 285, 260, 1, 30, 90, "stain_wall_mat")
-    for py, pz, h_, lean in ((FRONT + 120, 240, 60, 14), (FRONT + 160, 250, 45, 22), (BACK - 120, 255, 50, 18)):
-        rbox(inner_l + 1 + h_ * 0.12, py, pz, 0.6, 32, h_, "wallpaper_mat", tilt_x=lean)  # peeling off the wall
-    # cobwebs: thin strands strung across three top corners, 1.5 cm off the walls and ceiling
-    # (flat triangles lying on the wall z-fought with it and read as "a weird white thing")
-    for cx, cy, sx_, sy_ in ((inner_l, BACK - t, 1, -1), (inner_r, BACK - t, -1, -1), (inner_l, FRONT + t + 2, 1, 1)):
-        top = H - 11.5
-        corner = (cx + sx_ * 1.5, cy + sy_ * 1.5, top)
-        a = (cx + sx_ * 38, cy + sy_ * 1.5, top)              # along one wall's top edge
-        b = (cx + sx_ * 1.5, cy + sy_ * 34, top)              # along the other
-        c = (cx + sx_ * 1.5, cy + sy_ * 1.5, top - 45)        # down the corner
-        sag = lambda p, q, k=0.3: ((p[0] + q[0]) / 2, (p[1] + q[1]) / 2, (p[2] + q[2]) / 2 - k * 10)
-        for p, q in ((a, b), (b, c), (c, a)):                 # the outer threads, sagging a little
-            m = sag(p, q)
-            tube(p, m, 0.25, "cobweb_mat", sides=3)
-            tube(m, q, 0.25, "cobweb_mat", sides=3)
-            tube(corner, m, 0.2, "cobweb_mat", sides=3)       # spokes from the corner
-        for f in (0.45, 0.75):                                # two rings of cross threads
-            pa, pb, pc = [tuple(corner[i] + (v[i] - corner[i]) * f for i in range(3)) for v in (a, b, c)]
-            for p, q in ((pa, pb), (pb, pc), (pc, pa)):
-                tube(p, q, 0.18, "cobweb_mat", sides=3)
+    # cobwebs: one big web in the back corner above the bed (you see it walking in), a small
+    # one over the door
+    cobweb((inner_r, BACK - t), -1, -1, 62, H - 10)
+    cobweb((inner_l, FRONT + t + 2), 1, 1, 30, H - 10)
 
 
 def chair(x, y):

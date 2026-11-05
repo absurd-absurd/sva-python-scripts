@@ -79,3 +79,131 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ---------- her investigation notes (the wall over the dresser in Room 104) ----------
+
+INK_FONT = r"C:/Windows/Fonts/Inkfree.ttf"
+PAPER = (214, 204, 172)
+INK = (28, 26, 34)
+RED = (170, 22, 18)
+
+
+def _paper(w, h, rng, tint=PAPER):
+    im = Image.new("RGB", (w, h), tint)
+    px = im.load()
+    for y in range(h):                                                   # uneven, yellowed paper
+        for x in range(w):
+            g = rng.uniform(-10, 6) - 18 * ((x / w - 0.5) ** 2 + (y / h - 0.5) ** 2)
+            px[x, y] = tuple(max(0, min(255, int(c + g))) for c in px[x, y])
+    return im
+
+
+def _scrawl(d, x, y, w, rng, ink=INK, height=4):
+    """A line of handwriting too small to read: a wobbly pen line with loops."""
+    pts, cx = [], x
+    while cx < x + w:
+        pts.append((cx, y + rng.uniform(-height, height) * (0.5 if rng.random() < 0.6 else 1)))
+        cx += rng.uniform(1.5, 3.2)
+    d.line(pts, fill=ink, width=1)
+
+
+def note(name, w, h, lines, seed, extra=None):
+    """Handwritten note: real words (lines) where she pressed hard, scrawl everywhere else."""
+    from PIL import ImageFont
+    rng = random.Random(seed)
+    im = _paper(w, h, rng)
+    d = ImageDraw.Draw(im)
+    y = 8
+    for text, size, color, circle in lines:
+        if text == "~":
+            _scrawl(d, 8, y + 4, w - 16 - rng.randint(0, 30), rng)
+            y += 11
+            continue
+        f = ImageFont.truetype(INK_FONT, size)
+        d.text((8 + rng.randint(-2, 4), y), text, font=f, fill=color)
+        tw = d.textlength(text, font=f)
+        if circle:
+            d.ellipse([4, y - 2, 12 + tw + 6, y + size + 4], outline=RED, width=2)
+        y += size + 5
+    if extra:
+        extra(d, im, rng)
+    im.save(os.path.join(OUT, name + ".png"))
+
+
+def clipping(name, seed):
+    """A newspaper clipping: masthead, headline, a dark photo, columns of grey type."""
+    from PIL import ImageFont
+    rng = random.Random(seed)
+    w, h = 160, 200
+    im = _paper(w, h, rng, tint=(196, 190, 170))
+    d = ImageDraw.Draw(im)
+    bold = ImageFont.truetype(r"C:/Windows/Fonts/timesbd.ttf", 19)
+    small = ImageFont.truetype(r"C:/Windows/Fonts/times.ttf", 10)
+    d.text((8, 6), "MARROW FALLS COURIER", font=small, fill=(40, 38, 36))
+    d.line([(8, 19), (w - 8, 19)], fill=(40, 38, 36), width=1)
+    d.text((8, 22), "GUEST MISSING", font=bold, fill=(20, 20, 20))
+    d.text((8, 44), "AT BLACK HOLLOW LAKE", font=ImageFont.truetype(r"C:/Windows/Fonts/timesbd.ttf", 10), fill=(20, 20, 20))
+    d.rectangle([8, 64, 70, 112], fill=(46, 48, 50))                      # the photo
+    d.rectangle([12, 90, 66, 108], fill=(24, 26, 28))
+    for col, (x0, x1, y0) in enumerate(((76, w - 8, 64), (8, 76, 118), (82, w - 8, 118))):
+        for yy in range(y0, h - 8, 5):
+            d.line([(x0, yy), (x1 - rng.randint(0, 8), yy)], fill=(110, 106, 100), width=1)
+    d.ellipse([80, 120, 150, 140], outline=RED, width=2)                 # she circled something
+    d.text((96, 142), "1997!", font=ImageFont.truetype(INK_FONT, 15), fill=RED)
+    im.save(os.path.join(OUT, name + ".png"))
+
+
+def lake_map(name, seed):
+    """Her hand-drawn map of the lake: shoreline, the dock, the boathouse, X marks."""
+    from PIL import ImageFont
+    rng = random.Random(seed)
+    w, h = 220, 160
+    im = _paper(w, h, rng)
+    d = ImageDraw.Draw(im)
+    pts = []
+    for i in range(40):                                                  # wobbly lake outline
+        a = i / 40 * 6.283
+        r = 1 + 0.12 * math.sin(a * 3 + 1) + rng.uniform(-0.04, 0.04)
+        pts.append((110 + math.cos(a) * 80 * r, 78 + math.sin(a) * 50 * r))
+    d.line(pts + [pts[0]], fill=INK, width=2)
+    f = ImageFont.truetype(INK_FONT, 13)
+    d.text((70, 66), "BLACK HOLLOW", font=f, fill=INK)
+    d.line([(110, 128), (110, 146)], fill=INK, width=3)                  # the dock
+    d.text((116, 136), "dock", font=f, fill=INK)
+    d.rectangle([178, 104, 192, 116], outline=INK, width=1)              # boathouse
+    d.text((150, 118), "boathouse", font=ImageFont.truetype(INK_FONT, 11), fill=INK)
+    for (x, y) in ((92, 50), (128, 46), (150, 70), (96, 96)):            # red X marks on the water
+        d.line([(x - 5, y - 5), (x + 5, y + 5)], fill=RED, width=2)
+        d.line([(x - 5, y + 5), (x + 5, y - 5)], fill=RED, width=2)
+    d.text((8, 8), "where the lights were", font=f, fill=RED)
+    d.text((176, 20), "?", font=ImageFont.truetype(INK_FONT, 26), fill=INK)
+    im.save(os.path.join(OUT, name + ".png"))
+
+
+def notes():
+    def arrow(d, im, rng):
+        d.line([(20, im.height - 30), (im.width - 30, im.height - 50)], fill=RED, width=2)
+        d.line([(im.width - 30, im.height - 50), (im.width - 42, im.height - 44)], fill=RED, width=2)
+    note("pic_note_names", 150, 200, [
+        ("every year?", 18, INK, False), ("1974  R. Dale", 14, INK, True), ("1981  M. Ostrowski", 14, INK, True),
+        ("1988  J. Peake", 14, INK, True), ("1997  T. Hale", 14, INK, True), ("~", 0, 0, 0), ("2009  L. Brandt", 14, INK, True),
+        ("2018  D. Moss", 14, INK, True), ("and now me?", 16, RED, False)], seed=1)
+    note("pic_note_night", 120, 150, [
+        ("SAME", 22, INK, False), ("NIGHT", 22, INK, False), ("every year", 15, RED, True), ("~", 0, 0, 0), ("~", 0, 0, 0),
+        ("guest book", 14, INK, False), ("ask office", 14, INK, False)], seed=2)
+    note("pic_note_lights", 120, 150, [
+        ("red lights", 17, RED, False), ("on the water", 15, INK, False), ("~", 0, 0, 0), ("who carries", 14, INK, False),
+        ("them?", 14, INK, False), ("~", 0, 0, 0)], seed=3, extra=arrow)
+    note("pic_note_rattle", 120, 150, [
+        ("the rattle", 16, INK, False), ("stops when", 14, INK, False), ("I stop", 16, RED, True), ("~", 0, 0, 0), ("~", 0, 0, 0),
+        ("~", 0, 0, 0)], seed=4)
+    note("pic_note_scrawl", 120, 150, [("~", 0, 0, 0)] * 6 + [("don't stay", 15, INK, False), ("past dark", 15, RED, False)], seed=5)
+    clipping("pic_clipping", seed=6)
+    lake_map("pic_lake_map", seed=7)
+    print("notes: names, night, lights, rattle, scrawl, clipping, lake map")
+
+
+if __name__ == "__main__":
+    import math
+    notes()

@@ -226,34 +226,76 @@ def diary(cx, cy, cz, yaw):
     rbevel(cx - 7.3 * math.cos(a), cy + 7.3 * math.sin(a), cz + 1.6, 1.2, 20, 3.2, "diary_mat", r=0.5, yaw=yaw)
 
 
+def _sneaker_top(u):
+    """Height (cm above the sole) of a sneaker's upper along its length, u = -1 heel .. 1 toe:
+    collar at the heel, a dip at the ankle opening, the tongue, then a slope to a low toe."""
+    keys = [(-1.0, 7.2), (-0.75, 8.0), (-0.45, 7.0), (-0.2, 8.4), (0.1, 7.2), (0.45, 5.2), (0.75, 3.8), (1.0, 2.2)]
+    for (u0, h0), (u1, h1) in zip(keys, keys[1:]):
+        if u <= u1:
+            t = (u - u0) / (u1 - u0)
+            return h0 + (h1 - h0) * (t * t * (3 - 2 * t))
+    return keys[-1][1]
+
+
 def sneaker(cx, cy, yaw, seed):
-    """Sole, a soft upper, a rounded toe cap and laces."""
+    """A canvas sneaker built from a side profile (_sneaker_top) and a foot-shaped outline
+    (narrow heel, wide ball, rounded toe), smoothed; a white rubber sole and toe cap,
+    a dark ankle opening, white laces lying on the tongue."""
+    L, W = 28.0, 10.0
+    c = cmds.polyCube(w=W, h=1, d=L, sx=4, sy=3, sz=12, ch=False)[0]
+    pts = []
+    for x, y, z in _verts(c):
+        u, v, h = z / (L / 2), x / (W / 2), y + 0.5                    # h: 0 bottom, 1 top
+        width = 0.78 + 0.22 * math.exp(-((u - 0.4) / 0.6) ** 2)
+        if u > 0.75:
+            width *= math.sqrt(max(0.05, 1 - ((u - 0.75) / 0.3) ** 2))   # round toe
+        pts.append((v * (W / 2) * width * (1 - 0.3 * h * h), h * _sneaker_top(u) * 1.18, z))
+    _set_verts(c, pts)
+    cmds.polySmooth(c, dv=2, ch=False)
+    _place(c, cx, cy, 2.6, "shoe_mat", yaw=yaw)
     a = math.radians(yaw)
-    fx, fy = math.sin(a), math.cos(a)                 # along the shoe
-    rbevel(cx, cy, 1.5, 10, 28, 3, "sole_mat", r=1.2, yaw=yaw)
-    rsoft(cx - fx * 3, cy - fy * 3, 7, 9, 20, 8, "shoe_mat", jitter=0.3, seed=seed, yaw=yaw)
-    rsoft(cx + fx * 9, cy + fy * 9, 5, 9, 9, 5.5, "shoe_mat", seed=seed + 1, yaw=yaw)
-    for k in range(3):
-        rbox(cx + fx * (2 - k * 3), cy + fy * (2 - k * 3), 10.6, 5, 0.8, 0.5, "sole_mat", yaw=yaw)
+    fx, fy = -math.sin(a), math.cos(a)                                  # shoe forward, Unreal x/y
+    at = lambda d: (cx + fx * d, cy + fy * d)                           # a point d cm toward the toe
+    rbevel(cx, cy, 1.9, W + 0.8, L + 0.6, 2.6, "sole_mat", r=1.1, seg=2, yaw=yaw)       # sole (white sides)
+    rsoft(*at(11.8), 3.6, 7.6, 5.2, 3.4, "sole_mat", seed=seed, yaw=yaw)                # rubber toe cap
+    sphere(*at(-8.4), 2.6 + _sneaker_top(-0.6) * 1.12, 3.0, "shoe_inner_mat", sides=12, scale=(1, 1.4, 0.3))  # opening
+    for k in range(5):                                                  # laces on the tongue
+        d = -1.5 + k * 2.4
+        rbox(*at(d), 2.6 + _sneaker_top(d / (L / 2)) * 1.12 + 0.5, 6.4, 0.9, 0.8, "sole_mat", yaw=yaw, tilt_y=-12)
 
 
 def mug(cx, cy, z):
-    frustum(cx, cy, z + 0.3, z + 9, 3.7, 4.1, "mug_mat", sides=14)
-    frustum(cx, cy, z + 7.8, z + 8.4, 3.6, 3.7, "coffee_mat", sides=14)
-    ring(cx + 4.6, cy, z + 5, 2.4, 0.6, "mug_mat", axis="y", sides=10)
+    """Open-topped mug with a lining, a rim, a handle, and cold coffee a centimetre down."""
+    frustum(cx, cy, z + 0.3, z + 9, 3.7, 4.1, "mug_mat", sides=18, open_ends=True)
+    frustum(cx, cy, z + 1.0, z + 9, 3.25, 3.65, "mug_mat", sides=18, open_ends=True, inside=True)
+    frustum(cx, cy, z + 0.3, z + 1.2, 3.7, 3.75, "mug_mat", sides=18)             # base
+    ring(cx, cy, z + 9, 3.88, 0.24, "mug_mat", sides=18)                          # rim
+    frustum(cx, cy, z + 7.0, z + 7.6, 3.5, 3.55, "coffee_mat", sides=18)          # the coffee
+    ring(cx + 4.7, cy, z + 5, 2.3, 0.55, "mug_mat", axis="y", sides=12)          # handle
 
 
 def plant_pot(cx, cy, z, rng):
-    frustum(cx, cy, z + 0.3, z + 11, 5.5, 7.2, "pot_mat", sides=14)
-    ring(cx, cy, z + 11, 7.2, 0.8, "pot_mat", sides=14)
-    frustum(cx, cy, z + 9.2, z + 9.8, 6.5, 6.6, "soil_mat", sides=14)
-    for i in range(7):                                                               # dead stems, drooping
-        ang = i * 0.9
-        top = (cx + math.cos(ang) * 8, cy + math.sin(ang) * 8, z + 27 + rng.uniform(-4, 6))
-        tube((cx, cy, z + 9.5), top, 0.5, "twig_mat", sides=3)
-        end = (top[0] + math.cos(ang) * 6, top[1] + math.sin(ang) * 6, top[2] - 8)
-        tube(top, end, 0.4, "twig_mat", sides=3)
-        rsoft(end[0], end[1], end[2] - 0.5, 3, 1.5, 0.8, "leaf_dead_mat", seed=i, yaw=rng.uniform(0, 180))
+    """Terracotta pot with a rolled rim and a saucer, lumpy dry soil, and a dead plant: long
+    curving stems that droop over, with curled brown leaves along them."""
+    frustum(cx, cy, z + 0.2, z + 1.4, 7.5, 7.8, "pot_mat", sides=24)                       # saucer
+    frustum(cx, cy, z + 1.4, z + 11, 5.4, 7.0, "pot_mat", sides=24, open_ends=True)
+    frustum(cx, cy, z + 1.4, z + 11, 4.9, 6.5, "pot_mat", sides=24, open_ends=True, inside=True)
+    ring(cx, cy, z + 11, 7.1, 0.9, "pot_mat", sides=24)
+    rsoft(cx, cy, z + 9.3, 12.6, 12.6, 1.6, "soil_mat", jitter=0.35, seed=60)
+    for i in range(9):
+        ang = i * 0.7 + rng.uniform(-0.2, 0.2)
+        reach, rise = rng.uniform(7, 12), rng.uniform(18, 30)
+        prev = (cx + math.cos(ang) * 1.0, cy + math.sin(ang) * 1.0, z + 9.8)
+        n = 6
+        for k in range(1, n + 1):                                    # a stem: up, out, then drooping
+            t = k / n
+            p = (cx + math.cos(ang) * reach * t ** 0.8, cy + math.sin(ang) * reach * t ** 0.8,
+                 z + 9.8 + rise * math.sin(t * 2.4) / math.sin(2.4 * 0.62) * 0.62)
+            tube(prev, p, 0.45 - 0.25 * t, "twig_mat", sides=5)
+            if k in (3, 5, 6):                                       # curled dry leaves
+                rsoft(p[0], p[1], p[2] - 0.6, 3.4, 1.6, 0.9, "leaf_dead_mat", jitter=0.25, sag=-0.4,
+                      seed=i * 10 + k, yaw=math.degrees(ang) + rng.uniform(-40, 40), tilt_x=rng.uniform(-30, 30))
+            prev = p
 
 
 def side_table(tx, ty, tz):
@@ -267,18 +309,78 @@ def side_table(tx, ty, tz):
 
 
 def wood_chair(cx, cy, rng):
-    """Seat, two back posts with three slats, tapered legs, and her jacket slumped over it."""
+    """Seat, two back posts with three slats, tapered legs, and her jacket draped over it."""
     rbevel(cx, cy, 45, 42, 40, 4, "wood_mat", r=1.2)
     for dx in (-18, 18):
         frustum(cx + dx, cy - 16, 0, 43, 1.4, 2.0, "wood_mat", sides=8)
         frustum(cx + dx, cy + 17, 0, 92, 1.6, 2.0, "wood_mat", sides=8)                   # back posts
     for k, z in enumerate((62, 74, 86)):
         rbevel(cx, cy + 17, z, 34, 2, 6 if k < 2 else 9, "wood_mat", r=0.8)
-    # jacket: hanging behind the back, collar over the top, a sleeve dangling
-    rsoft(cx, cy + 21.5, 72, 44, 5, 40, "jacket_mat", jitter=1.0, seed=7, tilt_y=4)
-    rsoft(cx, cy + 17, 93.5, 46, 12, 5, "jacket_mat", jitter=0.6, seed=8)
-    rsoft(cx, cy + 13.5, 84, 40, 4, 20, "jacket_mat", jitter=0.8, seed=9, tilt_y=-6)
-    rsoft(cx - 24, cy + 19, 64, 8, 9, 46, "jacket_mat", jitter=0.8, seed=10, tilt_x=-6)
+    jacket(cx, cy + 17, 92)
+
+
+def _drape(path, width, rows, cols, flare, folds, seed):
+    """Cloth hanging along a path of (y, z) points: a grid, wider toward the hanging ends,
+    with soft vertical folds. Returns the vertex grid (Unreal x offset, y, z)."""
+    rng = random.Random(seed)
+    lens = [0.0]
+    for (y0, z0), (y1, z1) in zip(path, path[1:]):
+        lens.append(lens[-1] + math.hypot(y1 - y0, z1 - z0))
+    total = lens[-1]
+    grid = []
+    for r in range(rows + 1):
+        s = total * r / rows
+        k = max(i for i in range(len(lens)) if lens[i] <= s) if s < total else len(path) - 2
+        k = min(k, len(path) - 2)
+        t = (s - lens[k]) / max(1e-6, lens[k + 1] - lens[k])
+        y = path[k][0] + (path[k + 1][0] - path[k][0]) * t
+        z = path[k][1] + (path[k + 1][1] - path[k][1]) * t
+        hang = min(1.0, abs(s - lens[3]) / 15.0)                      # 0 where it lies over the rail
+        row = []
+        for c in range(cols + 1):
+            u = c / cols - 0.5
+            x = u * width * (1 + flare * hang)
+            dy = math.sin(u * folds * 6.283 + r * 0.35) * 1.3 * hang + rng.uniform(-0.25, 0.25)
+            row.append((x, y + dy, z + rng.uniform(-0.3, 0.3)))
+        grid.append(row)
+    return grid
+
+
+def _cloth(cx, grid, mat):
+    """Build a two-sided mesh from a vertex grid (rows x cols), at Unreal x = cx."""
+    rows, cols = len(grid) - 1, len(grid[0]) - 1
+    for side in (0, 1):
+        p = cmds.polyPlane(w=1, h=1, sx=cols, sy=rows, ch=False)[0]
+        # polyPlane vertex order: row by row (Maya z), cols along Maya x
+        pts = []
+        for r in range(rows + 1):
+            for c in range(cols + 1):
+                x, y, z = grid[r][c]
+                pts.append((x, z, y))                                   # Unreal (x, y, z) -> Maya (x, z, y)
+        _set_verts(p, pts)
+        if side:
+            cmds.polyNormal(p, normalMode=0, userNormalMode=0, ch=False)
+            cmds.move(0, 0, 0.35, p, relative=True)                     # the inside, a few mm behind
+        cmds.polySoftEdge(p, angle=180, ch=False)
+        cmds.move(cx, 0, 0, p, relative=True)
+        keep(p, mat)
+
+
+def jacket(cx, ty, tz):
+    """Her jacket thrown over the chair back (top rail at ty, tz): the body hangs down the
+    back and a shorter front flap, the collar bunched on top, both sleeves dangling."""
+    path = [(ty - 4.5, tz - 30), (ty - 3.5, tz - 10), (ty - 2.2, tz + 1.5), (ty, tz + 3.2),
+            (ty + 2.4, tz + 1.5), (ty + 4.2, tz - 12), (ty + 5.5, tz - 35), (ty + 6.5, tz - 48)]
+    _cloth(cx, _drape(path, 44, 26, 12, 0.18, 2.5, 70), "jacket_mat")
+    rsoft(cx, ty, tz + 3.6, 40, 8, 3.5, "jacket_mat", jitter=0.5, seed=71)                 # collar
+    for side in (-1, 1):                                                                # sleeves
+        top = (cx + side * 21, ty + 3.5, tz - 2)
+        mid = (cx + side * 23.5, ty + 7.5, tz - 26)
+        bot = (cx + side * 22.5, ty + 6.0, tz - 50)
+        tube(top, mid, 3.6, "jacket_mat", sides=10)
+        tube(mid, bot, 3.3, "jacket_mat", sides=10)
+        sphere(*mid, 3.6, "jacket_mat", sides=10)                                       # elbow
+        tube(bot, (bot[0], bot[1] - 0.5, bot[2] - 2.5), 3.5, "jacket_cuff_mat", sides=10)
 
 
 def suitcase(sx, sy, rng):
@@ -312,3 +414,59 @@ def camera(cx, cy, cz):
     tube((lx + 5.6 * math.cos(a), ly - 5.6 * math.sin(a), cz + 4.5),
          (lx + 5.9 * math.cos(a), ly - 5.9 * math.sin(a), cz + 4.5), 2.2, "glass_mat", sides=14)
     tube((cx, cy + 5, cz + 8.8), (cx, cy + 5, cz + 10.2), 1.2, "metal_mat", sides=8)
+
+
+def investigation_wall(wall_x, front):
+    """Her investigation pinned up around the lake photos over the dresser: handwritten notes
+    (tools/make_photos.py), a newspaper clipping, a hand-drawn lake map, a red pin in each,
+    and red string between the ones she connected. wall_x = the wall face (+x into the room)."""
+    items = {   # name: (y from FRONT, z centre, width, height, spin)
+        "pic_note_names": (168, 192, 21, 28, -3),
+        "pic_lake_map": (272, 248, 42, 30, 2),
+        "pic_clipping": (392, 196, 24, 30, 4),
+        "pic_note_night": (440, 238, 17, 21, -5),
+        "pic_note_lights": (388, 246, 17, 21, 3),
+        "pic_note_rattle": (160, 242, 17, 21, 6),
+        "pic_note_scrawl": (446, 186, 17, 21, -2),
+    }
+    pins = {}
+    for name, (dy, z, w, h, spin) in items.items():
+        picture(wall_x + 2.0, front + dy, z, w, h, name, spin=spin)
+        pin = (wall_x + 2.8, front + dy, z + h / 2.0 - 2.0)
+        sphere(*pin, 0.8, "pin_mat", sides=8)
+        pins[name] = pin
+    pins["pic_lanterns"] = (wall_x + 2.8, front + 336, 214.5)           # the red-lights photo (taped)
+    sphere(*pins["pic_lanterns"], 0.8, "pin_mat", sides=8)
+    for a, b in (("pic_note_names", "pic_lake_map"), ("pic_lake_map", "pic_lanterns"),
+                 ("pic_lanterns", "pic_note_lights"), ("pic_note_lights", "pic_note_night"),
+                 ("pic_note_names", "pic_clipping"), ("pic_note_rattle", "pic_lake_map")):
+        p, q = pins[a], pins[b]
+        m = ((p[0] + q[0]) / 2.0 + 0.3, (p[1] + q[1]) / 2.0, (p[2] + q[2]) / 2.0 - 2.5)   # string sags a little
+        tube((p[0] + 0.2, p[1], p[2]), m, 0.22, "red_string_mat", sides=4)
+        tube(m, (q[0] + 0.2, q[1], q[2]), 0.22, "red_string_mat", sides=4)
+
+
+def cobweb(corner, a_dir, b_dir, size, ceiling_z):
+    """A web strung across a top corner, 1.5 cm off both walls and the ceiling: spokes fanning
+    from the corner to the edges of a triangle (along both walls and down the corner), and
+    rings of sagging cross threads. a_dir / b_dir: +-1 directions along x and y into the room."""
+    cx, cy = corner
+    o = 1.5
+    c = (cx + a_dir * o, cy + b_dir * o, ceiling_z - o)
+    A = (cx + a_dir * size, cy + b_dir * o, ceiling_z - o)
+    B = (cx + a_dir * o, cy + b_dir * size * 0.85, ceiling_z - o)
+    C = (cx + a_dir * o, cy + b_dir * o, ceiling_z - size * 0.9)
+    lerp = lambda p, q, t: tuple(p[i] + (q[i] - p[i]) * t for i in range(3))
+    ends = [lerp(A, B, t) for t in (0, 0.33, 0.66)] + [lerp(B, C, t) for t in (0, 0.33, 0.66)] + \
+           [lerp(C, A, t) for t in (0, 0.33, 0.66)]
+    for e in ends:
+        tube(c, e, 0.32, "cobweb_mat", sides=4)
+    for f in (0.22, 0.4, 0.58, 0.76, 0.95):
+        ring_pts = [lerp(c, e, f) for e in ends] + [lerp(c, ends[0], f)]
+        for p, q in zip(ring_pts, ring_pts[1:]):
+            m = lerp(p, q, 0.5)
+            m = (m[0], m[1], m[2] - 1.2 * f)                              # sag
+            tube(p, m, 0.24, "cobweb_mat", sides=3)
+            tube(m, q, 0.24, "cobweb_mat", sides=3)
+    for e, droop in ((ends[1], 14), (ends[7], 9)):                        # loose strands hanging down
+        tube(lerp(c, e, 0.8), (lerp(c, e, 0.8)[0], lerp(c, e, 0.8)[1], lerp(c, e, 0.8)[2] - droop), 0.2, "cobweb_mat", sides=3)
