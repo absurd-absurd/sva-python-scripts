@@ -34,6 +34,10 @@ FRONT, BACK, H = -1400, -700, 320                     # front wall y, back wall 
 WALK = 300                                            # covered walkway depth
 OFFICE = (3050, 3750, -1750, -850, 340)               # x0, x1, y0 (front), y1, height
 LOT_Z = 3                                             # parking lot surface height
+# Flat things lying on the lot/road each get their own height (tops 8 mm apart). Closer than
+# that, two overlapping surfaces "z-fight": the GPU can't tell which is in front and they
+# flash in and out as you move.
+DECAL_H = {"stain": 0.8, "patch": 1.6, "crack": 2.4, "paint": 3.2}
 
 MATS = {
     "brick_mat": (0.45, 0.25, 0.2), "plaster_mat": (0.75, 0.7, 0.6), "trim_mat": (0.25, 0.22, 0.2),
@@ -234,9 +238,10 @@ def room_inside(x0, x1):
     Every room has the same layout; Room 104 (Cas's) gets its clues from clues.json."""
     t = 20
     mid = (FRONT + BACK) / 2.0
+    # side walls stop 1 cm short of the front wall's outer face: flush, they flashed through it
     box(x0, x1, BACK - t, BACK, 0, H, "plaster_mat")                         # back
-    box(x0, x0 + t, FRONT, BACK, 0, H, "plaster_mat")                        # left
-    box(x1 - t, x1, FRONT, BACK, 0, H, "plaster_mat")                        # right
+    box(x0, x0 + t, FRONT + 1, BACK, 0, H, "plaster_mat")                    # left
+    box(x1 - t, x1, FRONT + 1, BACK, 0, H, "plaster_mat")                    # right
     # the front wall is the motel's face, lit by the sign: it stays in the outside mesh, and a
     # thin lining on its inside face belongs to the room
     IN_ROOM[0] = False
@@ -244,10 +249,10 @@ def room_inside(x0, x1):
     box(x0 + 280, x1, FRONT, FRONT + t, 0, H, "plaster_mat")                 # front, right of door
     box(x0 + 140, x0 + 280, FRONT, FRONT + t, 230, H, "plaster_mat")         # above door
     IN_ROOM[0] = True
-    box(x0 + t, x0 + 140, FRONT + t, FRONT + t + 0.5, 0, H - 10, "plaster_mat")
-    box(x0 + 280, x1 - t, FRONT + t, FRONT + t + 0.5, 0, H - 10, "plaster_mat")
-    box(x0 + 140, x0 + 280, FRONT + t, FRONT + t + 0.5, 230, H - 10, "plaster_mat")
-    box(x0, x1, FRONT, BACK, H - 10, H, "plaster_mat")                       # ceiling
+    box(x0 + t, x0 + 140, FRONT + t + 1, FRONT + t + 2, 0, H - 10, "plaster_mat")
+    box(x0 + 280, x1 - t, FRONT + t + 1, FRONT + t + 2, 0, H - 10, "plaster_mat")
+    box(x0 + 140, x0 + 280, FRONT + t + 1, FRONT + t + 2, 230, H - 10, "plaster_mat")
+    box(x0 + 1, x1 - 1, FRONT + 1, BACK - 1, H - 10, H - 1, "plaster_mat")   # ceiling (clear of the awning and front wall)
     box(x0 + t, x1 - t, FRONT + t, BACK - t, 0, 2, "carpet_mat")             # carpet
     # bed: frame, mattress, pillow, headboard
     bx0, bx1 = x0 + 220, x1 - 40
@@ -312,7 +317,7 @@ def room_104(x0, x1):
     rbox(bx0 + 70, BACK - 50, 72, 85, 38, 14, "pillow_mat", yaw=-8)
     rbox(bx1 - 60, BACK - 58, 70, 80, 36, 12, "pillow_mat", yaw=14, tilt_x=6)
     for _ in range(5):                                                                    # old stains
-        rbox(rng.uniform(bx0 + 30, bx1 - 30), rng.uniform(BACK - 120, BACK - 90), 58.3,
+        rbox(rng.uniform(bx0 + 30, bx1 - 30), rng.uniform(BACK - 120, BACK - 90), 59.0,
              rng.uniform(10, 30), rng.uniform(8, 22), 0.4, "stain_sheet_mat", yaw=rng.uniform(0, 90))
     # her sneakers by the bed, side by side
     for dx in (0, 14):
@@ -334,17 +339,17 @@ def room_104(x0, x1):
         for dy in (-29, 29):
             tube((tx + dx, ty + dy, 0), (tx + dx, ty + dy, tz - 4), 2, "metal_mat", sides=4)
     tube((tx - 18, ty - 10, tz), (tx - 18, ty - 10, tz + 9), 4, "mug_mat", sides=8)       # mug
-    tube((tx - 18, ty - 10, tz + 7.5), (tx - 18, ty - 10, tz + 8), 3.4, "coffee_mat", sides=8)
+    tube((tx - 18, ty - 10, tz + 7.5), (tx - 18, ty - 10, tz + 8.5), 3.4, "coffee_mat", sides=8)
     tube((tx + 18, ty + 14, tz), (tx + 18, ty + 14, tz + 12), 7, "pot_mat", sides=8)       # pot
-    tube((tx + 18, ty + 14, tz + 11), (tx + 18, ty + 14, tz + 11.5), 6.4, "soil_mat", sides=8)
+    tube((tx + 18, ty + 14, tz + 10), (tx + 18, ty + 14, tz + 11), 6.4, "soil_mat", sides=8)
     for i in range(6):                                                                    # dead stems
         a = i * 1.05
         top = (tx + 18 + math.cos(a) * 9, ty + 14 + math.sin(a) * 9, tz + 26 + rng.uniform(-4, 6))
         tube((tx + 18, ty + 14, tz + 11), top, 0.6, "twig_mat", sides=3)
         tube(top, (top[0] + math.cos(a) * 6, top[1] + math.sin(a) * 6, top[2] - 7), 0.5, "twig_mat", sides=3)  # drooping
     for _ in range(4):                                                                    # dead leaves
-        rbox(tx + rng.uniform(-5, 38), ty + rng.uniform(-10, 30), tz + 0.3, 4, 2.5, 0.3, "leaf_dead_mat", yaw=rng.uniform(0, 180))
-    for i, (px, py, pz, yw) in enumerate(((tx - 20, ty + 18, tz + 0.4, 18), (tx - 5, ty + 26, tz + 0.6, -25),
+        rbox(tx + rng.uniform(-5, 38), ty + rng.uniform(-10, 30), tz + 2.2, 4, 2.5, 0.3, "leaf_dead_mat", yaw=rng.uniform(0, 180))
+    for i, (px, py, pz, yw) in enumerate(((tx - 20, ty + 18, tz + 0.6, 18), (tx - 5, ty + 26, tz + 1.4, -25),
                                           (tx - 40, ty + 60, 2.6, 40))):                  # torn diary pages
         rbox(px, py, pz, 15, 20, 0.4, "page_mat", yaw=yw)
     # chair at the table with her jacket over the back
@@ -377,10 +382,10 @@ def room_104(x0, x1):
         pz = 172 + row * 34 + rng.uniform(-3, 3)
         spin = rng.uniform(-6, 6)
         rbox(inner_l + 0.6, py, pz, 1, 30, 23, "photo_border_mat", tilt_y=spin)
-        picture(inner_l + 1.2, py, pz + 1, 26, 19.5, PHOTOS[i % len(PHOTOS)], spin=spin)
-        rbox(inner_l + 1.6, py, pz + 11, 1, 8, 3, "tape_mat")
+        picture(inner_l + 2.0, py, pz + 1, 26, 19.5, PHOTOS[i % len(PHOTOS)], spin=spin)
+        rbox(inner_l + 3.0, py, pz + 11, 1, 8, 3, "tape_mat")
     rbox(inner_l + 0.6, FRONT + 296, 206, 1, 30, 23, "photo_border_mat", tilt_y=4)
-    picture(inner_l + 1.2, FRONT + 296, 207, 26, 19.5, "pic_lanterns", spin=4)    # red lights out on the water
+    picture(inner_l + 2.0, FRONT + 296, 207, 26, 19.5, "pic_lanterns", spin=4)    # red lights out on the water
     cam_x, cam_y = inner_l + 25, FRONT + 352
     rbox(cam_x, cam_y, 85, 9, 14, 9, "camera_mat", yaw=20)
     tube((cam_x + 4, cam_y + 1, 85), (cam_x + 11, cam_y + 3, 85), 3.2, "camera_mat", sides=8)
@@ -397,7 +402,8 @@ def room_104(x0, x1):
 
     # --- a year of damp: ceiling stain with a drip streak, peeling wallpaper, cobwebs
     for r, ox, oy, mat in ((60, 0, 0, "stain_wall_mat"), (40, 25, 20, "stain_dark_mat"), (25, -20, 30, "stain_dark_mat")):
-        tube((x0 + 300 + ox, FRONT + 330 + oy, H - 10.4 - r * 0.001), (x0 + 300 + ox, FRONT + 330 + oy, H - 10.2), r,
+        zb = H - 11 - (60 - r) * 0.04                      # overlapping stains 8 mm apart, under the ceiling
+        tube((x0 + 300 + ox, FRONT + 330 + oy, zb), (x0 + 300 + ox, FRONT + 330 + oy, zb + 0.5), r,
              mat, sides=10)
     rbox(inner_r - 0.6, BACK - 300, 220, 1, 6, 170, "stain_wall_mat")                     # streak down the wall
     rbox(inner_r - 0.6, BACK - 285, 260, 1, 30, 90, "stain_wall_mat")
@@ -679,12 +685,12 @@ LOT = (-4000, 4000, -3800, -1700)        # x0, x1, y0 (road side), y1 (walkway e
 rng = random.Random(41)                  # same cracks and stains every build
 
 
-def flat(x0, x1, y0, y1, mat, h=0.4, z=LOT_Z):
+def flat(x0, x1, y0, y1, mat, h=DECAL_H["paint"], z=LOT_Z):
     """A thin flat piece lying on the lot (paint, patches)."""
     return box(x0, x1, y0, y1, z, z + h, mat)
 
 
-def seg(p0, p1, width, mat, z=LOT_Z, h=0.5):
+def seg(p0, p1, width, mat, z=LOT_Z, h=DECAL_H["paint"]):
     """A thin strip from p0 to p1 on the ground, any angle (cracks, road lines)."""
     dx, dy = p1[0] - p0[0], p1[1] - p0[1]
     length = math.hypot(dx, dy)
@@ -694,7 +700,7 @@ def seg(p0, p1, width, mat, z=LOT_Z, h=0.5):
     return keep(b, mat)
 
 
-def blot(x, y, r, mat, z=LOT_Z, h=0.3):
+def blot(x, y, r, mat, z=LOT_Z, h=DECAL_H["stain"]):
     """A round flat stain."""
     c = cmds.polyCylinder(r=r, h=h, sx=10, sy=1, sz=0, ch=False)[0]
     cmds.scale(1, 1, rng.uniform(0.6, 1.0), c)
@@ -709,10 +715,10 @@ def crack(x, y, steps, length):
     for _ in range(steps):
         ang += rng.uniform(-0.7, 0.7)
         nx, ny = x + math.cos(ang) * length, y + math.sin(ang) * length
-        seg((x, y), (nx, ny), rng.uniform(2.5, 5), "crack_mat", h=0.6)
+        seg((x, y), (nx, ny), rng.uniform(2.5, 5), "crack_mat", h=DECAL_H["crack"])
         if rng.random() < 0.3:                               # a branch off the side
             bx, by = x + math.cos(ang + 1.2) * length * 0.6, y + math.sin(ang + 1.2) * length * 0.6
-            seg((x, y), (bx, by), 2.5, "crack_mat", h=0.6)
+            seg((x, y), (bx, by), 2.5, "crack_mat", h=DECAL_H["crack"])
         x, y = nx, ny
 
 
@@ -731,9 +737,9 @@ def parking_lot():
     for k in range(4):
         x = 2800 + k * 260
         flat(x - 6, x + 6, -2700, -2150, "paint_mat")
-    seg((1200, -3050), (1200, -3350), 14, "paint_mat", h=0.4)
-    seg((1200, -3350), (1150, -3270), 14, "paint_mat", h=0.4)
-    seg((1200, -3350), (1250, -3270), 14, "paint_mat", h=0.4)
+    seg((1200, -3050), (1200, -3350), 14, "paint_mat")
+    seg((1200, -3350), (1150, -3270), 14, "paint_mat")
+    seg((1200, -3350), (1250, -3270), 14, "paint_mat")
     # cracks, patched holes and oil stains
     for _ in range(26):
         crack(rng.uniform(LOT[0] + 200, LOT[1] - 200), rng.uniform(LOT[2] + 100, LOT[3] - 100),
@@ -741,7 +747,7 @@ def parking_lot():
     for _ in range(9):
         x, y = rng.uniform(LOT[0] + 300, LOT[1] - 300), rng.uniform(LOT[2] + 200, LOT[3] - 300)
         w, d = rng.uniform(120, 380), rng.uniform(80, 260)
-        flat(x, x + w, y, y + d, "patch_mat", h=0.35)
+        flat(x, x + w, y, y + d, "patch_mat", h=DECAL_H["patch"])
     for k in range(12):
         if rng.random() < 0.6:
             blot(X0 + k * 250 + 125 + rng.uniform(-30, 30), FRONT - WALK - 380 + rng.uniform(-60, 60),
@@ -754,11 +760,11 @@ def road_lines():
     """Old Lake Road: dashed yellow centre line, faded white edge lines."""
     y, z = -4500, 2.0
     for x in range(-19800, 19800, 900):
-        seg((x, y), (x + 420, y), 12, "paint_yellow_mat", z=z, h=0.4)
+        seg((x, y), (x + 420, y), 12, "paint_yellow_mat", z=z, h=1.0)
     for edge in (-4060, -4940):
         for x in range(-19800, 19800, 1200):
             if rng.random() < 0.8:
-                seg((x, edge), (x + rng.uniform(600, 1150), edge), 10, "paint_mat", z=z, h=0.4)
+                seg((x, edge), (x + rng.uniform(600, 1150), edge), 10, "paint_mat", z=z, h=1.0)
 
 
 def lot_lamp(x, y, working):

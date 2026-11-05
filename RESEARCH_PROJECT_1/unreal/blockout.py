@@ -186,7 +186,7 @@ def trail():
     dirt = color("Dirt", (0.09, 0.07, 0.05))
     # a gap in the fence where the trail starts
     for i in range(len(TRAIL) - 1):
-        strip(f"Trail{i}", "Woods/Trail", TRAIL[i], TRAIL[i + 1], 260, dirt, z=1.5)
+        strip(f"Trail{i}", "Woods/Trail", TRAIL[i], TRAIL[i + 1], 260, dirt, z=1.0)   # top 1 cm under the parking lot (flush, they flickered)
 
 
 def structures():

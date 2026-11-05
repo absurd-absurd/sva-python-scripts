@@ -128,3 +128,23 @@ It's held off to the right and bobs with every step, so its hard, low-resolution
 band beside the TV and dresser, the patch by the chair, the post and frame edges on the walkway)
 jittered and crawled all the time. Rows: now · shadows off · softer, sharper shadows (only blurs it).
 **Fix: flashlight casts no shadows.**
+
+### What you actually meant: textures flashing in and out (z-fighting)
+
+![Z-fighting test](2026-11-05_zfighting_test.png)
+
+Your note: "I'm talking about all the textures that keep flashing in and out of the screen."
+That's **z-fighting**: two surfaces in (almost) the same place, so the GPU can't tell which is
+in front and they flash between each other as you move. Found and fixed:
+- **Parking lot:** paint lines, cracks, patches and oil stains were 3-6 mm apart and overlapping.
+  Now each kind has its own layer, 8 mm apart (stains 0.8 cm, patches 1.6, cracks 2.4, paint 3.2).
+- **Road lines** 4 mm above the road: now 1 cm. **Trail** top 5 mm under the lot: now 1 cm.
+- **Motel front:** the room side walls and ceilings were flush with the outside wall. Once the
+  room insides got their own lighting this morning, they flashed through as dark/red strips.
+  They now stop 1 cm short.
+- **Room 104:** photos 1 mm off their borders (now 8 mm), bed stains under the sheet, papers/leaves
+  on the table, ceiling stains on the ceiling.
+- Also off: occlusion culling (objects popping in late at the screen edge when you turn).
+
+Test: two screenshots 2 cm apart. White = pixels that changed a lot: only outlines moving by a
+pixel and the dead "M" (it flickers on purpose). Nothing flashes on the lot or the walls.
