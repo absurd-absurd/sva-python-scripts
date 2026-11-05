@@ -63,6 +63,7 @@ MATS = {
     "shoe_inner_mat": (0.05, 0.05, 0.05), "jacket_cuff_mat": (0.08, 0.1, 0.08),
     "pic_note_names": (1, 1, 1), "pic_note_night": (1, 1, 1), "pic_note_lights": (1, 1, 1), "pic_note_rattle": (1, 1, 1),
     "pic_note_scrawl": (1, 1, 1), "pic_clipping": (1, 1, 1), "pic_lake_map": (1, 1, 1),
+    "pic_page_1": (1, 1, 1), "pic_page_2": (1, 1, 1), "pic_page_3": (1, 1, 1), "pen_mat": (0.05, 0.07, 0.2),
     "chair_mat": (0.85, 0.85, 0.8), "metal_mat": (0.3, 0.3, 0.3), "ice_mat": (0.8, 0.82, 0.85),
     # the lot and the car
     "paint_mat": (0.55, 0.54, 0.48), "paint_yellow_mat": (0.55, 0.45, 0.12), "crack_mat": (0.015, 0.015, 0.015),
@@ -311,17 +312,12 @@ def room_104(x0, x1):
     bevel_box(bx0 + 3, bx1 - 3, BACK - 247, BACK - 30, 44, 57.3, "sheet_mat", r=5.5, seg=3)
     for k, (dx, dy, w, d, h, yw) in enumerate(((-50, -215, 120, 60, 9, 3), (40, -210, 110, 70, 11, -4),
                                                (-10, -180, 210, 26, 13, 2), (70, -175, 70, 30, 11, 8))):
+        flat = k == 0                                                                   # the note lies on this one
         rsoft((bx0 + bx1) / 2.0 + dx, BACK + dy, 57 + h / 2.0, w, d, h, "bedspread_mat",   # bedspread thrown back,
-              jitter=1.2, sag=-1.5, seed=40 + k, yaw=yw)                                # bunched at the foot
+              jitter=0.3 if flat else 1.2, sag=0 if flat else -1.5, seed=40 + k, yaw=yw)  # bunched at the foot
     rsoft(bx1 + 3, BACK - 205, 40, 5, 80, 38, "bedspread_mat", jitter=1.5, seed=45, tilt_x=10)   # hanging off the side
     rsoft(bx0 + 70, BACK - 50, 64.5, 85, 38, 14, "pillow_mat", sag=4, jitter=0.8, seed=46, yaw=-8)
     rsoft(bx1 - 60, BACK - 58, 64, 80, 36, 12, "pillow_mat", sag=3, jitter=0.8, seed=47, yaw=14, tilt_x=6)
-    for _ in range(5):                                                                    # old stains: dark, round, uneven
-        frustum(rng.uniform(bx0 + 30, bx1 - 30), rng.uniform(BACK - 112, BACK - 92), 57.65, 57.95,   # clear of the note
-                rng.uniform(5, 11), rng.uniform(5, 11), "stain_sheet_mat", sides=10, sx=1.0, sy=rng.uniform(0.55, 1.0))
-    # her sneakers by the bed, side by side
-    for k, dx in enumerate((0, 14)):
-        sneaker(bx0 - 30 + dx, BACK - 215, 4 + dx * 0.3, seed=50 + k)
 
     # --- nightstand: red bulb in the lamp, her diary with pages torn out
     lx, ly = x0 + 180, BACK - 47
@@ -338,9 +334,10 @@ def room_104(x0, x1):
     plant_pot(tx + 18, ty + 14, tz, rng)
     for _ in range(4):                                                                    # dead leaves
         rbox(tx + rng.uniform(-5, 38), ty + rng.uniform(-10, 30), tz + 2.2, 4, 2.5, 0.3, "leaf_dead_mat", yaw=rng.uniform(0, 180))
-    for i, (px, py, pz, yw) in enumerate(((tx - 20, ty + 18, tz + 0.6, 18), (tx - 5, ty + 26, tz + 1.4, -25),
-                                          (tx - 40, ty + 60, 3.0, 40))):                  # torn diary pages
-        rbox(px, py, pz, 15, 20, 0.4, "page_mat", yaw=yw)
+    for k, (px, py, pz, yw) in enumerate(((tx - 20, ty + 18, tz + 0.6, 18), (tx - 5, ty + 26, tz + 1.4, -25),
+                                          (tx - 40, ty + 60, 3.0, 40))):                  # torn diary pages, written on
+        flat_picture(px, py, pz, 15, 20, f"pic_page_{k + 1}", yaw=yw)
+    pen(tx + 5, ty - 22, tz, 32)
     # chair at the table with her jacket over the back
     cx_, cy_ = tx, ty + 70
     wood_chair(cx_, cy_, rng)

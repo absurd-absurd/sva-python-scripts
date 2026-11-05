@@ -316,7 +316,6 @@ def wood_chair(cx, cy, rng):
         frustum(cx + dx, cy + 17, 0, 92, 1.6, 2.0, "wood_mat", sides=8)                   # back posts
     for k, z in enumerate((62, 74, 86)):
         rbevel(cx, cy + 17, z, 34, 2, 6 if k < 2 else 9, "wood_mat", r=0.8)
-    jacket(cx, cy + 17, 92)
 
 
 def _drape(path, width, rows, cols, flare, folds, seed):
@@ -439,7 +438,7 @@ def investigation_wall(wall_x, front):
     sphere(*pins["pic_lanterns"], 0.8, "pin_mat", sides=8)
     for a, b in (("pic_note_names", "pic_lake_map"), ("pic_lake_map", "pic_lanterns"),
                  ("pic_lanterns", "pic_note_lights"), ("pic_note_lights", "pic_note_night"),
-                 ("pic_note_names", "pic_clipping"), ("pic_note_rattle", "pic_lake_map")):
+                 ("pic_note_rattle", "pic_lake_map")):
         p, q = pins[a], pins[b]
         m = ((p[0] + q[0]) / 2.0 + 0.3, (p[1] + q[1]) / 2.0, (p[2] + q[2]) / 2.0 - 2.5)   # string sags a little
         tube((p[0] + 0.2, p[1], p[2]), m, 0.22, "red_string_mat", sides=4)
@@ -470,3 +469,21 @@ def cobweb(corner, a_dir, b_dir, size, ceiling_z):
             tube(m, q, 0.24, "cobweb_mat", sides=3)
     for e, droop in ((ends[1], 14), (ends[7], 9)):                        # loose strands hanging down
         tube(lerp(c, e, 0.8), (lerp(c, e, 0.8)[0], lerp(c, e, 0.8)[1], lerp(c, e, 0.8)[2] - droop), 0.2, "cobweb_mat", sides=3)
+
+
+def flat_picture(cx, cy, z, w, h, mat, yaw=0):
+    """A picture lying flat, face up (a torn page on a table or the floor)."""
+    p = cmds.polyPlane(w=w, h=h, sx=1, sy=1, ch=False)[0]
+    return _place(p, cx, cy, z, mat, yaw=yaw)
+
+
+def pen(cx, cy, z, yaw):
+    """A ballpoint lying on the table: barrel, cap with a clip, a little cone tip."""
+    a = math.radians(yaw)
+    fx, fy = math.cos(a), math.sin(a)
+    p = lambda d, up=0.0: (cx + fx * d, cy + fy * d, z + 0.5 + up)
+    tube(p(-6.5), p(4.5), 0.45, "chair_mat", sides=8)
+    tube(p(4.5), p(6.0), 0.35, "chair_mat", sides=8)
+    frustum(*p(6.0)[:2], z + 0.32, z + 0.68, 0.18, 0.18, "metal_mat", sides=6)
+    tube(p(-7.0), p(-3.0), 0.52, "pen_mat", sides=8)                                   # cap
+    rbox(*p(-4.8)[:2], z + 1.05, 3.4, 0.35, 0.25, "metal_mat", yaw=yaw)                # clip

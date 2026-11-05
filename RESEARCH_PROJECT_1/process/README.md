@@ -206,3 +206,19 @@ weird item on the left wall, and cobwebs more noticeable and not in every corner
   soil, nine curving drooping stems with curled leaves.
 - **Left wall:** the "weird item" was the water streak (two flat slabs); removed.
 - **Cobwebs:** one big web in the back corner over the bed, one small one over the door.
+
+### Note on the bedspread, cleaner bed and wall, written pages, a pen, a patterned carpet
+
+![Carpet pattern](2026-11-05_carpet_pattern.png)
+![Room 104 now](2026-11-05_room104_carpet_note_pages.png)
+
+Your notes: move the note onto the blanket, get rid of the shoes, the stains on the bed, the red string
+going over the photos and the jacket; scribbles on the papers on the table and floor; a pen on the table;
+a pattern on the carpet.
+- The note (clue) now lies on the bunched bedspread at the foot of the bed (that lump has a flatter top).
+- Shoes, bed stains, jacket and the string across the photos removed.
+- The torn pages are her diary pages (ruled lines, red margin, torn edge, handwriting), and a ballpoint
+  pen with its cap and clip lies by the mug.
+- Carpet: `tools/make_carpet.py` draws a worn 70s motel pattern (mustard diamond lattice, rust
+  centres, dots on dark olive-brown) woven into the photo carpet so it still looks like pile; tiles
+  seamlessly, one repeat per 1.6 m, toned down so it looks worn. In every room.

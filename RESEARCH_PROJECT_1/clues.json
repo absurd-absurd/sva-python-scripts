@@ -50,7 +50,7 @@
     {
       "id": "note_bed",
       "shape": "paper",
-      "at": [-660, -850, 58], "yaw": 20,
+      "at": [-708, -914, 66.3], "yaw": 15,
       "title": "A note on the bed",
       "body": "[TEST NOTE]\n\nBug,\n\nIf you're reading this, you came. I knew you would. The office key is still in this room. Don't let them see you take it.\n\n- Cas",
       "journal": "Cas left a note on the bed in Room 104. The office key is somewhere in her room.",

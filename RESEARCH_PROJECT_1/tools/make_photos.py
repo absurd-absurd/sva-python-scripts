@@ -181,6 +181,30 @@ def lake_map(name, seed):
     im.save(os.path.join(OUT, name + ".png"))
 
 
+def diary_page(name, words, seed):
+    """A page torn out of her diary: ruled lines, a red margin, a ragged torn edge on the
+    left, and her handwriting (mostly unreadable scrawl, a few words pressed hard)."""
+    from PIL import ImageFont
+    rng = random.Random(seed)
+    w, h = 120, 160
+    im = _paper(w, h, rng, tint=(222, 216, 196))
+    d = ImageDraw.Draw(im)
+    for y in range(18, h - 6, 11):
+        d.line([(0, y), (w, y)], fill=(150, 160, 185), width=1)
+    d.line([(20, 0), (20, h)], fill=(190, 90, 90), width=1)
+    f = ImageFont.truetype(INK_FONT, 13)
+    y = 8
+    for word in words:
+        if word == "~":
+            _scrawl(d, 24, y + 6, w - 30 - rng.randint(0, 28), rng, height=3)
+        else:
+            d.text((24 + rng.randint(0, 6), y - 1), word, font=f, fill=INK)
+        y += 11
+    for y in range(0, h, 3):                                             # torn edge: ragged dark bite
+        d.line([(0, y), (rng.randint(1, 6), y)], fill=(120, 110, 90), width=3)
+    im.save(os.path.join(OUT, name + ".png"))
+
+
 def notes():
     def arrow(d, im, rng):
         d.line([(20, im.height - 30), (im.width - 30, im.height - 50)], fill=RED, width=2)
@@ -199,6 +223,9 @@ def notes():
         ("the rattle", 16, INK, False), ("stops when", 14, INK, False), ("I stop", 16, RED, True), ("~", 0, 0, 0), ("~", 0, 0, 0),
         ("~", 0, 0, 0)], seed=4)
     note("pic_note_scrawl", 120, 150, [("~", 0, 0, 0)] * 6 + [("don't stay", 15, INK, False), ("past dark", 15, RED, False)], seed=5)
+    for k, words in enumerate((["Oct", "~", "~", "they knew", "~", "~", "~"], ["~", "~", "the lake", "~", "~", "don't", "~", "~"],
+                               ["Bug -", "~", "~", "~", "I'm sorry", "~", "~"])):
+        diary_page(f"pic_page_{k + 1}", words, seed=10 + k)
     clipping("pic_clipping", seed=6)
     lake_map("pic_lake_map", seed=7)
     print("notes: names, night, lights, rattle, scrawl, clipping, lake map")
