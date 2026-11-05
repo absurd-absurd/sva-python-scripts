@@ -278,8 +278,6 @@ def weather():
         ("vignette_intensity", 0.35),
         ("film_grain_intensity", 0.5),
         ("bloom_intensity", 6.0),                   # big halo around the neon (picked from test shots)
-        ("motion_blur_amount", 0.0),                 # off: smeared/ghosted everything when you turned
-        ("ambient_occlusion_intensity", 0.0),        # off: SSAO flickers in noisy blocks without anti-aliasing
     ):
         s.set_editor_property("override_" + name, True)
         s.set_editor_property(name, value)
