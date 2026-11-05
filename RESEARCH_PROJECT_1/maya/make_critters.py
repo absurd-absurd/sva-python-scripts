@@ -32,6 +32,7 @@ COLORS = {
     "critter_owl_eye_mat": (1.0, 0.72, 0.1), "critter_snag_mat": (0.2, 0.17, 0.14),
     "critter_cat_mat": (0.022, 0.021, 0.024), "critter_cat_eye_mat": (0.55, 0.9, 0.25),
     "critter_catsit_mat": (0.022, 0.021, 0.024), "critter_catsit_eye_mat": (0.55, 0.9, 0.25),
+    "critter_cateyes_mat": (0.55, 0.9, 0.25),
 }
 
 
@@ -217,7 +218,15 @@ def catsit():
     _limb(pts, [1.7, 1.6, 1.5, 1.4, 1.2, 1.05, 0.95], m, sides=8)                          # tail round the front
 
 
-KINDS = {"cat": cat, "catsit": catsit, "crow": crow, "owl": owl, "snag": snag, "moth": moth, "firefly": firefly, "gnat": gnat, "bat": bat, "flock": flock_bird}
+def cateyes():
+    """Two glowing almond eyes for the Fab black cat (that model's eyes are only painted on), in
+    the Fab model's own coordinates (its face is turned a little to +x). unreal/critters.py puts
+    them with each Fab cat, so they walk, turn and shine with it."""
+    for s_ in (-1, 1):
+        sphere(15.2 + s_ * 3.7, 36.8, 51.2, 1.55, "critter_cateyes_mat", sides=12, scale=(1.3, 0.55, 0.8))
+
+
+KINDS = {"cateyes": cateyes, "cat": cat, "catsit": catsit, "crow": crow, "owl": owl, "snag": snag, "moth": moth, "firefly": firefly, "gnat": gnat, "bat": bat, "flock": flock_bird}
 
 
 def export_one(kind):

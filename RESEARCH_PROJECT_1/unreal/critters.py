@@ -69,36 +69,38 @@ if (Mode > 4.5) {                                          // the black cat walk
     face = normalize(lerp(face, away, push) + 1e-4);
     float a = atan2(-face.x, face.y);
     float moving = saturate((1 - ease) + push);
-    float3 l = L;
-    // legs: everything below 16 cm swings from the hip and lifts on the way forward
-    float leg = saturate((16.0 - L.z) / 16.0);
+    // shape thresholds below are in the model's own size (Fab cat); Body = how much it's scaled
+    float3 l = L / max(Body, 0.01);
+    float3 U = l;
+    // legs: everything below 20 cm swings from the hip and lifts on the way forward
+    float leg = saturate((20.0 - U.z) / 20.0);
     float ph = dist * 6.2832 / 34.0 + push * T * 9.0;      // one full stride per 34 cm
-    float off = (L.y > 0 ? 1.5708 : 0.0) + (L.x > 0 ? 3.1416 : 0.0);   // left hind, left fore, right hind, right fore
+    float off = (U.y > 0 ? 1.5708 : 0.0) + (U.x > 0 ? 3.1416 : 0.0);   // left hind, left fore, right hind, right fore
     l.y += sin(ph + off) * leg * 6.5 * moving;
     l.z += max(0.0, cos(ph + off)) * leg * 2.2 * moving;
     // body: a soft bob twice per stride and a slight sway
     l.z += sin(ph * 2.0) * 0.45 * moving * (1 - leg);
     l.x += sin(ph) * 0.6 * moving * (1 - leg);
     // tail: a slow wave travelling out to the tip
-    if (L.y < -18.0) {
-        float t = saturate((-L.y - 18.0) / 26.0);
+    if (U.y < -31.0) {
+        float t = saturate((-U.y - 31.0) / 22.0);
         l.x += sin(T * 1.1 - t * 2.6) * t * 7.0;
         l.z += sin(T * 0.7 - t * 2.0) * t * 2.5;
     }
     // sitting: hips down, front stays up
-    l.z -= ease * (1 - push) * saturate(-L.y / 18.0) * 8.0;
+    l.z -= ease * (1 - push) * saturate(-U.y / 25.0) * 10.0;
     // head: turns (smoothly, up to ~70 degrees) to watch you while you're within 20 m
-    if (L.y > 17.0 && L.z > 23.0) {
+    if (U.y > 20.0 && U.z > 40.0) {
         float2 toP = PPos.xy - (OPos.xy + p);
         float rel = atan2(-toP.x, toP.y) - a;
         rel = atan2(sin(rel), cos(rel));
         float h = clamp(rel, -1.2, 1.2) * saturate((2000.0 - length(toP)) / 500.0);
-        float2 q = l.xy - float2(0, 17.0);
-        l.xy = float2(0, 17.0) + float2(q.x * cos(h) - q.y * sin(h), q.x * sin(h) + q.y * cos(h));
+        float2 q = l.xy - float2(13.0, 20.0);
+        l.xy = float2(13.0, 20.0) + float2(q.x * cos(h) - q.y * sin(h), q.x * sin(h) + q.y * cos(h));
     }
     float2 lr = float2(l.x * cos(a) - l.y * sin(a), l.x * sin(a) + l.y * cos(a));
     float gone = saturate((d - 150.0) / 100.0);            // right next to you: it's gone
-    return float3(p, 0) + float3(lr, l.z) * gone - L;
+    return float3(p, 0) + float3(lr, l.z) * Body * gone - L;
 }
 if (Mode > 3.5) {                                          // owl: the head turns to watch you
     float2 toP = PPos.xy - OPos.xy;
@@ -161,14 +163,16 @@ KIND = {
     "owl":     dict(Mode=4, Speed=1, Radius=0, Height=25, Flap=0, Body=0, Glow=0, Bounds=3),
     "snag":    dict(Mode=9, Speed=0, Radius=0, Height=0, Flap=0, Body=0, Glow=0, Bounds=1),
     # cat: Speed cm/s, Radius / Height = half size of the rectangle it walks round the motel
-    "cat":     dict(Mode=5, Speed=30, Radius=1700, Height=625, Flap=0, Body=0, Glow=0, Bounds=120),
+    "cat":     dict(Mode=5, Speed=30, Radius=1700, Height=625, Flap=0, Body=0.75, Glow=0, Bounds=120),
     # watching cat: seen only between Radius and Height cm away (and only some of the time)
     "catsit":  dict(Mode=6, Speed=0, Radius=1100, Height=4500, Flap=0, Body=0, Glow=0, Bounds=3),
+    "cateyes": dict(Mode=9, Speed=0, Radius=0, Height=0, Flap=0, Body=0, Glow=0, Bounds=1),
 }
 SLOT = {    # per-part changes on top of the kind's settings
     "critter_owl_eye_mat": dict(Glow=5, Steady=1),
     "critter_cat_eye_mat": dict(Glow=150, Steady=2),        # eyeshine when you look right at it
     "critter_catsit_eye_mat": dict(Glow=150, Steady=2),
+    "critter_cateyes_mat": dict(Glow=150, Steady=2),
 }
 TEXTURE = {"critter_snag_mat": ("T_bark", 150)}
 
@@ -188,10 +192,14 @@ def critter_material():
     """M_PS2_Critter: a duplicate of M_PS2_Surface (which keeps its hand-connected World
     Position Offset wire on the custom node), with that node's code swapped for MOVE_HLSL and
     new inputs wired in, plus a blinking Emissive. Rebuilt from M_PS2_Surface every run."""
-    if lib.does_asset_exist(CRITTER):
-        unreal.get_editor_subsystem(unreal.AssetEditorSubsystem).close_all_editors_for_asset(unreal.load_asset(CRITTER))
-        lib.delete_asset(CRITTER)
-    m = lib.duplicate_asset(SURFACE, CRITTER)
+    # Unreal won't delete a material its instances still use, so it's built fresh under whichever
+    # of two names is free; finish_material() moves every critter instance onto it and removes the other
+    for name in (CRITTER, CRITTER + "_b"):
+        if lib.does_asset_exist(name):
+            unreal.get_editor_subsystem(unreal.AssetEditorSubsystem).close_all_editors_for_asset(unreal.load_asset(name))
+            lib.delete_asset(name)
+    free = next(n for n in (CRITTER, CRITTER + "_b") if not lib.does_asset_exist(n))
+    m = lib.duplicate_asset(SURFACE, free)
     wob = [c for c in _custom_nodes(m) if "Amount" in [str(i.get_editor_property("input_name")) for i in c.get_editor_property("inputs")]][0]
     pins = list(wob.get_editor_property("inputs"))
     for n in ("T", "OPos", "WPos", "Mode", "Speed", "Radius", "Height", "Flap", "Body", "PPos"):
@@ -201,7 +209,13 @@ def critter_material():
     wob.set_editor_property("inputs", pins)
     wob.set_editor_property("code", MOVE_HLSL)
     t = _expr(m, unreal.MaterialExpressionTime, -1100, 200)
-    opos = _expr(m, unreal.MaterialExpressionObjectPositionWS, -1100, 300)
+    # the critter's pivot in the world (local 0,0,0 -> world). Not ObjectPositionWS: that's the centre
+    # of the mesh's bounds, different for every mesh (the Fab cat's eyes drifted off its head)
+    zero = _expr(m, unreal.MaterialExpressionConstant3Vector, -1300, 300, constant=unreal.LinearColor(0, 0, 0, 0))
+    opos = _expr(m, unreal.MaterialExpressionTransformPosition, -1100, 300,
+                 transform_source_type=unreal.MaterialPositionTransformSource.TRANSFORMPOSSOURCE_LOCAL,
+                 transform_type=unreal.MaterialPositionTransformSource.TRANSFORMPOSSOURCE_WORLD)
+    MEL.connect_material_expressions(zero, "", opos, "")
     wpos = _expr(m, unreal.MaterialExpressionWorldPosition, -1100, 400,
                  world_position_shader_offset=unreal.WorldPositionIncludedOffsets.WPT_EXCLUDE_ALL_SHADER_OFFSETS)
     MEL.connect_material_expressions(t, "", wob, "T")
@@ -248,9 +262,41 @@ def critter_material():
     MEL.connect_material_expressions(a, "", b, "A")
     MEL.connect_material_expressions(steady, "", b, "B")
     MEL.connect_material_property(b, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    # UVMode 1: use the mesh's own UVs for Tex (and a normal map), for bought models like the
+    # Fab cat; 0 (default): the world projection every PS2 surface uses
+    tex = [e for e in unreal.ObjectIterator(unreal.MaterialExpressionTextureObjectParameter)
+           if e.get_outer() == m and str(e.get_editor_property("parameter_name")) == "Tex"][0]
+    proj = [e for e in unreal.ObjectIterator(unreal.MaterialExpressionMaterialFunctionCall) if e.get_outer() == m][0]
+    basemul = MEL.get_material_property_input_node(m, unreal.MaterialProperty.MP_BASE_COLOR)
+    uvs = _expr(m, unreal.MaterialExpressionTextureSample, -800, -650)
+    assert MEL.connect_material_expressions(tex, "", uvs, "Tex"), "texture sample: Tex pin"
+    uvmode = _expr(m, unreal.MaterialExpressionScalarParameter, -800, -750, parameter_name="UVMode", default_value=0.0)
+    pick = _expr(m, unreal.MaterialExpressionLinearInterpolate, -550, -600)
+    MEL.connect_material_expressions(proj, "XYZ Texture", pick, "A")
+    MEL.connect_material_expressions(uvs, "RGB", pick, "B")
+    MEL.connect_material_expressions(uvmode, "", pick, "Alpha")
+    MEL.connect_material_expressions(pick, "", basemul, "A")
+    nrm = _expr(m, unreal.MaterialExpressionTextureSampleParameter2D, -800, -900, parameter_name="NormalTex",
+                texture=unreal.load_asset("/Engine/EngineMaterials/FlatNormal"),
+                sampler_type=unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL)
+    MEL.connect_material_property(nrm, "RGB", unreal.MaterialProperty.MP_NORMAL)
     m.set_editor_property("two_sided", True)                      # thin wings seen from both sides
     MEL.recompile_material(m)
     lib.save_loaded_asset(m, False)
+    return finish_material(m)
+
+
+def finish_material(m):
+    mine = m.get_path_name().split(".")[0]
+    reg = unreal.AssetRegistryHelpers.get_asset_registry()
+    for a in reg.get_assets_by_path(DIR, recursive=False):
+        o = a.get_asset()
+        if isinstance(o, unreal.MaterialInstanceConstant):
+            o.set_editor_property("parent", m)
+            lib.save_loaded_asset(o, False)
+    for name in (CRITTER, CRITTER + "_b", CRITTER + "_build"):
+        if name != mine and lib.does_asset_exist(name):
+            lib.delete_asset(name)                       # nothing uses it now
     return m
 
 
@@ -285,8 +331,41 @@ def instance(kind, slot, mat, rgb):
     return mi
 
 
-def place(kind, mesh, mis, at, yaw=0.0):
+CAT_SCALE = 0.75          # the Fab cat is modelled bigger than a real cat
+
+
+def fab_cat(mat):
+    """The black cat the user added from Fab (Content/Fab/Black_Cat...): its mesh, and two
+    M_PS2_Critter instances (walking / watching) that use its own textures through its UVs."""
+    reg = unreal.AssetRegistryHelpers.get_asset_registry()
+    found = [a for a in reg.get_assets_by_path("/Game/Fab", recursive=True)]
+    mesh = next((a.get_asset() for a in found if str(a.asset_class_path.asset_name) == "StaticMesh" and "cat" in str(a.asset_name).lower()), None)
+    if not mesh:
+        print("no Fab cat found")
+        return None
+    tex = {str(a.asset_name): a.get_asset() for a in found if str(a.asset_class_path.asset_name) == "Texture2D"}
+    nanite = mesh.get_editor_property("nanite_settings")
+    nanite.set_editor_property("enabled", False)
+    mesh.set_editor_property("nanite_settings", nanite)
+    lib.save_loaded_asset(mesh, False)
+    mis = {}
+    for kind in ("cat", "catsit"):
+        mi = instance(kind, "critter_fabcat_mat", mat, (1.0, 1.0, 1.0))
+        base = next((t for n, t in tex.items() if "base" in n.lower()), None)
+        normal = next((t for n, t in tex.items() if "normal" in n.lower()), None)
+        if base:
+            MEL.set_material_instance_texture_parameter_value(mi, "Tex", base)
+        if normal:
+            MEL.set_material_instance_texture_parameter_value(mi, "NormalTex", normal)
+        MEL.set_material_instance_scalar_parameter_value(mi, "UVMode", 1.0)
+        lib.save_loaded_asset(mi, False)
+        mis[kind] = mi
+    return mesh, mis
+
+
+def place(kind, mesh, mis, at, yaw=0.0, scale=1.0):
     a = actors.spawn_actor_from_object(mesh, unreal.Vector(*at), unreal.Rotator(0, 0, yaw))
+    a.set_actor_scale3d(unreal.Vector(scale, scale, scale))
     a.set_actor_label(f"{kind}_{len(PLACED.setdefault(kind, []))}")
     a.set_folder_path(f"Critters/{kind}")
     a.tags = [TAG]
@@ -358,12 +437,19 @@ def main():
     # the owl on a dead tree just off the trail (yaw 0: the head-turn assumes it faces +y)
     place("snag", *assets["snag"], (450, 4500, 0))
     place("owl", *assets["owl"], (450, 4500, 301))
-    # the black cat: walks a loop round the rooms (front along the lot, back by the fence)
-    place("cat", *assets["cat"], (-1000, -1175, 3))
-    # ...and sometimes it's out there, sitting, watching you (each spot shows up at its own times)
-    for (x, y, z) in ((-1500, 7000, 0), (2600, 9700, 0), (1500, 14650, 22), (4700, 12650, 0), (2050, 4150, 0),
-                      (-3200, 13800, 0), (-2800, 1200, 0)):
-        place("catsit", *assets["catsit"], (x, y, z))
+    # the black cat (your Fab model, scaled to cat size): walks a loop round the rooms (front along
+    # the lot, back by the fence), with its glowing eyes as a second piece that moves with it
+    fab = fab_cat(mat)
+    if fab:
+        place("cat", fab[0], [fab[1]["cat"]], (-1000, -1175, 3), scale=CAT_SCALE)
+        place("cat", assets["cateyes"][0], [instance("cat", "critter_cateyes_mat", mat, (0.55, 0.9, 0.25))],
+              (-1000, -1175, 3), scale=CAT_SCALE)
+        # ...and sometimes it's out there, watching you (each spot shows up at its own times)
+        eyes_w = instance("catsit", "critter_cateyes_mat", mat, (0.55, 0.9, 0.25))
+        for (x, y, z) in ((-1500, 7000, 0), (2600, 9700, 0), (1500, 14650, 22), (4700, 12650, 0), (2050, 4150, 0),
+                          (-3200, 13800, 0), (-2800, 1200, 0)):
+            place("catsit", fab[0], [fab[1]["catsit"]], (x, y, z), scale=CAT_SCALE)
+            place("catsit", assets["cateyes"][0], [eyes_w], (x, y, z), scale=CAT_SCALE)
     unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
     print("critters placed:", {k: len(v) for k, v in PLACED.items()})
 

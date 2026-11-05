@@ -350,3 +350,18 @@ Your note: "make the cat higher poly, he looks really bad, give him a slow elega
   distance walked, so the paws don't slide; a soft bob and sway; the tail waves slowly from base to
   tip; it turns its head to keep watching you as it walks (shots 2 and 3, eyes shining); every 22 s it
   sits for 10 s and stares. The watching cats use the same new model, sitting.
+
+### The cat, take three: your Fab black cat
+
+![Fab cat](2026-11-05_cat_fab.png)
+
+Your note: "I just added a black cat from Fab to the project, I want a cat like that." Now the walking
+cat and the seven watching cats are your Fab model ("Black Cat, available for 3D printing", ~64k
+triangles, its own colour and normal textures), scaled to 75% so it's cat-sized, and driven by the same
+slow walk as before (legs, body bob, tail wave, head following you, sitting to stare). Its eyes are
+only painted on, so a small pair of glowing eyes is added on top for the eyeshine.
+How: `M_PS2_Critter` got a "UVMode" switch that uses a model's own UVs and normal map instead of the
+PS2 world projection, and the walk's leg/tail/head cut-offs were re-measured for this model.
+Two fixes along the way: the creature material is now rebuilt under a spare name and the instances
+moved onto it (Unreal wouldn't delete the old one while it was in use, so changes weren't applied),
+and creatures now move around their true pivot (the eyes had drifted off the head).
