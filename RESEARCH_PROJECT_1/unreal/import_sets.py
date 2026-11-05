@@ -248,7 +248,7 @@ def main():
         c.set_intensity(l["intensity"])
         c.set_light_color(unreal.LinearColor(*l["color"], 1))
         c.set_attenuation_radius(l["radius"])
-        c.set_cast_shadows(False)                # cheap, soft, PS2-like
+        c.set_cast_shadows(bool(l.get("shadows")))   # off = cheap, soft, PS2-like; on = walls block it
         if l.get("flicker"):
             c.set_light_function_material(flicker)   # dies and sputters with the dead neon
         p.set_actor_label(l["name"])

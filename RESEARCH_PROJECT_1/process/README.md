@@ -68,3 +68,18 @@ were "far" and nothing changed. Now the HUD also checks for a ceiling within 2.5
 eyes: indoors, the beam drops to a set share of its power; outside nothing changes (woods and
 motel front measured the same as before). Rows: flashlight off, 35%, 15%, 8% (the 35% bed shot
 caught a flicker cut-out). **Picked: 15%**: a soft pool on the wall, photos and table readable.
+
+### Red lamp, new carpet, red kept outside
+
+![Red lamp and carpet](2026-11-05_room104_red_lamp_carpet.png)
+
+Your notes: "change the carpet color", "I don't want the whole room red, just the lamp", and the lamp
+looked pink, not like a real light. Causes and fixes:
+- **Whole room red:** the big outside lights (sign letters, cross, OPEN, lot lamps, streetlight) cast no
+  shadows, so their light went straight through the walls. They now cast shadows, so walls block them.
+  That also took the red glow off the motel's front wall (the awning blocked the sign), so six red
+  wash lights under the awning (one per room, also shadowed) put it back. The front looks close to before.
+- **Pink lamp:** the shade's glow was so strong it bloomed to pinky white. Turned down (3 to 0.6) so
+  it reads as red, and the bulb is now a real point light with inverse-square falloff right at the
+  lamp: hot at the bulb, fading across the wall and nightstand.
+- **Carpet:** from red to a worn khaki brown (all rooms).

@@ -29,7 +29,7 @@
   "MI_PS2_curtain_mat": {"texture": "fabric", "tint": [0.7, 0.55, 0.4], "size": 80},
   "MI_PS2_roof_metal_mat": {"texture": "rust", "tint": [0.7, 0.68, 0.65], "size": 200},
   "MI_PS2_concrete_mat": {"texture": "concrete", "tint": [0.7, 0.7, 0.68], "size": 250},
-  "MI_PS2_carpet_mat": {"texture": "carpet", "tint": [0.7, 0.4, 0.4], "size": 120},
+  "MI_PS2_carpet_mat": {"texture": "carpet", "tint": [0.45, 0.42, 0.3], "size": 120},
   "MI_PS2_bed_mat": {"texture": "fabric", "tint": [0.6, 0.56, 0.47], "size": 100},
   "MI_PS2_sheet_mat": {"texture": "fabric", "tint": [0.5, 0.45, 0.36], "size": 90},
   "MI_PS2_bedspread_mat": {"texture": "fabric", "tint": [0.42, 0.26, 0.18], "size": 70},
@@ -44,7 +44,7 @@
     "glow_neon_dead_mat": {"strength": 80.0, "flicker": 1.0},
     "glow_window_mat": {"strength": 0.5, "flicker": 0.0},
     "glow_lamp_mat": {"strength": 2.0, "flicker": 0.0},
-    "glow_lamp_red_mat": {"strength": 3.0, "flicker": 0.0},
+    "glow_lamp_red_mat": {"strength": 0.6, "flicker": 0.0},
     "glow_ice_mat": {"strength": 1.5, "flicker": 0.0},
     "glow_street_mat": {"strength": 4.0, "flicker": 0.15}, "glow_sodium_mat": {"strength": 6.0, "flicker": 0.05}, "glow_tail_mat": {"strength": 10.0, "flicker": 0.0}, "glow_phone_mat": {"strength": 3.0, "flicker": 0.0}
   }
