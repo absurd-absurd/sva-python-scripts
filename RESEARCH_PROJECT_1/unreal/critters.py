@@ -35,6 +35,17 @@ float R = frac(sin(dot(OPos.xy, float2(12.9898, 78.233)) + OPos.z * 0.123) * 437
 float3 o = 0;
 float2 vel = float2(0, 1);
 if (Mode > 8.5) return float3(0, 0, 0);                    // still (the owl's dead tree)
+if (Mode > 6.5 && Mode < 7.5) {                            // bugs around you: a field that wraps round the player
+    float a = T * Speed;
+    float3 drift = float3(sin(a * 0.31 + R * 17.0) + 0.5 * sin(a * 0.83 + R * 5.0),
+                          sin(a * 0.27 + R * 29.0) + 0.5 * sin(a * 0.71 + R * 3.0),
+                          sin(a * 0.19 + R * 41.0)) * 45.0;
+    float3 rel = OPos + drift - PPos;
+    rel.xy = (frac(rel.xy / (2.0 * Radius) + 0.5) - 0.5) * 2.0 * Radius;
+    rel.z = (frac((rel.z - 40.0) / (2.0 * Height) + 0.5) - 0.5) * 2.0 * Height + 40.0;
+    float flapn = max(0.0, abs(L.x) - Body) * sin(T * Flap + R * 30.0) * 0.9;
+    return PPos + rel - OPos + float3(0, 0, flapn);
+}
 if (Mode > 5.5) {                                          // a cat sitting far off, watching you
     float2 toP = PPos.xy - OPos.xy;
     float d = length(toP);
@@ -136,6 +147,8 @@ if (Mode < 0.5) {                                          // orbit
     float a = T * Speed + R * 0.9;
     o = float3(cos(a) * Radius, sin(a) * Radius, sin(T * 0.3 + R * 7.0) * Height);
     vel = float2(-sin(a), cos(a));
+    float dp = length(OPos.xy + o.xy - PPos.xy);            // you walk under it: it climbs away
+    o.z += pow(saturate((1100.0 - dp) / 600.0), 1.5) * 900.0;
 }
 vel = normalize(vel + 1e-4);
 float ang = atan2(-vel.x, vel.y);                          // turn so the head (+y) leads
@@ -159,7 +172,13 @@ KIND = {
     "gnat":    dict(Mode=1, Speed=1.6, Radius=28, Height=22, Flap=0, Body=9, Glow=0, Bounds=40),
     "bat":     dict(Mode=0, Speed=0.9, Radius=420, Height=60, Flap=26, Body=2.5, Glow=0, Bounds=300),
     "flock":   dict(Mode=2, Speed=0.07, Radius=1300, Height=120, Flap=5, Body=3, Glow=0, Bounds=900),
-    "crow":    dict(Mode=3, Speed=1, Radius=900, Height=700, Flap=24, Body=3.4, Glow=0, Bounds=400),
+    "crow":    dict(Mode=3, Speed=1, Radius=1200, Height=700, Flap=24, Body=3.4, Glow=0, Bounds=400),
+    # more birds: flocks of different sizes and heights, and single crows gliding low
+    "flock2":  dict(Mode=2, Speed=0.11, Radius=800, Height=90, Flap=6, Body=3, Glow=0, Bounds=600),
+    "glider":  dict(Mode=2, Speed=0.16, Radius=1500, Height=150, Flap=4, Body=3, Glow=0, Bounds=1000),
+    # bugs around the screen: specks and a few moths in a field that always surrounds you
+    "speck":   dict(Mode=7, Speed=0.5, Radius=350, Height=120, Flap=0, Body=9, Glow=0, Bounds=300000),
+    "nearmoth": dict(Mode=7, Speed=0.9, Radius=450, Height=110, Flap=45, Body=0.7, Glow=0, Bounds=12000),
     "owl":     dict(Mode=4, Speed=1, Radius=0, Height=25, Flap=0, Body=0, Glow=0, Bounds=3),
     "snag":    dict(Mode=9, Speed=0, Radius=0, Height=0, Flap=0, Body=0, Glow=0, Bounds=1),
     # cat: Speed cm/s, Radius / Height = half size of the rectangle it walks round the motel
@@ -402,7 +421,7 @@ def main():
     for name in ("light_lot", "light_street", "light_open", "light_ice", "light_cross", "light_car_tail"):
         if name in lights:
             x, y, z = lights[name]
-            for _ in range(7 if name in ("light_lot", "light_street") else 4):
+            for _ in range(rng.choice((2, 2, 3))):                # just two or three at each light
                 place("moth", *assets["moth"], (x + rng.uniform(-25, 25), y + rng.uniform(-25, 25), z + rng.uniform(-30, 10)))
     # fireflies along the trail and the lake shore
     trail = layout["trail"]
@@ -425,14 +444,43 @@ def main():
                             (*lights.get("light_street", (1630, -3500, 600))[:2], 560, 2), (1500, 14900, 650, 5)):
         for _ in range(n):
             place("bat", *assets["bat"], (cx + rng.uniform(-60, 60), cy + rng.uniform(-60, 60), cz + rng.uniform(-40, 40)))
-    # the flock: one circle over the dock end of the lake
-    for _ in range(12):
-        place("flock", *assets["flock"], (1500 + rng.uniform(-250, 250), 15600 + rng.uniform(-250, 250), 1300 + rng.uniform(-80, 80)))
+    # flocks circling in the sky: over the lake, the woods, the motel and the road
+    def mis_for(kind, base):
+        return [instance(kind, str(sl.material_slot_name), mat, data["materials"].get(str(sl.material_slot_name), (0.2, 0.2, 0.2)))
+                for sl in assets[base][0].static_materials]
+    flock2, glider = mis_for("flock2", "flock"), mis_for("glider", "flock")
+    for kind, mis, (cx, cy, cz, n) in (("flock", assets["flock"][1], (1500, 15600, 1300, 14)),
+                                       ("flock", assets["flock"][1], (-4000, 9000, 1600, 12)),
+                                       ("flock2", flock2, (3500, 5500, 1100, 10)),
+                                       ("flock2", flock2, (-1000, -1200, 1500, 9)),
+                                       ("flock2", flock2, (-6000, -4300, 1200, 8)),
+                                       ("flock", assets["flock"][1], (6000, 12500, 1900, 16))):
+        for _ in range(n):
+            place(kind, assets["flock"][0], mis, (cx + rng.uniform(-260, 260), cy + rng.uniform(-260, 260), cz + rng.uniform(-90, 90)))
+    for (cx, cy, cz) in ((-1500, -2600, 700), (1500, 2500, 800), (-500, 8000, 750), (2000, 13000, 650)):
+        for _ in range(2):                                        # single crows gliding low, wide circles
+            place("glider", assets["flock"][0], glider, (cx + rng.uniform(-400, 400), cy + rng.uniform(-400, 400), cz + rng.uniform(-60, 60)))
+    # bugs around the screen: they float around you wherever you go (mostly seen in the flashlight)
+    speck = mis_for("speck", "gnat")
+    nearmoth = mis_for("nearmoth", "moth")
+    for _ in range(45):
+        place("speck", assets["gnat"][0], speck, (rng.uniform(-350, 350), rng.uniform(-350, 350), rng.uniform(0, 240)), scale=3.0)
+    for _ in range(4):
+        place("nearmoth", assets["moth"][0], nearmoth, (rng.uniform(-450, 450), rng.uniform(-450, 450), rng.uniform(20, 240)))
     # crows: on the lot lamps, the streetlight, the payphone, the dumpster, the motel roof, the fence.
     # They lift off and fly away as you come within ~9 m, and drift back once you've gone.
     perches = [(-3685, -2470, 740.5), (-3500, -2500, 721), (-335, -3620, 740.5), (-150, -3650, 721), (1600, -3500, 655.5),
                (2930, -1830, 192), (3925, -1150, 130.5), (3995, -1120, 130.5), (-2300, -1692, 337.5), (-1880, -1692, 337.5),
                (-420, -1692, 337.5), (180, -1692, 337.5), (-1500, -100, 160.5), (1200, -100, 160.5), (1260, -100, 160.5)]
+    # and on the ground along the trail and at the clearings, pecking about
+    trail = layout["trail"]
+    for i in range(len(trail) - 1):
+        for _ in range(2):
+            t = rng.random()
+            perches.append((trail[i][0] + (trail[i + 1][0] - trail[i][0]) * t + rng.uniform(-300, 300),
+                            trail[i][1] + (trail[i + 1][1] - trail[i][1]) * t + rng.uniform(-300, 300), 1.0))
+    for c in layout["clearings"][:4]:
+        perches.append((c["x"] + rng.uniform(-150, 150), c["y"] + rng.uniform(-150, 150), 1.0))
     for (x, y, z) in perches:
         place("crow", *assets["crow"], (x, y, z), yaw=rng.uniform(0, 360))
     # the owl on a dead tree just off the trail (yaw 0: the head-turn assumes it faces +y)

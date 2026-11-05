@@ -393,3 +393,19 @@ first skin gave the back legs to the tail, and a bob key dropped the body to the
 Your note: "just get rid of the cat, it looks really bad." The walking cat, its sequence, the seven
 watching cats and the rig scripts are gone (they stay in the git history if you ever want them
 back). Your Fab download itself is untouched in Content/Fab. The bugs, bats, crows, owl and flock stay.
+
+### Fewer bugs at the lights, bugs around you, many more birds
+
+![Bugs and birds](2026-11-05_bugs_birds_more.png)
+
+Your notes: only two or three bugs around a light, bugs around the screen, more birds flying and
+more swarms in the sky, and birds must fly away when you get close.
+- Moths: 2-3 per light (13 in all, was 30).
+- Bugs around you: 45 drifting specks and 4 moths in a field that wraps round the player wherever you
+  go (a new shader mode), so something is always floating past the camera, mostly seen in the flashlight.
+- Birds: 6 flocks (77 birds) circling over the lake, the woods, the motel and the road at different
+  heights and speeds, plus 8 crows gliding low in wide circles; 35 perched crows (15 on lamps, roof,
+  fence, payphone, dumpster; 20 on the ground along the trail and at the clearings).
+- Fly-away: perched crows lift off from ~12 m (was 9), and any flying bird you walk under climbs away.
+Shots: specks in the lot and woods, the lake flock, two moths and a bat at the lot lamp; bottom: two
+crows on the trail from 18 m, gone when you walk up.
