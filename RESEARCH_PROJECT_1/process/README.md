@@ -117,3 +117,14 @@ wall). The room insides and the room lamps are on channel 1; the sign, cross, lo
 are on channel 0, so they can't reach inside. The flashlight and the moonlight light both. All lights
 are back to no shadows, the six extra awning lights are gone, and the motel front looks like it did
 originally (top row: the shadowed version; middle/bottom: now, flashlight off/on).
+
+### The real culprit: the flashlight's own shadow
+
+![Flashlight shadows](2026-11-05_flashlight_shadows.png)
+
+Your note: "it did not fix it at all" (worst on the walkway). The lighting-channel change was still
+worth keeping, but the artifacts came from the one light that still cast shadows: the flashlight.
+It's held off to the right and bobs with every step, so its hard, low-resolution shadow (the dark
+band beside the TV and dresser, the patch by the chair, the post and frame edges on the walkway)
+jittered and crawled all the time. Rows: now · shadows off · softer, sharper shadows (only blurs it).
+**Fix: flashlight casts no shadows.**
