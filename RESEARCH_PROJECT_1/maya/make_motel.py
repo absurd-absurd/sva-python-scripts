@@ -45,7 +45,7 @@ MATS = {
     "curtain_mat": (0.55, 0.45, 0.3), "roof_metal_mat": (0.35, 0.33, 0.3), "concrete_mat": (0.5, 0.5, 0.48),
     "carpet_mat": (0.3, 0.28, 0.2), "bed_mat": (0.5, 0.46, 0.38), "wood_mat": (0.35, 0.22, 0.12),   # bed: old, yellowed
     # Room 104 (Cas's room)
-    "sheet_mat": (0.42, 0.38, 0.3), "bedspread_mat": (0.33, 0.2, 0.14), "pillow_mat": (0.46, 0.42, 0.34), "stain_sheet_mat": (0.25, 0.2, 0.12),
+    "sheet_mat": (0.42, 0.38, 0.3), "bedspread_mat": (0.33, 0.2, 0.14), "pillow_mat": (0.46, 0.42, 0.34), "stain_sheet_mat": (0.16, 0.12, 0.07),
     "shoe_mat": (0.3, 0.3, 0.32), "diary_mat": (0.18, 0.08, 0.06), "page_mat": (0.6, 0.56, 0.45),
     "mug_mat": (0.55, 0.52, 0.46), "coffee_mat": (0.04, 0.02, 0.01), "pot_mat": (0.35, 0.17, 0.1),
     "soil_mat": (0.05, 0.04, 0.03), "twig_mat": (0.16, 0.11, 0.07), "leaf_dead_mat": (0.25, 0.17, 0.07),
@@ -58,6 +58,8 @@ MATS = {
     "camera_mat": (0.04, 0.04, 0.04), "string_mat": (0.4, 0.33, 0.22), "wallpaper_mat": (0.7, 0.64, 0.5),
     "stain_wall_mat": (0.38, 0.3, 0.18), "stain_dark_mat": (0.22, 0.16, 0.09), "cobweb_mat": (0.45, 0.44, 0.42),
     "glow_lamp_red_mat": (1.0, 0.05, 0.02),
+    "tv_mat": (0.09, 0.075, 0.06), "screen_mat": (0.035, 0.045, 0.045), "sole_mat": (0.62, 0.6, 0.55),
+    "lining_mat": (0.3, 0.1, 0.09),
     "chair_mat": (0.85, 0.85, 0.8), "metal_mat": (0.3, 0.3, 0.3), "ice_mat": (0.8, 0.82, 0.85),
     # the lot and the car
     "paint_mat": (0.55, 0.54, 0.48), "paint_yellow_mat": (0.55, 0.45, 0.12), "crack_mat": (0.015, 0.015, 0.015),
@@ -204,7 +206,7 @@ def room_row():
         x1 = x0 + ROOM_W
         number = 101 + i
         IN_ROOM[0] = True
-        room_inside(x0, x1)
+        room_inside(x0, x1, her=(i == HER_ROOM))
         if i == HER_ROOM:
             room_104(x0, x1)
         IN_ROOM[0] = False
@@ -233,7 +235,7 @@ def room_row():
             chair(x0 + 60, FRONT - 120)
 
 
-def room_inside(x0, x1):
+def room_inside(x0, x1, her=False):
     """One motel room: walls, ceiling, carpet, bed, nightstand + lamp, dresser + TV.
     Every room has the same layout; Room 104 (Cas's) gets its clues from clues.json."""
     t = 20
@@ -254,20 +256,13 @@ def room_inside(x0, x1):
     box(x0 + 140, x0 + 280, FRONT + t + 1, FRONT + t + 2, 230, H - 10, "plaster_mat")
     box(x0 + 1, x1 - 1, FRONT + 1, BACK - 1, H - 10, H - 1, "plaster_mat")   # ceiling (clear of the awning and front wall)
     box(x0 + t, x1 - t, FRONT + t, BACK - t, 0, 2, "carpet_mat")             # carpet
-    # bed: frame, mattress, pillow, headboard
-    bx0, bx1 = x0 + 220, x1 - 40
-    box(bx0, bx1, BACK - 250, BACK - 20, 0, 35, "wood_mat")
-    box(bx0 + 5, bx1 - 5, BACK - 245, BACK - 25, 35, 58, "bed_mat")
-    box(bx0 + 30, bx1 - 30, BACK - 70, BACK - 30, 58, 70, "bed_mat")
-    box(bx0, bx1, BACK - 28, BACK - 20, 0, 110, "wood_mat")
-    # nightstand with a lamp
-    box(x0 + 150, x0 + 210, BACK - 70, BACK - 25, 0, 60, "wood_mat")
-    tube((x0 + 180, BACK - 47, 60), (x0 + 180, BACK - 47, 95), 3, "brass_mat")
-    tube((x0 + 180, BACK - 47, 95), (x0 + 180, BACK - 47, 120), 16, "glow_lamp_mat", sides=8)
-    # dresser with an old TV against the left wall, facing the bed (kept clear of the doorway)
-    box(x0 + t, x0 + t + 55, FRONT + 200, FRONT + 370, 0, 80, "wood_mat")
-    box(x0 + t + 5, x0 + t + 50, FRONT + 235, FRONT + 335, 80, 150, "metal_mat")
-    box(x0 + t + 50, x0 + t + 52, FRONT + 245, FRONT + 325, 90, 140, "glass_mat")
+    # furniture (maya/room_props.py): bed, nightstand + lamp, dresser with an old TV against the
+    # left wall facing the bed (kept clear of the doorway). Room 104 dresses its own bed.
+    bed(x0, x1, made=not her)
+    nightstand(x0)
+    lamp(x0 + 180, BACK - 47, *(("glow_lamp_red_mat", "glow_lamp_red_mat") if her else ()))
+    dresser(x0)
+    crt_tv(x0)
 
 
 def rbox(cx, cy, cz, sx, sy, sz, mat, yaw=0, tilt_x=0, tilt_y=0):
@@ -309,44 +304,35 @@ def room_104(x0, x1):
 
     # --- the bed, slept in and left: blanket thrown back, pillows dented and askew
     bx0, bx1 = x0 + 220, x1 - 40
-    rbox((bx0 + bx1) / 2.0, BACK - 120, 58.3, bx1 - bx0 - 14, 190, 0.6, "sheet_mat")              # bottom sheet
-    for dx, dy, w, d, h, yw in ((-50, -215, 120, 60, 7, 3), (40, -210, 110, 70, 9, -4), (-10, -180, 210, 26, 12, 2),
-                                (70, -175, 70, 30, 10, 8)):                                   # bedspread thrown back,
-        rbox((bx0 + bx1) / 2.0 + dx, BACK + dy, 58 + h / 2.0, w, d, h, "bedspread_mat", yaw=yw)   # bunched at the foot
-    rbox(bx1 + 4, BACK - 205, 42, 6, 80, 34, "bedspread_mat", tilt_x=10)                       # hanging off the side
-    rbox(bx0 + 70, BACK - 50, 72, 85, 38, 14, "pillow_mat", yaw=-8)
-    rbox(bx1 - 60, BACK - 58, 70, 80, 36, 12, "pillow_mat", yaw=14, tilt_x=6)
-    for _ in range(5):                                                                    # old stains
-        rbox(rng.uniform(bx0 + 30, bx1 - 30), rng.uniform(BACK - 120, BACK - 90), 59.0,
-             rng.uniform(10, 30), rng.uniform(8, 22), 0.4, "stain_sheet_mat", yaw=rng.uniform(0, 90))
+    # fitted sheet over the mattress (top 57.3: the note clue lies at 58)
+    bevel_box(bx0 + 3, bx1 - 3, BACK - 247, BACK - 30, 44, 57.3, "sheet_mat", r=5.5, seg=3)
+    for k, (dx, dy, w, d, h, yw) in enumerate(((-50, -215, 120, 60, 9, 3), (40, -210, 110, 70, 11, -4),
+                                               (-10, -180, 210, 26, 13, 2), (70, -175, 70, 30, 11, 8))):
+        rsoft((bx0 + bx1) / 2.0 + dx, BACK + dy, 57 + h / 2.0, w, d, h, "bedspread_mat",   # bedspread thrown back,
+              jitter=1.2, sag=-1.5, seed=40 + k, yaw=yw)                                # bunched at the foot
+    rsoft(bx1 + 3, BACK - 205, 40, 5, 80, 38, "bedspread_mat", jitter=1.5, seed=45, tilt_x=10)   # hanging off the side
+    rsoft(bx0 + 70, BACK - 50, 64.5, 85, 38, 14, "pillow_mat", sag=4, jitter=0.8, seed=46, yaw=-8)
+    rsoft(bx1 - 60, BACK - 58, 64, 80, 36, 12, "pillow_mat", sag=3, jitter=0.8, seed=47, yaw=14, tilt_x=6)
+    for _ in range(5):                                                                    # old stains: dark, round, uneven
+        frustum(rng.uniform(bx0 + 30, bx1 - 30), rng.uniform(BACK - 112, BACK - 92), 57.65, 57.95,   # clear of the note
+                rng.uniform(5, 11), rng.uniform(5, 11), "stain_sheet_mat", sides=10, sx=1.0, sy=rng.uniform(0.55, 1.0))
     # her sneakers by the bed, side by side
-    for dx in (0, 14):
-        rbox(bx0 - 30 + dx, BACK - 215, 5, 11, 28, 10, "shoe_mat", yaw=4 + dx * 0.3)
+    for k, dx in enumerate((0, 14)):
+        sneaker(bx0 - 30 + dx, BACK - 215, 4 + dx * 0.3, seed=50 + k)
 
     # --- nightstand: red bulb in the lamp, her diary with pages torn out
     lx, ly = x0 + 180, BACK - 47
-    tube((lx, ly, 93.5), (lx, ly, 121.5), 17.2, "glow_lamp_red_mat", sides=8)             # shade over the old one (caps clear of it)
     # the bulb: real (inverse-square) falloff, so it's hot right at the lamp and fades across the room.
     # It sits just under the shade: inside it, it burnt a white spot into the shade. Kept dim on
     # purpose: bright red light on the cream walls reads as pink.
     light("light_104_lamp", lx, ly - 22, 90, [1.0, 0.0, 0.0], LAMP_104[0], LAMP_104[1], room=True)
-    rbox(lx - 16, ly - 8, 62.5, 15, 20, 4, "diary_mat", yaw=-12)
+    diary(lx - 17, ly - 9, 60.2, -12)
 
     # --- the table under the window: cold coffee, dead plant, torn pages
     tx, ty, tz = x1 - 110, FRONT + 240, 70
-    rbox(tx, ty, tz - 2, 80, 70, 4, "wood_mat")
-    for dx in (-34, 34):
-        for dy in (-29, 29):
-            tube((tx + dx, ty + dy, 0), (tx + dx, ty + dy, tz - 4), 2, "metal_mat", sides=4)
-    tube((tx - 18, ty - 10, tz), (tx - 18, ty - 10, tz + 9), 4, "mug_mat", sides=8)       # mug
-    tube((tx - 18, ty - 10, tz + 7.5), (tx - 18, ty - 10, tz + 8.5), 3.4, "coffee_mat", sides=8)
-    tube((tx + 18, ty + 14, tz), (tx + 18, ty + 14, tz + 12), 7, "pot_mat", sides=8)       # pot
-    tube((tx + 18, ty + 14, tz + 10), (tx + 18, ty + 14, tz + 11), 6.4, "soil_mat", sides=8)
-    for i in range(6):                                                                    # dead stems
-        a = i * 1.05
-        top = (tx + 18 + math.cos(a) * 9, ty + 14 + math.sin(a) * 9, tz + 26 + rng.uniform(-4, 6))
-        tube((tx + 18, ty + 14, tz + 11), top, 0.6, "twig_mat", sides=3)
-        tube(top, (top[0] + math.cos(a) * 6, top[1] + math.sin(a) * 6, top[2] - 7), 0.5, "twig_mat", sides=3)  # drooping
+    side_table(tx, ty, tz)
+    mug(tx - 18, ty - 10, tz)
+    plant_pot(tx + 18, ty + 14, tz, rng)
     for _ in range(4):                                                                    # dead leaves
         rbox(tx + rng.uniform(-5, 38), ty + rng.uniform(-10, 30), tz + 2.2, 4, 2.5, 0.3, "leaf_dead_mat", yaw=rng.uniform(0, 180))
     for i, (px, py, pz, yw) in enumerate(((tx - 20, ty + 18, tz + 0.6, 18), (tx - 5, ty + 26, tz + 1.4, -25),
@@ -354,26 +340,11 @@ def room_104(x0, x1):
         rbox(px, py, pz, 15, 20, 0.4, "page_mat", yaw=yw)
     # chair at the table with her jacket over the back
     cx_, cy_ = tx, ty + 70
-    rbox(cx_, cy_, 45, 42, 40, 4, "wood_mat")
-    rbox(cx_, cy_ + 19, 70, 42, 4, 50, "wood_mat")
-    for dx in (-18, 18):
-        for dy in (-16, 16):
-            tube((cx_ + dx, cy_ + dy, 0), (cx_ + dx, cy_ + dy, 43), 1.8, "wood_mat", sides=4)
-    rbox(cx_, cy_ + 24, 76, 44, 4, 36, "jacket_mat", tilt_y=4)                            # jacket: hanging behind
-    rbox(cx_, cy_ + 19, 95, 46, 14, 4, "jacket_mat")                                      # over the top of the chair
-    rbox(cx_, cy_ + 15, 85, 40, 3, 20, "jacket_mat", tilt_y=-6)                           # front flap
-    rbox(cx_ - 24, cy_ + 22, 66, 7, 9, 44, "jacket_mat", tilt_x=-6)                       # a sleeve hanging down
+    wood_chair(cx_, cy_, rng)
 
     # --- open suitcase on a luggage rack in the corner, clothes folded inside
     sx, sy = x1 - 95, FRONT + 400
-    for dx in (-40, 40):
-        tube((sx + dx, sy - 25, 0), (sx + dx, sy + 25, 45), 1.5, "metal_mat", sides=4)
-        tube((sx + dx, sy + 25, 0), (sx + dx, sy - 25, 45), 1.5, "metal_mat", sides=4)
-    rbox(sx, sy, 46, 86, 54, 2, "strap_mat")
-    rbox(sx, sy, 56, 80, 50, 18, "suitcase_mat")
-    rbox(sx, sy + 30, 88, 80, 4, 48, "suitcase_mat", tilt_y=12)                          # lid open, leaning back
-    for i, mat in enumerate(("clothes_a_mat", "clothes_b_mat", "clothes_c_mat")):
-        rbox(sx - 22 + i * 22, sy - 4, 66 + i * 0.5, 30, 38, 5, mat, yaw=rng.uniform(-6, 6))
+    suitcase(sx, sy, rng)
 
     # --- her lake photos taped over the dresser, camera next to the TV
     for i in range(7):
@@ -389,8 +360,7 @@ def room_104(x0, x1):
     picture(inner_l + 2.0, FRONT + 336, 207, 26, 19.5, "pic_lanterns", spin=4)    # red lights out on the water
     rbox(inner_l + 3.0, FRONT + 336, 218, 1, 8, 3, "tape_mat")
     cam_x, cam_y = inner_l + 25, FRONT + 352
-    rbox(cam_x, cam_y, 85, 9, 14, 9, "camera_mat", yaw=20)
-    tube((cam_x + 4, cam_y + 1, 85), (cam_x + 11, cam_y + 3, 85), 3.2, "camera_mat", sides=8)
+    camera(cam_x, cam_y, 80)
 
     # --- twig figure on a string over the bed, turning slowly in the draft (still, here)
     fx, fy = x1 - 120, BACK - 160
@@ -861,6 +831,10 @@ def lot_dressing():
     payphone(2930, -1830)
     dumpster(3960, -1150)
     car(-725, FRONT - WALK - 420)          # in front of Room 104
+
+
+# detailed furniture and Cas's things (bed, nightstand, lamp, dresser, TV, ...)
+exec(open(os.path.join(ROOT, "maya", "room_props.py"), encoding="utf-8").read())
 
 
 # ---------- build and export ----------
