@@ -245,23 +245,29 @@ def dumpster(x, y):
     propped open on a bag), castors, rust streaks, rubbish bags around it."""
     c = cmds.polyCube(w=200, h=110, d=150, sx=1, sy=1, sz=1, ch=False)[0]
     _set_verts(c, [(vx * (1.0 if vy > 0 else 0.92), vy, vz * (1.0 if vy > 0 else 0.9)) for vx, vy, vz in _verts(c)])
-    _bevel(c, 2.0, 2)
+    _bevel(c, 3.5, 6)                                                       # well rounded edges
     cmds.move(x, 70, y, c)
     keep(c, "dumpster_mat")
-    for dx in (-60, 0, 60):
-        bevel_box(x + dx - 5, x + dx + 5, y - 77, y - 72, 25, 120, "dumpster_mat", r=1.2)     # ribs
+    for dx in (-60, 0, 60):                                                 # ribs, front and back
+        for y0_, y1_ in ((y - 77, y - 72), (y + 72, y + 77)):
+            bevel_box(x + dx - 5, x + dx + 5, y0_, y1_, 25, 120, "dumpster_mat", r=1.8, seg=4)
     for s in (-1, 1):
-        bevel_box(x + s * 101, x + s * 109, y - 50, y + 50, 70, 86, "metal_mat", r=1.2)        # lifting pockets
-    rbevel(x - 50, y, 127.5, 102, 156, 4, "lid_mat", r=1.2)                                 # lid (shut)
-    rbevel(x + 50, y + 18, 150, 102, 156, 4, "lid_mat", r=1.2, tilt_y=28)                   # lid (propped up)
-    rsoft(x + 60, y - 30, 132, 50, 40, 34, "bag_mat", jitter=1.5, seed=3)
+        bevel_box(x + s * 101, x + s * 109, y - 50, y + 50, 70, 86, "metal_mat", r=1.8, seg=4)  # lifting pockets
+        bevel_box(x + s * 100.5, x + s * 110, y - 55, y + 55, 86.5, 88.5, "metal_mat", r=0.8, seg=3)
+    rbevel(x - 50, y, 127.5, 102, 156, 4, "lid_mat", r=1.8, seg=5)                          # lid (shut)
+    rbevel(x + 50, y + 18, 150, 102, 156, 4, "lid_mat", r=1.8, seg=5, tilt_y=28)            # lid (propped up)
+    for lx in (-50, 50):                                                                   # hinge rods at the back
+        tube((x + lx - 45, y + 78, 128), (x + lx + 45, y + 78, 128), 1.4, "metal_mat", sides=16)
+    rsoft(x + 60, y - 30, 132, 50, 40, 34, "bag_mat", jitter=1.2, smooth=3, seed=3, div=(5, 4, 5))
     for dx in (-80, 80):
         for dy in (-55, 55):
-            frustum(x + dx, y + dy, 9, 15.5, 4, 4, "metal_mat", sides=8)
-            lathe(x + dx, y + dy, [(0.4, 0.5), (1.0, 4.5), (5.0, 6.0), (9.0, 4.5), (9.6, 0.5)], "tire_mat", sides=12)
+            frustum(x + dx, y + dy, 9, 15.5, 4, 4, "metal_mat", sides=20)
+            lathe(x + dx, y + dy, [(0.4, 0.5), (0.8, 3.5), (1.6, 5.2), (3.0, 6.0), (6.5, 6.0), (8.0, 5.2), (9.0, 3.5),
+                                   (9.6, 0.5)], "tire_mat", sides=24)
     for bx, by, r in ((x - 150, y - 60, 28), (x - 175, y + 10, 22), (x + 140, y - 90, 25), (x - 135, y + 55, 18)):
-        rsoft(bx, by, r * 0.75 + 0.5, r * 2.1, r * 1.9, r * 1.5, "bag_mat", jitter=r * 0.06, sag=-r * 0.1, seed=int(bx))
-        frustum(bx, by, r * 1.45, r * 1.75, 2.5, 1.0, "bag_mat", sides=6)                  # knot
+        rsoft(bx, by, r * 0.75 + 0.5, r * 2.1, r * 1.9, r * 1.5, "bag_mat", jitter=r * 0.05, sag=-r * 0.1,
+              smooth=3, seed=int(bx), div=(5, 4, 5))
+        frustum(bx, by, r * 1.45, r * 1.75, 2.5, 1.0, "bag_mat", sides=16)                 # knot
 
 
 # ---------- the parking lot ----------
@@ -296,7 +302,7 @@ def parking_lot_detail():
 
 # ---------- the car ----------
 
-def _shaped(cx, cy, L, W, prof, mat, sx=8, sy=4, sz=20, smooth=1):
+def _shaped(cx, cy, L, W, prof, mat, sx=12, sy=6, sz=40, smooth=2):
     """A car-body shape: a subdivided block whose cross-section along its length follows
     prof(u) -> (bottom z, top z, half width at the bottom, half width at the top), u = 0 rear .. 1 front."""
     c = cmds.polyCube(w=1, h=1, d=1, sx=sx, sy=sy, sz=sz, ch=False)[0]
@@ -330,40 +336,44 @@ def car(cx, cy):
         end = min(u, 1 - u)
         k = math.sqrt(max(0.15, min(1.0, end / 0.04)))
         return bot, top, W / 2 * k * 0.98, (W / 2 - 6) * k
-    _shaped(cx, cy, L, W, body, "car_paint_mat", sz=24)
+    _shaped(cx, cy, L, W, body, "car_paint_mat", sz=48)
     # greenhouse: glass block narrowing to the roof, pillars, a roof panel
     gl0, gl1 = 0.26, 0.64                                                       # rear window .. windscreen
     def cabin(u):
         uu = gl0 + (gl1 - gl0) * u
         rake = min(1.0, u / 0.22) * min(1.0, (1 - u) / 0.28)                    # slope front and back
         return 91.5, 91.5 + 45 * rake ** 0.6 + 0.5, W / 2 - 9, W / 2 - 22
-    _shaped(cx, back + L * gl0 + L * (gl1 - gl0) / 2, L * (gl1 - gl0), W, cabin, "glass_mat", sz=12)
+    _shaped(cx, back + L * gl0 + L * (gl1 - gl0) / 2, L * (gl1 - gl0), W, cabin, "glass_mat", sz=24)
     roof_y0, roof_y1 = back + L * (gl0 + 0.07), back + L * (gl1 - 0.09)
-    rbevel(cx, (roof_y0 + roof_y1) / 2, 137.5, W - 42, roof_y1 - roof_y0, 3.0, "car_paint_mat", r=1.2)
+    rbevel(cx, (roof_y0 + roof_y1) / 2, 137.5, W - 42, roof_y1 - roof_y0, 3.0, "car_paint_mat", r=1.4, seg=4)
     for s in (-1, 1):
         xx = cx + s * (W / 2 - 16)
-        tube((xx, back + L * gl0 + 6, 93), (cx + s * (W / 2 - 22), roof_y0, 137), 3.0, "car_paint_mat", sides=8)    # C pillar
-        tube((cx + s * (W / 2 - 13), back + L * 0.46, 93), (cx + s * (W / 2 - 21), back + L * 0.46, 137), 2.4, "trim_mat", sides=6)  # B
-        tube((xx, back + L * gl1 - 6, 93), (cx + s * (W / 2 - 22), roof_y1, 137), 2.6, "car_paint_mat", sides=8)    # A pillar
-        # wheel arches (a dark lip) and wheels
+        tube((xx, back + L * gl0 + 6, 93), (cx + s * (W / 2 - 22), roof_y0, 137), 3.0, "car_paint_mat", sides=16)   # C pillar
+        tube((cx + s * (W / 2 - 13), back + L * 0.46, 93), (cx + s * (W / 2 - 21), back + L * 0.46, 137), 2.4, "trim_mat", sides=12)  # B
+        tube((xx, back + L * gl1 - 6, 93), (cx + s * (W / 2 - 22), roof_y1, 137), 2.6, "car_paint_mat", sides=16)   # A pillar
+        # wheels: rounded tyres (sidewall + tread), dished hubcaps, lug nuts
         for wy in (back + 92, front - 105):
-            wx = cx + s * (W / 2 - 14)
-            prof = [(0, 0.5), (1.5, 26), (4.5, 33), (14, 34), (23.5, 33), (26.5, 26), (28, 0.5)]
-            t = lathe(0, 0, prof, "tire_mat", sides=24)                       # tyre, built standing up then turned
+            prof = [(0, 0.5), (0.6, 22), (1.6, 27), (3.0, 31), (5.0, 33), (9, 34), (14, 34.3), (19, 34), (23, 33),
+                    (25, 31), (26.4, 27), (27.4, 22), (28, 0.5)]
+            t = lathe(0, 0, prof, "tire_mat", sides=48)                       # tyre, built standing up then turned
             cmds.rotate(0, 0, 90, t, pivot=(0, 0, 0))                          # axis along -x, 28 wide
             cmds.move((cx + W / 2 - 1) if s > 0 else (cx - W / 2 + 29), 34, wy, t, relative=True)
-            hub = lathe(0, 0, [(0, 0.3), (0.6, 18), (2.6, 17), (3.8, 6), (4.6, 2), (4.8, 0.3)], "chrome_mat", sides=20)
+            hub = lathe(0, 0, [(0, 0.3), (0.5, 19), (1.2, 19.5), (2.2, 18.5), (2.8, 15), (3.2, 10), (3.9, 6), (4.4, 3),
+                               (4.7, 1.5), (4.8, 0.3)], "chrome_mat", sides=40)
             cmds.rotate(0, 0, -90 * s, hub, pivot=(0, 0, 0))
             cmds.move(cx + s * (W / 2 + 0.8), 34, wy, hub, relative=True)
+            for k in range(5):                                                 # lug nuts
+                a = k * 2 * math.pi / 5
+                sphere(cx + s * (W / 2 + 3.6), wy + math.cos(a) * 7, 34 + math.sin(a) * 7, 0.9, "chrome_mat", sides=8)
         # door seams, handles, mirror, side trim
         for sy_ in (back + L * 0.30, back + L * 0.47, back + L * 0.64):
             box(cx + s * (W / 2 - 0.2) - 0.6, cx + s * (W / 2 - 0.2) + 0.6, sy_ - 0.5, sy_ + 0.5, 42, 90, "tire_mat")
         for hy in (back + L * 0.40, back + L * 0.58):
             rbevel(cx + s * (W / 2 + 0.6), hy, 80, 2, 14, 3, "chrome_mat", r=0.5)
-        rsoft(cx + s * (W / 2 + 7), back + L * gl1 - 14, 98, 12, 6, 9, "car_paint_mat", smooth=1)
+        rsoft(cx + s * (W / 2 + 7), back + L * gl1 - 14, 98, 12, 6, 9, "car_paint_mat", smooth=3)
         box(cx + s * (W / 2 - 1) - 1, cx + s * (W / 2 - 1) + 1.6, back + 60, front - 60, 56, 60, "chrome_mat")
     # front: bumper, grille, headlights, plate; back: bumper, tail lights, plate, exhaust
-    rbevel(cx, front - 4, 42, W + 4, 14, 14, "chrome_mat", r=3.0)
+    rbevel(cx, front - 4, 42, W + 4, 14, 14, "chrome_mat", r=4.0, seg=5)
     bevel_box(cx - 48, cx + 48, front - 9, front - 6.5, 58, 78, "trim_mat", r=1.0)
     for k in range(6):
         box(cx - 44, cx + 44, front - 6.9, front - 6.0, 60 + k * 3, 61.3 + k * 3, "chrome_mat")
@@ -371,7 +381,7 @@ def car(cx, cy):
         bevel_box(cx + s * 56 - 20, cx + s * 56 + 20, front - 10, front - 6, 60, 76, "chrome_mat", r=1.0)
         bevel_box(cx + s * 56 - 17, cx + s * 56 + 17, front - 6.6, front - 5.6, 62, 74, "glass_mat", r=0.6)
         bevel_box(cx + s * 60 - 22, cx + s * 60 + 22, back + 5.6, back + 8, 62, 78, "glow_tail_mat", r=1.0)
-    rbevel(cx, back + 4, 44, W + 4, 14, 14, "chrome_mat", r=3.0)
+    rbevel(cx, back + 4, 44, W + 4, 14, 14, "chrome_mat", r=4.0, seg=5)
     for py in (front - 11.5, back + 11.5 - 0.0):
         bevel_box(cx - 15, cx + 15, py - 0.6, py + 0.6, 38, 52, "plate_mat", r=0.4)
     tube((cx + 50, back + 12, 28), (cx + 50, back - 2, 28), 2.8, "metal_mat", sides=10)
@@ -407,8 +417,6 @@ def door_mesh(width, height, name, knob_side=1):
         bevel_box(kx - 3, kx + 3, ys, ys + side * 0.8, 88, 106, "brass_mat", r=0.5)
         tube((kx, ys, 97), (kx, ys + side * 5, 97), 1.0, "brass_mat", sides=8)
         sphere(kx, ys + side * 6.5, 97, 2.8, "brass_mat", sides=12)
-        if side > 0:
-            bevel_box(4, width - 4, ys, ys + 0.6, 2, 26, "brass_mat", r=0.3)                     # kick plate
     tube((width / 2.0, 2.5, 160), (width / 2.0, 3.6, 160), 1.3, "brass_mat", sides=10)   # peephole
     for hz in (25, height / 2.0, height - 25):
         bevel_box(-1.5, 2.0, -2.0, 2.0, hz - 6, hz + 6, "metal_mat", r=0.4)
@@ -424,7 +432,7 @@ def export_doors():
     """export/prop_room_door.fbx and prop_office_door.fbx, listed in sets.json "props"."""
     made = {}
     for name, w in (("prop_room_door", 138), ("prop_office_door", 108)):
-        m = door_mesh(w, 228, name)
+        m = door_mesh(w, 231, name)                  # tucks up into the frame (no light strip under it)
         fbx = os.path.join(OUT, name + ".fbx").replace("\\", "/")
         cmds.select(m)
         mel.eval("FBXResetExport")

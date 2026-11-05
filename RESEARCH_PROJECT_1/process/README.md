@@ -453,3 +453,17 @@ New `maya/exterior_props.py` (rooftop sign and neon cross untouched):
   panel, tyres with hubcaps, chrome bumpers and side trim, a grille, headlights and red tail lights,
   mirrors, door seams and handles, wipers, plates, an aerial, an exhaust.
 Motel: ~255k -> ~333k triangles.
+
+### Door gap, a higher-resolution car and dumpster
+
+![Doors, car, dumpster](2026-11-05_doors_car_dumpster_hires.png)
+
+Your notes: a gap under the doors, the car and the garbage bin higher resolution.
+- The "gap" was the brass kick plate: the only light part of the door, right where it meets the
+  walkway. Removed, and the doors are 3 cm taller so they tuck into the frame.
+- Car: body and cabin built from twice as many cross-sections and smoothed twice; tyres with
+  rounded sidewalls and tread (48 sides), dished hubcaps (40 sides) with five lug nuts, rounder
+  bumpers, pillars, roof, mirrors and exhaust.
+- Dumpster: well-rounded body edges, ribs front and back, lifting pockets with a rim, rounder lids
+  with hinge rods, smoother castors and bags.
+Motel now ~515k triangles (most of the new ones are the car).
