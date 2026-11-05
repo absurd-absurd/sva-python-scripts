@@ -281,6 +281,7 @@ def critter_material():
                 sampler_type=unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL)
     MEL.connect_material_property(nrm, "RGB", unreal.MaterialProperty.MP_NORMAL)
     m.set_editor_property("two_sided", True)                      # thin wings seen from both sides
+    m.set_editor_property("used_with_skeletal_mesh", True)        # the rigged cat uses it too
     MEL.recompile_material(m)
     lib.save_loaded_asset(m, False)
     return finish_material(m)
@@ -437,13 +438,10 @@ def main():
     # the owl on a dead tree just off the trail (yaw 0: the head-turn assumes it faces +y)
     place("snag", *assets["snag"], (450, 4500, 0))
     place("owl", *assets["owl"], (450, 4500, 301))
-    # the black cat (your Fab model, scaled to cat size): walks a loop round the rooms (front along
-    # the lot, back by the fence), with its glowing eyes as a second piece that moves with it
+    # the black cat (your Fab model, scaled to cat size)
     fab = fab_cat(mat)
     if fab:
-        place("cat", fab[0], [fab[1]["cat"]], (-1000, -1175, 3), scale=CAT_SCALE)
-        place("cat", assets["cateyes"][0], [instance("cat", "critter_cateyes_mat", mat, (0.55, 0.9, 0.25))],
-              (-1000, -1175, 3), scale=CAT_SCALE)
+        # (the walking cat is now the rigged one: unreal/cat_walk.py)
         # ...and sometimes it's out there, watching you (each spot shows up at its own times)
         eyes_w = instance("catsit", "critter_cateyes_mat", mat, (0.55, 0.9, 0.25))
         for (x, y, z) in ((-1500, 7000, 0), (2600, 9700, 0), (1500, 14650, 22), (4700, 12650, 0), (2050, 4150, 0),

@@ -365,3 +365,25 @@ PS2 world projection, and the walk's leg/tail/head cut-offs were re-measured for
 Two fixes along the way: the creature material is now rebuilt under a spare name and the instances
 moved onto it (Unreal wouldn't delete the old one while it was in use, so changes weren't applied),
 and creatures now move around their true pivot (the eyes had drifted off the head).
+
+### The cat, take four: rigged in Maya with a real walk cycle
+
+![Reference, test, in the game](2026-11-05_cat_rigged_walk.png)
+
+Your note: "the cat's walk is really bad and not natural", then: rig it in Maya (plus your reference video).
+The Fab cat was one rigid statue, so the shader could only bend it. Now `maya/make_cat_rig.py` turns
+it straight, finds its anatomy in the mesh (feet, leg centres, torso, head, the hanging tail) and
+builds a 34-joint skeleton: spine, neck, head, four legs (the back legs bend backwards at the hock),
+an 8-joint tail. It skins the mesh (bone-based, tail and leg weights cleaned up) and keys a walk with
+IK so the paws plant and never slide: the reference's order (back left, front left, back right,
+front right), one stride a second, hips and shoulders rolling, a small bob, the head held level, the
+tail hanging with a gentle sway; plus an 8 s idle (breathing, looking around).
+`unreal/cat_rig_import.py` brings it in (SK_Cat, A_Cat_Walk, A_Cat_Idle), `unreal/cat_material.py`
+gives it the PS2 look, and `unreal/cat_walk.py` makes a looping Level Sequence that walks it round the
+motel at ~20 cm/s (matching the stride), stopping at two corners to stand and look around. It starts
+by itself with the game.
+Top: your reference. Middle: the walk on the spot (quarter speed). Bottom: walking along the rooms.
+On the way: raising the tail tore the mesh (the model's tail hangs, so it now hangs and sways), the
+first skin gave the back legs to the tail, and a bob key dropped the body to the floor.
+
+![Skin weights](2026-11-05_cat_rig_weights.png)

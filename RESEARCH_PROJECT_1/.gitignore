@@ -3,3 +3,5 @@ export/
 # CC0 photo textures: downloaded by tools/fetch_textures.py (credits.json is kept)
 textures/*.jpg
 __pycache__/
+# rig scene contains the Fab black cat model (third-party asset): rebuilt by maya/make_cat_rig.py
+maya/cat_rig.ma
