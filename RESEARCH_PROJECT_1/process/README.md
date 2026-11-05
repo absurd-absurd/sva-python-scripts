@@ -83,3 +83,17 @@ looked pink, not like a real light. Causes and fixes:
   it reads as red, and the bulb is now a real point light with inverse-square falloff right at the
   lamp: hot at the bulb, fading across the wall and nightstand.
 - **Carpet:** from red to a worn khaki brown (all rooms).
+
+### The lamp, still pink → deep red
+
+![Lamp options](2026-11-05_room104_lamp_red_options.png)
+
+Your note: "the lamp color is still pink". Very bright red bleaches toward pink and white on screen,
+and it was too bright in two places: the shade's glow, and the bulb light sitting inside the shade
+(it burnt a white spot into it and turned the cream wall pink). Tried three dimmer, pure-red versions
+(A, B, C, with the bulb moved under the shade). B was the reddest but its shade went dark grey.
+
+![Lamp final](2026-11-05_room104_lamp_deep_red.png)
+
+Final: bulb under the shade, pure red, dim (9); the shade is now red fabric itself (it showed grey in
+the flashlight before) with a soft glow (0.5).

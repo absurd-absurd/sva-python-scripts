@@ -185,6 +185,8 @@ def materials(colors, table):
             MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
             MEL.set_material_instance_scalar_parameter_value(mi, "Strength", float(spec.get("strength", 4.0)))
             MEL.set_material_instance_scalar_parameter_value(mi, "Flicker", float(spec.get("flicker", 0.0)))
+            if "glass" in spec:          # what it looks like unlit / in the flashlight (default: dark glass)
+                MEL.set_material_instance_vector_parameter_value(mi, "Glass", unreal.LinearColor(*spec["glass"], 1))
             seed = DEAD_SEED if spec.get("flicker", 0) >= 1 else float(i)
             MEL.set_material_instance_scalar_parameter_value(mi, "Seed", seed)
         elif name.startswith("pic_"):

@@ -89,7 +89,7 @@ FONT = {
 }
 
 WALK_RED = (250, 650)       # red wash lights under the awning: brightness, reach in cm
-LAMP_104 = (30, 450)        # Room 104's red bulb: brightness, reach in cm
+LAMP_104 = (9, 450)        # Room 104's red bulb: brightness, reach in cm
 PHOTOS = ["pic_lake_dusk", "pic_lake_fog", "pic_dock", "pic_lake_night"]
 PARTS = []      # every mesh made, combined at the end
 
@@ -310,8 +310,10 @@ def room_104(x0, x1):
     # --- nightstand: red bulb in the lamp, her diary with pages torn out
     lx, ly = x0 + 180, BACK - 47
     tube((lx, ly, 95), (lx, ly, 120), 16.5, "glow_lamp_red_mat", sides=8)                 # shade over the old one
-    # the bulb: real (inverse-square) falloff, so it's hot right at the lamp and fades across the room
-    light("light_104_lamp", lx, ly - 22, 106, [1.0, 0.02, 0.0], LAMP_104[0], LAMP_104[1])
+    # the bulb: real (inverse-square) falloff, so it's hot right at the lamp and fades across the room.
+    # It sits just under the shade: inside it, it burnt a white spot into the shade. Kept dim on
+    # purpose: bright red light on the cream walls reads as pink.
+    light("light_104_lamp", lx, ly - 22, 90, [1.0, 0.0, 0.0], LAMP_104[0], LAMP_104[1])
     rbox(lx - 16, ly - 8, 62.5, 15, 20, 4, "diary_mat", yaw=-12)
 
     # --- the table under the window: cold coffee, dead plant, torn pages
