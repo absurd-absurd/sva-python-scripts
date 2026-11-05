@@ -499,10 +499,101 @@ def window_inside(wx0, wx1, lit=False):
     for a, b, c_, d in ((wx0 - 6, wx0, z0, z1 + 6), (wx1, wx1 + 6, z0, z1 + 6), (wx0 - 6, wx1 + 6, z1, z1 + 6)):
         bevel_box(a, b, y, y + 1.5, c_, d, "wood_mat", r=0.4)                                 # casing
     tube((wx0 - 32, y + 7, z1 + 14), (wx1 + 32, y + 7, z1 + 14), 0.9, "brass_mat", sides=8)   # rod
-    if lit:
-        for a, b in ((wx0 - 26, (wx0 + wx1) / 2.0 + 2), ((wx0 + wx1) / 2.0 - 2, wx1 + 26)):
-            rsoft((a + b) / 2.0, y + 6, (z0 + z1) / 2.0 + 4, b - a, 3, z1 - z0 + 30, "glow_window_mat",
-                  jitter=0.4, seed=int(a))
-    else:
-        for k, (cx, w) in enumerate(((wx0 - 14, 30), (wx1 - 9, 20))):   # right one: the side wall is close
-            rsoft(cx, y + 6, (z0 + z1) / 2.0 + 4, w, 5, z1 - z0 + 30, "curtain_mat", jitter=1.0, seed=int(cx) + k)
+    if lit:                                               # closed, lit from behind
+        for k, (a, b) in enumerate(((wx0 - 26, (wx0 + wx1) / 2.0 + 2), ((wx0 + wx1) / 2.0 - 2, wx1 + 8))):
+            curtain((a + b) / 2.0, y + 1.5, 2.5, z1 + 13, b - a, "glow_window_mat", seed=int(a) + k, pleats=5)
+    else:                                                 # pulled back to the sides
+        for k, (cx, w) in enumerate(((wx0 - 14, 30), (wx1 - 9, 20))):
+            curtain(cx, y + 1.5, 2.5, z1 + 13, w, "curtain_mat", seed=int(cx) + k, pleats=3, depth=3.2)
+
+
+def ceiling_fan(cx, cy, ceiling_z, lit=False):
+    """An old motel ceiling fan with a light kit: canopy, downrod, motor housing with a trim
+    ring, five wooden blades on brass irons, a frosted glass bowl (glowing when lit=True)
+    and a pull chain."""
+    top = ceiling_z - 1.0
+    frustum(cx, cy, top - 4, top, 4.5, 7.5, "brass_mat", sides=20)                  # canopy
+    tube((cx, cy, top - 4), (cx, cy, top - 30), 1.1, "brass_mat", sides=10)          # downrod
+    mz = top - 36
+    frustum(cx, cy, mz + 4, mz + 7, 9.5, 5, "fan_mat", sides=24)                     # motor housing
+    frustum(cx, cy, mz - 2, mz + 4, 10, 9.5, "fan_mat", sides=24)
+    ring(cx, cy, mz + 1, 10.1, 0.6, "brass_mat", sides=24)
+    frustum(cx, cy, mz - 5, mz - 2, 7, 10, "fan_mat", sides=24)
+    for k in range(5):                                                               # blades
+        a = math.radians(k * 72 + 12)
+        ex, ey = math.cos(a), math.sin(a)
+        tube((cx + ex * 7, cy + ey * 7, mz - 1), (cx + ex * 18, cy + ey * 18, mz - 2.5), 0.9, "brass_mat", sides=6)
+        rbevel(cx + ex * 38, cy + ey * 38, mz - 2.8, 46, 13, 0.9, "wood_mat", r=0.35, yaw=math.degrees(a), tilt_x=6)
+    bz = mz - 5
+    frustum(cx, cy, bz - 3, bz, 5.5, 7, "brass_mat", sides=20)                       # light kit fitter
+    sphere(cx, cy, bz - 9, 10, "glow_lamp_mat" if lit else "bowl_mat", sides=20, scale=(1, 1, 0.62))   # bowl
+    sphere(cx, cy, bz - 15.4, 1.0, "brass_mat", sides=8)                             # finial
+    tube((cx + 5, cy, bz - 3), (cx + 5, cy, bz - 26), 0.18, "brass_mat", sides=3)    # pull chain
+    sphere(cx + 5, cy, bz - 26.8, 0.8, "brass_mat", sides=6)
+
+
+def curtain(cx, y_face, z_bot, z_top, width, mat, seed, pleats=6, depth=2.6):
+    """A floor-length curtain hanging from the rod: pleated folds across, sagging slightly
+    and flaring out a little toward the hem, gathered at the top."""
+    rng = random.Random(seed)
+    rows, cols = 16, pleats * 4
+    grid = []
+    for r in range(rows + 1):
+        t = r / rows                                       # 0 hem .. 1 top
+        z = z_bot + (z_top - z_bot) * t
+        row = []
+        for c in range(cols + 1):
+            u = c / cols - 0.5
+            x = u * width * (1.08 - 0.12 * t)
+            fold = math.sin(u * pleats * 6.283) * depth * (0.7 + 0.3 * (1 - t))
+            row.append((x, y_face + 2.5 + fold + rng.uniform(-0.2, 0.2), z + rng.uniform(-0.3, 0.3) * (1 - t)))
+        grid.append(row)
+    _cloth(cx, grid, mat)
+
+
+def bedspread(bx0, bx1, by0, fold_y, top_z, keep_flat=None, seed=0):
+    """A real bedspread thrown back: one cloth that lies over the bed from the foot to fold_y,
+    hangs down both sides and over the foot with soft folds, then is turned back on itself
+    in a loose roll. keep_flat = (x, y, r): a calm patch with no wrinkles (the note lies there)."""
+    rng = random.Random(seed)
+    hw = (bx1 - bx0) / 2.0 + 1.5
+    mid = (bx0 + bx1) / 2.0
+    hang = 30.0                                            # how far it drapes down the sides
+    # path along the bed (y, z): hanging over the foot, across the top, the fold, turned back
+    path = [(by0 - 3.0, top_z - hang), (by0 - 2.0, top_z - 12), (by0 + 2, top_z), (fold_y, top_z + 0.5),
+            (fold_y + 4, top_z + 3.0), (fold_y + 2, top_z + 6.0), (fold_y - 6, top_z + 5.2), (fold_y - 34, top_z + 3.4)]
+    lens = [0.0]
+    for (y0, z0), (y1, z1) in zip(path, path[1:]):
+        lens.append(lens[-1] + math.hypot(y1 - y0, z1 - z0))
+    rows, cols = 42, 36
+    grid = []
+    for r in range(rows + 1):
+        s = lens[-1] * r / rows
+        k = min(max(i for i in range(len(lens)) if lens[i] <= s), len(path) - 2)
+        t = (s - lens[k]) / max(1e-6, lens[k + 1] - lens[k])
+        y = path[k][0] + (path[k + 1][0] - path[k][0]) * t
+        z = path[k][1] + (path[k + 1][1] - path[k][1]) * t
+        on_top = k >= 2
+        turned = k >= 4                                    # the folded-back layer: narrower, no side drop
+        row = []
+        for c in range(cols + 1):
+            u = c / cols * 2 - 1                           # -1 .. 1 across
+            span = hw + (0 if turned else hang)
+            x = u * span
+            zz, yy = z, y
+            if not turned and abs(x) > hw:                 # over the side: hangs down, flares a little
+                d = abs(x) - hw
+                x = math.copysign(hw + 1.5 + d * 0.12, x)
+                zz = min(z, top_z) - d
+                yy += math.sin(y * 0.12 + d * 0.15) * 2.0 * (d / hang)    # folds in the drop
+            if turned:
+                x = u * (hw - 3)
+            w = 0.9 * math.sin(x * 0.21 + y * 0.09 + seed) + 0.6 * math.sin(x * 0.07 - y * 0.23)
+            if keep_flat:
+                fx, fy, fr = keep_flat
+                w *= min(1.0, math.hypot(mid + x - fx, yy - fy) / fr)
+            if on_top and abs(x) <= hw:
+                zz += max(-0.4, w) + rng.uniform(-0.15, 0.15)
+            row.append((x, yy, zz))
+        grid.append(row)
+    _cloth(mid, grid, "bedspread_mat")

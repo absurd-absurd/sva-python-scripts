@@ -60,6 +60,7 @@ MATS = {
     "glow_lamp_red_mat": (1.0, 0.05, 0.02),
     "room_wall_mat": (1, 1, 1), "seeglass_window_mat": (0.12, 0.14, 0.15), "frame_mat": (0.3, 0.22, 0.1),
     "pic_painting": (1, 1, 1),
+    "fan_mat": (0.32, 0.26, 0.17), "bowl_mat": (0.62, 0.6, 0.55),
     "tv_mat": (0.09, 0.075, 0.06), "screen_mat": (0.035, 0.045, 0.045), "sole_mat": (0.62, 0.6, 0.55),
     "lining_mat": (0.3, 0.1, 0.09), "pin_mat": (0.6, 0.03, 0.02), "red_string_mat": (0.45, 0.03, 0.03),
     "shoe_inner_mat": (0.05, 0.05, 0.05), "jacket_cuff_mat": (0.08, 0.1, 0.08),
@@ -295,6 +296,7 @@ def room_inside(x0, x1, her=False):
     lamp(x0 + 180, BACK - 47, *(("glow_lamp_red_mat", "glow_lamp_red_mat") if her else ()))
     dresser(x0)
     crt_tv(x0)
+    ceiling_fan(x0 + 250, (FRONT + BACK) / 2.0, H - 10, lit=her)   # Room 104's is on (Lamp_HerRoom)
 
 
 def rbox(cx, cy, cz, sx, sy, sz, mat, yaw=0, tilt_x=0, tilt_y=0):
@@ -338,12 +340,8 @@ def room_104(x0, x1):
     bx0, bx1 = x0 + 220, x1 - 40
     # fitted sheet over the mattress (top 57.3: the note clue lies at 58)
     bevel_box(bx0 + 3, bx1 - 3, BACK - 247, BACK - 30, 44, 57.3, "sheet_mat", r=5.5, seg=3)
-    for k, (dx, dy, w, d, h, yw) in enumerate(((-50, -215, 120, 60, 9, 3), (40, -210, 110, 70, 11, -4),
-                                               (-10, -180, 210, 26, 13, 2), (70, -175, 70, 30, 11, 8))):
-        flat = k == 0                                                                   # the note lies on this one
-        rsoft((bx0 + bx1) / 2.0 + dx, BACK + dy, 57 + h / 2.0, w, d, h, "bedspread_mat",   # bedspread thrown back,
-              jitter=0.3 if flat else 1.2, sag=0 if flat else -1.5, seed=40 + k, yaw=yw)  # bunched at the foot
-    rsoft(bx1 + 3, BACK - 205, 40, 5, 80, 38, "bedspread_mat", jitter=1.5, seed=45, tilt_x=10)   # hanging off the side
+    # the bedspread, thrown back toward the foot; the note (clues.json) lies on it at (-708, -914)
+    bedspread(bx0, bx1, BACK - 250, BACK - 150, 58.3, keep_flat=(-708, -914, 26), seed=3)
     rsoft(bx0 + 70, BACK - 50, 64.5, 85, 38, 14, "pillow_mat", sag=4, jitter=0.8, seed=46, yaw=-8)
     rsoft(bx1 - 60, BACK - 58, 64, 80, 36, 12, "pillow_mat", sag=3, jitter=0.8, seed=47, yaw=14, tilt_x=6)
 

@@ -251,3 +251,17 @@ Fix: `import_sets.py` turns Nanite off on the motel meshes every import.
 ![Outside fixed](2026-11-05_outside_fixed.png)
 
 Top: now. Bottom: earlier today. Motel front, lot and walkway match again (plus the new windows).
+
+### Ceiling fan light, a real bedspread, floor-length curtains
+
+![Fan, bedspread, curtains](2026-11-05_room104_fan_bedspread_curtains.png)
+
+Your notes: make the ceiling lamp higher poly and a fan light, the blanket more realistic, the
+curtains all the way to the floor.
+- Ceiling fan with a light kit in every room (canopy, downrod, motor housing with a brass ring, five
+  wooden blades on brass irons, frosted bowl, pull chain). Room 104's bowl glows and the room light
+  now sits just under it. (The bulb shape in these editor shots is only Unreal's light icon.)
+- Bedspread: one piece of cloth instead of lumps. It lies over the foot half, hangs down both sides
+  and over the foot with folds, and is turned back on itself in a loose roll; the note lies on it.
+- Curtains: pleated cloth from the rod down to the carpet (closed and glowing in 102 and 106).
+- Outside checked after the rebuild: unchanged.

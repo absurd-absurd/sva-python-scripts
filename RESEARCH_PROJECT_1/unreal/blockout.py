@@ -293,7 +293,7 @@ def weather():
     pp.set_editor_property("settings", s)
 
     # a dim lamp inside her room (the streetlight comes with the Maya motel)
-    lamp = spawn(unreal.PointLight, "Lamp_HerRoom", (-750, -1050, 280))
+    lamp = spawn(unreal.PointLight, "Lamp_HerRoom", (-750, -1050, 240))   # just under the ceiling fan's bowl
     lamp.point_light_component.set_intensity(60)
     lamp.point_light_component.set_light_color(unreal.LinearColor(1.0, 0.8, 0.55, 1))
     lamp.point_light_component.set_attenuation_radius(450)
