@@ -603,26 +603,45 @@ def bedspread(bx0, bx1, by0, fold_y, top_z, keep_flat=None, seed=0):
 
 
 def folded(cx, cy, z, w, d, mat, kind, seed):
-    """A folded piece of clothing lying in the suitcase (z = what it lies on): a soft body,
-    a second folded layer on top, the rounded fold along the front, and what makes it that
-    garment: a shirt's collar, placket and buttons; jeans' centre seam and back pocket;
-    a sweater's ribbed hem."""
-    rsoft(cx, cy, z + 1.6, w, d, 3.2, mat, jitter=0.12, sag=0.3, smooth=3, seed=seed, div=(4, 2, 5))
-    rsoft(cx, cy + 1.5, z + 3.9, w - 2, d - 7, 1.8, mat, jitter=0.1, smooth=3, seed=seed + 1, div=(4, 2, 5))
-    tube((cx - w / 2 + 1.8, cy - d / 2 + 1.7, z + 2.0), (cx + w / 2 - 1.8, cy - d / 2 + 1.7, z + 2.0), 1.7, mat, sides=14)
+    """A folded piece of clothing lying in the suitcase (z = what it lies on), textured fabric
+    (tools/make_fabrics.py): a soft body with a rounded fold along the front, then what makes
+    it that garment. shirt: flannel, a real collar (band + two points), placket, buttons and
+    one sleeve hanging out over the front of the case. jeans: denim, waistband with belt
+    loops, button and fly. sweater: knit, both sleeves folded across the front, ribbed hem."""
+    rsoft(cx, cy, z + 1.7, w, d, 3.4, mat, jitter=0.15, sag=0.4, smooth=2, seed=seed, div=(4, 2, 5))
+    tube((cx - w / 2 + 1.8, cy - d / 2 + 1.8, z + 2.0), (cx + w / 2 - 1.8, cy - d / 2 + 1.8, z + 2.0), 1.8, mat, sides=14)
     for ex in (cx - w / 2 + 1.8, cx + w / 2 - 1.8):
-        sphere(ex, cy - d / 2 + 1.7, z + 2.0, 1.7, mat, sides=12)
-    top = z + 4.8
+        sphere(ex, cy - d / 2 + 1.8, z + 2.0, 1.8, mat, sides=12)
+    top = z + 3.4
+    back = cy + d / 2
     if kind == "shirt":
-        ring(cx, cy + d / 2 - 9, top + 0.3, 4.2, 0.8, mat, sides=20)                     # collar
-        rbox(cx, cy - 1, top + 0.15, 2.2, d - 20, 0.35, mat)                              # placket
-        for k in range(3):
-            sphere(cx, cy + 4 - k * 6, top + 0.45, 0.45, "sole_mat", sides=8)             # buttons
+        rsoft(cx, back - 4, top + 0.9, 11, 3.2, 1.8, mat, smooth=2, seed=seed + 1)                       # collar band
+        for side in (-1, 1):                                                                            # collar points
+            rsoft(cx + side * 3.2, back - 7.5, top + 0.7, 5, 5.5, 1.0, mat, smooth=2, seed=seed + 2,
+                  yaw=side * 28)
+        rbox(cx, cy - 1, top + 0.25, 2.4, d - 16, 0.5, mat)                                            # placket
+        for k in range(4):
+            frustum(cx, back - 12 - k * 6, top + 0.4, top + 0.75, 0.55, 0.5, "sole_mat", sides=10)      # buttons
+        # one sleeve slid out over the front edge of the case, hanging down outside it
+        p0 = (cx - w / 2 + 3, cy - d / 2 + 4, top - 0.5)
+        pts = [p0, (p0[0] - 2, p0[1] - 8, top + 0.6), (p0[0] - 3, p0[1] - 13, top - 3),
+               (p0[0] - 3.5, p0[1] - 15, top - 14), (p0[0] - 3, p0[1] - 15.5, top - 24)]
+        for a, b in zip(pts, pts[1:]):
+            tube(a, b, 3.0, mat, sides=12)
+            sphere(*b, 3.0, mat, sides=12)
+        tube(pts[-1], (pts[-1][0], pts[-1][1], pts[-1][2] - 4), 3.2, mat, sides=12)                    # cuff
     elif kind == "jeans":
-        rbox(cx, cy, top + 0.12, 0.5, d - 9, 0.3, "strap_mat")                            # centre seam
-        rbevel(cx + 5, cy + 4, top + 0.2, 7.5, 8, 0.4, mat, r=0.15)                       # back pocket
-        for dy in (-3.6, 3.6):
-            rbox(cx + 5, cy + 4 + dy, top + 0.45, 7, 0.2, 0.1, "brass_mat")              # stitching
+        rsoft(cx, back - 2.5, top + 0.4, w - 1, 4.5, 1.6, mat, smooth=2, seed=seed + 1)                  # waistband
+        for dx in (-w / 2 + 3, -3, 3, w / 2 - 3):
+            rbox(cx + dx, back - 2.5, top + 1.25, 1.2, 4.8, 0.5, mat)                                   # belt loops
+        sphere(cx, back - 2.5, top + 1.3, 0.8, "brass_mat", sides=10)                                  # button
+        rbox(cx, back - 12, top + 0.2, 0.4, 15, 0.3, "brass_mat")                                       # fly stitch
+        rbox(cx + 2.5, back - 12, top + 0.2, 0.3, 15, 0.3, "brass_mat")
+        rbox(cx, cy - 4, top + 0.15, 0.4, d - 18, 0.25, "strap_mat")                                    # leg seam
     elif kind == "sweater":
-        for k in range(8):                                                                # ribbed hem
-            rbox(cx - w / 2 + 2.5 + k * (w - 5) / 7, cy - d / 2 + 6, top - 0.6, 0.7, 7, 0.5, mat)
+        rsoft(cx, back - 3, top + 0.6, w - 3, 5, 2.0, mat, smooth=2, seed=seed + 1)                       # neck
+        for side in (-1, 1):                                                                            # sleeves crossed
+            rsoft(cx, cy + 1, top + 1.0 + (0.9 if side > 0 else 0), w * 1.05, 6.5, 2.2, mat, smooth=2,
+                  seed=seed + 2 + side, yaw=side * 38)
+        for k in range(8):                                                                              # ribbed hem
+            rbox(cx - w / 2 + 2.5 + k * (w - 5) / 7, cy - d / 2 + 5, top - 0.2, 0.8, 6, 0.6, mat)

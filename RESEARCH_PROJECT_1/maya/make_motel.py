@@ -403,11 +403,7 @@ def room_104(x0, x1):
     rbox(fx, fy, 200, 3.5, 3.5, 4, "string_mat")                                          # twine knots
     rbox(fx + 0.5, fy, 172, 3, 3, 4, "string_mat")
 
-    # --- a year of damp: a water stain on the ceiling, cobwebs
-    for r, ox, oy, mat in ((60, 0, 0, "stain_wall_mat"), (40, 25, 20, "stain_dark_mat"), (25, -20, 30, "stain_dark_mat")):
-        zb = H - 11 - (60 - r) * 0.04                      # overlapping stains 8 mm apart, under the ceiling
-        tube((x0 + 300 + ox, FRONT + 330 + oy, zb), (x0 + 300 + ox, FRONT + 330 + oy, zb + 0.5), r,
-             mat, sides=10)
+    # --- a year of damp: cobwebs
     # cobwebs: one big web in the back corner above the bed (you see it walking in), a small
     # one over the door
     cobweb((inner_r, BACK - t), -1, -1, 62, H - 10)

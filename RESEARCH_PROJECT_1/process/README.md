@@ -276,3 +276,16 @@ clothes in the suitcase should be higher poly.
 - Bedspread: only a few broad, gentle folds.
 - Suitcase: three properly folded garments (smoother, two layers and a rounded fold): a sweater with a
   ribbed hem, jeans with a centre seam and stitched back pocket, a shirt with collar, placket and buttons.
+
+### Better clothes, no circles on the ceiling
+
+![Fabrics](2026-11-05_fabrics.png)
+![Clothes and ceiling](2026-11-05_room104_clothes_ceiling.png)
+
+Your notes: make the clothes better, get rid of the weird circles on the ceiling.
+- The circles were the water-stain discs on the ceiling: removed.
+- Clothes now have real fabric (`tools/make_fabrics.py`): a red/black flannel shirt with a proper
+  collar, placket, buttons and one sleeve hanging out over the front of the case; denim jeans with a
+  waistband, belt loops, button and fly stitching; an oatmeal knit sweater folded with its sleeves
+  crossed and a ribbed hem. (Flannel redrawn once: the first version was mostly black.)
+- Outside re-checked after the rebuild: unchanged.
