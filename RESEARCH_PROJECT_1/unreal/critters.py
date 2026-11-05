@@ -438,16 +438,6 @@ def main():
     # the owl on a dead tree just off the trail (yaw 0: the head-turn assumes it faces +y)
     place("snag", *assets["snag"], (450, 4500, 0))
     place("owl", *assets["owl"], (450, 4500, 301))
-    # the black cat (your Fab model, scaled to cat size)
-    fab = fab_cat(mat)
-    if fab:
-        # (the walking cat is now the rigged one: unreal/cat_walk.py)
-        # ...and sometimes it's out there, watching you (each spot shows up at its own times)
-        eyes_w = instance("catsit", "critter_cateyes_mat", mat, (0.55, 0.9, 0.25))
-        for (x, y, z) in ((-1500, 7000, 0), (2600, 9700, 0), (1500, 14650, 22), (4700, 12650, 0), (2050, 4150, 0),
-                          (-3200, 13800, 0), (-2800, 1200, 0)):
-            place("catsit", fab[0], [fab[1]["catsit"]], (x, y, z), scale=CAT_SCALE)
-            place("catsit", assets["cateyes"][0], [eyes_w], (x, y, z), scale=CAT_SCALE)
     unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
     print("critters placed:", {k: len(v) for k, v in PLACED.items()})
 

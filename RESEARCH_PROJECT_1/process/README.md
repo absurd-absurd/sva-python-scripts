@@ -387,3 +387,9 @@ On the way: raising the tail tore the mesh (the model's tail hangs, so it now ha
 first skin gave the back legs to the tail, and a bob key dropped the body to the floor.
 
 ![Skin weights](2026-11-05_cat_rig_weights.png)
+
+### The cat: removed
+
+Your note: "just get rid of the cat, it looks really bad." The walking cat, its sequence, the seven
+watching cats and the rig scripts are gone (they stay in the git history if you ever want them
+back). Your Fab download itself is untouched in Content/Fab. The bugs, bats, crows, owl and flock stay.

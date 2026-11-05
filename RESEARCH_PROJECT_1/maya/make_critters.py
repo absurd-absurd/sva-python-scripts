@@ -226,7 +226,7 @@ def cateyes():
         sphere(15.2 + s_ * 3.7, 36.8, 51.2, 1.55, "critter_cateyes_mat", sides=12, scale=(1.3, 0.55, 0.8))
 
 
-KINDS = {"cateyes": cateyes, "cat": cat, "catsit": catsit, "crow": crow, "owl": owl, "snag": snag, "moth": moth, "firefly": firefly, "gnat": gnat, "bat": bat, "flock": flock_bird}
+KINDS = {"crow": crow, "owl": owl, "snag": snag, "moth": moth, "firefly": firefly, "gnat": gnat, "bat": bat, "flock": flock_bird}
 
 
 def export_one(kind):
