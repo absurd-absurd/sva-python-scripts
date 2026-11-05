@@ -132,44 +132,89 @@ def snag():
     tube((-2, 0, 40), (-30, 5, 0), 6, m, sides=6)                               # a root
 
 
-def _cat_head(m, e, y, z):
-    """Head with ears, muzzle and eyes, centred at (0, y, z), facing +y."""
-    sphere(0, y, z, 6.2, m, sides=12, scale=(1.05, 0.95, 0.9))
-    rsoft(0, y + 4.8, z - 1.6, 5, 4, 3.6, m, smooth=1)                          # muzzle
+def _limb(points, radii, m, sides=10):
+    """A smooth limb or tail through points, radius tapering along radii, with round joints."""
+    for (a, b), (ra, rb) in zip(zip(points, points[1:]), zip(radii, radii[1:])):
+        tube(a, b, (ra + rb) / 2.0, m, sides=sides)
+    for p, r in zip(points, radii):
+        sphere(*p, r, m, sides=sides)
+
+
+def _torso(m, y0, y1, profile, seed=0):
+    """A cat's body as one smooth shape along y (y0 rump .. y1 chest). profile(u) gives
+    (half width, half height, centre height) at u = 0..1 along the body."""
+    c = cmds.polyCube(w=1, h=1, d=1, sx=6, sy=6, sz=14, ch=False)[0]
+    pts = []
+    for x, y, z in _verts(c):
+        u = z + 0.5
+        hw, hh, cz = profile(u)
+        v, q = x * 2, y * 2                                   # -1..1 square cross-section
+        r = max(abs(v), abs(q))
+        n = math.hypot(v, q) or 1.0
+        v, q = v / n * r, q / n * r                            # square -> round
+        pts.append((v * hw, cz + q * hh, y0 + (y1 - y0) * u))
+    _set_verts(c, pts)
+    cmds.polySmooth(c, dv=2, ch=False)
+    return keep(c, m)
+
+
+def _cat_head(m, e, y, z, look=0.0):
+    """Head centred at (0, y, z) facing +y: round skull, cheeks, muzzle, nose, pointed ears,
+    almond eyes standing just out of the face."""
+    sphere(0, y, z, 5.4, m, sides=20, scale=(1.08, 1.0, 0.92))
     for s_ in (-1, 1):
-        tube((s_ * 3.4, y - 0.5, z + 4.2), (s_ * 4.2, y - 0.2, z + 9.2), 1.7, m, sides=4)   # ears
-        sphere(s_ * 2.4, y + 5.4, z + 1.0, 1.45, e, sides=8, scale=(1, 0.6, 0.85))        # eyes (stand out of the head)
+        sphere(s_ * 2.6, y + 1.8, z - 1.6, 2.9, m, sides=14)                       # cheeks
+        frustum(s_ * 3.0, y - 0.6, z + 3.2, z + 9.4, 2.4, 0.2, m, sides=10)       # ears
+        sphere(s_ * 2.15, y + 4.75, z + 0.9, 1.25, e, sides=12, scale=(1.25, 0.55, 0.75))   # eyes
+    rsoft(0, y + 4.6, z - 2.0, 4.4, 3.4, 3.0, m, smooth=2)                         # muzzle
+    sphere(0, y + 6.1, z - 0.9, 0.8, m, sides=8, scale=(1.2, 0.8, 0.7))             # nose
+
+
+def _cat_body(u):
+    """half width, half height, centre z along the body (0 rump .. 1 chest)."""
+    hw = 4.2 + 0.9 * math.exp(-((u - 0.18) / 0.2) ** 2) - 0.9 * math.exp(-((u - 0.5) / 0.18) ** 2) \
+        + 0.5 * math.exp(-((u - 0.82) / 0.15) ** 2)
+    hh = 5.0 + 0.9 * math.exp(-((u - 0.2) / 0.2) ** 2) - 0.8 * math.exp(-((u - 0.5) / 0.2) ** 2) \
+        + 0.9 * math.exp(-((u - 0.82) / 0.16) ** 2)
+    end = min(u, 1 - u)
+    k = math.sqrt(max(0.02, min(1.0, end / 0.12)))            # rounded ends
+    return hw * k, hh * k, 21.0 + 0.8 * math.sin(u * math.pi) - 1.2 * math.exp(-((u - 0.5) / 0.2) ** 2) * 0.5
 
 
 def cat():
-    """A thin black cat walking (feet at the origin, facing +y): body, chest, head, a long tail
-    curving up, four legs with paws. The shader swings the legs (everything below 15 cm),
-    sways the tail (behind y -18) and turns the head (in front of y 14, above 22 cm)."""
+    """A slender black cat walking (feet at the origin, facing +y). The shader moves it:
+    legs = everything below 16 cm, tail = behind y -18, head = in front of y 17 and above 23 cm."""
     m, e = "critter_cat_mat", "critter_cat_eye_mat"
-    rsoft(0, -2, 21, 11, 34, 12, m, smooth=2)                                  # body
-    rsoft(0, 12, 22, 10, 10, 12, m, smooth=2)                                  # chest
-    _cat_head(m, e, 21, 29)
-    pts = [(0, -18, 23), (0, -26, 26), (0, -31, 33), (0, -33, 42), (0, -31, 49)]
-    for a, b in zip(pts, pts[1:]):
-        tube(a, b, 1.5, m, sides=6)
-    for x in (-3.8, 3.8):
-        for y in (12, -13):
-            tube((x, y, 17), (x, y + 0.5, 1.6), 1.7 if y > 0 else 2.0, m, sides=6)       # legs
-            sphere(x, y + 1.0, 1.4, 1.7, m, sides=6, scale=(1, 1.3, 0.7))                # paws
+    _torso(m, -18, 15, _cat_body)
+    _limb([(0, 12, 24), (0, 16, 27.5), (0, 19.5, 29.5)], [3.6, 3.0, 2.7], m)                   # neck
+    _cat_head(m, e, 21.5, 31)
+    for s_ in (-1, 1):
+        _limb([(s_ * 2.9, 11, 18), (s_ * 2.8, 12, 9.5), (s_ * 2.7, 11.6, 2.6)], [1.9, 1.35, 1.1], m)      # front legs
+        sphere(s_ * 2.7, 12.6, 1.2, 1.35, m, sides=10, scale=(1, 1.4, 0.7))
+        _limb([(s_ * 3.4, -12, 19.5), (s_ * 3.4, -7.5, 11), (s_ * 3.2, -13.5, 5), (s_ * 3.1, -12.2, 1.8)],
+              [2.8, 1.8, 1.2, 1.05], m)                                                                     # back legs
+        sphere(s_ * 3.1, -11.2, 1.2, 1.35, m, sides=10, scale=(1, 1.4, 0.7))
+    pts, rad = [], []
+    for i in range(14):                                         # long tail, rising, tip curling
+        t = i / 13.0
+        pts.append((0, -18 - 22 * t + 4 * max(0, t - 0.75) ** 2 * 10, 22 + 6 * t + 22 * t * t))
+        rad.append(1.7 - 0.8 * t)
+    _limb(pts, rad, m, sides=8)
 
 
 def catsit():
     """The same cat sitting upright (feet at the origin, facing +y), tail curled round its feet."""
     m, e = "critter_catsit_mat", "critter_catsit_eye_mat"
-    rsoft(0, -4, 10, 14, 18, 18, m, smooth=2)                                  # haunches
-    rsoft(0, 1, 21, 10, 11, 20, m, smooth=2, tilt_y=10)                         # chest, upright
-    _cat_head(m, e, 3, 34)
-    for x in (-2.6, 2.6):
-        tube((x, 5.5, 16), (x, 7, 1.4), 1.6, m, sides=6)                        # front legs
-        sphere(x, 7.6, 1.3, 1.6, m, sides=6, scale=(1, 1.3, 0.7))
-    pts = [(0, -12, 2), (7, -8, 1.6), (9, 0, 1.5), (6, 8, 1.5), (1, 10, 1.6)]
-    for a, b in zip(pts, pts[1:]):
-        tube(a, b, 1.5, m, sides=6)                                             # tail round the front
+    _torso(m, -9, 7, lambda u: (lambda hw, hh: (hw * 1.15, hh * 1.35, 10 + 11 * u))(*_cat_body(u)[:2]))
+    _limb([(0, 3, 22), (0, 4.5, 27), (0, 5, 30)], [4.0, 3.2, 2.8], m)                           # neck
+    _cat_head(m, e, 6, 33)
+    for s_ in (-1, 1):
+        _limb([(s_ * 2.4, 4.5, 17), (s_ * 2.3, 6.5, 8), (s_ * 2.2, 7, 2.4)], [1.8, 1.3, 1.1], m)  # front legs
+        sphere(s_ * 2.2, 8.0, 1.2, 1.35, m, sides=10, scale=(1, 1.4, 0.7))
+        sphere(s_ * 5.2, -2, 5, 4.5, m, sides=14, scale=(0.6, 1.3, 0.9))                       # haunches
+        sphere(s_ * 3.6, 4.5, 1.2, 1.4, m, sides=10, scale=(1, 1.6, 0.6))                      # back feet
+    pts = [(0, -9, 2), (5, -8, 1.8), (9, -2, 1.6), (9.5, 4, 1.5), (7, 9, 1.5), (3, 11, 1.6), (0.5, 11.5, 1.8)]
+    _limb(pts, [1.7, 1.6, 1.5, 1.4, 1.2, 1.05, 0.95], m, sides=8)                          # tail round the front
 
 
 KINDS = {"cat": cat, "catsit": catsit, "crow": crow, "owl": owl, "snag": snag, "moth": moth, "firefly": firefly, "gnat": gnat, "bat": bat, "flock": flock_bird}

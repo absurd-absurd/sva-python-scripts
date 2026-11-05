@@ -44,9 +44,14 @@ if (Mode > 5.5) {                                          // a cat sitting far 
     return float3(Lr - L.xy, 0) - L * (1.0 - seen);       // not there: shrunk to nothing
 }
 if (Mode > 4.5) {                                          // the black cat walking round the motel
-    float cyc = 25.0, walk = 18.0;                         // walks 18 s, sits 7 s
+    // slow, elegant and a little uncanny: long unhurried strides in a cat's walking order,
+    // feet planted (steps follow the distance walked, so the paws never slide), the body
+    // gently bobbing and swaying, the tail waving slowly from base to tip, and the head
+    // turning to keep watching you as it goes. Every 22 s it stops for 10 s to sit and stare.
+    float cyc = 32.0, walk = 22.0;
     float k = floor(T / cyc), f = T - k * cyc;
     float sitting = step(walk, f);
+    float ease = smoothstep(walk - 1.5, walk, f) * (1 - smoothstep(cyc - 1.5, cyc, f));   // settles / rises
     float dist = (k * walk + min(f, walk)) * Speed;
     float hx = Radius, hy = Height, per = 4.0 * (hx + hy);
     float s = fmod(dist, per);
@@ -58,19 +63,39 @@ if (Mode > 4.5) {                                          // the black cat walk
     float2 toCat = OPos.xy + p - PPos.xy;
     float d = length(toCat);
     float2 away = toCat / max(d, 1.0);
-    float push = saturate((400.0 - d) / 250.0);            // you come close: it bolts away
+    float push = saturate((400.0 - d) / 250.0);            // you come close: it slinks away
     p += away * push * 260.0;
-    float2 face = lerp(dir, -away, sitting * (1 - push));  // sitting: stares at you
-    face = lerp(face, away, push);
-    face = normalize(face + 1e-4);
+    float2 face = lerp(dir, -away, ease * (1 - push));     // sitting: turned to stare at you
+    face = normalize(lerp(face, away, push) + 1e-4);
     float a = atan2(-face.x, face.y);
-    float moving = (1 - sitting) + push;
+    float moving = saturate((1 - ease) + push);
     float3 l = L;
-    float leg = saturate((15.0 - L.z) / 15.0);             // legs: swing from the hips
-    float phase = T * (6.0 + push * 8.0) + (L.y > 0 ? 0.0 : 3.1416) + (L.x > 0 ? 3.1416 : 0.0);
-    l.y += sin(phase) * leg * 5.0 * saturate(moving);
-    if (L.y < -18.0) l.x += sin(T * 2.2) * (-L.y - 18.0) * 0.25;      // tail sways
-    l.z -= sitting * (1 - push) * saturate(-L.y / 20.0) * 7.0;       // sitting: hips down
+    // legs: everything below 16 cm swings from the hip and lifts on the way forward
+    float leg = saturate((16.0 - L.z) / 16.0);
+    float ph = dist * 6.2832 / 34.0 + push * T * 9.0;      // one full stride per 34 cm
+    float off = (L.y > 0 ? 1.5708 : 0.0) + (L.x > 0 ? 3.1416 : 0.0);   // left hind, left fore, right hind, right fore
+    l.y += sin(ph + off) * leg * 6.5 * moving;
+    l.z += max(0.0, cos(ph + off)) * leg * 2.2 * moving;
+    // body: a soft bob twice per stride and a slight sway
+    l.z += sin(ph * 2.0) * 0.45 * moving * (1 - leg);
+    l.x += sin(ph) * 0.6 * moving * (1 - leg);
+    // tail: a slow wave travelling out to the tip
+    if (L.y < -18.0) {
+        float t = saturate((-L.y - 18.0) / 26.0);
+        l.x += sin(T * 1.1 - t * 2.6) * t * 7.0;
+        l.z += sin(T * 0.7 - t * 2.0) * t * 2.5;
+    }
+    // sitting: hips down, front stays up
+    l.z -= ease * (1 - push) * saturate(-L.y / 18.0) * 8.0;
+    // head: turns (smoothly, up to ~70 degrees) to watch you while you're within 20 m
+    if (L.y > 17.0 && L.z > 23.0) {
+        float2 toP = PPos.xy - (OPos.xy + p);
+        float rel = atan2(-toP.x, toP.y) - a;
+        rel = atan2(sin(rel), cos(rel));
+        float h = clamp(rel, -1.2, 1.2) * saturate((2000.0 - length(toP)) / 500.0);
+        float2 q = l.xy - float2(0, 17.0);
+        l.xy = float2(0, 17.0) + float2(q.x * cos(h) - q.y * sin(h), q.x * sin(h) + q.y * cos(h));
+    }
     float2 lr = float2(l.x * cos(a) - l.y * sin(a), l.x * sin(a) + l.y * cos(a));
     float gone = saturate((d - 150.0) / 100.0);            // right next to you: it's gone
     return float3(p, 0) + float3(lr, l.z) * gone - L;
@@ -136,7 +161,7 @@ KIND = {
     "owl":     dict(Mode=4, Speed=1, Radius=0, Height=25, Flap=0, Body=0, Glow=0, Bounds=3),
     "snag":    dict(Mode=9, Speed=0, Radius=0, Height=0, Flap=0, Body=0, Glow=0, Bounds=1),
     # cat: Speed cm/s, Radius / Height = half size of the rectangle it walks round the motel
-    "cat":     dict(Mode=5, Speed=55, Radius=1700, Height=625, Flap=0, Body=0, Glow=0, Bounds=120),
+    "cat":     dict(Mode=5, Speed=30, Radius=1700, Height=625, Flap=0, Body=0, Glow=0, Bounds=120),
     # watching cat: seen only between Radius and Height cm away (and only some of the time)
     "catsit":  dict(Mode=6, Speed=0, Radius=1100, Height=4500, Flap=0, Body=0, Glow=0, Bounds=3),
 }

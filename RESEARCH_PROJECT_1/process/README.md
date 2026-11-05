@@ -337,3 +337,16 @@ Row 3: a "watching" cat by the shack: there in one shot out of three (they only 
   part of the time, only when you're between 11 and 45 m away, always facing you; its eyes shine
   green when you look straight at it.
 All of it runs in the vertex shader of `M_PS2_Critter` (no Blueprints).
+
+### The cat, take two: higher poly, a slow elegant walk
+
+![Cat v2](2026-11-05_cat_v2.png)
+
+Your note: "make the cat higher poly, he looks really bad, give him a slow elegant and mysterious walk."
+- Model (~20k triangles): one smooth torso (rounded haunches, narrow waist, deeper chest), a neck, a
+  round head with cheeks, muzzle, nose, pointed ears and almond eyes, slender jointed legs (the back
+  legs bend backwards at the hock like a real cat's), paws, a long tapering tail that rises and curls.
+- Walk: ~30 cm/s; each leg lifts and reaches in a cat's walking order and the steps follow the
+  distance walked, so the paws don't slide; a soft bob and sway; the tail waves slowly from base to
+  tip; it turns its head to keep watching you as it walks (shots 2 and 3, eyes shining); every 22 s it
+  sits for 10 s and stares. The watching cats use the same new model, sitting.
