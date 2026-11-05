@@ -24,6 +24,7 @@ SHAPES = {
     "door":  ((108, 5, 228), "MI_PS2_door_mat", (54, 0, 114)),
     "room_door": ((138, 5, 228), "MI_PS2_door_mat", (69, 0, 114)),
 }
+DOOR_MESH = {"room_door": "/Game/Horror/Sets/prop_room_door", "door": "/Game/Horror/Sets/prop_office_door"}
 FIELDS = {"prompt": "Prompt", "title": "Title", "body": "Body", "journal": "Journal",
           "gives_key": "GivesKey", "needs_key": "NeedsKey", "locked_text": "LockedText",
           "objective": "Objective", "pickup": "PickUp",
@@ -66,10 +67,17 @@ def main():
         a.set_editor_property("IsDoor", c["shape"] in ("door", "room_door"))
         size, mat, offset = SHAPES[c["shape"]]
         mesh = a.get_components_by_class(unreal.StaticMeshComponent)[0]
-        mesh.set_static_mesh(CUBE)
-        mesh.set_relative_location(unreal.Vector(*offset), False, True)
-        mesh.set_relative_scale3d(unreal.Vector(size[0] / 100, size[1] / 100, size[2] / 100))
-        mesh.set_material(0, unreal.load_asset(MATS + mat))
+        door = DOOR_MESH.get(c["shape"])
+        if door and unreal.EditorAssetLibrary.does_asset_exist(door):
+            # the detailed panelled door from maya/exterior_props.py, built at its hinge
+            mesh.set_static_mesh(unreal.load_asset(door))
+            mesh.set_relative_location(unreal.Vector(0, 0, 0), False, True)
+            mesh.set_relative_scale3d(unreal.Vector(1, 1, 1))
+        else:
+            mesh.set_static_mesh(CUBE)
+            mesh.set_relative_location(unreal.Vector(*offset), False, True)
+            mesh.set_relative_scale3d(unreal.Vector(size[0] / 100, size[1] / 100, size[2] / 100))
+            mesh.set_material(0, unreal.load_asset(MATS + mat))
         if in_room(c["at"]) and "door" not in c["shape"]:
             mesh.set_editor_property("lighting_channels", ROOM_LIGHT)   # like the room around it
         # the invisible aim box: the object plus HIT_MARGIN all round (doors: just the door)

@@ -426,3 +426,30 @@ twentieth of the old brightness; the rest are plain dark bugs.
 Your note: "make them unaffected by the flashlight, it's making them glow." The bugs (moths, fireflies,
 gnats, the floating specks) are on lighting channel 2 only; the flashlight lights channels 0 and 1, so
 the beam passes over them and they stay dark little shapes in the night light. Birds are unchanged.
+
+## 2026-11-05: Motel outside, detail pass
+
+![Exterior detail](2026-11-05_exterior_detail.png)
+
+Your notes: the sign is perfect, leave it; everything else outside more high poly and detailed,
+including the parking lot and the car; make all the lamp posts the cool colour of the one on the left.
+New `maya/exterior_props.py` (rooftop sign and neon cross untouched):
+- Room fronts: brick base with a concrete cap, stepped door casings with a cornice, framed windows
+  with inner stops, a middle bar and a sloped sill, number plates with screws, through-wall AC units
+  (louvres, vents, brackets, a drip stain) under four windows, doormats.
+- Doors: real panelled doors (six raised panels each side, brass knob and backplate, peephole, kick
+  plate, hinges) replace the plain slabs; they still swing on E (`place_clues.py` uses the new mesh).
+- Awning: a rippled corrugated roof, fascia, gutter and downspouts, steel posts with base plates,
+  bolts and knee braces, walkway expansion joints. Plastic patio chairs with slats, arms and feet.
+- Office: brick cap, door cornice, window mullions and sill, gutter. ICE machine: bevelled cabinet on
+  legs, lit sign, steel door with handle and hinges, vent, coin plate.
+- Lamp posts: concrete footing, bolted flange, tapered pole, curved arm, cobra head with a lens; all
+  in the streetlight's cool green-white (the dead lamp stays dark).
+- Payphone: keypad, coin slot, return chute, handset on its hooks, armoured cord, shelf, lit hood.
+  Dumpster: tapered body, ribs, lifting pockets, one lid propped open on a bag, castors, more bags.
+- Parking lot: bevelled wheel stops with rebar pins, a bevelled curb, a storm drain, a manhole cover,
+  weeds in the cracks and along the curb.
+- The car: a shaped sedan body (sloped nose and trunk), glass greenhouse with pillars and a roof
+  panel, tyres with hubcaps, chrome bumpers and side trim, a grille, headlights and red tail lights,
+  mirrors, door seams and handles, wipers, plates, an aerial, an exhaust.
+Motel: ~255k -> ~333k triangles.

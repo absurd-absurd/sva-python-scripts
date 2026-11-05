@@ -61,6 +61,9 @@ MATS = {
     "room_wall_mat": (1, 1, 1), "seeglass_window_mat": (0.12, 0.14, 0.15), "frame_mat": (0.3, 0.22, 0.1),
     "pic_painting": (1, 1, 1),
     "fan_mat": (0.32, 0.26, 0.17), "bowl_mat": (0.62, 0.6, 0.55),
+    "ac_mat": (0.55, 0.53, 0.48), "doormat_mat": (0.14, 0.11, 0.08), "post_mat": (0.18, 0.17, 0.16),
+    "lid_mat": (0.06, 0.07, 0.06), "chrome_mat": (0.5, 0.5, 0.52), "plate_mat": (0.75, 0.72, 0.6),
+    "weed_mat": (0.16, 0.2, 0.09),
     "tv_mat": (0.09, 0.075, 0.06), "screen_mat": (0.035, 0.045, 0.045), "sole_mat": (0.62, 0.6, 0.55),
     "lining_mat": (0.3, 0.1, 0.09), "pin_mat": (0.6, 0.03, 0.02), "red_string_mat": (0.45, 0.03, 0.03),
     "shoe_inner_mat": (0.05, 0.05, 0.05), "jacket_cuff_mat": (0.08, 0.1, 0.08),
@@ -218,33 +221,11 @@ def room_row():
         if i == HER_ROOM:
             room_104(x0, x1)
         IN_ROOM[0] = False
-        # brick lower wall, sticking out 3 cm
-        door_x0, door_x1 = x0 + 140, x0 + 280                       # doorway, 140 wide x 230 tall
-        for a, b in ((x0, door_x0 - 8), (door_x1 + 8, x1)):
-            box(a, b, FRONT - 3, FRONT, 0, 100, "brick_mat")
-        # window: a real opening (room_inside cuts it), a trim frame with a middle bar,
-        # see-through glass; the curtains hang inside (closed and lit in 102 and 106)
         wx0, wx1 = x0 + WIN[0], x0 + WIN[1]
-        for a, b, c_, d in ((wx0 - 8, wx0, 100, 222), (wx1, wx1 + 8, 100, 222),
-                            (wx0 - 8, wx1 + 8, WIN[3], 222), (wx0 - 8, wx1 + 8, 100, WIN[2])):
-            box(a, b, FRONT - 6, FRONT, c_, d, "trim_mat")
-        box((wx0 + wx1) / 2.0 - 2.5, (wx0 + wx1) / 2.0 + 2.5, FRONT - 5, FRONT - 1, WIN[2], WIN[3], "trim_mat")
-        box(wx0, wx1, FRONT - 3.6, FRONT - 3.0, WIN[2], WIN[3], "seeglass_window_mat")
         IN_ROOM[0] = True
         window_inside(wx0, wx1, lit=i in (1, 5), gap=16 if i == HER_ROOM else 0)
         IN_ROOM[0] = False
-        box(wx0 - 12, wx1 + 12, FRONT - 14, FRONT, 96, 104, "trim_mat")     # sill
-        # door frame: two jambs and a header, so the doorway stays open
-        box(door_x0 - 8, door_x0, FRONT - 5, FRONT, 0, 238, "trim_mat")
-        box(door_x1, door_x1 + 8, FRONT - 5, FRONT, 0, 238, "trim_mat")
-        box(door_x0 - 8, door_x1 + 8, FRONT - 5, FRONT, 230, 238, "trim_mat")
-        # room number: brass digits on a dark plate above the door
-        plate_x = (door_x0 + door_x1) / 2.0
-        box(plate_x - 32, plate_x + 32, FRONT - 8, FRONT - 5, 244, 270, "trim_mat")
-        sign_word(str(number), plate_x, FRONT - 8, 250, 14, 1.5, "brass_mat", 2.5)
-        # plastic chair by some doors
-        if i in (0, 2, 4):
-            chair(x0 + 60, FRONT - 120)
+        facade(x0, x1, i, number)        # the outside (maya/exterior_props.py)
 
 
 def room_inside(x0, x1, her=False):
@@ -725,9 +706,6 @@ def parking_lot():
         if rng.random() < 0.25:                              # worn: only part of the line left
             y_end = y_top - rng.uniform(150, 400)
         flat(x - 6, x + 6, y_end, y_top, "paint_mat")
-        if k < 12:
-            cx = x + 125
-            box(cx - 85, cx + 85, FRONT - WALK - 160, FRONT - WALK - 140, LOT_Z, LOT_Z + 13, "stop_mat")
     # a few stalls by the office, and a painted arrow toward the exit
     for k in range(4):
         x = 2800 + k * 260
@@ -747,8 +725,6 @@ def parking_lot():
         if rng.random() < 0.6:
             blot(X0 + k * 250 + 125 + rng.uniform(-30, 30), FRONT - WALK - 380 + rng.uniform(-60, 60),
                  rng.uniform(25, 55), "stain_mat")
-    # the lot's edge toward the road: a low concrete curb
-    box(LOT[0], LOT[1], LOT[2] - 15, LOT[2], 0, 15, "concrete_mat")
 
 
 def road_lines():
@@ -834,6 +810,7 @@ def car(cx, cy):
 
 def lot_dressing():
     parking_lot()
+    parking_lot_detail()
     road_lines()
     lot_lamp(-3500, -2500, True)
     lot_lamp(-150, -3650, False)
@@ -844,6 +821,8 @@ def lot_dressing():
 
 # detailed furniture and Cas's things (bed, nightstand, lamp, dresser, TV, ...)
 exec(open(os.path.join(ROOT, "maya", "room_props.py"), encoding="utf-8").read())
+# detailed outside: room fronts, awning, lamps, payphone, dumpster, lot, car, doors
+exec(open(os.path.join(ROOT, "maya", "exterior_props.py"), encoding="utf-8").read())
 
 
 # ---------- build and export ----------
@@ -858,6 +837,7 @@ def build():
     awning()
     rooftop_sign()
     office()
+    office_trim()
     streetlight(1500, -3500)
     lot_dressing()
     meshes = []
@@ -873,6 +853,7 @@ def build():
     cmds.file(save=True, type="mayaAscii")
     tris = sum(cmds.polyEvaluate(m, triangle=True) for m in meshes)
     export(meshes, lights)
+    export_doors()
     print(f"Motel built: {tris} triangles, {len(lights)} lights -> {SCENE}")
 
 

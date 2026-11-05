@@ -301,6 +301,8 @@ def main():
         a.tags = [TAG]
         if name in data.get("room_sets", []):
             a.static_mesh_component.set_editor_property("lighting_channels", ROOM_ONLY)
+    for name, fbx in data.get("props", {}).items():       # pieces placed by other scripts (the doors)
+        import_set(name, fbx, mats)
     flicker = light_flicker_material()
     for l in data["lights"]:
         p = actors.spawn_actor_from_class(unreal.PointLight, unreal.Vector(*l["position"]))
