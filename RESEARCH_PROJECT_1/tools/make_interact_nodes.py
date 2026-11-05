@@ -336,7 +336,12 @@ def hud_graph():
                    g.pure(MATH, "Multiply_VectorFloat", [("A", "vector", fwd), ("B", "real", NEAR)], ty="vector"))], ty="vector")
     end = g.pure(MATH, "Add_VectorVector", [("A", "vector", loc), ("B", "vector",
                  g.pure(MATH, "Multiply_VectorFloat", [("A", "vector", fwd), ("B", "real", REACH)], ty="vector"))], ty="vector")
-    trace = g.call(SYS, "LineTraceSingle", ev.then, [("Start", "vector", start), ("End", "vector", end),
+    # tell the materials where you are (MPC_Horror.PlayerPos): crows fly off, the owl turns its head
+    ploc = g.pure(ACTOR, "K2_GetActorLocation", ty="vector", target=(g.pure(HUD, "GetOwningPawn", ty="actor"), "actor"))
+    pcol = g.pure(MATH, "Conv_VectorToLinearColor", [("InVec", "vector", ploc)], ty="color")
+    tell = g.call("/Script/Engine.KismetMaterialLibrary", "SetVectorParameterValue", ev.then,
+                  [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "PlayerPos"), ("ParameterValue", "color", pcol)])
+    trace = g.call(SYS, "LineTraceSingle", tell.then, [("Start", "vector", start), ("End", "vector", end),
                    ("bIgnoreSelf", "bool", True)], outs=[("OutHit", "hit")])
     hit_actor = g.pure(STATICS, "BreakHitResult", [("Hit", "hit", trace.o["OutHit"])], out="HitActor", ty="actor")
     cast = g._node(K2 + "K2Node_DynamicCast", f'TargetType="{EX_CLASS}"', True)

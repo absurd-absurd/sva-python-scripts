@@ -52,6 +52,10 @@ def fear_collection():
         p.set_editor_property("default_value", value)
         params.append(p)
     mpc.set_editor_property("scalar_parameters", params)
+    pos = unreal.CollectionVectorParameter()                 # where the player is (BP_HorrorHUD sets it
+    pos.set_editor_property("parameter_name", "PlayerPos")   # every frame; critters react to it)
+    pos.set_editor_property("default_value", unreal.LinearColor(0, 0, -100000, 0))
+    mpc.set_editor_property("vector_parameters", [pos])
     lib.save_loaded_asset(mpc, False)
     return mpc
 

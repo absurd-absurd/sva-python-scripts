@@ -13,6 +13,7 @@ radius from the critter's middle.
 Writes export/critter_<kind>.fbx and export/critters.json (the colors of their materials).
 """
 import json
+import math
 import os
 
 import maya.cmds as cmds
@@ -26,6 +27,9 @@ COLORS = {
     "critter_moth_mat": (0.55, 0.48, 0.36), "critter_firefly_mat": (0.75, 0.85, 0.3),
     "critter_gnat_mat": (0.5, 0.5, 0.48), "critter_bat_mat": (0.06, 0.05, 0.05),
     "critter_flock_mat": (0.03, 0.03, 0.035),
+    "critter_crow_mat": (0.028, 0.028, 0.034), "critter_crow_beak_mat": (0.06, 0.055, 0.05),
+    "critter_owl_mat": (0.26, 0.2, 0.14), "critter_owl_face_mat": (0.5, 0.44, 0.34),
+    "critter_owl_eye_mat": (1.0, 0.72, 0.1), "critter_snag_mat": (0.2, 0.17, 0.14),
 }
 
 
@@ -80,7 +84,53 @@ def flock_bird():
         wing(s * 17, s * 30, -4, 2, 0.6, m, droop=0.5)
 
 
-KINDS = {"moth": moth, "firefly": firefly, "gnat": gnat, "bat": bat, "flock": flock_bird}
+def crow():
+    """A crow sitting on a perch (feet at the origin, facing +y): body leaning forward, folded
+    wings along the sides, tail, head with a heavy beak, legs and toes. ~40 cm long."""
+    m, b = "critter_crow_mat", "critter_crow_beak_mat"
+    rsoft(0, 0, 11, 9, 19, 10, m, smooth=2, tilt_y=-12)                         # body
+    sphere(0, 9.5, 18, 4.6, m, sides=10, scale=(1, 1.15, 1))                   # head
+    tube((0, 13, 18), (0, 19.5, 16.8), 1.5, b, sides=6)                         # beak
+    sphere(0, 19.3, 16.9, 0.7, b, sides=6)
+    rbevel(0, -13, 8.5, 6, 12, 0.9, m, r=0.3, tilt_y=14)                        # tail
+    for s_ in (-1, 1):
+        rsoft(s_ * 4.6, -1.5, 12.5, 2.2, 19, 7, m, smooth=1, tilt_x=s_ * 6)       # folded wings
+        tube((s_ * 1.8, 1, 6.5), (s_ * 1.8, 1.8, 0.4), 0.45, b, sides=4)         # legs
+        for dx, dy in ((-1.5, 2.5), (0, 3.2), (1.5, 2.5), (0, -2)):
+            tube((s_ * 1.8, 1.8, 0.4), (s_ * 1.8 + dx, 1.8 + dy, 0.2), 0.3, b, sides=3)   # toes
+
+
+def owl():
+    """A barred owl on a perch (feet at the origin, facing +y): an egg-shaped body, a round head
+    (everything above 25 cm turns to watch you), pale facial disc, glowing yellow eyes, beak,
+    ear tufts, wings folded, talons."""
+    m, f, e = "critter_owl_mat", "critter_owl_face_mat", "critter_owl_eye_mat"
+    rsoft(0, 0, 13, 18, 16, 24, m, smooth=2)                                    # body
+    rsoft(0, 5.5, 13, 12, 6, 18, f, smooth=2)                                   # pale chest
+    sphere(0, 0, 32, 9.5, m, sides=14, scale=(1, 0.95, 0.9))                    # head
+    rsoft(0, 7.6, 32, 15, 2.5, 12, f, smooth=2)                                 # facial disc
+    for s_ in (-1, 1):
+        sphere(s_ * 3.4, 9.0, 33, 2.1, e, sides=10)                             # eyes
+        sphere(s_ * 3.4, 10.6, 33, 0.9, "critter_crow_mat", sides=8)             # pupils
+        tube((s_ * 5, 1, 39), (s_ * 7, 1.5, 43.5), 1.2, m, sides=5)             # ear tufts
+        rsoft(s_ * 8, -1, 15, 3, 15, 20, m, smooth=1)                           # folded wings
+        for dx in (-1.2, 0, 1.2):
+            tube((s_ * 3 + dx, 3, 1.5), (s_ * 3 + dx * 1.4, 5.5, 0.2), 0.45, "critter_crow_beak_mat", sides=3)  # talons
+    tube((0, 9.5, 30.5), (0, 11.5, 28.5), 0.9, "critter_crow_beak_mat", sides=5)  # beak
+
+
+def snag():
+    """A dead, broken-off tree for the owl to sit on: tapered trunk, jagged top, one stub branch."""
+    m = "critter_snag_mat"
+    frustum(0, 0, 0, 290, 17, 10, m, sides=10)
+    for k in range(5):                                                          # jagged break
+        a = k * 1.25
+        tube((math.cos(a) * 6, math.sin(a) * 6, 288), (math.cos(a) * 4, math.sin(a) * 4, 300 + (k % 3) * 9), 2.5, m, sides=4)
+    tube((0, 0, 230), (45, 10, 262), 4, m, sides=6)                             # stub branch
+    tube((-2, 0, 40), (-30, 5, 0), 6, m, sides=6)                               # a root
+
+
+KINDS = {"crow": crow, "owl": owl, "snag": snag, "moth": moth, "firefly": firefly, "gnat": gnat, "bat": bat, "flock": flock_bird}
 
 
 def export_one(kind):
@@ -107,7 +157,8 @@ def main():
     out = {"critters": {}, "materials": {k: list(v) for k, v in COLORS.items()}}
     for kind in KINDS:
         fbx, tris = export_one(kind)
-        out["critters"][kind] = {"fbx": fbx, "material": f"critter_{kind}_mat", "tris": tris}
+        mats = sorted(m for m in COLORS if m.startswith(f"critter_{kind}_"))
+        out["critters"][kind] = {"fbx": fbx, "materials": mats, "tris": tris}
     with open(os.path.join(ROOT, "export", "critters.json"), "w") as f:
         json.dump(out, f, indent=1)
     print("critters:", {k: v["tris"] for k, v in out["critters"].items()})

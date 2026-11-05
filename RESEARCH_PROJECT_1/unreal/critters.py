@@ -34,6 +34,26 @@ float3 L = WPos - OPos;                                    // vertex relative to
 float R = frac(sin(dot(OPos.xy, float2(12.9898, 78.233)) + OPos.z * 0.123) * 43758.5453);
 float3 o = 0;
 float2 vel = float2(0, 1);
+if (Mode > 8.5) return float3(0, 0, 0);                    // still (the owl's dead tree)
+if (Mode > 3.5) {                                          // owl: the head turns to watch you
+    float2 toP = PPos.xy - OPos.xy;
+    float a = clamp(atan2(-toP.x, toP.y), -2.9, 2.9);
+    a = round(a / 0.35) * 0.35;                            // in little jerks, like an owl
+    if (L.z < Height) return float3(0, 0, 0);
+    float2 hr = float2(L.x * cos(a) - L.y * sin(a), L.x * sin(a) + L.y * cos(a));
+    return float3(hr - L.xy, 0);
+}
+if (Mode > 2.5) {                                          // perched crow: flies off as you come near
+    float2 away = OPos.xy - PPos.xy;
+    float d = length(away);
+    float scare = saturate((Radius - d) / (Radius * 0.6));
+    float s2 = scare * scare;
+    float2 dir = away / max(d, 1.0);
+    float3 off = float3(dir * s2 * Height * 2.0, s2 * Height + sin(T * 3.0 + R * 20.0) * 0.25 * (1 - scare));
+    float flapw = max(0.0, abs(L.x) - Body) * sin(T * Flap + R * 30.0) * 2.2 * saturate(scare * 6.0);
+    float keep = 1.0 - saturate((scare - 0.85) / 0.15);   // gone once it's high up
+    return off + float3(0, 0, flapw) + L * (keep - 1.0);
+}
 if (Mode < 0.5) {                                          // orbit
     float t = T * Speed * (0.7 + 0.6 * R) + R * 6.2831;
     float r = Radius * (0.6 + 0.4 * R);
@@ -70,7 +90,14 @@ KIND = {
     "gnat":    dict(Mode=1, Speed=1.6, Radius=28, Height=22, Flap=0, Body=9, Glow=0, Bounds=40),
     "bat":     dict(Mode=0, Speed=0.9, Radius=420, Height=60, Flap=26, Body=2.5, Glow=0, Bounds=300),
     "flock":   dict(Mode=2, Speed=0.07, Radius=1300, Height=120, Flap=5, Body=3, Glow=0, Bounds=900),
+    "crow":    dict(Mode=3, Speed=1, Radius=900, Height=700, Flap=24, Body=3.4, Glow=0, Bounds=400),
+    "owl":     dict(Mode=4, Speed=1, Radius=0, Height=25, Flap=0, Body=0, Glow=0, Bounds=3),
+    "snag":    dict(Mode=9, Speed=0, Radius=0, Height=0, Flap=0, Body=0, Glow=0, Bounds=1),
 }
+SLOT = {    # per-part changes on top of the kind's settings
+    "critter_owl_eye_mat": dict(Glow=5, Steady=1),
+}
+TEXTURE = {"critter_snag_mat": ("T_bark", 150)}
 
 
 def _custom_nodes(m):
@@ -94,7 +121,7 @@ def critter_material():
     m = lib.duplicate_asset(SURFACE, CRITTER)
     wob = [c for c in _custom_nodes(m) if "Amount" in [str(i.get_editor_property("input_name")) for i in c.get_editor_property("inputs")]][0]
     pins = list(wob.get_editor_property("inputs"))
-    for n in ("T", "OPos", "WPos", "Mode", "Speed", "Radius", "Height", "Flap", "Body"):
+    for n in ("T", "OPos", "WPos", "Mode", "Speed", "Radius", "Height", "Flap", "Body", "PPos"):
         p = unreal.CustomInput()
         p.set_editor_property("input_name", n)
         pins.append(p)
@@ -107,10 +134,13 @@ def critter_material():
     MEL.connect_material_expressions(t, "", wob, "T")
     MEL.connect_material_expressions(opos, "", wob, "OPos")
     MEL.connect_material_expressions(wpos, "", wob, "WPos")
+    ppos = _expr(m, unreal.MaterialExpressionCollectionParameter, -1100, 470,
+                 collection=unreal.load_asset("/Game/Horror/Materials/MPC_Horror"), parameter_name="PlayerPos")
+    MEL.connect_material_expressions(ppos, "", wob, "PPos")
     params = {}
-    for i, n in enumerate(("Mode", "Speed", "Radius", "Height", "Flap", "Body", "Glow")):
+    for i, n in enumerate(("Mode", "Speed", "Radius", "Height", "Flap", "Body", "Glow", "Steady")):
         params[n] = _expr(m, unreal.MaterialExpressionScalarParameter, -1100, 520 + i * 80, parameter_name=n, default_value=0.0)
-        if n != "Glow":
+        if n not in ("Glow", "Steady"):
             MEL.connect_material_expressions(params[n], "", wob, n)
     # fireflies: Color * Glow * blink -> Emissive
     blink = _expr(m, unreal.MaterialExpressionCustom, -700, -500, code=BLINK_HLSL,
@@ -129,9 +159,14 @@ def critter_material():
     a = _expr(m, unreal.MaterialExpressionMultiply, -450, -450)
     MEL.connect_material_expressions(color, "", a, "A")
     MEL.connect_material_expressions(params["Glow"], "", a, "B")
+    steady = _expr(m, unreal.MaterialExpressionLinearInterpolate, -450, -350)    # Steady 1 = no blinking
+    MEL.connect_material_expressions(blink, "", steady, "A")
+    one = _expr(m, unreal.MaterialExpressionConstant, -600, -330, r=1.0)
+    MEL.connect_material_expressions(one, "", steady, "B")
+    MEL.connect_material_expressions(params["Steady"], "", steady, "Alpha")
     b = _expr(m, unreal.MaterialExpressionMultiply, -300, -450)
     MEL.connect_material_expressions(a, "", b, "A")
-    MEL.connect_material_expressions(blink, "", b, "B")
+    MEL.connect_material_expressions(steady, "", b, "B")
     MEL.connect_material_property(b, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     m.set_editor_property("two_sided", True)                      # thin wings seen from both sides
     MEL.recompile_material(m)
@@ -152,26 +187,32 @@ def import_mesh(kind, fbx):
     return mesh
 
 
-def instance(kind, mat, rgb):
-    path = f"{DIR}/MI_Critter_{kind}"
+def instance(kind, slot, mat, rgb):
+    """MI_Critter_<kind>_<slot>: the kind's motion settings, the slot's color (and SLOT extras)."""
+    name = "MI_Critter_%s_%s" % (kind, slot.replace("critter_", "").replace("_mat", ""))
+    path = f"{DIR}/{name}"
     mi = unreal.load_asset(path) if lib.does_asset_exist(path) else \
-        tools.create_asset(f"MI_Critter_{kind}", DIR, unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
+        tools.create_asset(name, DIR, unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
     mi.set_editor_property("parent", mat)
     MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
-    for k, v in KIND[kind].items():
+    for k, v in dict(KIND[kind], **SLOT.get(slot, {})).items():
         if k != "Bounds":
             MEL.set_material_instance_scalar_parameter_value(mi, k, float(v))
+    if slot in TEXTURE and lib.does_asset_exist(f"/Game/Horror/Textures/{TEXTURE[slot][0]}"):
+        MEL.set_material_instance_texture_parameter_value(mi, "Tex", unreal.load_asset(f"/Game/Horror/Textures/{TEXTURE[slot][0]}"))
+        MEL.set_material_instance_scalar_parameter_value(mi, "TexSize", float(TEXTURE[slot][1]))
     lib.save_loaded_asset(mi, False)
     return mi
 
 
-def place(kind, mesh, mi, at, yaw=0.0):
+def place(kind, mesh, mis, at, yaw=0.0):
     a = actors.spawn_actor_from_object(mesh, unreal.Vector(*at), unreal.Rotator(0, 0, yaw))
     a.set_actor_label(f"{kind}_{len(PLACED.setdefault(kind, []))}")
     a.set_folder_path(f"Critters/{kind}")
     a.tags = [TAG]
     c = a.static_mesh_component
-    c.set_material(0, mi)
+    for i, mi in enumerate(mis):
+        c.set_material(i, mi)
     c.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
     c.set_editor_property("cast_shadow", False)
     c.set_editor_property("bounds_scale", float(KIND[kind]["Bounds"]))   # it wanders far from where it stands
@@ -192,7 +233,10 @@ def main():
     mat = critter_material()
     assets = {}
     for kind, spec in data["critters"].items():
-        assets[kind] = (import_mesh(kind, spec["fbx"]), instance(kind, mat, data["materials"][spec["material"]]))
+        mesh = import_mesh(kind, spec["fbx"])
+        mis = [instance(kind, str(sl.material_slot_name), mat,
+                        data["materials"].get(str(sl.material_slot_name), (0.2, 0.2, 0.2))) for sl in mesh.static_materials]
+        assets[kind] = (mesh, mis)
     rng = random.Random(13)
     # moths around the outside lights
     for name in ("light_lot", "light_street", "light_open", "light_ice", "light_cross", "light_car_tail"):
@@ -224,6 +268,16 @@ def main():
     # the flock: one circle over the dock end of the lake
     for _ in range(12):
         place("flock", *assets["flock"], (1500 + rng.uniform(-250, 250), 15600 + rng.uniform(-250, 250), 1300 + rng.uniform(-80, 80)))
+    # crows: on the lot lamps, the streetlight, the payphone, the dumpster, the motel roof, the fence.
+    # They lift off and fly away as you come within ~9 m, and drift back once you've gone.
+    perches = [(-3685, -2470, 740.5), (-3500, -2500, 721), (-335, -3620, 740.5), (-150, -3650, 721), (1600, -3500, 655.5),
+               (2930, -1830, 185.5), (3925, -1150, 130.5), (3995, -1120, 130.5), (-2300, -1692, 337.5), (-1880, -1692, 337.5),
+               (-420, -1692, 337.5), (180, -1692, 337.5), (-1500, -100, 160.5), (1200, -100, 160.5), (1260, -100, 160.5)]
+    for (x, y, z) in perches:
+        place("crow", *assets["crow"], (x, y, z), yaw=rng.uniform(0, 360))
+    # the owl on a dead tree just off the trail (yaw 0: the head-turn assumes it faces +y)
+    place("snag", *assets["snag"], (450, 4500, 0))
+    place("owl", *assets["owl"], (450, 4500, 301))
     unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
     print("critters placed:", {k: len(v) for k, v in PLACED.items()})
 
