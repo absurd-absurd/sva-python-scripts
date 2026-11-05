@@ -10,6 +10,8 @@ export/sets.json (build_level.py runs it in the right order).
 - Every other Maya material becomes an instance of M_PS2_Surface (texture, tint and size
   from textures.json, like the props).
 - The set is placed exactly where Maya built it, and each light locator becomes a point light.
+- set_motel_rooms (the room insides) and lights marked "room" go on lighting channel 1, so the
+  sign and lot lights (channel 0) don't shine through the walls into the rooms.
 Safe to run again: the old set and its lights are removed first.
 """
 import json
@@ -209,6 +211,19 @@ def materials(colors, table):
     return made
 
 
+def channels(outside, rooms):
+    lc = unreal.LightingChannels()
+    lc.set_editor_property("channel0", outside)
+    lc.set_editor_property("channel1", rooms)
+    return lc
+
+
+# Lighting channels keep outside light out of the rooms without shadows: the room insides
+# (set_motel_rooms) and the room lamps are on channel 1 only; everything else is on channel 0.
+# The flashlight and the moonlight are on both (flashlight.py, blockout.py).
+ROOM_ONLY = channels(False, True)
+
+
 def import_set(name, fbx, mats):
     t = unreal.AssetImportTask()
     t.filename = fbx
@@ -243,6 +258,8 @@ def main():
         a.set_actor_label(name)
         a.set_folder_path("Sets")
         a.tags = [TAG]
+        if name in data.get("room_sets", []):
+            a.static_mesh_component.set_editor_property("lighting_channels", ROOM_ONLY)
     flicker = light_flicker_material()
     for l in data["lights"]:
         p = actors.spawn_actor_from_class(unreal.PointLight, unreal.Vector(*l["position"]))
@@ -250,7 +267,9 @@ def main():
         c.set_intensity(l["intensity"])
         c.set_light_color(unreal.LinearColor(*l["color"], 1))
         c.set_attenuation_radius(l["radius"])
-        c.set_cast_shadows(bool(l.get("shadows")))   # off = cheap, soft, PS2-like; on = walls block it
+        c.set_cast_shadows(False)                # cheap, soft, PS2-like (and no shadow flicker)
+        if l.get("room"):
+            c.set_editor_property("lighting_channels", ROOM_ONLY)
         if l.get("flicker"):
             c.set_light_function_material(flicker)   # dies and sputters with the dead neon
         p.set_actor_label(l["name"])

@@ -88,10 +88,11 @@ FONT = {
     "R": [(0, 0, 0, 6), (0, 6, 3, 6), (3, 6, 4, 5), (4, 5, 4, 4), (4, 4, 3, 3), (3, 3, 0, 3), (2, 3, 4, 0)],
 }
 
-WALK_RED = (250, 650)       # red wash lights under the awning: brightness, reach in cm
 LAMP_104 = (9, 450)        # Room 104's red bulb: brightness, reach in cm
 PHOTOS = ["pic_lake_dusk", "pic_lake_fog", "pic_dock", "pic_lake_night"]
 PARTS = []      # every mesh made, combined at the end
+ROOM_PARTS = []  # the insides of the rooms: exported as their own mesh on lighting channel 1
+IN_ROOM = [False]
 
 
 # ---------- helpers (all positions in Unreal coordinates) ----------
@@ -107,7 +108,7 @@ def material(name, rgb):
 
 def keep(obj, mat):
     cmds.sets(obj, edit=True, forceElement=mat + "SG")
-    PARTS.append(obj)
+    (ROOM_PARTS if IN_ROOM[0] else PARTS).append(obj)
     return obj
 
 
@@ -176,15 +177,16 @@ def block_word(text, left, y, z, height, mat, thick, depth=14):
             keep(b, mat)
 
 
-def light(name, x, y, z, color, intensity, radius, flicker=False, shadows=False):
+def light(name, x, y, z, color, intensity, radius, flicker=False, room=False):
     """A locator that becomes a point light in Unreal (flicker: dims in step with the dead neon).
-    shadows: walls block it. Needed for the big outside lights (sign, cross, lamps): without
-    shadows their light goes straight through the walls and turns every room red."""
+    No light casts shadows (cheap, soft, PS2-like, and no shadow flicker). So outside light
+    can't shine through the walls into the rooms, the room insides are on their own lighting
+    channel: room=True lights reach only them, the other lights never do."""
     loc = cmds.spaceLocator(name=name)[0]
     cmds.move(x, z, y, loc)
     cmds.addAttr(loc, longName="ue_light", dataType="string")
     cmds.setAttr(loc + ".ue_light", json.dumps({"color": color, "intensity": intensity, "radius": radius, "flicker": flicker,
-                                                        "shadows": shadows}), type="string")
+                                                        "room": room}), type="string")
     return loc
 
 
@@ -197,9 +199,11 @@ def room_row():
         x0 = X0 + i * ROOM_W
         x1 = x0 + ROOM_W
         number = 101 + i
+        IN_ROOM[0] = True
         room_inside(x0, x1)
         if i == HER_ROOM:
             room_104(x0, x1)
+        IN_ROOM[0] = False
         # brick lower wall, sticking out 3 cm
         door_x0, door_x1 = x0 + 140, x0 + 280                       # doorway, 140 wide x 230 tall
         for a, b in ((x0, door_x0 - 8), (door_x1 + 8, x1)):
@@ -233,9 +237,16 @@ def room_inside(x0, x1):
     box(x0, x1, BACK - t, BACK, 0, H, "plaster_mat")                         # back
     box(x0, x0 + t, FRONT, BACK, 0, H, "plaster_mat")                        # left
     box(x1 - t, x1, FRONT, BACK, 0, H, "plaster_mat")                        # right
+    # the front wall is the motel's face, lit by the sign: it stays in the outside mesh, and a
+    # thin lining on its inside face belongs to the room
+    IN_ROOM[0] = False
     box(x0, x0 + 140, FRONT, FRONT + t, 0, H, "plaster_mat")                 # front, left of door
     box(x0 + 280, x1, FRONT, FRONT + t, 0, H, "plaster_mat")                 # front, right of door
     box(x0 + 140, x0 + 280, FRONT, FRONT + t, 230, H, "plaster_mat")         # above door
+    IN_ROOM[0] = True
+    box(x0 + t, x0 + 140, FRONT + t, FRONT + t + 0.5, 0, H - 10, "plaster_mat")
+    box(x0 + 280, x1 - t, FRONT + t, FRONT + t + 0.5, 0, H - 10, "plaster_mat")
+    box(x0 + 140, x0 + 280, FRONT + t, FRONT + t + 0.5, 230, H - 10, "plaster_mat")
     box(x0, x1, FRONT, BACK, H - 10, H, "plaster_mat")                       # ceiling
     box(x0 + t, x1 - t, FRONT + t, BACK - t, 0, 2, "carpet_mat")             # carpet
     # bed: frame, mattress, pillow, headboard
@@ -313,7 +324,7 @@ def room_104(x0, x1):
     # the bulb: real (inverse-square) falloff, so it's hot right at the lamp and fades across the room.
     # It sits just under the shade: inside it, it burnt a white spot into the shade. Kept dim on
     # purpose: bright red light on the cream walls reads as pink.
-    light("light_104_lamp", lx, ly - 22, 90, [1.0, 0.0, 0.0], LAMP_104[0], LAMP_104[1])
+    light("light_104_lamp", lx, ly - 22, 90, [1.0, 0.0, 0.0], LAMP_104[0], LAMP_104[1], room=True)
     rbox(lx - 16, ly - 8, 62.5, 15, 20, 4, "diary_mat", yaw=-12)
 
     # --- the table under the window: cold coffee, dead plant, torn pages
@@ -421,12 +432,6 @@ def awning():
         x = X0 + i * ROOM_W
         box(x - 8, x + 8, y_front + 10, y_front + 26, 0, H, "trim_mat")
     box(xa, xb, y_front, FRONT, 0, 12, "concrete_mat")                           # walkway slab
-    # red wash on the walkway and the front wall: from the strip and the sign above. These cast
-    # shadows (like the sign lights) so the red stops at the walls and only spills in through
-    # open doors and windows.
-    for i in range(ROOMS):
-        x = X0 + i * ROOM_W + ROOM_W / 2.0
-        light(f"light_walk_{101 + i}", x, FRONT - WALK + 40, H - 40, [1.0, 0.0, 0.0], WALK_RED[0], WALK_RED[1], shadows=True)
 
 
 # ---------- the rooftop sign: real font letters ----------
@@ -575,7 +580,7 @@ def rooftop_sign():
     # comes from the letters (closer than ~1 m it burns a hot spot into the wall)
     for k, x in enumerate(centers):
         light(f"light_sign_{'MOTEL'[k]}", x, y_wall - 150, z_big + big * 0.2, [1.0, 0.0, 0.0],
-              1400, 2600, flicker=(k == 0), shadows=True)
+              1400, 2600, flicker=(k == 0))
 
 
 def office():
@@ -614,7 +619,7 @@ def office():
     box(wx0 - 8, wx1 + 8, y0 - 6, y0, 95, 250, "trim_mat")
     box(wx0, wx1, y0 - 7, y0 - 2, 103, 242, "glass_mat")
     neon_word("OPEN", wx1 - 30, y0 - 12, 150, 40, "glow_neon_red_mat", r=3.5)
-    light("light_open", (wx0 + wx1) / 2.0, y0 - 25, 170, [1.0, 0.0, 0.0], 600, 600, shadows=True)
+    light("light_open", (wx0 + wx1) / 2.0, y0 - 25, 170, [1.0, 0.0, 0.0], 600, 600)
     # the neon cross: SIN above the bar, WILL / FIND on the bar, YOU OUT below. It stands in
     # front of the office on a post, rising above the roof, bottom high enough to walk under.
     cross(x0 + 300, y0 - 190, 38)
@@ -648,7 +653,7 @@ def cross(cx, y, letter_h):
     neon_word("YOUOUT", cx + u * 2, y, bar_z - step, letter_h, "glow_neon_red_mat", r=3.5, vertical=True)
     neon_word("WILL", cx + col_w + u + word_w, y, bar_z, letter_h, "glow_neon_red_mat", r=3.5)   # left of the column, seen from the road
     neon_word("FIND", cx - col_w - u, y, bar_z, letter_h, "glow_neon_red_mat", r=3.5)
-    light("light_cross", cx, y - 30, bar_z, [1.0, 0.0, 0.0], 2500, 1100, shadows=True)
+    light("light_cross", cx, y - 30, bar_z, [1.0, 0.0, 0.0], 2500, 1100)
     print(f"cross bottom at {v_bottom:.0f} cm, top at {top:.0f} cm")
 
 
@@ -665,7 +670,7 @@ def streetlight(x, y):
     tube((x, y, 640), (x + 120, y, 650), 5, "metal_mat")
     box(x + 100, x + 160, y - 20, y + 20, 630, 648, "metal_mat")
     box(x + 105, x + 155, y - 15, y + 15, 626, 630, "glow_street_mat")
-    light("light_street", x + 130, y, 600, [0.45, 1.0, 0.7], 4000, 1800, shadows=True)
+    light("light_street", x + 130, y, 600, [0.45, 1.0, 0.7], 4000, 1800)
 
 
 # ---------- the lot outside ----------
@@ -764,7 +769,7 @@ def lot_lamp(x, y, working):
     box(x - 225, x - 145, y + 10, y + 50, 711, 715, "glow_sodium_mat" if working else "glass_mat")
     box(x - 25, x + 25, y - 25, y + 25, 0, 60, "concrete_mat")             # base
     if working:
-        light("light_lot", x - 185, y + 30, 690, [1.0, 0.55, 0.22], 3500, 1700, shadows=True)
+        light("light_lot", x - 185, y + 30, 690, [1.0, 0.55, 0.22], 3500, 1700)
 
 
 def payphone(x, y):
@@ -840,6 +845,7 @@ def lot_dressing():
 
 def build():
     del PARTS[:]
+    del ROOM_PARTS[:]
     cmds.file(new=True, force=True)
     for name, rgb in MATS.items():
         material(name, rgb)
@@ -849,32 +855,39 @@ def build():
     office()
     streetlight(1500, -3500)
     lot_dressing()
-    motel = cmds.polyUnite(PARTS, name="set_motel", constructionHistory=False)[0]
-    cmds.delete(motel, constructionHistory=True)
-    cmds.xform(motel, pivots=(0, 0, 0), worldSpace=True)
+    meshes = []
+    for name, parts in (("set_motel", PARTS), ("set_motel_rooms", ROOM_PARTS)):
+        m = cmds.polyUnite(parts, name=name, constructionHistory=False)[0]
+        cmds.delete(m, constructionHistory=True)
+        cmds.xform(m, pivots=(0, 0, 0), worldSpace=True)
+        meshes.append(m)
     lights = cmds.ls("light_*", type="transform")
     cmds.group(lights, name="motel_lights")
     cmds.setAttr("perspShape.farClipPlane", 200000)
     cmds.file(rename=SCENE)
     cmds.file(save=True, type="mayaAscii")
-    tris = cmds.polyEvaluate(motel, triangle=True)
-    export(motel, lights)
+    tris = sum(cmds.polyEvaluate(m, triangle=True) for m in meshes)
+    export(meshes, lights)
     print(f"Motel built: {tris} triangles, {len(lights)} lights -> {SCENE}")
 
 
-def export(motel, lights):
+def export(meshes, lights):
+    """One FBX per mesh: set_motel (outside) and set_motel_rooms (room insides, own light channel)."""
     if not cmds.pluginInfo("fbxmaya", q=True, loaded=True):
         cmds.loadPlugin("fbxmaya")
     os.makedirs(OUT, exist_ok=True)
-    fbx = os.path.join(OUT, "set_motel.fbx").replace("\\", "/")
-    cmds.select(motel)
-    mel.eval("FBXResetExport")
-    mel.eval('FBXExport -f "{}" -s'.format(fbx))
-    used = set()
-    for sg in cmds.listConnections(cmds.listRelatives(motel, shapes=True), type="shadingEngine") or []:
-        used.update(cmds.listConnections(sg + ".surfaceShader") or [])
+    sets, used = {}, set()
+    for m in meshes:
+        fbx = os.path.join(OUT, m + ".fbx").replace("\\", "/")
+        cmds.select(m)
+        mel.eval("FBXResetExport")
+        mel.eval('FBXExport -f "{}" -s'.format(fbx))
+        sets[m] = fbx
+        for sg in cmds.listConnections(cmds.listRelatives(m, shapes=True), type="shadingEngine") or []:
+            used.update(cmds.listConnections(sg + ".surfaceShader") or [])
     data = {
-        "sets": {"set_motel": fbx},
+        "sets": sets,
+        "room_sets": ["set_motel_rooms"],
         "materials": {m: list(cmds.getAttr(m + ".color")[0]) for m in sorted(used)},
         "lights": [dict(json.loads(cmds.getAttr(l + ".ue_light")), name=l,
                         position=[cmds.xform(l, q=True, t=True, ws=True)[i] for i in (0, 2, 1)]) for l in lights],

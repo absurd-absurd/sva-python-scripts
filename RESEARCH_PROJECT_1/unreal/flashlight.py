@@ -105,6 +105,10 @@ for h in sub.k2_gather_subobject_data_for_blueprint(bp):
         light.set_editor_property("attenuation_radius", RADIUS)
         light.set_editor_property("relative_location", unreal.Vector(*POSITION))
         light.set_editor_property("light_function_material", None)
+        both = unreal.LightingChannels()           # lights the outside AND the room insides
+        both.set_editor_property("channel0", True)
+        both.set_editor_property("channel1", True)
+        light.set_editor_property("lighting_channels", both)
         break
 unreal.BlueprintEditorLibrary.compile_blueprint(bp)
 lib.save_loaded_asset(bp, False)

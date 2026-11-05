@@ -253,6 +253,10 @@ def weather():
     lc.set_intensity(3.0)
     lc.set_light_color(unreal.LinearColor(0.9, 0.92, 1.0, 1))
     lc.set_cast_shadows(False)                       # overcast: no hard shadows
+    both = unreal.LightingChannels()
+    both.set_editor_property("channel0", True)
+    both.set_editor_property("channel1", True)
+    lc.set_editor_property("lighting_channels", both)   # moonlight reaches the room insides too
 
     sky = spawn(unreal.SkyLight, "SkyLight", (0, 0, 1500))
     sc = sky.light_component
@@ -293,6 +297,10 @@ def weather():
     lamp.point_light_component.set_intensity(60)
     lamp.point_light_component.set_light_color(unreal.LinearColor(1.0, 0.8, 0.55, 1))
     lamp.point_light_component.set_attenuation_radius(450)
+    rooms = unreal.LightingChannels()
+    rooms.set_editor_property("channel0", False)
+    rooms.set_editor_property("channel1", True)
+    lamp.point_light_component.set_editor_property("lighting_channels", rooms)   # room insides only
 
     spawn(unreal.PlayerStart, "PlayerStart", (-1000, -3300, 120), (0, 0, 90))
 

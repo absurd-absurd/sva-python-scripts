@@ -39,6 +39,16 @@ def wrap(text):
     return "\n".join(textwrap.fill(p, WRAP) if p else "" for p in text.split("\n"))
 
 
+ROOM_LIGHT = unreal.LightingChannels()
+ROOM_LIGHT.set_editor_property("channel0", False)
+ROOM_LIGHT.set_editor_property("channel1", True)
+
+
+def in_room(at):
+    """Inside one of the six motel rooms (import_sets.py puts their insides on light channel 1)."""
+    return -2500 < at[0] < 500 and -1400 < at[1] < -700
+
+
 def main():
     for a in actors.get_all_level_actors():
         if a.actor_has_tag(TAG):
@@ -60,6 +70,8 @@ def main():
         mesh.set_relative_location(unreal.Vector(*offset), False, True)
         mesh.set_relative_scale3d(unreal.Vector(size[0] / 100, size[1] / 100, size[2] / 100))
         mesh.set_material(0, unreal.load_asset(MATS + mat))
+        if in_room(c["at"]) and "door" not in c["shape"]:
+            mesh.set_editor_property("lighting_channels", ROOM_LIGHT)   # like the room around it
         # the invisible aim box: the object plus HIT_MARGIN all round (doors: just the door)
         # it sits on the same surface and rises HIT_UP cm above the object, so the aim line
         # meets it before the bed or table around it

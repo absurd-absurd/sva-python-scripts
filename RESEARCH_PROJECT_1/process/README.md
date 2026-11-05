@@ -97,3 +97,23 @@ and it was too bright in two places: the shade's glow, and the bulb light sittin
 
 Final: bulb under the shade, pure red, dim (9); the shade is now red fabric itself (it showed grey in
 the flashlight before) with a soft glow (0.5).
+
+## 2026-11-05: "really bad artifacting everywhere"
+
+![Artifacts found](2026-11-05_artifacts_found.png)
+
+Two frames from recording your screen while you played: saw-tooth shadow edges along the awning and
+posts, thin bright lines leaking along the window and door frames, and shadow bands that crawled as
+you moved. Cause: the shadows turned on for the outside lights earlier today (to stop the sign's red
+shining through the walls into the rooms). Point-light shadows at this resolution, with no
+anti-aliasing, look like this. (A first guess, turning off motion blur and ambient occlusion, didn't
+help and changed the look, so it was undone.)
+
+![Lighting channels fix](2026-11-05_lighting_channels_fix.png)
+
+Fix without any shadows: **lighting channels**. The motel is now two meshes: the outside
+(`set_motel`) and the room insides (`set_motel_rooms`, with a thin lining on the inside of the front
+wall). The room insides and the room lamps are on channel 1; the sign, cross, lot and street lights
+are on channel 0, so they can't reach inside. The flashlight and the moonlight light both. All lights
+are back to no shadows, the six extra awning lights are gone, and the motel front looks like it did
+originally (top row: the shadowed version; middle/bottom: now, flashlight off/on).
