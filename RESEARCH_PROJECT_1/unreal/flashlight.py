@@ -26,6 +26,10 @@ FALLOFF = 3.0          # how quickly it fades toward RADIUS (higher = more of th
 RADIUS = 1200.0        # cm: the beam reaches 12 m
 POSITION = (30, 20, -15)   # cm from the camera: a little forward, right and down, like a held light
 MPC = "/Game/Horror/Materials/MPC_Horror"
+# Auto-dim (BP_HorrorHUD), so small rooms don't burn out white while the woods look the same:
+# indoors (a ceiling within FlCeiling cm above your eyes) the beam drops to FlIndoor of its power;
+# anywhere, it also dims when what it lands on is close: full from FlDimFar cm, FlDimMin at FlDimNear.
+AUTO_DIM = (("FlDimNear", 60.0), ("FlDimFar", 250.0), ("FlDimMin", 0.4), ("FlIndoor", 0.15), ("FlCeiling", 250.0))
 OLD_FLICKER = "/Game/Horror/Materials/M_FlashlightFlicker"   # first try (light function), removed
 HIT = "/Game/Horror/Player/CS_FlashHit"
 
@@ -41,10 +45,13 @@ def fear_collection():
     else:
         mpc = tools.create_asset("MPC_Horror", MPC.rsplit("/", 1)[0], unreal.MaterialParameterCollection,
                                  unreal.MaterialParameterCollectionFactoryNew())
-    p = unreal.CollectionScalarParameter()
-    p.set_editor_property("parameter_name", "Fear")
-    p.set_editor_property("default_value", 0.0)
-    mpc.set_editor_property("scalar_parameters", [p])
+    params = []
+    for name, value in (("Fear", 0.0),) + AUTO_DIM:
+        p = unreal.CollectionScalarParameter()
+        p.set_editor_property("parameter_name", name)
+        p.set_editor_property("default_value", value)
+        params.append(p)
+    mpc.set_editor_property("scalar_parameters", params)
     lib.save_loaded_asset(mpc, False)
     return mpc
 
@@ -101,4 +108,5 @@ for h in sub.k2_gather_subobject_data_for_blueprint(bp):
         break
 unreal.BlueprintEditorLibrary.compile_blueprint(bp)
 lib.save_loaded_asset(bp, False)
+print("auto-dim", AUTO_DIM)
 print("flashlight: even falloff, intensity", INTENSITY, "radius", RADIUS, "| CS_FlashHit + MPC_Horror.Fear ready")

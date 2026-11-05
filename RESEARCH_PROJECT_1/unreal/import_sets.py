@@ -5,6 +5,8 @@ export/sets.json (build_level.py runs it in the right order).
 
 - Builds M_PS2_Neon once: a glowing material with an optional flicker, for every Maya
   material named glow_*. Strength and flicker per material come from textures.json "glow".
+- Materials named pic_* are pictures (Cas's photos): export/<name>.png from
+  tools/make_photos.py on M_PS2_Picture, mapped once across the plane.
 - Every other Maya material becomes an instance of M_PS2_Surface (texture, tint and size
   from textures.json, like the props).
 - The set is placed exactly where Maya built it, and each light locator becomes a point light.
@@ -81,6 +83,53 @@ def neon_material():
     return m
 
 
+PICTURE = "/Game/Horror/Materials/PS2/M_PS2_Picture"
+PIC_DIR = "/Game/Horror/Textures/Pictures"
+
+
+def picture_material():
+    """M_PS2_Picture: a photo or print mapped once across its plane (UVs, not world projection),
+    matte like the other PS2 surfaces. Rebuilt on every run like the neon."""
+    if lib.does_asset_exist(PICTURE):
+        m = unreal.load_asset(PICTURE)
+        unreal.get_editor_subsystem(unreal.AssetEditorSubsystem).close_all_editors_for_asset(m)
+        MEL.delete_all_material_expressions(m)
+    else:
+        m = tools.create_asset("M_PS2_Picture", PICTURE.rsplit("/", 1)[0], unreal.Material, unreal.MaterialFactoryNew())
+    tex = MEL.create_material_expression(m, unreal.MaterialExpressionTextureSampleParameter2D, -600, 0)
+    tex.set_editor_property("parameter_name", "Tex")
+    color = MEL.create_material_expression(m, unreal.MaterialExpressionVectorParameter, -600, 250)
+    color.set_editor_property("parameter_name", "Color")
+    color.set_editor_property("default_value", unreal.LinearColor(1, 1, 1, 1))
+    mul = MEL.create_material_expression(m, unreal.MaterialExpressionMultiply, -300, 100)
+    MEL.connect_material_expressions(tex, "RGB", mul, "A")
+    MEL.connect_material_expressions(color, "", mul, "B")
+    MEL.connect_material_property(mul, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    for prop, v, y in ((unreal.MaterialProperty.MP_ROUGHNESS, 1.0, 400), (unreal.MaterialProperty.MP_SPECULAR, 0.0, 480)):
+        c = MEL.create_material_expression(m, unreal.MaterialExpressionConstant, -300, y)
+        c.set_editor_property("r", v)
+        MEL.connect_material_property(c, "", prop)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
+
+
+def picture_texture(name):
+    """export/<name>.png -> /Game/Horror/Textures/Pictures/T_<name>, kept crisp (PS2: no smoothing)."""
+    t = unreal.AssetImportTask()
+    t.filename = f"{ROOT}/export/{name}.png"
+    t.destination_path = PIC_DIR
+    t.destination_name = f"T_{name}"
+    t.automated, t.save, t.replace_existing = True, True, True
+    tools.import_asset_tasks([t])
+    tex = unreal.load_asset(f"{PIC_DIR}/T_{name}")
+    tex.set_editor_property("filter", unreal.TextureFilter.TF_NEAREST)
+    tex.set_editor_property("address_x", unreal.TextureAddress.TA_CLAMP)
+    tex.set_editor_property("address_y", unreal.TextureAddress.TA_CLAMP)
+    lib.save_loaded_asset(tex, False)
+    return tex
+
+
 LIGHT_FLICKER = "/Game/Horror/Materials/PS2/M_PS2_LightFlicker"
 DEAD_SEED = 3.0        # the dead M's neon and its light share this, so they die and sputter together
 
@@ -126,7 +175,7 @@ def instance(name, parent):
 
 
 def materials(colors, table):
-    neon, surface = neon_material(), unreal.load_asset(SURFACE)
+    neon, surface, pic = neon_material(), unreal.load_asset(SURFACE), None
     glow = table.get("glow", {})
     made = {}
     for i, (name, rgb) in enumerate(colors.items()):
@@ -138,6 +187,11 @@ def materials(colors, table):
             MEL.set_material_instance_scalar_parameter_value(mi, "Flicker", float(spec.get("flicker", 0.0)))
             seed = DEAD_SEED if spec.get("flicker", 0) >= 1 else float(i)
             MEL.set_material_instance_scalar_parameter_value(mi, "Seed", seed)
+        elif name.startswith("pic_"):
+            pic = pic or picture_material()
+            mi = instance(f"MI_PS2_{name}", pic)
+            MEL.set_material_instance_texture_parameter_value(mi, "Tex", picture_texture(name))
+            MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
         else:
             mi = instance(f"MI_PS2_{name}", surface)
             MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))

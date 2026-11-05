@@ -5,7 +5,8 @@ Run in the Unreal editor (Tools > Execute Python Script):
   2. import_scatter.py - the Maya woods (needs export/ from maya/export_to_unreal.py)
   3. ps2_look.py       - PS2 screen effect and surface material
   4. apply_textures.py - CC0 photo textures (needs textures/ from tools/fetch_textures.py)
-  5. import_sets.py    - the detailed Maya motel and its lights (needs export/ from maya/make_motel.py)
+  5. import_sets.py    - the detailed Maya motel and its lights (needs export/ from maya/make_motel.py
+                         and tools/make_photos.py for the photos in Room 104)
   6. interact_setup.py - E / Tab input, BP_Examinable, BP_HorrorHUD (their graphs: tools/make_interact_nodes.py)
   7. place_clues.py    - clues, keys and locked doors from clues.json
   8. import_map.py     - the paper map for the corner of the screen (needs export/ from tools/make_map.py)

@@ -39,7 +39,21 @@ MATS = {
     "brick_mat": (0.45, 0.25, 0.2), "plaster_mat": (0.75, 0.7, 0.6), "trim_mat": (0.25, 0.22, 0.2),
     "door_mat": (0.35, 0.15, 0.12), "brass_mat": (0.6, 0.5, 0.25), "glass_mat": (0.03, 0.04, 0.05),
     "curtain_mat": (0.55, 0.45, 0.3), "roof_metal_mat": (0.35, 0.33, 0.3), "concrete_mat": (0.5, 0.5, 0.48),
-    "carpet_mat": (0.45, 0.2, 0.2), "bed_mat": (0.7, 0.68, 0.6), "wood_mat": (0.35, 0.22, 0.12),
+    "carpet_mat": (0.45, 0.2, 0.2), "bed_mat": (0.5, 0.46, 0.38), "wood_mat": (0.35, 0.22, 0.12),   # bed: old, yellowed
+    # Room 104 (Cas's room)
+    "sheet_mat": (0.42, 0.38, 0.3), "bedspread_mat": (0.33, 0.2, 0.14), "pillow_mat": (0.46, 0.42, 0.34), "stain_sheet_mat": (0.25, 0.2, 0.12),
+    "shoe_mat": (0.3, 0.3, 0.32), "diary_mat": (0.18, 0.08, 0.06), "page_mat": (0.6, 0.56, 0.45),
+    "mug_mat": (0.55, 0.52, 0.46), "coffee_mat": (0.04, 0.02, 0.01), "pot_mat": (0.35, 0.17, 0.1),
+    "soil_mat": (0.05, 0.04, 0.03), "twig_mat": (0.16, 0.11, 0.07), "leaf_dead_mat": (0.25, 0.17, 0.07),
+    "jacket_mat": (0.12, 0.16, 0.12), "suitcase_mat": (0.2, 0.06, 0.05), "strap_mat": (0.1, 0.08, 0.06),
+    "clothes_a_mat": (0.4, 0.38, 0.35), "clothes_b_mat": (0.12, 0.14, 0.22), "clothes_c_mat": (0.35, 0.3, 0.2),
+    "photo_border_mat": (0.62, 0.6, 0.55), "tape_mat": (0.6, 0.57, 0.45),
+    # her photos (pictures drawn by tools/make_photos.py; the color here only tints them)
+    "pic_lake_dusk": (1, 1, 1), "pic_lake_fog": (1, 1, 1), "pic_dock": (1, 1, 1), "pic_lake_night": (1, 1, 1),
+    "pic_lanterns": (1, 1, 1),
+    "camera_mat": (0.04, 0.04, 0.04), "string_mat": (0.4, 0.33, 0.22), "wallpaper_mat": (0.7, 0.64, 0.5),
+    "stain_wall_mat": (0.38, 0.3, 0.18), "stain_dark_mat": (0.22, 0.16, 0.09), "cobweb_mat": (0.55, 0.55, 0.55),
+    "glow_lamp_red_mat": (1.0, 0.05, 0.02),
     "chair_mat": (0.85, 0.85, 0.8), "metal_mat": (0.3, 0.3, 0.3), "ice_mat": (0.8, 0.82, 0.85),
     # the lot and the car
     "paint_mat": (0.55, 0.54, 0.48), "paint_yellow_mat": (0.55, 0.45, 0.12), "crack_mat": (0.015, 0.015, 0.015),
@@ -74,6 +88,7 @@ FONT = {
     "R": [(0, 0, 0, 6), (0, 6, 3, 6), (3, 6, 4, 5), (4, 5, 4, 4), (4, 4, 3, 3), (3, 3, 0, 3), (2, 3, 4, 0)],
 }
 
+PHOTOS = ["pic_lake_dusk", "pic_lake_fog", "pic_dock", "pic_lake_night"]
 PARTS = []      # every mesh made, combined at the end
 
 
@@ -178,6 +193,8 @@ def room_row():
         x1 = x0 + ROOM_W
         number = 101 + i
         room_inside(x0, x1)
+        if i == HER_ROOM:
+            room_104(x0, x1)
         # brick lower wall, sticking out 3 cm
         door_x0, door_x1 = x0 + 140, x0 + 280                       # doorway, 140 wide x 230 tall
         for a, b in ((x0, door_x0 - 8), (door_x1 + 8, x1)):
@@ -230,6 +247,147 @@ def room_inside(x0, x1):
     box(x0 + t, x0 + t + 55, FRONT + 200, FRONT + 370, 0, 80, "wood_mat")
     box(x0 + t + 5, x0 + t + 50, FRONT + 235, FRONT + 335, 80, 150, "metal_mat")
     box(x0 + t + 50, x0 + t + 52, FRONT + 245, FRONT + 325, 90, 140, "glass_mat")
+
+
+def rbox(cx, cy, cz, sx, sy, sz, mat, yaw=0, tilt_x=0, tilt_y=0):
+    """A box centred at an Unreal point, sizes along Unreal x/y/z, then turned:
+    yaw spins it flat on the floor; tilt_x leans its top toward x, tilt_y toward y (degrees)."""
+    b = cmds.polyCube(w=sx, h=sz, d=sy, ch=False)[0]
+    cmds.xform(b, rotation=(tilt_y, -yaw, tilt_x), rotateOrder="yxz")
+    cmds.move(cx, cz, cy, b)
+    return keep(b, mat)
+
+
+def tri(p0, p1, p2, mat):
+    """One flat triangle between three Unreal points (cobwebs)."""
+    f = cmds.polyCreateFacet(p=[(p[0], p[2], p[1]) for p in (p0, p1, p2)], ch=False)[0]
+    return keep(f, mat)
+
+
+def picture(x_wall, y, z, w, h, mat, spin=0):
+    """A flat photo on a wall facing +x (into the room), its texture filling it once.
+    pic_* materials are pictures in Unreal (tools/make_photos.py draws them)."""
+    p = cmds.polyPlane(w=h, h=w, sx=1, sy=1, ch=False)[0]        # turned on its side below
+    cmds.xform(p, rotation=(spin, 0, -90), rotateOrder="zyx")
+    cmds.polyEditUV(p + ".map[*]", pivotU=0.5, pivotV=0.5, angle=90)   # picture upright
+    cmds.move(x_wall, z, y, p)
+    return keep(p, mat)
+
+
+def room_104(x0, x1):
+    """Cas's room, frozen in time: everything where she left it a year ago, as if she
+    meant to be back that night, under a year of damp and dust. Her lake photos are taped
+    over the dresser, her camera sits by the TV, a cold coffee and a dead plant are on the
+    table, the bed is unmade, and one of the twig figures from her door hangs over the bed.
+    The bedside lamp has a red bulb (the red light theme: red marks where something happened).
+    Keep clear of the clues in clues.json: the note on the bed (-660, -850), the office key
+    on the dresser (-952, -1182) and the door swing (x -860..-720, y -1380..-1240)."""
+    t = 20
+    inner_l, inner_r = x0 + t, x1 - t            # wall faces: -980 (dresser side), -520 (bed side)
+    rng = random.Random(104)
+
+    # --- the bed, slept in and left: blanket thrown back, pillows dented and askew
+    bx0, bx1 = x0 + 220, x1 - 40
+    rbox((bx0 + bx1) / 2.0, BACK - 120, 58.3, bx1 - bx0 - 14, 190, 0.6, "sheet_mat")              # bottom sheet
+    for dx, dy, w, d, h, yw in ((-50, -215, 120, 60, 7, 3), (40, -210, 110, 70, 9, -4), (-10, -180, 210, 26, 12, 2),
+                                (70, -175, 70, 30, 10, 8)):                                   # bedspread thrown back,
+        rbox((bx0 + bx1) / 2.0 + dx, BACK + dy, 58 + h / 2.0, w, d, h, "bedspread_mat", yaw=yw)   # bunched at the foot
+    rbox(bx1 + 4, BACK - 205, 42, 6, 80, 34, "bedspread_mat", tilt_x=10)                       # hanging off the side
+    rbox(bx0 + 70, BACK - 50, 72, 85, 38, 14, "pillow_mat", yaw=-8)
+    rbox(bx1 - 60, BACK - 58, 70, 80, 36, 12, "pillow_mat", yaw=14, tilt_x=6)
+    for _ in range(5):                                                                    # old stains
+        rbox(rng.uniform(bx0 + 30, bx1 - 30), rng.uniform(BACK - 120, BACK - 90), 58.3,
+             rng.uniform(10, 30), rng.uniform(8, 22), 0.4, "stain_sheet_mat", yaw=rng.uniform(0, 90))
+    # her sneakers by the bed, side by side
+    for dx in (0, 14):
+        rbox(bx0 - 30 + dx, BACK - 215, 5, 11, 28, 10, "shoe_mat", yaw=4 + dx * 0.3)
+
+    # --- nightstand: red bulb in the lamp, her diary with pages torn out
+    lx, ly = x0 + 180, BACK - 47
+    tube((lx, ly, 95), (lx, ly, 120), 16.5, "glow_lamp_red_mat", sides=8)                 # shade over the old one
+    light("light_104_lamp", lx, ly - 40, 108, [1.0, 0.08, 0.04], 5, 220)
+    rbox(lx - 16, ly - 8, 62.5, 15, 20, 4, "diary_mat", yaw=-12)
+
+    # --- the table under the window: cold coffee, dead plant, torn pages
+    tx, ty, tz = x1 - 110, FRONT + 240, 70
+    rbox(tx, ty, tz - 2, 80, 70, 4, "wood_mat")
+    for dx in (-34, 34):
+        for dy in (-29, 29):
+            tube((tx + dx, ty + dy, 0), (tx + dx, ty + dy, tz - 4), 2, "metal_mat", sides=4)
+    tube((tx - 18, ty - 10, tz), (tx - 18, ty - 10, tz + 9), 4, "mug_mat", sides=8)       # mug
+    tube((tx - 18, ty - 10, tz + 7.5), (tx - 18, ty - 10, tz + 8), 3.4, "coffee_mat", sides=8)
+    tube((tx + 18, ty + 14, tz), (tx + 18, ty + 14, tz + 12), 7, "pot_mat", sides=8)       # pot
+    tube((tx + 18, ty + 14, tz + 11), (tx + 18, ty + 14, tz + 11.5), 6.4, "soil_mat", sides=8)
+    for i in range(6):                                                                    # dead stems
+        a = i * 1.05
+        top = (tx + 18 + math.cos(a) * 9, ty + 14 + math.sin(a) * 9, tz + 26 + rng.uniform(-4, 6))
+        tube((tx + 18, ty + 14, tz + 11), top, 0.6, "twig_mat", sides=3)
+        tube(top, (top[0] + math.cos(a) * 6, top[1] + math.sin(a) * 6, top[2] - 7), 0.5, "twig_mat", sides=3)  # drooping
+    for _ in range(4):                                                                    # dead leaves
+        rbox(tx + rng.uniform(-5, 38), ty + rng.uniform(-10, 30), tz + 0.3, 4, 2.5, 0.3, "leaf_dead_mat", yaw=rng.uniform(0, 180))
+    for i, (px, py, pz, yw) in enumerate(((tx - 20, ty + 18, tz + 0.4, 18), (tx - 5, ty + 26, tz + 0.6, -25),
+                                          (tx - 40, ty + 60, 2.6, 40))):                  # torn diary pages
+        rbox(px, py, pz, 15, 20, 0.4, "page_mat", yaw=yw)
+    # chair at the table with her jacket over the back
+    cx_, cy_ = tx, ty + 70
+    rbox(cx_, cy_, 45, 42, 40, 4, "wood_mat")
+    rbox(cx_, cy_ + 19, 70, 42, 4, 50, "wood_mat")
+    for dx in (-18, 18):
+        for dy in (-16, 16):
+            tube((cx_ + dx, cy_ + dy, 0), (cx_ + dx, cy_ + dy, 43), 1.8, "wood_mat", sides=4)
+    rbox(cx_, cy_ + 24, 76, 44, 4, 36, "jacket_mat", tilt_y=4)                            # jacket: hanging behind
+    rbox(cx_, cy_ + 19, 95, 46, 14, 4, "jacket_mat")                                      # over the top of the chair
+    rbox(cx_, cy_ + 15, 85, 40, 3, 20, "jacket_mat", tilt_y=-6)                           # front flap
+    rbox(cx_ - 24, cy_ + 22, 66, 7, 9, 44, "jacket_mat", tilt_x=-6)                       # a sleeve hanging down
+
+    # --- open suitcase on a luggage rack in the corner, clothes folded inside
+    sx, sy = x1 - 95, FRONT + 400
+    for dx in (-40, 40):
+        tube((sx + dx, sy - 25, 0), (sx + dx, sy + 25, 45), 1.5, "metal_mat", sides=4)
+        tube((sx + dx, sy + 25, 0), (sx + dx, sy - 25, 45), 1.5, "metal_mat", sides=4)
+    rbox(sx, sy, 46, 86, 54, 2, "strap_mat")
+    rbox(sx, sy, 56, 80, 50, 18, "suitcase_mat")
+    rbox(sx, sy + 30, 88, 80, 4, 48, "suitcase_mat", tilt_y=12)                          # lid open, leaning back
+    for i, mat in enumerate(("clothes_a_mat", "clothes_b_mat", "clothes_c_mat")):
+        rbox(sx - 22 + i * 22, sy - 4, 66 + i * 0.5, 30, 38, 5, mat, yaw=rng.uniform(-6, 6))
+
+    # --- her lake photos taped over the dresser, camera next to the TV
+    for i in range(7):
+        col, row = i % 4, i // 4
+        py = FRONT + 210 + col * 42 + rng.uniform(-4, 4)
+        pz = 172 + row * 34 + rng.uniform(-3, 3)
+        spin = rng.uniform(-6, 6)
+        rbox(inner_l + 0.6, py, pz, 1, 30, 23, "photo_border_mat", tilt_y=spin)
+        picture(inner_l + 1.2, py, pz + 1, 26, 19.5, PHOTOS[i % len(PHOTOS)], spin=spin)
+        rbox(inner_l + 1.6, py, pz + 11, 1, 8, 3, "tape_mat")
+    rbox(inner_l + 0.6, FRONT + 296, 206, 1, 30, 23, "photo_border_mat", tilt_y=4)
+    picture(inner_l + 1.2, FRONT + 296, 207, 26, 19.5, "pic_lanterns", spin=4)    # red lights out on the water
+    cam_x, cam_y = inner_l + 25, FRONT + 352
+    rbox(cam_x, cam_y, 85, 9, 14, 9, "camera_mat", yaw=20)
+    tube((cam_x + 4, cam_y + 1, 85), (cam_x + 11, cam_y + 3, 85), 3.2, "camera_mat", sides=8)
+
+    # --- twig figure on a string over the bed, turning slowly in the draft (still, here)
+    fx, fy = x1 - 120, BACK - 160
+    tube((fx, fy, H - 10), (fx, fy, 215), 0.3, "string_mat", sides=3)
+    tube((fx, fy, 217), (fx + 1, fy, 168), 1.0, "twig_mat", sides=4)                      # body
+    tube((fx - 17, fy, 202), (fx + 16, fy + 2, 199), 0.8, "twig_mat", sides=4)            # arms
+    tube((fx, fy, 172), (fx - 11, fy, 142), 0.8, "twig_mat", sides=4)                     # legs
+    tube((fx, fy, 172), (fx + 12, fy - 1, 143), 0.8, "twig_mat", sides=4)
+    rbox(fx, fy, 200, 3.5, 3.5, 4, "string_mat")                                          # twine knots
+    rbox(fx + 0.5, fy, 172, 3, 3, 4, "string_mat")
+
+    # --- a year of damp: ceiling stain with a drip streak, peeling wallpaper, cobwebs
+    for r, ox, oy, mat in ((60, 0, 0, "stain_wall_mat"), (40, 25, 20, "stain_dark_mat"), (25, -20, 30, "stain_dark_mat")):
+        tube((x0 + 300 + ox, FRONT + 330 + oy, H - 10.4 - r * 0.001), (x0 + 300 + ox, FRONT + 330 + oy, H - 10.2), r,
+             mat, sides=10)
+    rbox(inner_r - 0.6, BACK - 300, 220, 1, 6, 170, "stain_wall_mat")                     # streak down the wall
+    rbox(inner_r - 0.6, BACK - 285, 260, 1, 30, 90, "stain_wall_mat")
+    for py, pz, h_, lean in ((FRONT + 120, 240, 60, 14), (FRONT + 160, 250, 45, 22), (BACK - 120, 255, 50, 18)):
+        rbox(inner_l + 1 + h_ * 0.12, py, pz, 0.6, 32, h_, "wallpaper_mat", tilt_x=lean)  # peeling off the wall
+    for cx, cy, sx_, sy_ in ((inner_l, BACK - t, 1, -1), (inner_r, BACK - t, -1, -1), (inner_l, FRONT + t, 1, 1)):
+        z = H - 10.5
+        tri((cx, cy, z), (cx + sx_ * 30, cy, z), (cx, cy + sy_ * 30, z), "cobweb_mat")
+        tri((cx, cy, z), (cx + sx_ * 26, cy, z - 22), (cx, cy, z - 34), "cobweb_mat")
 
 
 def chair(x, y):

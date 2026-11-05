@@ -405,7 +405,43 @@ def hud_graph():
     spot = as_spot.out("AsSpot Light Component", "spot")
     sel = lambda a_, b_, pick: g.pure(MATH, "SelectFloat", [("A", "real", a_), ("B", "real", b_), ("bPickA", "bool", pick)])
     level = sel(0.0, sel(rnd(0.1, 0.8), 1.0, mode_is(1)), mode_is(2))     # off / flutter / on
-    lit = g.call("/Script/Engine.LightComponent", "SetIntensity", spot_ok, [("NewIntensity", "float", g.mul(level, FLASH_INTENSITY))],
+    # auto-dim: when the beam lands on something close (a wall, a bed), the light dims like
+    # your eyes adjusting, so small rooms don't burn out white. FlDimNear/FlDimFar/FlDimMin live
+    # in MPC_Horror (unreal/flashlight.py) so they can be tuned while playing.
+    g.row(340 * 14, -2400)
+    prm = []
+    after_ = spot_ok
+    for name_ in ("FlDimNear", "FlDimFar", "FlDimMin", "FlIndoor", "FlCeiling"):
+        n_ = g.call(LIB, "GetScalarParameterValue", after_, [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", name_)],
+                    outs=[("ReturnValue", "float")])
+        prm.append(n_.o["ReturnValue"])
+        after_ = n_.then
+    dim_near, dim_far, dim_min, indoor_level, ceiling = prm
+    far_end = g.pure(MATH, "Add_VectorVector", [("A", "vector", loc), ("B", "vector",
+                     g.pure(MATH, "Multiply_VectorFloat", [("A", "vector", fwd), ("B", "real", dim_far)], ty="vector"))], ty="vector")
+    beam_start = g.pure(MATH, "Add_VectorVector", [("A", "vector", loc), ("B", "vector",
+                        g.pure(MATH, "Multiply_VectorFloat", [("A", "vector", fwd), ("B", "real", NEAR)], ty="vector"))], ty="vector")
+    beam = g.call(SYS, "LineTraceSingle", after_, [("Start", "vector", beam_start), ("End", "vector", far_end),
+                  ("bIgnoreSelf", "bool", True)], outs=[("OutHit", "hit"), ("ReturnValue", "bool")])
+    dist = g.pure(STATICS, "BreakHitResult", [("Hit", "hit", beam.o["OutHit"])], out="Distance", ty="float")
+    dist = sel(g.pure(MATH, "Add_DoubleDouble", [("A", "real", dist), ("B", "real", NEAR)]), dim_far, beam.o["ReturnValue"])
+    t_ = g.pure(MATH, "FClamp", [("Value", "real", g.pure(MATH, "Divide_DoubleDouble", [
+        ("A", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", dist), ("B", "real", dim_near)])),
+        ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", dim_far), ("B", "real", dim_near)]))])),
+        ("Min", "real", 0.0), ("Max", "real", 1.0)])
+    want = g.pure(MATH, "Lerp", [("A", "real", dim_min), ("B", "real", 1.0), ("Alpha", "real", t_)])
+    # indoors (a ceiling within FlCeiling cm above your eyes) the whole beam drops to FlIndoor
+    up = g.call(SYS, "LineTraceSingle", beam.then, [("Start", "vector", loc), ("End", "vector",
+                g.pure(MATH, "Add_VectorVector", [("A", "vector", loc), ("B", "vector",
+                       g.pure(MATH, "MakeVector", [("X", "real", 0.0), ("Y", "real", 0.0), ("Z", "real", ceiling)], ty="vector"))],
+                       ty="vector")), ("bIgnoreSelf", "bool", True)], outs=[("OutHit", "hit"), ("ReturnValue", "bool")])
+    want = g.pure(MATH, "FMin", [("A", "real", want), ("B", "real", sel(indoor_level, 1.0, up.o["ReturnValue"]))])
+    smooth = g.pure(MATH, "FInterpTo", [("Current", "real", g.get("FlDim", "real")), ("Target", "real", want),
+                                       ("DeltaTime", "real", g.pure(STATICS, "GetWorldDeltaSeconds")),
+                                       ("InterpSpeed", "real", 5.0)])
+    s_dim = g.set("FlDim", "real", smooth, up.then)
+    power = g.pure(MATH, "Multiply_DoubleDouble", [("A", "real", g.mul(level, FLASH_INTENSITY)), ("B", "real", g.get("FlDim", "real"))])
+    lit = g.call("/Script/Engine.LightComponent", "SetIntensity", s_dim.then, [("NewIntensity", "float", power)],
                  target=(spot, "light"))
 
     # objective + message
