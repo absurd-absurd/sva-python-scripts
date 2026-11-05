@@ -48,11 +48,11 @@ def _place(obj, cx, cy, cz, mat, yaw=0, tilt_x=0, tilt_y=0):
     return keep(obj, mat)
 
 
-def rsoft(cx, cy, cz, sx, sy, sz, mat, jitter=0.0, sag=0.0, smooth=2, seed=0, **turn):
+def rsoft(cx, cy, cz, sx, sy, sz, mat, jitter=0.0, sag=0.0, smooth=2, seed=0, div=(3, 2, 3), **turn):
     """A soft, rounded lump exactly sx * sy * sz: a subdivided box smoothed round, then
     sag pushes the middle of the top down (a dent, a slump) and jitter adds random
     wrinkles (cm). Pillows, bedding, clothes."""
-    c = cmds.polyCube(w=1, h=1, d=1, sx=3, sy=2, sz=3, ch=False)[0]
+    c = cmds.polyCube(w=1, h=1, d=1, sx=div[0], sy=div[1], sz=div[2], ch=False)[0]
     cmds.polySmooth(c, dv=smooth, ch=False)
     bb = cmds.exactWorldBoundingBox(c)
     cmds.scale(sx / (bb[3] - bb[0]), sz / (bb[4] - bb[1]), sy / (bb[5] - bb[2]), c)
@@ -396,9 +396,9 @@ def suitcase(sx, sy, rng):
     for dx in (-25, 25):
         box(sx + dx - 2, sx + dx + 2, sy - 26, sy - 25, 60, 63, "brass_mat")             # latches
     ring(sx, sy - 27, 58, 5, 1.0, "strap_mat", axis="y", sides=10)                       # handle
-    for i, mat in enumerate(("clothes_a_mat", "clothes_b_mat", "clothes_c_mat")):
-        rsoft(sx - 22 + i * 22, sy - 4, 67.5 + i * 0.6, 26, 36, 6, mat, jitter=0.7, sag=1, seed=20 + i,
-              yaw=rng.uniform(-6, 6))
+    folded(sx - 22, sy - 3, 64.8, 22, 34, "clothes_a_mat", "shirt", 20)
+    folded(sx, sy - 2, 64.8, 22, 36, "clothes_b_mat", "jeans", 21)
+    folded(sx + 22, sy - 3, 64.8, 22, 34, "clothes_c_mat", "sweater", 22)
 
 
 def camera(cx, cy, cz):
@@ -498,13 +498,16 @@ def window_inside(wx0, wx1, lit=False):
     bevel_box(wx0 - 7, wx1 + 7, FRONT + 20, y + 8, z0 - 4, z0 + 0.5, "wood_mat", r=0.8)         # sill
     for a, b, c_, d in ((wx0 - 6, wx0, z0, z1 + 6), (wx1, wx1 + 6, z0, z1 + 6), (wx0 - 6, wx1 + 6, z1, z1 + 6)):
         bevel_box(a, b, y, y + 1.5, c_, d, "wood_mat", r=0.4)                                 # casing
-    tube((wx0 - 32, y + 7, z1 + 14), (wx1 + 32, y + 7, z1 + 14), 0.9, "brass_mat", sides=8)   # rod
+    # rod and curtains hang in front of the sill (y + 8), so they never cut through the frame
+    tube((wx0 - 32, y + 12.5, z1 + 14), (wx1 + 32, y + 12.5, z1 + 14), 0.9, "brass_mat", sides=8)   # rod
+    for ex in (wx0 - 32, wx1 + 32):
+        tube((ex, y + 0.2, z1 + 14), (ex, y + 12.5, z1 + 14), 0.6, "brass_mat", sides=6)            # brackets
     if lit:                                               # closed, lit from behind
         for k, (a, b) in enumerate(((wx0 - 26, (wx0 + wx1) / 2.0 + 2), ((wx0 + wx1) / 2.0 - 2, wx1 + 8))):
-            curtain((a + b) / 2.0, y + 1.5, 2.5, z1 + 13, b - a, "glow_window_mat", seed=int(a) + k, pleats=5)
+            curtain((a + b) / 2.0, y + 10, 2.5, z1 + 13, b - a, "glow_window_mat", seed=int(a) + k, pleats=5)
     else:                                                 # pulled back to the sides
         for k, (cx, w) in enumerate(((wx0 - 14, 30), (wx1 - 9, 20))):
-            curtain(cx, y + 1.5, 2.5, z1 + 13, w, "curtain_mat", seed=int(cx) + k, pleats=3, depth=3.2)
+            curtain(cx, y + 10, 2.5, z1 + 13, w, "curtain_mat", seed=int(cx) + k, pleats=3, depth=3.2)
 
 
 def ceiling_fan(cx, cy, ceiling_z, lit=False):
@@ -585,15 +588,41 @@ def bedspread(bx0, bx1, by0, fold_y, top_z, keep_flat=None, seed=0):
                 d = abs(x) - hw
                 x = math.copysign(hw + 1.5 + d * 0.12, x)
                 zz = min(z, top_z) - d
-                yy += math.sin(y * 0.12 + d * 0.15) * 2.0 * (d / hang)    # folds in the drop
+                yy += math.sin(y * 0.06 + seed) * 2.2 * (d / hang)        # a few broad folds in the drop
             if turned:
                 x = u * (hw - 3)
-            w = 0.9 * math.sin(x * 0.21 + y * 0.09 + seed) + 0.6 * math.sin(x * 0.07 - y * 0.23)
+            w = 0.7 * math.sin(x * 0.045 + y * 0.035 + seed) + 0.35 * math.sin(x * 0.03 - y * 0.06)   # broad, gentle
             if keep_flat:
                 fx, fy, fr = keep_flat
                 w *= min(1.0, math.hypot(mid + x - fx, yy - fy) / fr)
             if on_top and abs(x) <= hw:
-                zz += max(-0.4, w) + rng.uniform(-0.15, 0.15)
+                zz += max(-0.3, w)
             row.append((x, yy, zz))
         grid.append(row)
     _cloth(mid, grid, "bedspread_mat")
+
+
+def folded(cx, cy, z, w, d, mat, kind, seed):
+    """A folded piece of clothing lying in the suitcase (z = what it lies on): a soft body,
+    a second folded layer on top, the rounded fold along the front, and what makes it that
+    garment: a shirt's collar, placket and buttons; jeans' centre seam and back pocket;
+    a sweater's ribbed hem."""
+    rsoft(cx, cy, z + 1.6, w, d, 3.2, mat, jitter=0.12, sag=0.3, smooth=3, seed=seed, div=(4, 2, 5))
+    rsoft(cx, cy + 1.5, z + 3.9, w - 2, d - 7, 1.8, mat, jitter=0.1, smooth=3, seed=seed + 1, div=(4, 2, 5))
+    tube((cx - w / 2 + 1.8, cy - d / 2 + 1.7, z + 2.0), (cx + w / 2 - 1.8, cy - d / 2 + 1.7, z + 2.0), 1.7, mat, sides=14)
+    for ex in (cx - w / 2 + 1.8, cx + w / 2 - 1.8):
+        sphere(ex, cy - d / 2 + 1.7, z + 2.0, 1.7, mat, sides=12)
+    top = z + 4.8
+    if kind == "shirt":
+        ring(cx, cy + d / 2 - 9, top + 0.3, 4.2, 0.8, mat, sides=20)                     # collar
+        rbox(cx, cy - 1, top + 0.15, 2.2, d - 20, 0.35, mat)                              # placket
+        for k in range(3):
+            sphere(cx, cy + 4 - k * 6, top + 0.45, 0.45, "sole_mat", sides=8)             # buttons
+    elif kind == "jeans":
+        rbox(cx, cy, top + 0.12, 0.5, d - 9, 0.3, "strap_mat")                            # centre seam
+        rbevel(cx + 5, cy + 4, top + 0.2, 7.5, 8, 0.4, mat, r=0.15)                       # back pocket
+        for dy in (-3.6, 3.6):
+            rbox(cx + 5, cy + 4 + dy, top + 0.45, 7, 0.2, 0.1, "brass_mat")              # stitching
+    elif kind == "sweater":
+        for k in range(8):                                                                # ribbed hem
+            rbox(cx - w / 2 + 2.5 + k * (w - 5) / 7, cy - d / 2 + 6, top - 0.6, 0.7, 7, 0.5, mat)

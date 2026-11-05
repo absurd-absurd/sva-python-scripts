@@ -265,3 +265,14 @@ curtains all the way to the floor.
   and over the foot with folds, and is turned back on itself in a loose roll; the note lies on it.
 - Curtains: pleated cloth from the rod down to the carpet (closed and glowing in 102 and 106).
 - Outside checked after the rebuild: unchanged.
+
+### Curtains clear of the frame, a smoother blanket, detailed clothes
+
+![Curtains, blanket, clothes](2026-11-05_room104_curtains_blanket_clothes.png)
+
+Your notes: the curtains went through the wooden window frame, too many lumps on the blanket, the
+clothes in the suitcase should be higher poly.
+- Rod and curtains moved forward, in front of the sill, on brass brackets.
+- Bedspread: only a few broad, gentle folds.
+- Suitcase: three properly folded garments (smoother, two layers and a rounded fold): a sweater with a
+  ribbed hem, jeans with a centre seam and stitched back pocket, a shirt with collar, placket and buttons.
