@@ -147,8 +147,8 @@ def nightstand(x0):
 def lamp(lx, ly, shade="glow_lamp_mat", bulb="glow_lamp_mat"):
     """Brass base and stem, a bulb you can see under the shade, a tapered shade (with a
     lining so it isn't see-through from inside) and a little finial on top."""
-    frustum(lx, ly, 60.4, 62.6, 8, 6.5, "brass_mat", sides=16)
-    frustum(lx, ly, 62.3, 64.2, 6.3, 3, "brass_mat", sides=16)      # overlaps the base: no shared face
+    lathe(lx, ly, [(60.3, 7.8), (60.9, 8.1), (61.8, 7.9), (62.5, 6.8), (63.1, 4.6), (63.8, 2.6), (64.6, 1.4)],
+          "brass_mat", sides=24)                                    # one turned piece: no clashing parts
     tube((lx, ly, 64.2), (lx, ly, 92), 1.0, "brass_mat", sides=8)
     sphere(lx, ly, 92.5, 1.8, "brass_mat", sides=8)
     sphere(lx, ly, 98.5, 3.6, bulb, sides=10, scale=(1, 1, 1.25))
@@ -678,3 +678,22 @@ def pillow(cx, cy, z, w, d, h, seed, yaw=0, tilt_y=0, dent=2.5):
     cmds.makeIdentity(c, apply=True, t=True)
     cmds.xform(c, pivots=(0, 0, 0))
     return _place(c, cx, cy, z, "pillow_mat", yaw=yaw, tilt_y=tilt_y)
+
+
+def lathe(cx, cy, profile, mat, sides=24):
+    """A turned (lathed) solid: profile = [(z, radius), ...] from the bottom up, closed at both
+    ends, smooth shading around it. Lamp bases, knobs, anything round with a profile."""
+    n = len(profile)
+    c = cmds.polyCylinder(r=1, h=1, sx=sides, sy=n - 1, sz=0, ch=False)[0]
+    pts = []
+    for x, y, z in _verts(c):
+        k = int(round((y + 0.5) * (n - 1)))
+        k = max(0, min(n - 1, k))
+        pz, pr = profile[k]
+        d = math.hypot(x, z)
+        f = pr / d if d > 1e-6 else 0.0
+        pts.append((x * f, pz, z * f))
+    _set_verts(c, pts)
+    cmds.polySoftEdge(c, angle=50, ch=False)
+    cmds.move(cx, 0, cy, c, relative=True)
+    return keep(c, mat)

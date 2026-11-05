@@ -301,4 +301,7 @@ a little out of Room 104, and close every other room's curtains.
   elastic strap and a red ribbon bookmark.
 - Pillows (every bed): plump in the middle, pinched at the seam and corners, a soft head dent.
 - Curtains drawn in every room (102 and 106 still glow); Room 104's leave a 16 cm crack to look out.
-- Also: stacked parts of the lamp base and fan housing no longer share faces.
+- Also: the bedside lamp's base showed dark speckled facets (two stacked pieces cutting into each
+  other); it's now one smooth turned piece (`lathe()`), and the fan housing parts no longer share faces.
+
+![Lamp base fixed](2026-11-05_lamp_base_fixed.png)
