@@ -25,9 +25,11 @@ SHAPES = {
     "room_door": ((138, 5, 228), "MI_PS2_door_mat", (69, 0, 114)),
     "plank_door": ((104, 5, 228), "MI_PS2_door_mat", (52, 0, 114)),        # the lake cabin
     "boathouse_door": ((104, 5, 228), "MI_PS2_door_mat", (52, 0, 114)),    # padlocked plank door
+    "gate": ((206, 6, 176), "MI_PS2_galv_mat", (103, 0, 88)),             # the chain-link back gate
 }
 DOOR_MESH = {"room_door": "/Game/Horror/Sets/prop_room_door", "door": "/Game/Horror/Sets/prop_office_door",
-             "plank_door": "/Game/Horror/Sets/prop_plank_door", "boathouse_door": "/Game/Horror/Sets/prop_boathouse_door"}
+             "plank_door": "/Game/Horror/Sets/prop_plank_door", "boathouse_door": "/Game/Horror/Sets/prop_boathouse_door",
+             "gate": "/Game/Horror/Sets/prop_gate"}
 FIELDS = {"prompt": "Prompt", "title": "Title", "body": "Body", "journal": "Journal",
           "gives_key": "GivesKey", "needs_key": "NeedsKey", "locked_text": "LockedText",
           "objective": "Objective", "pickup": "PickUp",

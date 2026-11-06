@@ -411,7 +411,8 @@ def main():
         for k in ("lights", "room_sets"):        # lists: room_sets (lighting channel 1) was being dropped
             data[k] += d.get(k, [])
     table = json.load(open(f"{ROOT}/textures.json"))
-    gray_motel = ("Room", "Motel_Roof", "Walkway_Post", "Office")       # blockout.py's stand-in motel
+    gray_motel = ("Room", "Motel_Roof", "Walkway_Post", "Office",       # blockout.py's stand-ins
+                  "Fence_Behind", "Shack", "RustedCar", "Tower_")             # (the trail structures: maya/make_trail.py)
     for a in actors.get_all_level_actors():
         if a.actor_has_tag(TAG) or (a.actor_has_tag("blockout") and a.get_actor_label().startswith(gray_motel)):
             actors.destroy_actor(a)

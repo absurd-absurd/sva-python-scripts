@@ -129,7 +129,7 @@ def road_and_lot():
     asphalt = color("Asphalt", (0.03, 0.03, 0.03))
     strip("Road", "Motel", (-20000, -4500), (20000, -4500), 900, asphalt)
     box("ParkingLot", "Motel", 0, -2600, 0, 8000, 2400, 3, asphalt)
-    box("Fence_Behind", "Motel", 350, -100, 0, 6300, 15, 160, color("Fence", (0.15, 0.12, 0.08)))
+    # (the fence behind the motel and its gate are built in maya/make_trail.py now)
     if not unreal.EditorAssetLibrary.does_asset_exist(MOTEL_SET):      # the Maya motel has the real car
         box("Car_Player", "Motel", -1800, -2600, 0, 450, 190, 140, color("Car", (0.1, 0.12, 0.15)))
 
@@ -190,19 +190,9 @@ def trail():
 
 
 def structures():
-    wood = color("OldWood", (0.14, 0.1, 0.07))
-    rust = color("Rust", (0.25, 0.1, 0.04))
-    # hunting shack, door hanging open
-    box("Shack", "Woods/Shack", 2300, 4400, 0, 450, 400, 280, wood, yaw=12)
-    box("Shack_Door", "Woods/Shack", 2050, 4250, 0, 90, 8, 210, color("Door", (0.2, 0.1, 0.05)), yaw=60)
-    # rusted car off the trail
-    box("RustedCar", "Woods/Car", -1700, 7300, 0, 450, 190, 140, rust, yaw=-25)
-    # ranger lookout tower
-    for i, (dx, dy) in enumerate([(-200, -200), (200, -200), (-200, 200), (200, 200)]):
-        box(f"Tower_Leg{i}", "Woods/Tower", 2800 + dx, 10000 + dy, 0, 30, 30, 1100, wood)
-    box("Tower_Cabin", "Woods/Tower", 2800, 10000, 1100, 500, 500, 280, wood)
-    # boathouse, half over the water
-    # (the boathouse is built in maya/lake_buildings.py now)
+    # (the hunting shack, the rusted car and the lookout tower are built in maya/make_trail.py now;
+    #  the boathouse in maya/lake_buildings.py)
+    pass
 
 
 def lake():

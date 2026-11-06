@@ -7,3 +7,5 @@ __pycache__/
 maya/cat_rig.ma
 # big Maya scene (51 MB): rebuilt by maya/make_lake.py
 maya/lake_scene.ma
+# big Maya scene: rebuilt by maya/make_trail.py
+maya/trail_scene.ma

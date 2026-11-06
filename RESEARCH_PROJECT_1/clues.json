@@ -87,6 +87,26 @@
       "objective": "Find the trail behind the motel."
     },
     {
+      "id": "key_backgate",
+      "shape": "key",
+      "at": [3460, -1150, 77.6], "yaw": 25, "room": true,
+      "prompt": "Take",
+      "title": "Back gate key",
+      "body": "[TEST KEY]\n\nA new key on a red tag, lying on the office desk. Someone wrote on the tag: GATE.",
+      "journal": "Found a key marked GATE on the office desk. The trail behind the motel starts at a locked gate.",
+      "gives_key": "backgate",
+      "objective": "Open the gate behind the motel."
+    },
+    {
+      "id": "door_backgate",
+      "shape": "gate",
+      "at": [-3105, -100, 0], "yaw": 0, "open_angle": 90,
+      "prompt": "Open",
+      "needs_key": "backgate",
+      "locked_text": "A new chain and padlock. Someone wants this kept shut.",
+      "objective": "Follow the trail to the lake."
+    },
+    {
       "id": "door_cabin2",
       "shape": "plank_door",
       "at": [4983.3, 13254.8, 40], "yaw": -8, "open_angle": -95,

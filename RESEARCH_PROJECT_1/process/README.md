@@ -603,3 +603,23 @@ Plain untextured colours were washing out to near-white in the flashlight, so th
 ![Boat fix, before (left) and after (right)](2026-11-06_boathouse_boat_fix.png)
 
 Feedback: "the boat is still underwater and there's a weird slab of wood behind it". The boats were only about 30 cm above the water with the floor right at the waterline, so they looked swamped. The hulls are now taller, with about 45 cm of side above the water, and the floors sit higher. The "slab" was the flat, squared-off stern of the hull, which looked like a loose board when the flashlight hit it. The boathouse boat and the far rowboat now come to a point at both ends, with a stern post, and the seats were narrowed to fit inside the hull. The canoe was raised the same way.
+
+## 2026-11-06: first pass at the office, the other rooms and the trail
+
+You asked for a first pass at every remaining structure, to review them all together afterwards. These are the shots I checked them with.
+
+![Office](2026-11-06_office_first_pass.png)
+
+**Office** ("someone just left"): front counter with a bell, the open guest book and a pen, and the flap lifted. Behind it are the desk (lamp on, radio on, a cigarette still burning, a coffee mug), the swivel chair pushed back, the key board with 104's hook empty, and a bookcase of old guest books with three red lanterns on top. The lobby has a couch under the window, a coffee table, a coffee station, a brochure rack and the framed photo of red lanterns on the lake. Through a door left ajar is the owner's back room with a cot, a TV that's still on, a hot plate, and a coat and boots. The first shots were too bright and orange, so the lamps were turned down and the wood panelling darkened.
+
+![Rooms](2026-11-06_rooms_102_103_105_106.png)
+
+**Rooms** (bottom right of the office sheet is 101): 101 was left in a hurry (spilled suitcase, drawer on the floor, lamp knocked over, teddy bear, key on the carpet). 102 was barricaded and then broken into (dresser dragged to the door, chair tipped over, phone off the hook). 103 is a renovation that stopped (bare bed frame, mattress against the wall, dust sheets, ladder, paint). 105 has water damage (ceiling panel hanging down, debris, a bucket, stains). 106 is the next guest (duffel bag, meal tray, and a red lantern on the nightstand).
+
+![Gate and shack](2026-11-06_gate_and_shack.png)
+
+**Back gate**: a chain-link fence with barbed wire along the back of the motel. The gate is chained with a new padlock and has a NO TRESPASSING sign. It's a locked door that needs the back gate key; for testing, that key is on the office desk. **Hunter's shack**: board walls, a tin roof, the door hanging off one hinge, a red lantern burning on the porch post. Inside are a cot with a sleeping bag (someone slept here), a candle stub and cans, antlers, an empty gun rack, traps, a pelt and a small stove.
+
+![Car and tower](2026-11-06_car_and_tower.png)
+
+**Rusted car**: an old sedan sunk into the ground, rusted, windows gone, the driver's door hanging open, weeds and vines, its tail lights still glowing red. **Lookout tower**: four braced legs, six flights of stairs with landings and handrails, and a cabin 11 m up with windows all round and a table for a clue. An automated walk climbed all six flights to the top without getting stuck (the first try caught on low braces and a floor joist, both fixed).
