@@ -808,7 +808,9 @@ def lot_dressing():
     lot_lamp(-150, -3650, False)
     payphone(2930, -1830)
     dumpster(3960, -1150)
-    car(-725, FRONT - WALK - 420)          # in front of Room 104
+    # your car is the Fab "Low-Poly Classic Car" (unreal/place_car.py puts it in front of Room 104);
+    # its red tail-light glow on the asphalt stays part of the red-light theme
+    light("light_car_tail", -725, FRONT - WALK - 420 - 290, 60, [1.0, 0.03, 0.0], 160, 380)
 
 
 # detailed furniture and Cas's things (bed, nightstand, lamp, dresser, TV, ...)

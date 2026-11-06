@@ -483,3 +483,14 @@ Your note: "make the parking lot look most realistic, and the car too."
   glossy paint and chrome (new `M_PS2_Gloss`), tinted glass you can see the interior through (front
   seats with headrests, rear bench, dashboard with a gauge hood, steering wheel, parcel shelf), and
   real number plates ("4KJ 219").
+
+### Your car: the Fab classic car
+
+![Fab car](2026-11-05_fab_car.png)
+
+Your note: "I added a car from Fab, replace the car with that one." The Maya-built sedan is out of the
+motel build; `unreal/place_car.py` (a build_level step) puts your Fab "Low-Poly Classic Car (Free)"
+in the same stall in front of Room 104: turned so the nose faces the motel (its front is at its local
+-x), lifted so the wheels sit on the asphalt (its pivot is mid-body), centred on the stall, with
+collision so you can't walk through it and Nanite off. The red tail-light glow on the asphalt stays.
+The model stays in Content/Fab (your download), not in this repo.
