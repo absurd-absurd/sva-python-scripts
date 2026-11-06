@@ -569,3 +569,31 @@ Inside cabin 2 (all on the room lighting channel, so only the flashlight lights 
 The table with Cas's lake map (the boathouse marked) and a torn page, a candle stub, a tin cup and matches. The boathouse key (test clue) lies on the map. Also a wood stove, a rag rug, a shelf of cans, a hanging lamp and cobwebs.
 
 Fix found on the way: since the lake got its own set file, the import had stopped passing on which meshes are "room insides", so Room 104's insides had lost their own lighting channel. The import now merges that list too.
+
+### 2026-11-05 — More realistic bedding, boathouse and boats
+
+![The boat in the slip](2026-11-05_boathouse_boat_fixed.png)
+
+The boat in the boathouse looked underwater: I had sunk it on purpose, and the inside of every hull was really a solid block, so they looked filled up. Now the hulls are truly hollow (an outer shell with the top cut away plus a thinner inner shell facing in), the boat floats, tied off at the bow, and you look down into it: ribs, floorboards laid just above the waterline (so the lake never shows inside), seats, oarlocks, keel, stem, transom, an oar and a bailing can. The canoe and the far rowboat got the same hollow hull. The plank that sat in front of the boat (meant as a fallen boat door) is gone; the remaining door is now a proper plank door hanging open on its strap hinges, with the empty hinge pins where the other one was.
+
+![Sleeping bag](2026-11-05_sleeping_bag.png)
+
+Cas's sleeping bag: a quilted shell with sewn channels, the top corner unzipped and folded back showing the red flannel lining, the zipper down the side with its pull, the hood bunched with a drawcord, the empty stuff sack at the foot.
+
+![Bunks with bedding](2026-11-05_cabin2_bunks_bedding.png)
+
+Both bunks now have fitted sheets (the mattress ticking showing at the bottom edge) and real pillows, and the top bunk has a grey wool blanket turned down. The bunk was moved a little off the walls so the blanket can hang over the side rails.
+
+![Pegboard and bench](2026-11-05_boathouse_pegboard.png)
+
+The workbench got a pegboard with hanging tools (hammer, screwdrivers, wrench, hand saw, wire, pliers), a proper vise, a jar of screws, a coffee can full of nails, an oily rag, a hand drill, and a cantilever toolbox with both trays open.
+
+![Shelves](2026-11-05_boathouse_shelves.png)
+
+New shelves on the east wall: paint cans with drips and handles, jars and bottles, stacked rags, a red gas can, a bucket. Also new: fishing rods and a landing net in the corner, two oars stored across the roof beams, an anchor with its chain, life jackets shaped like vests with straps and buckles, a net with floats hung on nails, the life ring with tape bands and a grab line, a slatted crate with the tarp draped over it, and boot-shaped muddy prints.
+
+![The lantern](2026-11-05_boathouse_lantern.png)
+
+The lantern is now a hurricane lantern (tank, burner, glass globe with the flame inside, wire guard, cap, bail handle). From the door you see its glow on the bench.
+
+Plain untextured colours were washing out to near-white in the flashlight, so the new materials all have textures with darker tints now.

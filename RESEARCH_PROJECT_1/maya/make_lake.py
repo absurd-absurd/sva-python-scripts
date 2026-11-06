@@ -210,11 +210,12 @@ def canoe(cx, cy, yaw_deg):
     a = math.radians(yaw_deg)
     grp = []
     before = len(PARTS)
-    _shaped(0, 0, L, W, hull, "canoe_mat", sx=10, sy=6, sz=40, smooth=2)
+    open_hull(L, hull, "canoe_mat", "canoe_inner_mat", sx=10, sy=6, sz=40, thick=2.0)      # hollow
     def inner(u):
         b, t, w0, w1 = hull(u)
         return b + 4, t + 0.6, max(0.5, w0 - 3), max(0.5, w1 - 3)
-    _shaped(0, 0, L - 16, W, inner, "canoe_inner_mat", sx=10, sy=6, sz=40, smooth=2)
+    sole_plate(L, lambda u: (lambda b, t, w0, w1: (b + 2, t, max(0.5, w0 - 2), max(0.5, w1 - 2)))(*hull(u * 0.8 + 0.1)),
+               WATER_Z + 1.5, "canoe_inner_mat", Ls=L * 0.8)
     for s in (-1, 1):
         pts = []
         for k in range(21):
@@ -298,11 +299,12 @@ def rowboat(cx, cy, yaw_deg):
         rise = 10 * max(0.0, (0.15 - (1 - u)) / 0.15) ** 2
         return WATER_Z - 14, WATER_Z + 26 + rise, W / 2 * k * 0.5, W / 2 * k
     before = len(PARTS)
-    _shaped(0, 0, L, W, hull, "dock_dark_mat", sx=10, sy=6, sz=36, smooth=2)
+    open_hull(L, hull, "dock_dark_mat", "dock_wood_mat", sx=10, sy=6, sz=36, thick=2.5)    # hollow
     def inner(u):
         b, t, w0, w1 = hull(u)
         return b + 4, t + 0.6, max(0.5, w0 - 3), max(0.5, w1 - 3)
-    _shaped(0, 0, L - 14, W, inner, "dock_wood_mat", sx=10, sy=6, sz=36, smooth=2)
+    sole_plate(L, lambda u: (lambda b, t, w0, w1: (b + 2.5, t, max(0.5, w0 - 2.5), max(0.5, w1 - 2.5)))(*hull(u * 0.96 + 0.02)),
+               WATER_Z + 1.5, "dock_wood_mat", Ls=L * 0.96)
     for s_ in (-1, 1):
         pts = [(s_ * hull(k / 20.0)[3], (k / 20.0 - 0.5) * L, hull(k / 20.0)[1] + 0.5) for k in range(21)]
         for p0, p1 in zip(pts, pts[1:]):

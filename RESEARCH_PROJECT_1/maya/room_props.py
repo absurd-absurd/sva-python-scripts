@@ -563,14 +563,14 @@ def curtain(cx, y_face, z_bot, z_top, width, mat, seed, pleats=6, depth=2.6):
     _cloth(cx, grid, mat)
 
 
-def bedspread(bx0, bx1, by0, fold_y, top_z, keep_flat=None, seed=0):
+def bedspread(bx0, bx1, by0, fold_y, top_z, keep_flat=None, seed=0, mat="bedspread_mat", hang=30.0):
     """A real bedspread thrown back: one cloth that lies over the bed from the foot to fold_y,
     hangs down both sides and over the foot with soft folds, then is turned back on itself
     in a loose roll. keep_flat = (x, y, r): a calm patch with no wrinkles (the note lies there)."""
     rng = random.Random(seed)
     hw = (bx1 - bx0) / 2.0 + 1.5
     mid = (bx0 + bx1) / 2.0
-    hang = 30.0                                            # how far it drapes down the sides
+    # hang: how far it drapes down the sides
     # path along the bed (y, z): hanging over the foot, across the top, the fold, turned back
     path = [(by0 - 3.0, top_z - hang), (by0 - 2.0, top_z - 12), (by0 + 2, top_z), (fold_y, top_z + 0.5),
             (fold_y + 4, top_z + 3.0), (fold_y + 2, top_z + 6.0), (fold_y - 6, top_z + 5.2), (fold_y - 34, top_z + 3.4)]
@@ -608,7 +608,7 @@ def bedspread(bx0, bx1, by0, fold_y, top_z, keep_flat=None, seed=0):
                 zz += max(-0.3, w)
             row.append((x, yy, zz))
         grid.append(row)
-    _cloth(mid, grid, "bedspread_mat")
+    _cloth(mid, grid, mat)
 
 
 def folded(cx, cy, z, w, d, mat, kind, seed):
