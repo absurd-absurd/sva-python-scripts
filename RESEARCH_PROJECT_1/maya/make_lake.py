@@ -110,10 +110,15 @@ def blockers(y0, y1):
         cmds.move((xa + xb) / 2.0, (z0 + z1) / 2.0, (ya + yb) / 2.0, c)
         out.append(c)
     edge = lambda x: shore_y(x) - 112                                  # ground_z there = WATER_Z - 30
-    xs = list(range(-13000, int(DOCK_X - hw), 200)) + [DOCK_X - hw]
+    xs = sorted(set(list(range(-13000, int(DOCK_X - hw), 200)) + [DOCK_X - hw, BH_X - BH_W - 4, BH_X + BH_W + 4]))
     pts = [(x, edge(x)) for x in xs]
     for a, b in zip(pts, pts[1:]):
+        if a[0] >= BH_X - BH_W - 5 and b[0] <= BH_X + BH_W + 5:
+            continue                                                  # the boathouse walls take over here
         wall(a, b)
+    for s in (-1, 1):                                                 # keep you out of the boat slip
+        wall((BH_X + s * (SLIP + 2), BH_Y - 150), (BH_X + s * (SLIP + 2), BH_Y + BH_N))
+    wall((BH_X - SLIP, BH_Y - 152), (BH_X + SLIP, BH_Y - 152))
     xs = [DOCK_X + hw] + list(range(int(DOCK_X + hw) + 200, 13001, 200))
     pts = [(x, edge(x)) for x in xs]
     for a, b in zip(pts, pts[1:]):
@@ -248,7 +253,7 @@ def rocks():
     for _ in range(46):
         x = rng_l.uniform(-9000, 9000)
         y = shore_y(x) + rng_l.uniform(-350, 120)
-        if abs(x - DOCK_X) < 200:
+        if abs(x - DOCK_X) < 200 or (abs(x - BH_X) < BH_W + 60 and BH_Y + BH_S - 60 < y < BH_Y + BH_N + 60):
             continue
         r = rng_l.uniform(18, 75)
         rsoft(x, y, ground_z(x, y) + r * 0.25, r * 2.2, r * 1.8, r * 1.1, "rock_mat", jitter=r * 0.12,
@@ -321,6 +326,9 @@ def rowboat(cx, cy, yaw_deg):
     light("light_rowboat", cx - math.sin(a) * ly, cy + math.cos(a) * ly, lz + 10, [1.0, 0.72, 0.42], 0.3, 300)      # basically out: even 3 left a bright streak on the water
 
 
+exec(open(os.path.join(ROOT, "maya", "lake_buildings.py"), encoding="utf-8").read())
+
+
 def build():
     del PARTS[:]
     del ROOM_PARTS[:]
@@ -333,7 +341,8 @@ def build():
     canoe(DOCK_X + 190, y1 - 420, 8)
     rowboat(-900, 20200, 35)
     tube((DOCK_X + 120, y1 - 120, DECK_Z + 3), (DOCK_X + 175, y1 - 190, WATER_Z + 20), 0.9, "rope_mat", sides=6)   # mooring line
-    for cx in (-6000, -3900, -1200, 300, 2800, 4400, 6900):
+    lake_buildings()
+    for cx in (-6000, -4700, -1200, 300, 2800, 4400, 6900):
         reeds(cx, shore_y(cx) - 60, 26)
     rocks()
     fallen_log(-2200, shore_y(-2200) - 280)
@@ -342,7 +351,7 @@ def build():
     cmds.delete(lake, constructionHistory=True)
     cmds.xform(lake, pivots=(0, 0, 0), worldSpace=True)
     extra = {}
-    for name, parts in (("set_lake_fx", fx), ("set_lake_block", blockers(y0, y1))):
+    for name, parts in (("set_lake_rooms", list(ROOM_PARTS)), ("set_lake_fx", fx), ("set_lake_block", blockers(y0, y1))):
         m = cmds.polyUnite(parts, name=name, constructionHistory=False)[0] if len(parts) > 1 else cmds.rename(parts[0], name)
         cmds.delete(m, constructionHistory=True)
         cmds.xform(m, pivots=(0, 0, 0), worldSpace=True)
@@ -350,7 +359,7 @@ def build():
             material("lake_block_mat", (1, 0, 1))
             cmds.sets(m, edit=True, forceElement="lake_block_matSG")
         extra[name] = m
-    lights = cmds.ls("light_dock*", type="transform") + cmds.ls("light_rowboat*", type="transform")
+    lights = cmds.ls("light_*", type="transform")
     cmds.file(rename=os.path.join(ROOT, "maya", "lake_scene.ma"))
     cmds.file(save=True, type="mayaAscii")
     if not cmds.pluginInfo("fbxmaya", q=True, loaded=True):
@@ -366,11 +375,15 @@ def build():
         sets[name] = f
         for sg in cmds.listConnections(cmds.listRelatives(m, shapes=True), type="shadingEngine") or []:
             used.update(cmds.listConnections(sg + ".surfaceShader") or [])
-    data = {"sets": sets,
+    props = export_building_doors()
+    data = {"sets": sets, "room_sets": ["set_lake_rooms"], "props": props,
             "materials": {m: list(cmds.getAttr(m + ".color")[0]) for m in sorted(used)},
             "lights": [dict(json.loads(cmds.getAttr(l + ".ue_light")), name=l,
                             position=[cmds.xform(l, q=True, t=True, ws=True)[i] for i in (0, 2, 1)]) for l in lights],
             "dock": {"x": DOCK_X, "y0": y0, "y1": y1, "deck_z": DECK_Z}, "water_z": WATER_Z}
+    for mt in list(BLD_MATS) + ["metal_mat", "brass_mat", "chrome_mat"]:
+        data["materials"].setdefault(mt, list(cmds.getAttr(mt + ".color")[0]))
+    data["doors"] = DOORS
     json.dump(data, open(os.path.join(OUT, "sets_lake.json"), "w"), indent=1)
     print(f"Lake built: {cmds.polyEvaluate(lake, triangle=True)} triangles, dock y {y0:.0f}..{y1:.0f}")
 

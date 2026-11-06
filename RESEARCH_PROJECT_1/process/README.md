@@ -533,3 +533,39 @@ The water's edge now goes in and out in small coves and points (two more, shorte
 ![Rowboat lantern basically off](2026-11-05_lake_rowboat_dim.png)
 
 Rowboat lantern turned down until it's basically off: the glass is no longer glowing and the light is at 0.3. Even at 3 the glossy water still showed a bright streak under the boat. Now it's a dark shape with the smallest glint.
+
+### 2026-11-05 — Boathouse and the three cabins
+
+![Boathouse from the shore](2026-11-05_boathouse_outside.png)
+
+The boathouse, half over the water west of the dock (maya/lake_buildings.py). Grey board-and-batten walls, a rusted tin roof that sags in the middle with a loose panel and a hole near the lake end, pilings standing in the water. The lantern inside glows through the gaps at the lake end.
+
+![The padlocked door](2026-11-05_boathouse_padlock.png)
+
+The way in from land: a plank door with strap hinges and a hasp with a new brass padlock. It needs the boathouse key ("Padlocked. The lock is new. Everything else here is rotting."), so it's abandoned, locked, and recently used all at once.
+
+![Workbench](2026-11-05_boathouse_bench.png)
+
+Inside: the workbench with a vise, hammer, wrench, a can of nails and a saw on the wall, and the signs someone was here recently: an open red toolbox and a kerosene lantern still burning low (a small warm light). The boat slip runs down the middle (you can't fall in, invisible walls).
+
+![East walkway](2026-11-05_boathouse_walkway.png)
+
+The east walkway: muddy footprints from the door to the slip, a new coil of rope, a life ring on the wall, the tarp pulled half off a crate, and the half-sunk rowboat in the slip.
+
+![Cabin 2, the open one](2026-11-05_cabin2_outside.png)
+
+The cabins are log cabins on stone piers, porches facing the lake, with shingle roofs, railings and two steps. Cabin 2 (nearest the dock) is the one you can go into: grimy glass in the windows, one boarded from inside, a stove pipe through the roof, and a plank door that opens.
+
+![Cabin 1, boarded](2026-11-05_cabin1_boarded.png)
+
+Cabins 1 and 3 are boarded up: the door nailed shut with boards across, every window boarded (with a dark backing so you never see into an empty house), a stone chimney, a missing row of shingles, broken porch boards, a chair tipped over.
+
+![Cabin 2 bunks](2026-11-05_cabin2_bunks.png)
+
+Inside cabin 2 (all on the room lighting channel, so only the flashlight lights it): a bunk bed with Cas's green sleeping bag and a rolled flannel for a pillow on the bottom bunk, her backpack on the floor.
+
+![Cabin 2 table](2026-11-05_cabin2_table.png)
+
+The table with Cas's lake map (the boathouse marked) and a torn page, a candle stub, a tin cup and matches. The boathouse key (test clue) lies on the map. Also a wood stove, a rag rug, a shelf of cans, a hanging lamp and cobwebs.
+
+Fix found on the way: since the lake got its own set file, the import had stopped passing on which meshes are "room insides", so Room 104's insides had lost their own lighting channel. The import now merges that list too.

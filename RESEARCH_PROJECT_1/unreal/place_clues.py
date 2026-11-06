@@ -23,8 +23,11 @@ SHAPES = {
     "book":  ((30, 22, 4), "MI_PS2_door_mat", (0, 0, 2)),
     "door":  ((108, 5, 228), "MI_PS2_door_mat", (54, 0, 114)),
     "room_door": ((138, 5, 228), "MI_PS2_door_mat", (69, 0, 114)),
+    "plank_door": ((104, 5, 228), "MI_PS2_door_mat", (52, 0, 114)),        # the lake cabin
+    "boathouse_door": ((104, 5, 228), "MI_PS2_door_mat", (52, 0, 114)),    # padlocked plank door
 }
-DOOR_MESH = {"room_door": "/Game/Horror/Sets/prop_room_door", "door": "/Game/Horror/Sets/prop_office_door"}
+DOOR_MESH = {"room_door": "/Game/Horror/Sets/prop_room_door", "door": "/Game/Horror/Sets/prop_office_door",
+             "plank_door": "/Game/Horror/Sets/prop_plank_door", "boathouse_door": "/Game/Horror/Sets/prop_boathouse_door"}
 FIELDS = {"prompt": "Prompt", "title": "Title", "body": "Body", "journal": "Journal",
           "gives_key": "GivesKey", "needs_key": "NeedsKey", "locked_text": "LockedText",
           "objective": "Objective", "pickup": "PickUp",
@@ -64,7 +67,7 @@ def main():
         for key, var in FIELDS.items():
             if key in c:
                 a.set_editor_property(var, wrap(c[key]) if key in ("body", "journal") else c[key])
-        a.set_editor_property("IsDoor", c["shape"] in ("door", "room_door"))
+        a.set_editor_property("IsDoor", "door" in c["shape"])
         size, mat, offset = SHAPES[c["shape"]]
         mesh = a.get_components_by_class(unreal.StaticMeshComponent)[0]
         door = DOOR_MESH.get(c["shape"])
@@ -78,7 +81,7 @@ def main():
             mesh.set_relative_location(unreal.Vector(*offset), False, True)
             mesh.set_relative_scale3d(unreal.Vector(size[0] / 100, size[1] / 100, size[2] / 100))
             mesh.set_material(0, unreal.load_asset(MATS + mat))
-        if in_room(c["at"]) and "door" not in c["shape"]:
+        if (c.get("room") or in_room(c["at"])) and "door" not in c["shape"]:
             mesh.set_editor_property("lighting_channels", ROOM_LIGHT)   # like the room around it
         # the invisible aim box: the object plus HIT_MARGIN all round (doors: just the door)
         # it sits on the same surface and rises HIT_UP cm above the object, so the aim line

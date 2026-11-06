@@ -403,12 +403,13 @@ def import_set(name, fbx, mats):
 def main():
     # every set file: sets.json (the motel), sets_lake.json (the lake), ... merged
     import glob
-    data = {"sets": {}, "materials": {}, "lights": [], "props": {}}
+    data = {"sets": {}, "materials": {}, "lights": [], "props": {}, "room_sets": []}
     for path in sorted(glob.glob(f"{ROOT}/export/sets*.json")):
         d = json.load(open(path))
         for k in ("sets", "materials", "props"):
             data[k].update(d.get(k, {}))
-        data["lights"] += d.get("lights", [])
+        for k in ("lights", "room_sets"):        # lists: room_sets (lighting channel 1) was being dropped
+            data[k] += d.get(k, [])
     table = json.load(open(f"{ROOT}/textures.json"))
     gray_motel = ("Room", "Motel_Roof", "Walkway_Post", "Office")       # blockout.py's stand-in motel
     for a in actors.get_all_level_actors():

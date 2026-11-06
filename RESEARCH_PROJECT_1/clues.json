@@ -85,6 +85,33 @@
       "body": "[TEST GUEST BOOK]\n\nYears of names in different pens. One name in every year is circled in red.\n\nLast October: Room 104 - C. Byrne. Circled.",
       "journal": "The guest book has Cas's name circled in red. One name is circled every year.",
       "objective": "Find the trail behind the motel."
+    },
+    {
+      "id": "door_cabin2",
+      "shape": "plank_door",
+      "at": [4983.3, 13254.8, 40], "yaw": -8, "open_angle": -95,
+      "prompt": "Open"
+    },
+    {
+      "id": "key_boathouse",
+      "shape": "key",
+      "at": [5046.6, 13043.9, 115.8], "yaw": 32, "room": true,
+      "prompt": "Take",
+      "title": "Boathouse key",
+      "body": "[TEST KEY]\n\nA small new key on a loop of fishing line, lying on Cas's lake map. Someone drew a circle around the boathouse.",
+      "journal": "Found a new key on the map in the cabin by the lake. The boathouse is circled.",
+      "gives_key": "boathouse",
+      "objective": "Open the boathouse.",
+      "pickup": true
+    },
+    {
+      "id": "door_boathouse",
+      "shape": "boathouse_door",
+      "at": [-3448, 13950, 16], "yaw": 180, "open_angle": -95,
+      "prompt": "Open",
+      "needs_key": "boathouse",
+      "locked_text": "Padlocked. The lock is new. Everything else here is rotting.",
+      "objective": "Search the boathouse."
     }
   ]
 }

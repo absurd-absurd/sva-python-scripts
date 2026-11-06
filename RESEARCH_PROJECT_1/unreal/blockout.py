@@ -202,15 +202,12 @@ def structures():
         box(f"Tower_Leg{i}", "Woods/Tower", 2800 + dx, 10000 + dy, 0, 30, 30, 1100, wood)
     box("Tower_Cabin", "Woods/Tower", 2800, 10000, 1100, 500, 500, 280, wood)
     # boathouse, half over the water
-    box("Boathouse", "Lake/Boathouse", -3500, 14700, 0, 800, 1000, 380, wood)
+    # (the boathouse is built in maya/lake_buildings.py now)
 
 
 def lake():
     # (the dock is built in maya/make_lake.py now)
-    cabin = color("Cabin", (0.18, 0.14, 0.1))
-    for i, (x, y, yaw) in enumerate([(-6500, 13200, 5), (5000, 13000, -8), (7500, 12400, 15)]):
-        box(f"Cabin{i + 1}", "Lake/Cabins", x, y, 0, 700, 600, 320, cabin, yaw=yaw)
-        box(f"Cabin{i + 1}_Boards", "Lake/Cabins", x, y - 303, 80, 300, 8, 150, color("Boards", (0.25, 0.2, 0.14)), yaw=yaw)
+    # (the three cabins are built in maya/lake_buildings.py now)
 
 
 def placeholder_trees():
