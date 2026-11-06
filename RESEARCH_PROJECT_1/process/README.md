@@ -467,3 +467,19 @@ Your notes: a gap under the doors, the car and the garbage bin higher resolution
 - Dumpster: well-rounded body edges, ribs front and back, lifting pockets with a rim, rounder lids
   with hinge rods, smoother castors and bags.
 Motel now ~515k triangles (most of the new ones are the car).
+
+### A more realistic parking lot and car
+
+![Lot and car](2026-11-05_lot_car_realism.png)
+
+Your note: "make the parking lot look most realistic, and the car too."
+- Lot: one large painted asphalt surface instead of scattered crack and stain pieces
+  (`tools/make_asphalt.py`, ~4 cm per pixel, top image): aggregate grain and tone variation, darker
+  worn lanes into the stalls, an oil stain under every stall, branching cracks and crumbling
+  alligator cracking, repair patches with irregular edges and sealed seams, a puddle with a dried
+  rim, grit and dead leaves along the curb and the walkway. The road got the same (worn tyre lanes,
+  patches, cracks). The painted lines, wheel stops, drain, manhole and weeds sit on top.
+- Car: real wheel arches cut into the body with dark wheel wells, a dark underside, a slightly
+  glossy paint and chrome (new `M_PS2_Gloss`), tinted glass you can see the interior through (front
+  seats with headrests, rear bench, dashboard with a gauge hood, steering wheel, parcel shelf), and
+  real number plates ("4KJ 219").

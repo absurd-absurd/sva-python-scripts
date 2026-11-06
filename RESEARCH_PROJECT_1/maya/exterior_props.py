@@ -273,8 +273,9 @@ def dumpster(x, y):
 # ---------- the parking lot ----------
 
 def parking_lot_detail():
-    """On top of parking_lot()'s lines and cracks: proper wheel stops (bevelled, two rebar pins,
+    """On top of parking_lot()'s lines: the painted asphalt (ground_textures), proper wheel stops (bevelled, two rebar pins,
     chipped), a bevelled curb, a storm drain grate, a manhole cover, weeds in the cracks."""
+    ground_textures()
     for k in range(12):
         cx = X0 + k * 250 + 125
         bevel_box(cx - 85, cx + 85, FRONT - WALK - 162, FRONT - WALK - 138, LOT_Z + 3.4, LOT_Z + 15, "stop_mat", r=3.0)
@@ -333,24 +334,28 @@ def car(cx, cy):
         if u > 0.62:
             top -= 4 * (u - 0.62) / 0.28                                         # hood slopes down
         bot = 30 + 6 * max(0.0, (0.05 - u) / 0.05) + 6 * max(0.0, (u - 0.95) / 0.05)
+        for uw in (92.0 / L, 1 - 105.0 / L):                                       # wheel arches
+            d = abs(u - uw) * L
+            if d < 40:
+                bot = max(bot, 34 + math.sqrt(40 * 40 - d * d))
         end = min(u, 1 - u)
         k = math.sqrt(max(0.15, min(1.0, end / 0.04)))
         return bot, top, W / 2 * k * 0.98, (W / 2 - 6) * k
-    _shaped(cx, cy, L, W, body, "car_paint_mat", sz=48)
+    _shaped(cx, cy, L, W, body, "gloss_car_paint_mat", sz=48)
     # greenhouse: glass block narrowing to the roof, pillars, a roof panel
     gl0, gl1 = 0.26, 0.64                                                       # rear window .. windscreen
     def cabin(u):
         uu = gl0 + (gl1 - gl0) * u
         rake = min(1.0, u / 0.22) * min(1.0, (1 - u) / 0.28)                    # slope front and back
         return 91.5, 91.5 + 45 * rake ** 0.6 + 0.5, W / 2 - 9, W / 2 - 22
-    _shaped(cx, back + L * gl0 + L * (gl1 - gl0) / 2, L * (gl1 - gl0), W, cabin, "glass_mat", sz=24)
+    _shaped(cx, back + L * gl0 + L * (gl1 - gl0) / 2, L * (gl1 - gl0), W, cabin, "seeglass_car_mat", sz=24)
     roof_y0, roof_y1 = back + L * (gl0 + 0.07), back + L * (gl1 - 0.09)
-    rbevel(cx, (roof_y0 + roof_y1) / 2, 137.5, W - 42, roof_y1 - roof_y0, 3.0, "car_paint_mat", r=1.4, seg=4)
+    rbevel(cx, (roof_y0 + roof_y1) / 2, 137.5, W - 42, roof_y1 - roof_y0, 3.0, "gloss_car_paint_mat", r=1.4, seg=4)
     for s in (-1, 1):
         xx = cx + s * (W / 2 - 16)
-        tube((xx, back + L * gl0 + 6, 93), (cx + s * (W / 2 - 22), roof_y0, 137), 3.0, "car_paint_mat", sides=16)   # C pillar
+        tube((xx, back + L * gl0 + 6, 93), (cx + s * (W / 2 - 22), roof_y0, 137), 3.0, "gloss_car_paint_mat", sides=16)   # C pillar
         tube((cx + s * (W / 2 - 13), back + L * 0.46, 93), (cx + s * (W / 2 - 21), back + L * 0.46, 137), 2.4, "trim_mat", sides=12)  # B
-        tube((xx, back + L * gl1 - 6, 93), (cx + s * (W / 2 - 22), roof_y1, 137), 2.6, "car_paint_mat", sides=16)   # A pillar
+        tube((xx, back + L * gl1 - 6, 93), (cx + s * (W / 2 - 22), roof_y1, 137), 2.6, "gloss_car_paint_mat", sides=16)   # A pillar
         # wheels: rounded tyres (sidewall + tread), dished hubcaps, lug nuts
         for wy in (back + 92, front - 105):
             prof = [(0, 0.5), (0.6, 22), (1.6, 27), (3.0, 31), (5.0, 33), (9, 34), (14, 34.3), (19, 34), (23, 33),
@@ -359,37 +364,76 @@ def car(cx, cy):
             cmds.rotate(0, 0, 90, t, pivot=(0, 0, 0))                          # axis along -x, 28 wide
             cmds.move((cx + W / 2 - 1) if s > 0 else (cx - W / 2 + 29), 34, wy, t, relative=True)
             hub = lathe(0, 0, [(0, 0.3), (0.5, 19), (1.2, 19.5), (2.2, 18.5), (2.8, 15), (3.2, 10), (3.9, 6), (4.4, 3),
-                               (4.7, 1.5), (4.8, 0.3)], "chrome_mat", sides=40)
+                               (4.7, 1.5), (4.8, 0.3)], "gloss_chrome_mat", sides=40)
             cmds.rotate(0, 0, -90 * s, hub, pivot=(0, 0, 0))
             cmds.move(cx + s * (W / 2 + 0.8), 34, wy, hub, relative=True)
             for k in range(5):                                                 # lug nuts
                 a = k * 2 * math.pi / 5
-                sphere(cx + s * (W / 2 + 3.6), wy + math.cos(a) * 7, 34 + math.sin(a) * 7, 0.9, "chrome_mat", sides=8)
+                sphere(cx + s * (W / 2 + 3.6), wy + math.cos(a) * 7, 34 + math.sin(a) * 7, 0.9, "gloss_chrome_mat", sides=8)
         # door seams, handles, mirror, side trim
         for sy_ in (back + L * 0.30, back + L * 0.47, back + L * 0.64):
             box(cx + s * (W / 2 - 0.2) - 0.6, cx + s * (W / 2 - 0.2) + 0.6, sy_ - 0.5, sy_ + 0.5, 42, 90, "tire_mat")
         for hy in (back + L * 0.40, back + L * 0.58):
-            rbevel(cx + s * (W / 2 + 0.6), hy, 80, 2, 14, 3, "chrome_mat", r=0.5)
-        rsoft(cx + s * (W / 2 + 7), back + L * gl1 - 14, 98, 12, 6, 9, "car_paint_mat", smooth=3)
-        box(cx + s * (W / 2 - 1) - 1, cx + s * (W / 2 - 1) + 1.6, back + 60, front - 60, 56, 60, "chrome_mat")
+            rbevel(cx + s * (W / 2 + 0.6), hy, 80, 2, 14, 3, "gloss_chrome_mat", r=0.5)
+        rsoft(cx + s * (W / 2 + 7), back + L * gl1 - 14, 98, 12, 6, 9, "gloss_car_paint_mat", smooth=3)
+        box(cx + s * (W / 2 - 1) - 1, cx + s * (W / 2 - 1) + 1.6, back + 60, front - 60, 56, 60, "gloss_chrome_mat")
+    for wy in (back + 92, front - 105):                                            # wheel wells (dark)
+        tube((cx - W / 2 + 4, wy, 34), (cx + W / 2 - 4, wy, 34), 39, "tire_mat", sides=24)
+    bevel_box(cx - W / 2 + 12, cx + W / 2 - 12, back + 30, front - 30, 24, 31, "tire_mat", r=2.0)   # underside
+    car_interior(cx, back, L, W, gl0, gl1)
     # front: bumper, grille, headlights, plate; back: bumper, tail lights, plate, exhaust
-    rbevel(cx, front - 4, 42, W + 4, 14, 14, "chrome_mat", r=4.0, seg=5)
+    rbevel(cx, front - 4, 42, W + 4, 14, 14, "gloss_chrome_mat", r=4.0, seg=5)
     bevel_box(cx - 48, cx + 48, front - 9, front - 6.5, 58, 78, "trim_mat", r=1.0)
     for k in range(6):
-        box(cx - 44, cx + 44, front - 6.9, front - 6.0, 60 + k * 3, 61.3 + k * 3, "chrome_mat")
+        box(cx - 44, cx + 44, front - 6.9, front - 6.0, 60 + k * 3, 61.3 + k * 3, "gloss_chrome_mat")
     for s in (-1, 1):
-        bevel_box(cx + s * 56 - 20, cx + s * 56 + 20, front - 10, front - 6, 60, 76, "chrome_mat", r=1.0)
+        bevel_box(cx + s * 56 - 20, cx + s * 56 + 20, front - 10, front - 6, 60, 76, "gloss_chrome_mat", r=1.0)
         bevel_box(cx + s * 56 - 17, cx + s * 56 + 17, front - 6.6, front - 5.6, 62, 74, "glass_mat", r=0.6)
         bevel_box(cx + s * 60 - 22, cx + s * 60 + 22, back + 5.6, back + 8, 62, 78, "glow_tail_mat", r=1.0)
-    rbevel(cx, back + 4, 44, W + 4, 14, 14, "chrome_mat", r=4.0, seg=5)
-    for py in (front - 11.5, back + 11.5 - 0.0):
-        bevel_box(cx - 15, cx + 15, py - 0.6, py + 0.6, 38, 52, "plate_mat", r=0.4)
+    rbevel(cx, back + 4, 44, W + 4, 14, 14, "gloss_chrome_mat", r=4.0, seg=5)
+    for py, facing in ((front - 12.0, 1), (back + 12.0, -1)):
+        plate(cx, py - facing * 0.8, 45, facing)
     tube((cx + 50, back + 12, 28), (cx + 50, back - 2, 28), 2.8, "metal_mat", sides=10)
     # wipers, aerial, a dent in the door
     for s in (-1, 1):
         tube((cx + s * 30, back + L * gl1 + 4, 92.5), (cx + s * 30 - 40, back + L * gl1 - 2, 98), 0.7, "trim_mat", sides=4)
-    tube((cx + 60, front - 120, 92), (cx + 62, front - 125, 150), 0.35, "chrome_mat", sides=4)
+    tube((cx + 60, front - 120, 92), (cx + 62, front - 125, 150), 0.35, "gloss_chrome_mat", sides=4)
     light("light_car_tail", cx, back - 60, 60, [1.0, 0.03, 0.0], 160, 380)
+
+
+def car_interior(cx, back, L, W, gl0, gl1):
+    """What you see through the tinted windows: front bucket seats and a bench, headrests, a
+    dashboard with a hood over the gauges, a steering wheel, the rear parcel shelf."""
+    fy = back + L * 0.50                                                  # front seats
+    for s_ in (-1, 1):
+        rsoft(cx + s_ * 38, fy, 104, 48, 12, 30, "seat_mat", smooth=2, sag=-1, tilt_y=-12)      # back
+        rsoft(cx + s_ * 38, fy - 4, 125, 24, 10, 13, "seat_mat", smooth=2)                       # headrest
+    by = back + L * 0.32                                                  # rear bench
+    rsoft(cx, by, 104, W - 44, 12, 28, "seat_mat", smooth=2, sag=-1, tilt_y=-14)
+    rsoft(cx, back + L * gl0 + 6, 95, W - 40, 22, 3, "dash_mat", smooth=1)                     # parcel shelf
+    dy = back + L * gl1 - 14                                              # dashboard
+    rsoft(cx, dy, 95, W - 34, 30, 10, "dash_mat", smooth=2, sag=-2)
+    rsoft(cx + 38, dy - 8, 101, 36, 12, 7, "dash_mat", smooth=2)                               # gauge hood
+    ring(cx + 38, dy - 22, 104, 17, 1.4, "dash_mat", axis="y", sides=24)                      # steering wheel
+    tube((cx + 38, dy - 22, 104), (cx + 38, dy - 4, 97), 2.0, "dash_mat", sides=10)
+
+
+def plate(cx, y, z, facing):
+    """The number plate, a picture on a thin backing, facing +y (front) or -y (back)."""
+    bevel_box(cx - 16, cx + 16, y - 0.5, y + 0.5, z - 8, z + 8, "gloss_chrome_mat", r=0.4)
+    p = cmds.polyPlane(w=30, h=15, sx=1, sy=1, ch=False)[0]
+    cmds.rotate(90 * facing, 0, 0, p)
+    if facing < 0:
+        cmds.rotate(0, 180, 0, p, relative=True)
+    cmds.move(cx, z, y + facing * 0.9, p)
+    keep(p, "pic_car_plate")
+
+
+def ground_textures():
+    """The lot and the road as one large painted surface each (tools/make_asphalt.py), 8 mm above
+    the grey blockout so they never fight it, below the paint lines and the wheel stops."""
+    flat_picture(0, (LOT[2] + LOT[3]) / 2.0, LOT_Z + 0.8, LOT[1] - LOT[0], LOT[3] - LOT[2], "pic_lot_asphalt")
+    flat_picture(0, -4500, 2.8, 16000, 900, "pic_road_asphalt")
 
 
 # ---------- the swinging doors (their own meshes) ----------

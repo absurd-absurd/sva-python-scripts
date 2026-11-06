@@ -133,6 +133,22 @@ def picture_texture(name):
 
 
 GLASS = "/Game/Horror/Materials/PS2/M_PS2_Glass"
+GLOSS = "/Game/Horror/Materials/PS2/M_PS2_Gloss"
+
+
+def gloss_material():
+    """M_PS2_Gloss: the PS2 surface (keeps its wobble wire) with a little shine, for car paint and
+    chrome (Maya materials named gloss_*). Made once from M_PS2_Surface."""
+    if lib.does_asset_exist(GLOSS):
+        return unreal.load_asset(GLOSS)
+    m = lib.duplicate_asset(SURFACE, GLOSS)
+    for prop, v in ((unreal.MaterialProperty.MP_ROUGHNESS, 0.32), (unreal.MaterialProperty.MP_SPECULAR, 0.6)):
+        node = MEL.get_material_property_input_node(m, prop)
+        if node:
+            node.set_editor_property("r", v)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
 
 
 def glass_material():
@@ -224,9 +240,14 @@ def materials(colors, table):
                 MEL.set_material_instance_vector_parameter_value(mi, "Glass", unreal.LinearColor(*spec["glass"], 1))
             seed = DEAD_SEED if spec.get("flicker", 0) >= 1 else float(i)
             MEL.set_material_instance_scalar_parameter_value(mi, "Seed", seed)
+        elif name.startswith("gloss_"):
+            mi = instance(f"MI_PS2_{name}", gloss_material())
+            MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
         elif name.startswith("seeglass_"):
             mi = instance(f"MI_PS2_{name}", glass_material())
             MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
+            if "car" in name:              # tinted car glass: you see shapes inside, not a convertible
+                MEL.set_material_instance_scalar_parameter_value(mi, "Opacity", 0.72)
         elif name.startswith("pic_"):
             pic = pic or picture_material()
             mi = instance(f"MI_PS2_{name}", pic)

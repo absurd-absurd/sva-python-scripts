@@ -64,6 +64,9 @@ MATS = {
     "ac_mat": (0.55, 0.53, 0.48), "doormat_mat": (0.14, 0.11, 0.08), "post_mat": (0.18, 0.17, 0.16),
     "lid_mat": (0.06, 0.07, 0.06), "chrome_mat": (0.5, 0.5, 0.52), "plate_mat": (0.75, 0.72, 0.6),
     "weed_mat": (0.16, 0.2, 0.09),
+    "gloss_car_paint_mat": (0.22, 0.035, 0.03), "gloss_chrome_mat": (0.55, 0.55, 0.57),
+    "seeglass_car_mat": (0.05, 0.06, 0.07), "seat_mat": (0.16, 0.12, 0.09), "dash_mat": (0.05, 0.05, 0.05),
+    "pic_lot_asphalt": (1, 1, 1), "pic_road_asphalt": (1, 1, 1), "pic_car_plate": (1, 1, 1),
     "tv_mat": (0.09, 0.075, 0.06), "screen_mat": (0.035, 0.045, 0.045), "sole_mat": (0.62, 0.6, 0.55),
     "lining_mat": (0.3, 0.1, 0.09), "pin_mat": (0.6, 0.03, 0.02), "red_string_mat": (0.45, 0.03, 0.03),
     "shoe_inner_mat": (0.05, 0.05, 0.05), "jacket_cuff_mat": (0.08, 0.1, 0.08),
@@ -713,23 +716,12 @@ def parking_lot():
     seg((1200, -3050), (1200, -3350), 14, "paint_mat")
     seg((1200, -3350), (1150, -3270), 14, "paint_mat")
     seg((1200, -3350), (1250, -3270), 14, "paint_mat")
-    # cracks, patched holes and oil stains
-    for _ in range(26):
-        crack(rng.uniform(LOT[0] + 200, LOT[1] - 200), rng.uniform(LOT[2] + 100, LOT[3] - 100),
-              rng.randint(3, 7), rng.uniform(60, 160))
-    for _ in range(9):
-        x, y = rng.uniform(LOT[0] + 300, LOT[1] - 300), rng.uniform(LOT[2] + 200, LOT[3] - 300)
-        w, d = rng.uniform(120, 380), rng.uniform(80, 260)
-        flat(x, x + w, y, y + d, "patch_mat", h=DECAL_H["patch"])
-    for k in range(12):
-        if rng.random() < 0.6:
-            blot(X0 + k * 250 + 125 + rng.uniform(-30, 30), FRONT - WALK - 380 + rng.uniform(-60, 60),
-                 rng.uniform(25, 55), "stain_mat")
+    # cracks, patches and oil stains are painted into the asphalt texture (tools/make_asphalt.py)
 
 
 def road_lines():
     """Old Lake Road: dashed yellow centre line, faded white edge lines."""
-    y, z = -4500, 2.0
+    y, z = -4500, 3.6                       # above the road texture plane (2.8)
     for x in range(-19800, 19800, 900):
         seg((x, y), (x + 420, y), 12, "paint_yellow_mat", z=z, h=1.0)
     for edge in (-4060, -4940):
