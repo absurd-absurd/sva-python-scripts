@@ -94,8 +94,8 @@ def strip(label, folder, p0, p1, width, mat, z=1.0):
 
 def ground():
     m = color("Ground", (0.05, 0.06, 0.04))
-    place("Ground", "Ground", PLANE, (0, 5000, 0), (40000, 40000, 1), m)
-    place("Lake", "Lake", PLANE, (0, 19000, 3), (24000, 9000, 1), color("Water", (0.005, 0.01, 0.015)))
+    # the flat ground stops at the lake: the shore, the water and the lake bed come from maya/make_lake.py
+    place("Ground", "Ground", PLANE, (0, -650, 0), (40000, 28700, 1), m)
 
 
 STORY = json.load(open(r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/story.json"))
@@ -206,11 +206,7 @@ def structures():
 
 
 def lake():
-    wood = color("OldWood", (0.14, 0.1, 0.07))
-    box("Dock", "Lake/Dock", 1500, 15600, 20, 250, 2200, 15, wood)
-    for i in range(6):
-        for side in (-110, 110):
-            box(f"Dock_Post{i}_{side}", "Lake/Dock", 1500 + side, 14700 + i * 400, -100, 20, 20, 140, wood)
+    # (the dock is built in maya/make_lake.py now)
     cabin = color("Cabin", (0.18, 0.14, 0.1))
     for i, (x, y, yaw) in enumerate([(-6500, 13200, 5), (5000, 13000, -8), (7500, 12400, 15)]):
         box(f"Cabin{i + 1}", "Lake/Cabins", x, y, 0, 700, 600, 320, cabin, yaw=yaw)

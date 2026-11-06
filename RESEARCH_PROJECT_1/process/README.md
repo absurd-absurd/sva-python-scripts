@@ -494,3 +494,24 @@ in the same stall in front of Room 104: turned so the nose faces the motel (its 
 -x), lifted so the wheels sit on the asphalt (its pivot is mid-body), centred on the stall, with
 collision so you can't walk through it and Nanite off. The red tail-light glow on the asphalt stays.
 The model stays in Content/Fab (your download), not in this repo.
+
+## 2026-11-05: Black Hollow Lake
+
+![The lake](2026-11-05_lake.png)
+
+Top: first pass (the water read pale grey, like fog). Bottom: now.
+New `maya/make_lake.py` (exported as its own set, `export/sets_lake.json`, which `import_sets.py`
+now merges with the motel's):
+- A real shore: one ground sheet sloping down into the lake along a wavy edge, with a point of land at
+  the dock so the trail ends on solid ground; dry forest floor, wet mud at the waterline, a dark bed.
+  The flat blockout ground now stops at the shore, and the old black lake plane and box dock are gone.
+- Water 45 cm below the shore: dark, a faint slow ripple, a little gloss so the dock lantern lays a
+  red streak on it (`M_PS2_Water`). Low mist banks drifting over it, fading where they meet the
+  ground (`M_PS2_Mist`).
+- The dock: weathered planks with gaps (a few missing, one broken and sagging), stringers on pilings
+  with cross bracing, cleats, a coil of rope, a swim ladder going down into the water, and a red
+  lantern on a post at the end (its light reflects on the water: the red-light theme).
+- A split-rail railing along the shore where the trail comes out, with a gap onto the dock; the red
+  canoe moored by the dock with a line to a cleat, a paddle inside; reeds and cattails along the edge,
+  rocks, and a fallen tree lying out into the water.
+Boathouse and cabins come next (their own plan rows).

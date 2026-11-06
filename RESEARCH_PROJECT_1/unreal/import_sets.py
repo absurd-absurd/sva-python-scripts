@@ -132,6 +132,94 @@ def picture_texture(name):
     return tex
 
 
+WATER = "/Game/Horror/Materials/PS2/M_PS2_Water"
+MIST = "/Game/Horror/Materials/PS2/M_PS2_Mist"
+
+WATER_HLSL = """
+// still lake water: a slow, faint ripple in the surface normal (no texture needed)
+float2 p = W.xy;
+float2 g = float2(sin(p.x * 0.011 + T * 0.6) + 0.6 * sin(p.y * 0.017 + T * 0.45) + 0.3 * sin((p.x + p.y) * 0.031 + T * 1.1),
+                  cos(p.y * 0.013 + T * 0.5) + 0.5 * cos(p.x * 0.021 - T * 0.4) + 0.3 * cos((p.x - p.y) * 0.027 + T * 0.9));
+return normalize(float3(g * Amp, 1.0));
+"""
+MIST_HLSL = """
+// low mist: soft drifting banks (layered waves), slowly moving across the lake
+float2 p = W.xy * 0.0006 + float2(T * 0.012, T * 0.007);
+float n = sin(p.x * 6.1) * sin(p.y * 5.3) + 0.5 * sin(p.x * 13.7 + p.y * 9.1 + T * 0.05) + 0.25 * sin(p.x * 27.0 - p.y * 23.0);
+return saturate(n * 0.35 + 0.45) * Op;
+"""
+
+
+def _custom(m, code, pins, out, x, y):
+    c = MEL.create_material_expression(m, unreal.MaterialExpressionCustom, x, y)
+    c.set_editor_property("code", code)
+    c.set_editor_property("output_type", out)
+    ins = []
+    for n in pins:
+        ci = unreal.CustomInput()
+        ci.set_editor_property("input_name", n)
+        ins.append(ci)
+    c.set_editor_property("inputs", ins)
+    return c
+
+
+def _fresh(path, name):
+    if lib.does_asset_exist(path):
+        m = unreal.load_asset(path)
+        unreal.get_editor_subsystem(unreal.AssetEditorSubsystem).close_all_editors_for_asset(m)
+        MEL.delete_all_material_expressions(m)
+        return m
+    return tools.create_asset(name, path.rsplit("/", 1)[0], unreal.Material, unreal.MaterialFactoryNew())
+
+
+def water_material():
+    """M_PS2_Water: dark, glossy, a slow ripple, so the dock lantern and the lamps lay streaks
+    of light on it. Rebuilt every run."""
+    m = _fresh(WATER, "M_PS2_Water")
+    color = MEL.create_material_expression(m, unreal.MaterialExpressionVectorParameter, -500, -200)
+    color.set_editor_property("parameter_name", "Color")
+    MEL.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    for prop, v, y in ((unreal.MaterialProperty.MP_ROUGHNESS, 0.16, 0), (unreal.MaterialProperty.MP_SPECULAR, 0.12, 80)):
+        c = MEL.create_material_expression(m, unreal.MaterialExpressionConstant, -300, y)
+        c.set_editor_property("r", v)
+        MEL.connect_material_property(c, "", prop)
+    rip = _custom(m, WATER_HLSL, ("W", "T", "Amp"), unreal.CustomMaterialOutputType.CMOT_FLOAT3, -300, 200)
+    MEL.connect_material_expressions(MEL.create_material_expression(m, unreal.MaterialExpressionWorldPosition, -600, 200), "", rip, "W")
+    MEL.connect_material_expressions(MEL.create_material_expression(m, unreal.MaterialExpressionTime, -600, 280), "", rip, "T")
+    amp = MEL.create_material_expression(m, unreal.MaterialExpressionScalarParameter, -600, 360)
+    amp.set_editor_property("parameter_name", "Ripple")
+    amp.set_editor_property("default_value", 0.012)
+    MEL.connect_material_expressions(amp, "", rip, "Amp")
+    MEL.connect_material_property(rip, "", unreal.MaterialProperty.MP_NORMAL)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
+
+
+def mist_material():
+    """M_PS2_Mist: translucent drifting mist, fading out where it meets the ground (depth fade)."""
+    m = _fresh(MIST, "M_PS2_Mist")
+    m.set_editor_property("blend_mode", unreal.BlendMode.BLEND_TRANSLUCENT)
+    m.set_editor_property("two_sided", True)
+    color = MEL.create_material_expression(m, unreal.MaterialExpressionVectorParameter, -500, -200)
+    color.set_editor_property("parameter_name", "Color")
+    MEL.connect_material_property(color, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    n = _custom(m, MIST_HLSL, ("W", "T", "Op"), unreal.CustomMaterialOutputType.CMOT_FLOAT1, -500, 100)
+    MEL.connect_material_expressions(MEL.create_material_expression(m, unreal.MaterialExpressionWorldPosition, -800, 100), "", n, "W")
+    MEL.connect_material_expressions(MEL.create_material_expression(m, unreal.MaterialExpressionTime, -800, 180), "", n, "T")
+    op = MEL.create_material_expression(m, unreal.MaterialExpressionScalarParameter, -800, 260)
+    op.set_editor_property("parameter_name", "Opacity")
+    op.set_editor_property("default_value", 0.2)
+    MEL.connect_material_expressions(op, "", n, "Op")
+    fade = MEL.create_material_expression(m, unreal.MaterialExpressionDepthFade, -250, 100)
+    fade.set_editor_property("fade_distance_default", 220.0)
+    MEL.connect_material_expressions(n, "", fade, "Opacity")
+    MEL.connect_material_property(fade, "", unreal.MaterialProperty.MP_OPACITY)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
+
+
 GLASS = "/Game/Horror/Materials/PS2/M_PS2_Glass"
 GLOSS = "/Game/Horror/Materials/PS2/M_PS2_Gloss"
 
@@ -240,6 +328,12 @@ def materials(colors, table):
                 MEL.set_material_instance_vector_parameter_value(mi, "Glass", unreal.LinearColor(*spec["glass"], 1))
             seed = DEAD_SEED if spec.get("flicker", 0) >= 1 else float(i)
             MEL.set_material_instance_scalar_parameter_value(mi, "Seed", seed)
+        elif name.startswith("water_"):
+            mi = instance(f"MI_PS2_{name}", water_material())
+            MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
+        elif name.startswith("mist_"):
+            mi = instance(f"MI_PS2_{name}", mist_material())
+            MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
         elif name.startswith("gloss_"):
             mi = instance(f"MI_PS2_{name}", gloss_material())
             MEL.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
@@ -307,7 +401,14 @@ def import_set(name, fbx, mats):
 
 
 def main():
-    data = json.load(open(f"{ROOT}/export/sets.json"))
+    # every set file: sets.json (the motel), sets_lake.json (the lake), ... merged
+    import glob
+    data = {"sets": {}, "materials": {}, "lights": [], "props": {}}
+    for path in sorted(glob.glob(f"{ROOT}/export/sets*.json")):
+        d = json.load(open(path))
+        for k in ("sets", "materials", "props"):
+            data[k].update(d.get(k, {}))
+        data["lights"] += d.get("lights", [])
     table = json.load(open(f"{ROOT}/textures.json"))
     gray_motel = ("Room", "Motel_Roof", "Walkway_Post", "Office")       # blockout.py's stand-in motel
     for a in actors.get_all_level_actors():
