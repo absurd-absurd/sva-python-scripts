@@ -418,6 +418,13 @@ def main():
     for name, fbx in data["sets"].items():
         mesh = import_set(name, fbx, mats)
         a = actors.spawn_actor_from_object(mesh, unreal.Vector(0, 0, 0))
+        comp = a.static_mesh_component
+        if name.endswith("_fx"):                     # water, mist: seen, never stood on
+            comp.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+        elif name.endswith("_block"):                # invisible walls: felt, never seen
+            a.set_actor_hidden_in_game(True)
+            comp.set_editor_property("visible", False)
+            comp.set_cast_shadow(False)
         a.set_actor_label(name)
         a.set_folder_path("Sets")
         a.tags = [TAG]

@@ -25,7 +25,7 @@ exec(_src[:_src.rindex("\nbuild()")])                   # helpers + MATS (and th
 
 WATER_Z = -45.0               # the lake surface
 DOCK_X = 1500.0               # the trail ends here (layout.json)
-DECK_Z = 52.0
+DECK_Z = 16.0                 # low: you step straight onto it from the trail (ground is z 1)
 LAKE_MATS = {
     "shore_mat": (0.3, 0.26, 0.2), "mud_wet_mat": (0.1, 0.085, 0.07), "lakebed_mat": (0.03, 0.03, 0.03),
     "water_lake_mat": (0.012, 0.016, 0.02), "mist_lake_mat": (0.32, 0.34, 0.37),
@@ -40,7 +40,9 @@ rng_l = random.Random(77)
 def shore_y(x):
     """Where the water's edge would be on flat ground: a wavy line, with a point of land jutting
     out at the dock so the trail ends on solid ground and steps straight onto the dock."""
-    return 14550 + 260 * math.sin(x / 1700.0) + 140 * math.sin(x / 630.0 + 1.0) + 260 * math.exp(-((x - DOCK_X) / 700.0) ** 2)
+    return (14550 + 260 * math.sin(x / 1700.0) + 140 * math.sin(x / 630.0 + 1.0)
+            + 150 * math.sin(x / 420.0 + 2.0) + 60 * math.sin(x / 190.0 + 0.5)         # little coves and points
+            + 260 * math.exp(-((x - DOCK_X) / 700.0) ** 2))
 
 
 def ground_z(x, y):
@@ -55,7 +57,7 @@ def shore():
     """The ground falling away into the lake: one subdivided sheet bent to ground_z, coloured by
     height (dry shore, wet mud near the waterline, dark lake bed below)."""
     x0, x1, y0, y1 = -13000, 13000, 13500, 17500
-    nx, ny = 130, 80
+    nx, ny = 220, 80
     p = cmds.polyPlane(w=x1 - x0, h=y1 - y0, sx=nx, sy=ny, ch=False)[0]
     cmds.move((x0 + x1) / 2.0, 0, (y0 + y1) / 2.0, p)
     cmds.makeIdentity(p, apply=True, t=True)
@@ -80,6 +82,8 @@ def shore():
 
 
 def water_and_mist():
+    """Returns its parts: they go in their own mesh with no collision (you walked on the mist)."""
+    before = len(PARTS)
     p = cmds.polyPlane(w=40000, h=16000, sx=40, sy=16, ch=False)[0]
     cmds.move(0, WATER_Z, 14100 + 8000, p)
     keep(p, "water_lake_mat")
@@ -88,6 +92,36 @@ def water_and_mist():
         m = cmds.polyPlane(w=w, h=h, sx=1, sy=1, ch=False)[0]
         cmds.move(cx, z, cy, m)
         keep(m, "mist_lake_mat")
+    fx = PARTS[before:]
+    del PARTS[before:]
+    return fx
+
+
+def blockers(y0, y1):
+    """Invisible walls (collision only): along the lake where the water gets knee deep, and around
+    the dock, so you can walk onto the dock but not into the lake or off the dock's sides."""
+    hw = 126
+    out = []
+    def wall(a, b, z0=-320, z1=320):
+        (xa, ya), (xb, yb) = a, b
+        L = math.hypot(xb - xa, yb - ya)
+        c = cmds.polyCube(w=L + 20, h=z1 - z0, d=10, ch=False)[0]
+        cmds.rotate(0, -math.degrees(math.atan2(yb - ya, xb - xa)), 0, c)
+        cmds.move((xa + xb) / 2.0, (z0 + z1) / 2.0, (ya + yb) / 2.0, c)
+        out.append(c)
+    edge = lambda x: shore_y(x) - 112                                  # ground_z there = WATER_Z - 30
+    xs = list(range(-13000, int(DOCK_X - hw), 200)) + [DOCK_X - hw]
+    pts = [(x, edge(x)) for x in xs]
+    for a, b in zip(pts, pts[1:]):
+        wall(a, b)
+    xs = [DOCK_X + hw] + list(range(int(DOCK_X + hw) + 200, 13001, 200))
+    pts = [(x, edge(x)) for x in xs]
+    for a, b in zip(pts, pts[1:]):
+        wall(a, b)
+    for s in (-1, 1):                                                 # dock sides and end
+        wall((DOCK_X + s * hw, edge(DOCK_X + s * hw)), (DOCK_X + s * hw, y1 + 30))
+    wall((DOCK_X - hw, y1 + 30), (DOCK_X + hw, y1 + 30))
+    return out
 
 
 def plank(cx, cy, z, w, d, t, yaw=0, tilt=0, mat="dock_wood_mat"):
@@ -98,9 +132,13 @@ def dock():
     """The old dock: two stringers on pilings with cross bracing, planks across with gaps (a few
     missing, one broken and sagging), a swim ladder off the end, cleats, a coil of rope, and a red
     lantern on a post at the end."""
-    y0 = shore_y(DOCK_X) - 260
+    y0 = shore_y(DOCK_X) - 330                                         # starts on dry ground, level with the trail
     y1 = y0 + 2200
     hw = 120
+    # where the trail meets it: a timber sill and two worn boards bridging ground to deck
+    bevel_box(DOCK_X - hw - 10, DOCK_X + hw + 10, y0 - 40, y0 + 4, -4, DECK_Z - 4, "dock_dark_mat", r=1.5)
+    for k, yy in enumerate((y0 - 62, y0 - 44)):
+        plank(DOCK_X + (k - 0.5) * 6, yy, 1.5 + k * 4, 2 * hw - 20, 17, 3.0, yaw=(k - 0.5) * 3, tilt=-6)
     for k in range(int((y1 - y0) / 300) + 1):                         # pilings
         py = y0 + 80 + k * 300
         for s in (-1, 1):
@@ -234,19 +272,53 @@ def fallen_log(x, y):
 def overlook(x0, x1):
     """A wooden railing along the top of the shore where the trail comes out: posts following the
     water's edge, two split rails between them, a gap for the dock."""
-    posts = []
-    x = x0
-    while x <= x1:
-        y = shore_y(x) - 340
-        posts.append((x, y, ground_z(x, y)))
-        x += 220
+    xs = [x for x in range(int(x0), int(x1) + 1, 220) if abs(x - DOCK_X) > 230] + [DOCK_X - 165, DOCK_X + 165]
+    posts = [(x, shore_y(x) - 345, ground_z(x, shore_y(x) - 345)) for x in sorted(xs)]
     for (xa, ya, za), (xb, yb, zb) in zip(posts, posts[1:]):
-        if abs((xa + xb) / 2.0 - DOCK_X) < 170:
-            continue                                                  # the way onto the dock
+        if xa < DOCK_X < xb:
+            continue                                                  # the open way onto the dock
         for zz in (55, 100):
             tube((xa, ya, za + zz), (xb, yb, zb + zz), 3.5, "dock_wood_mat", sides=8)
     for (x, y, z) in posts:
         frustum(x, y, z - 10, z + 108, 6, 5, "dock_dark_mat", sides=8)
+
+
+def rowboat(cx, cy, yaw_deg):
+    """A small empty rowboat far out on the lake, drifting: wide plank hull, three seats, the oars
+    still in their locks, one trailing in the water. A faint lantern so you can just make it out."""
+    L, W = 340.0, 128.0
+    def hull(u):
+        end = min(u, 1 - u)
+        k = math.sin(math.pi * min(0.5, end + (0.12 if u < 0.5 else 0.0))) ** 0.6   # squared-off stern
+        rise = 10 * max(0.0, (0.15 - (1 - u)) / 0.15) ** 2
+        return WATER_Z - 14, WATER_Z + 26 + rise, W / 2 * k * 0.5, W / 2 * k
+    before = len(PARTS)
+    _shaped(0, 0, L, W, hull, "dock_dark_mat", sx=10, sy=6, sz=36, smooth=2)
+    def inner(u):
+        b, t, w0, w1 = hull(u)
+        return b + 4, t + 0.6, max(0.5, w0 - 3), max(0.5, w1 - 3)
+    _shaped(0, 0, L - 14, W, inner, "dock_wood_mat", sx=10, sy=6, sz=36, smooth=2)
+    for s_ in (-1, 1):
+        pts = [(s_ * hull(k / 20.0)[3], (k / 20.0 - 0.5) * L, hull(k / 20.0)[1] + 0.5) for k in range(21)]
+        for p0, p1 in zip(pts, pts[1:]):
+            tube(p0, p1, 2.0, "dock_wood_mat", sides=8)
+    for u in (0.22, 0.5, 0.78):                                       # seats
+        b, t, w0, w1 = hull(u)
+        rbevel(0, (u - 0.5) * L, t - 8, 2 * w1 - 6, 24, 3, "dock_wood_mat", r=0.6)
+    b, t, w0, w1 = hull(0.55)
+    for s_, (ex, ez) in ((-1, (-200, WATER_Z + 2)), (1, (150, t + 6))):     # oars: one trailing, one shipped
+        tube((s_ * w1, 0.05 * L, t + 4), (s_ * w1 + s_ * abs(ex) * 0.9, 0.05 * L - 60 * s_, ez), 2.2, "dock_wood_mat", sides=8)
+    lz = hull(0.78)[1] + 4                                            # lantern on the front seat
+    frustum(0, 0.3 * L, lz, lz + 16, 4.5, 4.5, "glow_lamp_mat", sides=10)
+    frustum(0, 0.3 * L, lz + 16, lz + 21, 6, 1.5, "lantern_metal_mat", sides=10)
+    new = PARTS[before:]
+    g = cmds.group(new, name="rowboat_grp")
+    cmds.rotate(0, -yaw_deg, 0, g, pivot=(0, 0, 0))
+    cmds.move(cx, 0, cy, g, relative=True)
+    cmds.ungroup(g)
+    a = math.radians(yaw_deg)
+    ly = 0.3 * L
+    light("light_rowboat", cx - math.sin(a) * ly, cy + math.cos(a) * ly, lz + 10, [1.0, 0.72, 0.42], 60, 900)
 
 
 def build():
@@ -256,9 +328,10 @@ def build():
     for name, rgb in list(MATS.items()) + list(LAKE_MATS.items()):
         material(name, rgb)
     shore()
-    water_and_mist()
+    fx = water_and_mist()
     y0, y1 = dock()
     canoe(DOCK_X + 190, y1 - 420, 8)
+    rowboat(-900, 20200, 35)
     tube((DOCK_X + 120, y1 - 120, DECK_Z + 3), (DOCK_X + 175, y1 - 190, WATER_Z + 20), 0.9, "rope_mat", sides=6)   # mooring line
     for cx in (-6000, -3900, -1200, 300, 2800, 4400, 6900):
         reeds(cx, shore_y(cx) - 60, 26)
@@ -268,19 +341,32 @@ def build():
     lake = cmds.polyUnite(PARTS, name="set_lake", constructionHistory=False)[0]
     cmds.delete(lake, constructionHistory=True)
     cmds.xform(lake, pivots=(0, 0, 0), worldSpace=True)
-    lights = cmds.ls("light_dock*", type="transform")
+    extra = {}
+    for name, parts in (("set_lake_fx", fx), ("set_lake_block", blockers(y0, y1))):
+        m = cmds.polyUnite(parts, name=name, constructionHistory=False)[0] if len(parts) > 1 else cmds.rename(parts[0], name)
+        cmds.delete(m, constructionHistory=True)
+        cmds.xform(m, pivots=(0, 0, 0), worldSpace=True)
+        if name.endswith("_block"):
+            material("lake_block_mat", (1, 0, 1))
+            cmds.sets(m, edit=True, forceElement="lake_block_matSG")
+        extra[name] = m
+    lights = cmds.ls("light_dock*", type="transform") + cmds.ls("light_rowboat*", type="transform")
     cmds.file(rename=os.path.join(ROOT, "maya", "lake_scene.ma"))
     cmds.file(save=True, type="mayaAscii")
     if not cmds.pluginInfo("fbxmaya", q=True, loaded=True):
         cmds.loadPlugin("fbxmaya")
     fbx = os.path.join(OUT, "set_lake.fbx").replace("\\", "/")
-    cmds.select(lake)
-    mel.eval("FBXResetExport")
-    mel.eval('FBXExport -f "{}" -s'.format(fbx))
+    sets = {}
     used = set()
-    for sg in cmds.listConnections(cmds.listRelatives(lake, shapes=True), type="shadingEngine") or []:
-        used.update(cmds.listConnections(sg + ".surfaceShader") or [])
-    data = {"sets": {"set_lake": fbx},
+    for name, m in [("set_lake", lake)] + list(extra.items()):
+        f = os.path.join(OUT, name + ".fbx").replace("\\", "/")
+        cmds.select(m)
+        mel.eval("FBXResetExport")
+        mel.eval('FBXExport -f "{}" -s'.format(f))
+        sets[name] = f
+        for sg in cmds.listConnections(cmds.listRelatives(m, shapes=True), type="shadingEngine") or []:
+            used.update(cmds.listConnections(sg + ".surfaceShader") or [])
+    data = {"sets": sets,
             "materials": {m: list(cmds.getAttr(m + ".color")[0]) for m in sorted(used)},
             "lights": [dict(json.loads(cmds.getAttr(l + ".ue_light")), name=l,
                             position=[cmds.xform(l, q=True, t=True, ws=True)[i] for i in (0, 2, 1)]) for l in lights],

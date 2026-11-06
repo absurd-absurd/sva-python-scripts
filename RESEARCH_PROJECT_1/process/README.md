@@ -515,3 +515,17 @@ now merges with the motel's):
   canoe moored by the dock with a line to a cleat, a paddle inside; reeds and cattails along the edge,
   rocks, and a fallen tree lying out into the water.
 Boathouse and cabins come next (their own plan rows).
+
+### 2026-11-05 — Lake fixes: low dock, rowboat, wavier shore
+
+![Dock, now low](2026-11-05_lake_dock_low.png)
+
+The dock was 50 cm above the trail, so you couldn't step onto it. Now it sits just above the ground (deck at 16 cm) and starts on dry land, with a timber sill and two worn boards bridging the step. A railing post that stood in the middle of the dock entrance was moved to the sides of the opening. While testing I found the player could walk on top of the low mist and on the water. The water and mist are now a separate mesh with no collision, and invisible walls run along the knee-deep line of the shore and the dock's sides and end, so you can walk the dock but not into the lake.
+
+![Rowboat in the distance](2026-11-05_lake_rowboat.png)
+
+An empty rowboat far out on the lake (about 35 m from the end of the dock), one oar trailing in the water, with a very faint lantern so you can only just make it out through the mist.
+
+![Shoreline](2026-11-05_lake_shoreline.png)
+
+The water's edge now goes in and out in small coves and points (two more, shorter waves added to the shoreline curve), instead of one long smooth bend.
