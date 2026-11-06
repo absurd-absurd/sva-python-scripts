@@ -164,19 +164,92 @@ def guest_book(x, y, z, yaw=0):
 
 
 def couch(x0, x1, y0, y1):
-    """A tired vinyl couch, back against y1 (facing -y)."""
-    rsoft((x0 + x1) / 2.0, (y0 + y1) / 2.0 + 6, 22, x1 - x0, y1 - y0 - 12, 30, "couch_mat", jitter=0.5, smooth=1, seed=11)
+    """A tired 70s couch, back against y1 (facing -y): a base on turned wooden feet, three seat
+    cushions with piped edges (the middle one sagging), button-tufted back cushions, rolled arms."""
+    cxm, w_all = (x0 + x1) / 2.0, x1 - x0
+    rsoft(cxm, (y0 + y1) / 2.0 + 4, 24, w_all - 8, y1 - y0 - 10, 22, "couch_mat", jitter=0.4, smooth=2, seed=11, div=(6, 2, 3))
+    bevel_box(x0 + 6, x1 - 6, y1 - 22, y1 - 4, 30, 62, "couch_mat", r=4, seg=3)            # back frame
+    aw = 18.0
     n = 3
-    w = (x1 - x0 - 24) / n
+    w = (w_all - 2 * aw) / n
     for k in range(n):
-        cx = x0 + 12 + w * (k + 0.5)
-        rsoft(cx, (y0 + y1) / 2.0 - 4, 42, w - 2, y1 - y0 - 30, 12, "couch_mat", jitter=0.8, sag=2.5 if k == 1 else 1, smooth=2, seed=20 + k)
-        rsoft(cx, y1 - 14, 66, w - 2, 16, 38, "couch_mat", jitter=0.8, smooth=2, seed=30 + k, tilt_y=6)
-    for x in (x0 + 6, x1 - 6):
-        rsoft(x, (y0 + y1) / 2.0, 52, 14, y1 - y0, 26, "couch_mat", jitter=0.4, smooth=2, seed=int(x))
-    for x in (x0 + 8, x1 - 8):
-        for y in (y0 + 8, y1 - 8):
-            frustum(x, y, 0, 7, 2, 2.5, "trim_mat", sides=8)
+        cx = x0 + aw + w * (k + 0.5)
+        sy0, sy1 = y0 + 4, y1 - 24
+        rsoft(cx, (sy0 + sy1) / 2.0, 41, w - 2, sy1 - sy0, 13, "couch_mat", jitter=0.6, sag=3.0 if k == 1 else 1.2,
+              smooth=2, seed=20 + k, div=(5, 2, 5))
+        tube((cx - w / 2 + 3, sy0 + 1, 44), (cx + w / 2 - 3, sy0 + 1, 44), 0.9, "trim_mat", sides=8)    # piping
+        rsoft(cx, y1 - 15, 70, w - 3, 18, 40, "couch_mat", jitter=0.6, smooth=2, seed=30 + k, tilt_y=8, div=(5, 4, 2))
+        for r_ in range(2):                                                   # tufting buttons
+            for c_ in range(3):
+                sphere(cx - w / 3.0 + c_ * w / 3.0, y1 - 25 + r_ * 2.5, 60 + r_ * 16, 1.1, "trim_mat", sides=8)
+    for x in (x0 + aw / 2.0, x1 - aw / 2.0):                                   # rolled arms
+        rsoft(x, (y0 + y1) / 2.0, 44, aw, y1 - y0 - 2, 34, "couch_mat", jitter=0.4, smooth=2, seed=int(x), div=(3, 4, 5))
+        tube((x, y0 + 2, 60), (x, y1 - 4, 60), aw * 0.52, "couch_mat", sides=14)
+    for x in (x0 + 10, x1 - 10):
+        for y in (y0 + 10, y1 - 10):
+            lathe(x, y, [(5, 1.6), (8, 2.2), (12, 2.8), (13, 3.4)], "wood_mat", sides=12)
+
+
+def coffee_table(cx, cy):
+    """Coffee table: a top with a moulded edge, an apron, turned legs, a magazine shelf."""
+    rbevel(cx, cy, 40, 110, 55, 3, "wood_mat", r=1.2, seg=3)
+    for yy in (cy - 27.5, cy + 27.5):
+        tube((cx - 55, yy, 38.6), (cx + 55, yy, 38.6), 1.0, "wood_mat", sides=8)
+    for (a, b, c_, d) in ((-50, 50, -24, -22.5), (-50, 50, 22.5, 24), (-50, -48.5, -24, 24), (48.5, 50, -24, 24)):
+        bevel_box(cx + a, cx + b, cy + c_, cy + d, 31, 38.5, "wood_mat", r=0.4)
+    for dx in (-47, 47):
+        for dy in (-21, 21):
+            lathe(cx + dx, cy + dy, [(5, 1.4), (7, 2.0), (14, 1.5), (19, 2.4), (23, 2.4), (29, 1.8), (31, 2.6), (38.5, 2.6)],
+                  "wood_mat", sides=12)
+    rbevel(cx, cy, 13, 96, 44, 1.5, "wood_mat", r=0.5)
+
+
+def end_table(cx, cy, top=60):
+    """A small end table like the rooms' nightstands: drawer with a brass knob, a shelf."""
+    bevel_box(cx - 28, cx + 28, cy - 24, cy + 24, 11, top - 2.5, "wood_mat", r=1)
+    bevel_box(cx - 30, cx + 30, cy - 26, cy + 26, top - 3, top, "wood_mat", r=1)
+    for lx in (cx - 26, cx + 22):
+        for ly in (cy - 22, cy + 18):
+            bevel_box(lx, lx + 4, ly, ly + 4, 5, 11.5, "wood_mat", r=0.8)
+    bevel_box(cx - 24, cx + 24, cy - 25.5, cy - 24, top - 22, top - 6, "wood_mat", r=0.8)
+    sphere(cx, cy - 26.2, top - 14, 1.6, "brass_mat", sides=8)
+    bevel_box(cx - 24, cx + 24, cy - 24.5, cy + 20, 15, top - 26, "trim_mat", r=0.5)
+
+
+def wainscot(axis, fixed, a, b, d, top=96.0, base=14.0):
+    """Wood panelling below a chair rail: a backing board, raised panels with a field, a rounded
+    chair rail and a baseboard; on the wall face `fixed`, the room toward d (+1 / -1)."""
+    def bx(p, q, o0, o1, z0, z1, r):
+        lo, hi = min(fixed + d * o0, fixed + d * o1), max(fixed + d * o0, fixed + d * o1)
+        if axis == "x":
+            bevel_box(p, q, lo, hi, z0, z1, "wood_mat", r=r)
+        else:
+            bevel_box(lo, hi, p, q, z0, z1, "wood_mat", r=r)
+    if b - a < 4:
+        return
+    bx(a, b, 0.6, 1.4, base, top, 0.2)
+    n = max(1, int((b - a) / 58))
+    w = (b - a) / n
+    for k in range(n):
+        p, q = a + k * w + 7, a + (k + 1) * w - 7
+        if q - p < 14:
+            continue
+        bx(p, q, 1.4, 2.4, base + 9, top - 12, 1.2)                  # raised panel
+        bx(p + 6, q - 6, 2.4, 2.9, base + 15, top - 18, 0.8)         # its field
+    bx(a, b, 1.4, 4.2, top - 2, top + 4, 1.4)                        # chair rail
+    bx(a, b, 0.6, 2.6, 5, base, 0.5)                                 # baseboard
+
+
+def crown(axis, fixed, a, b, d, ceil_z):
+    """Two-step crown moulding where the wall meets the ceiling."""
+    def bx(o0, o1, z0, z1):
+        lo, hi = min(fixed + d * o0, fixed + d * o1), max(fixed + d * o0, fixed + d * o1)
+        if axis == "x":
+            bevel_box(a, b, lo, hi, z0, z1, "wood_mat", r=0.6)
+        else:
+            bevel_box(lo, hi, a, b, z0, z1, "wood_mat", r=0.6)
+    bx(0.6, 3.0, ceil_z - 12, ceil_z - 0.5)
+    bx(3.0, 5.5, ceil_z - 6, ceil_z - 0.5)
 
 
 def wall_calendar(x_wall, y, z, facing, page_mat="paper_mat"):
@@ -293,8 +366,9 @@ def office():
     L, R, F, B = x0 + t / 2 + 1, x1 - t / 2 - 1, y0 + t + 1, y1 - t / 2 - 1       # inner faces
     P0, P1 = -1136.0, -1124.0                          # the partition between the office and the back room
     PD0, PD1 = x1 - 140, x1 - 50                       # its doorway
-    # wood panelling below a chair rail, plaster above (lined 1 cm in from the shell)
-    def lining(axis, fixed, a, b, holes=()):
+    # like the rooms: the motel wallpaper (room_wall_mat) above a wood wainscot, crown moulding,
+    # the motel carpet; walls lined 1 cm in from the shell
+    def lining(axis, fixed, a, b, d, holes=()):
         spans = [(a, b, 0, h - 12)]
         for ha, hb, hz0, hz1 in holes:
             nxt = []
@@ -313,55 +387,79 @@ def office():
         for p, q, z0_, z1_ in spans:
             if q - p < 1 or z1_ - z0_ < 1:
                 continue
-            for zl, zh, m in ((z0_, min(z1_, 110), "panel_mat"), (max(z0_, 110), z1_, "wallpaper_mat")):
-                if zh - zl < 1:
-                    continue
-                if axis == "x":
-                    box(p, q, fixed - 0.5, fixed + 0.5, zl, zh, m)
-                else:
-                    box(fixed - 0.5, fixed + 0.5, p, q, zl, zh, m)
-    lining("x", F + 0.5, L, R, [(d0, d1, 0, dh), (wx0, wx1, 103, 242)])
-    lining("x", B - 0.5, L, R)
-    lining("y", L + 0.5, F, B)
-    lining("y", R - 0.5, F, B)
+            if axis == "x":
+                box(p, q, fixed - 0.5, fixed + 0.5, z0_, z1_, "room_wall_mat")
+            else:
+                box(fixed - 0.5, fixed + 0.5, p, q, z0_, z1_, "room_wall_mat")
+            if z0_ < 1 and z1_ > 100:
+                wainscot(axis, fixed + d * 0.5, p, q, d)
+        crown(axis, fixed + d * 0.5, a, b, d, h - 12)
+    lining("x", F + 0.5, L, R, 1, [(d0 - 10, d1 + 10, 0, dh + 8), (wx0 - 8, wx1 + 8, 99, 250)])
+    lining("x", B - 0.5, L, R, -1)
+    lining("y", L + 0.5, F, B, 1)
+    lining("y", R - 0.5, F, B, -1)
     box(L, R, F, B, h - 12, h - 11, "plaster_mat")                                  # ceiling
-    box(L + 1, R - 1, F + 1, B - 1, 0, 5.0, "linoleum_mat")                           # floor (over the lot, which is z 3 here)
-    for (ax, fx) in (("x", F + 1), ("x", B - 1)):
-        bevel_box(L + 1, R - 1, fx - 0.8, fx + 0.8, 1.5, 12, "wood_mat", r=0.3)
-    # the partition with its doorway (both faces panelled)
-    box(L + 1, PD0, P0, P1, 0, h - 12, "panel_mat")
-    box(PD1, R - 1, P0, P1, 0, h - 12, "panel_mat")
-    box(PD0, PD1, P0, P1, 215, h - 12, "panel_mat")
+    box(L + 1, R - 1, F + 1, P0, 0, 5.0, "carpet_mat")                                # motel carpet (the lot is z 3 here)
+    box(L + 1, R - 1, P1, B - 1, 0, 5.0, "linoleum_mat")                              # back room: old linoleum
+    # the entrance from inside: a casing round the door like the rooms'
+    for a_, b_, c_, e_ in ((d0 - 9, d0, 5, dh + 9), (d1, d1 + 9, 5, dh + 9), (d0 - 9, d1 + 9, dh, dh + 9)):
+        bevel_box(a_, b_, F + 1, F + 3, c_, e_, "wood_mat", r=0.6)
+    # the partition with its doorway: wallpapered, wainscot on both faces, a cased doorway
+    box(L + 1, PD0, P0, P1, 0, h - 12, "room_wall_mat")
+    box(PD1, R - 1, P0, P1, 0, h - 12, "room_wall_mat")
+    box(PD0, PD1, P0, P1, 215, h - 12, "room_wall_mat")
+    for d_, fx in ((-1, P0), (1, P1)):
+        wainscot("x", fx, L + 1, PD0 - 8, d_)
+        wainscot("x", fx, PD1 + 8, R - 1, d_)
+        crown("x", fx, L + 1, R - 1, d_, h - 12)
     for x in (PD0 - 8, PD1):
-        bevel_box(x, x + 8, P0 - 2, P1 + 2, 0, 223, "trim_mat", r=0.6)
-    bevel_box(PD0 - 8, PD1 + 8, P0 - 2, P1 + 2, 215, 223, "trim_mat", r=0.6)
+        bevel_box(x, x + 8, P0 - 3, P1 + 3, 5, 223, "wood_mat", r=0.6)
+    bevel_box(PD0 - 8, PD1 + 8, P0 - 3, P1 + 3, 215, 223, "wood_mat", r=0.6)
     # the back-room door, left ajar
     with Moved(PD0, P1, -62):
         bevel_box(PD0, PD1 - 2, P1, P1 + 4, 1, 213, "door_mat", r=0.8)
         sphere(PD1 - 10, P1 + 6, 100, 2.2, "brass_mat", sides=8)
-    # window: glass, sill, half-open blinds
+    # window like the rooms': glass, casing, sill, a brass rod with the curtains pulled to the
+    # sides, the old blinds half down between them
     box(wx0, wx1, y0 + 2, y0 + 3, 103, 242, "seeglass_window_mat")
-    bevel_box(wx0 - 4, wx1 + 4, F, F + 14, 99, 103, "wood_mat", r=0.6)
+    bevel_box(wx0 - 7, wx1 + 7, F, F + 9, 98, 103.5, "wood_mat", r=0.8)
+    for a_, b_, c_, e_ in ((wx0 - 7, wx0, 103, 249), (wx1, wx1 + 7, 103, 249), (wx0 - 7, wx1 + 7, 242, 249)):
+        bevel_box(a_, b_, F + 1, F + 3, c_, e_, "wood_mat", r=0.5)
+    tube((wx0 - 30, F + 12.5, 258), (wx1 + 12, F + 12.5, 258), 0.9, "brass_mat", sides=8)
+    for ex in (wx0 - 30, wx1 + 12):
+        tube((ex, F + 1, 258), (ex, F + 12.5, 258), 0.6, "brass_mat", sides=6)
+        sphere(ex, F + 12.5, 258, 1.8, "brass_mat", sides=8)
+    curtain(wx0 - 8, F + 8, 6, 257, 46, "curtain_mat", seed=71, pleats=5)
+    curtain(wx1 - 14, F + 8, 108, 257, 40, "curtain_mat", seed=72, pleats=5)          # right one stops at the sill (couch)
     for k in range(14):
         z = 236 - k * 5.2
         if z < 175:
             break
         rbevel((wx0 + wx1) / 2.0, F + 6, z, wx1 - wx0 - 6, 4.5, 0.4, "plate_mat", r=0.1, tilt_y=25)
     rbevel((wx0 + wx1) / 2.0, F + 6, 170, wx1 - wx0 - 4, 5, 2.5, "plate_mat", r=0.5)
+    tube(((wx0 + wx1) / 2.0 + 60, F + 6.5, 242), ((wx0 + wx1) / 2.0 + 60, F + 6.5, 150), 0.2, "string_mat", sides=3)
+    sphere((wx0 + wx1) / 2.0 + 60, F + 6.5, 148, 1.0, "wood_mat", sides=6)
 
     # ---- lobby
     couch(wx0 + 10, wx0 + 210, F + 30, F + 112)
     cy_ = F + 175
-    rbevel(wx0 + 110, cy_, 40, 110, 55, 3.5, "wood_mat", r=0.8)                         # coffee table
-    for dx in (-48, 48):
-        for dy in (-22, 22):
-            frustum(wx0 + 110 + dx, cy_ + dy, 0, 38, 1.8, 2.2, "wood_mat", sides=8)
-    rbevel(wx0 + 110, cy_, 12, 100, 48, 1.5, "wood_mat", r=0.4)                          # shelf under it
+    coffee_table(wx0 + 110, cy_)
     for k in range(5):
-        rbevel(wx0 + 80 + k * 13, cy_ - 5 + (k % 2) * 8, 42 + k * 0.3, 21, 28, 0.25, "magazine_mat", r=0.05, yaw=k * 17 - 30)
-    ashtray(wx0 + 145, cy_ + 10, 41.8, lit=False)
+        rbevel(wx0 + 80 + k * 13, cy_ - 5 + (k % 2) * 8, 41.6 + k * 0.3, 21, 28, 0.25, "magazine_mat", r=0.05, yaw=k * 17 - 30)
+    for k in range(3):
+        rbevel(wx0 + 90 + k * 25, cy_ + 3, 14 + k * 0.3, 21, 28, 0.25, "magazine_mat", r=0.05, yaw=k * 9 - 8)
+    ashtray(wx0 + 145, cy_ + 10, 41.5, lit=False)
+    # an end table by the couch with one of the rooms' lamps on it, lit
+    end_table(wx0 - 40, F + 70)
+    lamp(wx0 - 40, F + 70)
+    light("light_office_lamp", wx0 - 40, F + 70, 100, [1.0, 0.75, 0.45], 3, 360, room=True)
+    # the rooms' painting over the couch on the right wall, a dead plant on the end table
+    bevel_box(R - 4, R - 1, F + 30, F + 130, 140, 215, "frame_mat", r=0.8)
+    picture(R - 4.6, F + 80, 177.5, 88, 63, "pic_painting", facing=-1)
+    plant_pot(wx0 - 52, F + 84, 60, random.Random(7))
+    ceiling_fan((L + R) / 2.0 + 60, F + 200, h - 12, lit=True)
     # coffee station on the right wall: cabinet, coffee maker (pot on the warmer), cups, sugar
-    cx_, cyy = R - 30, F + 290
+    cx_, cyy = R - 34, F + 290
     bevel_box(cx_ - 28, cx_ + 28, cyy - 50, cyy + 50, 0, 88, "wood_mat", r=1)
     bevel_box(cx_ - 30, cx_ + 30, cyy - 52, cyy + 52, 88, 91, "trim_mat", r=0.6)
     bevel_box(cx_ - 14, cx_ + 14, cyy - 12, cyy + 12, 91, 128, "tv_mat", r=2)
@@ -372,7 +470,7 @@ def office():
         frustum(cx_ + 6, cyy - 40 + k * 6, 91 + k * 9, 100 + k * 9, 3.5, 4, "chair_mat", sides=10, open_ends=True)
     frustum(cx_ + 2, cyy + 35, 91, 101, 4.5, 4.5, "seeglass_window_mat", sides=12)
     # brochure rack and the lantern photo on the left wall (lobby side)
-    bx_ = L + 1
+    bx_ = L + 5                                                   # in front of the wainscot
     bevel_box(bx_, bx_ + 6, F + 140, F + 220, 90, 170, "wood_mat", r=0.6)
     for r_ in range(3):
         for c in range(3):
@@ -388,10 +486,21 @@ def office():
     # ---- the counter, across the office, its flap up at the left end
     CY0, CY1 = -1400.0, -1340.0
     CX0 = L + 170
-    bevel_box(CX0, R - 1, CY0, CY1, 0, 103, "panel_mat", r=1)
-    for x in range(int(CX0) + 30, int(R) - 20, 60):                                       # raised panels
-        bevel_box(x, x + 50, CY0 - 1.2, CY0, 14, 92, "wood_mat", r=0.8)
-    bevel_box(CX0 - 4, R, CY0 - 6, CY1 + 4, 103, 108, "wood_mat", r=1.2)                # top
+    bevel_box(CX0, R - 1, CY0 + 4, CY1, 5, 14, "trim_mat", r=0.8)                       # recessed plinth
+    bevel_box(CX0, R - 1, CY0, CY1, 14, 101, "wood_mat", r=1)
+    n_ = int((R - 1 - CX0) / 62)
+    pw = (R - 1 - CX0) / n_
+    for k in range(n_):
+        p_, q_ = CX0 + k * pw, CX0 + (k + 1) * pw
+        bevel_box(p_ + 1, p_ + 7, CY0 - 1.8, CY0, 14, 101, "wood_mat", r=0.6)              # stiles
+        bevel_box(p_ + 13, q_ - 7, CY0 - 1.6, CY0, 24, 90, "wood_mat", r=1.4)              # raised panel
+        bevel_box(p_ + 19, q_ - 13, CY0 - 2.2, CY0 - 1.6, 30, 84, "wood_mat", r=0.8)       # its field
+    bevel_box(CX0, R - 1, CY0 - 2.5, CY0, 92, 101, "wood_mat", r=0.8)                    # top rail moulding
+    bevel_box(CX0 - 4, R, CY0 - 6, CY1 + 4, 101, 108, "wood_mat", r=2.2, seg=3)          # top, rounded
+    tube((CX0 - 4, CY0 - 5.5, 104.5), (R, CY0 - 5.5, 104.5), 3.2, "wood_mat", sides=12)  # bullnose edge
+    tube((CX0 + 8, CY0 - 16, 20), (R - 8, CY0 - 16, 20), 1.6, "brass_mat", sides=12)     # brass foot rail
+    for x in range(int(CX0) + 30, int(R) - 10, 110):
+        tube((x, CY0 - 16, 20), (x, CY0, 24), 1.0, "brass_mat", sides=8)
     rbevel(CX0 - 3, (CY0 + CY1) / 2.0, 108 + 32, 4, 70, 64, "wood_mat", r=1, tilt_x=-8)  # the flap, lifted
     bell(CX0 + 50, CY0 + 20, 108)
     guest_book(CX0 + 175, CY0 + 30, 108, yaw=-6)
@@ -404,12 +513,20 @@ def office():
     bevel_box(CX0 + 200, CX0 + 240, CY1 + 3, CY1 + 22, 63, 73, "dumpster_mat", r=1)
 
     # ---- the desk behind the counter, against the partition
-    DX0, DX1, DY0, DY1 = L + 330, L + 490, P0 - 72, P0 - 2
-    bevel_box(DX0, DX1, DY0, DY1, 74, 77, "wood_mat", r=0.8)
-    for xx in (DX0 + 2, DX1 - 46):
-        bevel_box(xx, xx + 44, DY0 + 2, DY1 - 2, 0, 74, "wood_mat", r=0.8)
-        for k in range(3):
-            bevel_box(xx + 3, xx + 41, DY0 + 0.8, DY0 + 2, 6 + k * 23, 26 + k * 23, "trim_mat", r=0.4)
+    DX0, DX1, DY0, DY1 = L + 330, L + 490, P0 - 76, P0 - 6
+    bevel_box(DX0 - 3, DX1 + 3, DY0 - 3, DY1, 74, 77.5, "wood_mat", r=1.2, seg=3)
+    bevel_box(DX0 + 46, DX1 - 46, DY1 - 6, DY1 - 3, 30, 74, "wood_mat", r=0.6)          # modesty panel
+    bevel_box(DX0 + 46, DX1 - 46, DY0 + 2, DY0 + 4, 64, 73, "wood_mat", r=0.6)          # pencil drawer
+    tube((DX0 + 72, DY0 + 1, 68.5), (DX1 - 72, DY0 + 1, 68.5), 0.7, "brass_mat", sides=6)
+    for xx in (DX0, DX1 - 46):
+        bevel_box(xx + 2, xx + 44, DY0 + 3, DY1 - 3, 8, 74, "wood_mat", r=0.8)
+        bevel_box(xx + 4, xx + 42, DY0 + 5, DY1 - 5, 4, 8.5, "trim_mat", r=0.6)
+        for za, zb in ((10, 30), (32, 52), (54, 72)):
+            bevel_box(xx + 4, xx + 42, DY0 + 1.6, DY0 + 3.2, za + 1, zb - 1, "wood_mat", r=0.8)
+            zc = (za + zb) / 2.0
+            for dx in (-7, 7):
+                box(xx + 23 + dx - 0.6, xx + 23 + dx + 0.6, DY0 + 0.4, DY0 + 1.6, zc - 0.6, zc + 0.6, "brass_mat")
+            tube((xx + 15, DY0 + 0.2, zc), (xx + 31, DY0 + 0.2, zc), 0.8, "brass_mat", sides=6)
     desk_lamp(DX1 - 25, DY1 - 22, 77, "light_office")
     radio(DX0 + 30, DY1 - 18, 77, yaw=10)
     ashtray(DX0 + 80, DY0 + 22, 77)
@@ -429,13 +546,15 @@ def office():
             rbevel(kx, P0 - 7.5, 178, 1.2, 1.4, 6, "brass_mat", r=0.2)                    # key
             rbevel(kx, P0 - 7.2, 167, 5, 0.8, 9, "book_red_mat", r=0.6, tilt_x=45)       # diamond tag
     # the bookcase of old guest books (1974 onward), red lanterns on top
-    SX0, SX1 = L + 2, L + 160
-    bevel_box(SX0, SX1, P0 - 34, P0, 0, 4, "wood_mat", r=0.6)
+    SX0, SX1 = L + 6, L + 160
+    bevel_box(SX0, SX1, P0 - 34, P0 - 5, 5, 12, "trim_mat", r=0.6)                        # plinth
+    bevel_box(SX0 + 3, SX1 - 3, P0 - 7, P0 - 5.5, 12, 196, "trim_mat", r=0.3)            # back
+    bevel_box(SX0 - 2, SX1 + 2, P0 - 37, P0 - 5, 196, 202, "wood_mat", r=1.2)            # crown
     for x in (SX0, SX1 - 3):
-        bevel_box(x, x + 3, P0 - 34, P0, 0, 200, "wood_mat", r=0.5)
+        bevel_box(x, x + 3, P0 - 34, P0 - 5, 5, 200, "wood_mat", r=0.5)
     rng = random.Random(1974)
-    for k, z in enumerate((4, 52, 100, 148, 196)):
-        bevel_box(SX0, SX1, P0 - 34, P0, z, z + 3, "wood_mat", r=0.5)
+    for k, z in enumerate((12, 58, 104, 150, 196)):
+        bevel_box(SX0, SX1, P0 - 34, P0 - 5, z, z + 3, "wood_mat", r=0.5)
         if z >= 196:
             break
         x = SX0 + 5
@@ -444,13 +563,13 @@ def office():
             hh = rng.uniform(32, 40)
             mat = ("book_red_mat", "book_green_mat", "book_brown_mat")[rng.randrange(3)]
             if rng.random() < 0.08:
-                book(x + 14, P0 - 17, z + 3, 28, 22, 6, mat, yaw=90, lie=True)            # one lying flat
+                book(x + 14, P0 - 20, z + 3, 28, 22, 6, mat, yaw=90, lie=True)            # one lying flat
                 x += 30
                 continue
-            book(x + w_ / 2.0, P0 - 16, z + 3, w_ - 0.6, 26, hh, mat, yaw=rng.uniform(-2, 2))
+            book(x + w_ / 2.0, P0 - 19, z + 3, w_ - 0.6, 26, hh, mat, yaw=rng.uniform(-2, 2))
             x += w_
     for k in range(3):
-        red_lantern(SX0 + 30 + k * 48, P0 - 17, 199)
+        red_lantern(SX0 + 30 + k * 48, P0 - 20, 202)
 
     # ---- the back room: the owner's cot, a TV left on, hot plate, coat, boots
     BY0, BY1 = P1 + 1, B
@@ -491,11 +610,8 @@ def office():
     # a bare bulb, off; the room is lit only by the TV
     tube((L + 150, (BY0 + BY1) / 2.0, h - 12), (L + 150, (BY0 + BY1) / 2.0, h - 42), 0.3, "trim_mat", sides=4)
     sphere(L + 150, (BY0 + BY1) / 2.0, h - 46, 3.5, "glass_mat", sides=10, scale=(1, 1, 1.3))
-    # a dim ceiling light over the lobby (the office was left lit)
-    lx, ly = (L + R) / 2.0 + 60, F + 200
-    frustum(lx, ly, h - 22, h - 12, 22, 24, "plate_mat", sides=20)
-    frustum(lx, ly, h - 23, h - 22, 20, 20, "glow_lamp_mat", sides=20)
-    light("light_office_lobby", lx, ly, h - 40, [1.0, 0.8, 0.55], 5, 650, room=True)
+    # the ceiling fan's light over the lobby (the office was left lit)
+    light("light_office_lobby", (L + R) / 2.0 + 60, F + 200, h - 90, [1.0, 0.8, 0.55], 5, 650, room=True)
     IN_ROOM[0] = False
 
 

@@ -623,3 +623,7 @@ You asked for a first pass at every remaining structure, to review them all toge
 ![Car and tower](2026-11-06_car_and_tower.png)
 
 **Rusted car**: an old sedan sunk into the ground, rusted, windows gone, the driver's door hanging open, weeds and vines, its tail lights still glowing red. **Lookout tower**: four braced legs, six flights of stairs with landings and handrails, and a cabin 11 m up with windows all round and a table for a clue. An automated walk climbed all six flights to the top without getting stuck (the first try caught on low braces and a floor joist, both fixed).
+
+![Office, second pass](2026-11-06_office_room_theme.png)
+
+Feedback: "the office is too plain, make it higher poly and make it go more with the hotel rooms theme". The office now uses the same striped motel wallpaper and patterned carpet as the rooms, over raised-panel wood wainscoting with a chair rail, baseboards and crown moulding. The window has the rooms' casing, sill, brass rod and curtains. The front door and the back-room doorway are cased in wood. The lobby has one of the rooms' lamps on an end table, a dead plant, the motel painting over the couch, and the rooms' ceiling fan with its light. The furniture is more detailed: a panelled counter with a rounded top and a brass foot rail, a desk built like the rooms' dresser with brass drawer pulls, a tufted couch on turned feet, a coffee table with turned legs, and a bookcase with a plinth and crown.
