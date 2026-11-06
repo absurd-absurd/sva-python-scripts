@@ -32,7 +32,7 @@ LAKE_MATS = {
     "dock_wood_mat": (0.33, 0.3, 0.26), "dock_dark_mat": (0.12, 0.1, 0.08), "rope_mat": (0.38, 0.32, 0.22),
     "canoe_mat": (0.3, 0.05, 0.04), "canoe_inner_mat": (0.24, 0.18, 0.12), "reed_mat": (0.2, 0.22, 0.1),
     "cattail_mat": (0.2, 0.12, 0.06), "lantern_metal_mat": (0.08, 0.08, 0.08),
-    "rock_mat": (0.3, 0.3, 0.28), "bark_mat": (0.2, 0.15, 0.1),        # same names as the woods props (textured alike)
+    "rock_mat": (0.3, 0.3, 0.28), "lantern_dim_mat": (0.16, 0.11, 0.06), "bark_mat": (0.2, 0.15, 0.1),        # same names as the woods props (textured alike)
 }
 rng_l = random.Random(77)
 
@@ -285,7 +285,7 @@ def overlook(x0, x1):
 
 def rowboat(cx, cy, yaw_deg):
     """A small empty rowboat far out on the lake, drifting: wide plank hull, three seats, the oars
-    still in their locks, one trailing in the water. A faint lantern so you can just make it out."""
+    still in their locks, one trailing in the water. Its lantern has all but gone out."""
     L, W = 340.0, 128.0
     def hull(u):
         end = min(u, 1 - u)
@@ -309,7 +309,7 @@ def rowboat(cx, cy, yaw_deg):
     for s_, (ex, ez) in ((-1, (-200, WATER_Z + 2)), (1, (150, t + 6))):     # oars: one trailing, one shipped
         tube((s_ * w1, 0.05 * L, t + 4), (s_ * w1 + s_ * abs(ex) * 0.9, 0.05 * L - 60 * s_, ez), 2.2, "dock_wood_mat", sides=8)
     lz = hull(0.78)[1] + 4                                            # lantern on the front seat
-    frustum(0, 0.3 * L, lz, lz + 16, 4.5, 4.5, "glow_lamp_mat", sides=10)
+    frustum(0, 0.3 * L, lz, lz + 16, 4.5, 4.5, "lantern_dim_mat", sides=10)    # gone out (almost)
     frustum(0, 0.3 * L, lz + 16, lz + 21, 6, 1.5, "lantern_metal_mat", sides=10)
     new = PARTS[before:]
     g = cmds.group(new, name="rowboat_grp")
@@ -318,7 +318,7 @@ def rowboat(cx, cy, yaw_deg):
     cmds.ungroup(g)
     a = math.radians(yaw_deg)
     ly = 0.3 * L
-    light("light_rowboat", cx - math.sin(a) * ly, cy + math.cos(a) * ly, lz + 10, [1.0, 0.72, 0.42], 60, 900)
+    light("light_rowboat", cx - math.sin(a) * ly, cy + math.cos(a) * ly, lz + 10, [1.0, 0.72, 0.42], 0.3, 300)      # basically out: even 3 left a bright streak on the water
 
 
 def build():

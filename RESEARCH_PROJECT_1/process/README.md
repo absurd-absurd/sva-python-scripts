@@ -529,3 +529,7 @@ An empty rowboat far out on the lake (about 35 m from the end of the dock), one 
 ![Shoreline](2026-11-05_lake_shoreline.png)
 
 The water's edge now goes in and out in small coves and points (two more, shorter waves added to the shoreline curve), instead of one long smooth bend.
+
+![Rowboat lantern basically off](2026-11-05_lake_rowboat_dim.png)
+
+Rowboat lantern turned down until it's basically off: the glass is no longer glowing and the light is at 0.3. Even at 3 the glossy water still showed a bright streak under the boat. Now it's a dark shape with the smallest glint.
