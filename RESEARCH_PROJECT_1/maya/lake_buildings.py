@@ -338,14 +338,14 @@ def boat_hull(L, W, out_mat, in_mat, seats=3, keel_z=0.0, water_z=None):
     transom, oarlocks."""
     def hull(u):
         end = min(u, 1 - u)
-        k = math.sin(math.pi * min(0.5, end + (0.12 if u < 0.5 else 0.0))) ** 0.6
-        rise = 10 * max(0.0, (0.15 - (1 - u)) / 0.15) ** 2
-        return keel_z, keel_z + 40 + rise, W / 2 * k * 0.5, W / 2 * k
+        k = math.sin(math.pi * min(0.5, end)) ** 0.6                  # pointed at both ends (a flat squared
+        rise = 10 * max(0.0, (0.15 - end) / 0.15) ** 2                 # stern read as a loose slab of wood)
+        return keel_z, keel_z + 52 + rise, W / 2 * k * 0.5, W / 2 * k      # ~45 cm of freeboard above the water
     open_hull(L, hull, out_mat, in_mat, sx=10, sy=6, sz=36, thick=2.5)
     def inner(u):
         b, t, w0, w1 = hull(u)
         return b + 2.5, t, max(0.5, w0 - 2.5), max(0.5, w1 - 2.5)
-    fz = max(keel_z + 9, (water_z if water_z is not None else -1e9) + 1.5)
+    fz = max(keel_z + 12, (water_z if water_z is not None else -1e9) + 4)
     sole_plate(L, lambda u: inner(u * 0.96 + 0.02), fz, "plank_dark_mat", Ls=L * 0.96)
     for k in range(5):                                                   # floorboards on the sole
         x = (k - 2) * 9.0
@@ -364,10 +364,10 @@ def boat_hull(L, W, out_mat, in_mat, seats=3, keel_z=0.0, water_z=None):
         tube((s_ * w1, 0.05 * L, t + 1), (s_ * w1, 0.05 * L, t + 2.2), 0.5, "rusty_tool_mat", sides=6)
     for u in [0.22, 0.5, 0.78][:seats]:
         b, t, w0, w1 = hull(u)
-        rbevel(0, (u - 0.5) * L, t - 8, 2 * w1 - 6, 24, 3, "plank_grey_mat", r=0.6)
+        rbevel(0, (u - 0.5) * L, t - 8, 2 * min(hull(u - 0.04)[3], hull(u + 0.04)[3]) - 8, 24, 3, "plank_grey_mat", r=0.6)   # fits the narrowing hull
     tube((0, -L * 0.48, keel_z - 1.5), (0, L * 0.48, keel_z - 1.5), 2.2, "plank_dark_mat", sides=6)   # keel
     b, t, w0, w1 = hull(0.0)
-    rbevel(0, -L / 2 + 1.5, (b + t) / 2.0 + 2, 2 * hull(0.02)[3] - 4, 3, t - b - 2, "plank_dark_mat", r=0.6)   # transom
+    tube((0, -L / 2 + 4, keel_z + 2), (0, -L / 2 - 1, keel_z + 52), 2.4, "plank_dark_mat", sides=8)   # stern post
     tube((0, L / 2 - 4, keel_z + 2), (0, L / 2 + 1, keel_z + 52), 2.4, "plank_dark_mat", sides=8)     # stem
     return hull
 
@@ -699,15 +699,15 @@ def boathouse():
             step += 1
     # ---- the old rowboat, floating in the slip, tied off at the bow
     n, m = len(PARTS), len(ROOM_PARTS)
-    boat_hull(340, 128, "boat_old_mat", "plank_dark_mat", keel_z=WATER_Z - 10, water_z=WATER_Z)
+    boat_hull(340, 128, "boat_old_mat", "plank_dark_mat", keel_z=WATER_Z - 8, water_z=WATER_Z)
     new = PARTS[n:] + ROOM_PARTS[m:]
     g = cmds.group(new, name="slip_boat_grp")
     cmds.rotate(0, 3, 2.5, g, pivot=(0, WATER_Z, 0))
     cmds.move(X - 6, 0, Y + 300, g, relative=True)
     cmds.ungroup(g)
-    tube((X - 6, Y + 470, WATER_Z + 45), (X - SLIP + 6, Y + 520, F - 2), 0.9, "rope_mat", sides=6)
+    tube((X - 6, Y + 470, WATER_Z + 55), (X - SLIP + 6, Y + 520, F - 2), 0.9, "rope_mat", sides=6)
     rbevel(X - SLIP + 2, Y + 520, F + 1, 8, 20, 4, "rusty_tool_mat", r=1.0)            # cleat on the slip edge
-    oar((X - 30, Y + 220, WATER_Z + 31), (X + 4, Y + 420, WATER_Z + 31))                  # an oar left in the boat
+    oar((X - 30, Y + 220, WATER_Z + 40), (X + 4, Y + 420, WATER_Z + 40))                  # an oar left in the boat
     frustum(X + 28, Y + 250, WATER_Z + 7, WATER_Z + 21, 8, 9, "can_mat", sides=12, open_ends=True)   # bailing can
     # cobwebs in two top corners
     cobweb((X - W + 5, Y + S + 5), 1, 1, 46, EAVE - 2)

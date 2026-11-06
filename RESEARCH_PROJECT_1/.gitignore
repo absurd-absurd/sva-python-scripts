@@ -5,3 +5,5 @@ textures/*.jpg
 __pycache__/
 # rig scene contains the Fab black cat model (third-party asset): rebuilt by maya/make_cat_rig.py
 maya/cat_rig.ma
+# big Maya scene (51 MB): rebuilt by maya/make_lake.py
+maya/lake_scene.ma

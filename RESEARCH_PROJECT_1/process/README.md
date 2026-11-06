@@ -597,3 +597,9 @@ New shelves on the east wall: paint cans with drips and handles, jars and bottle
 The lantern is now a hurricane lantern (tank, burner, glass globe with the flame inside, wire guard, cap, bail handle). From the door you see its glow on the bench.
 
 Plain untextured colours were washing out to near-white in the flashlight, so the new materials all have textures with darker tints now.
+
+## 2026-11-06: boats ride higher, no more "slab"
+
+![Boat fix, before (left) and after (right)](2026-11-06_boathouse_boat_fix.png)
+
+Feedback: "the boat is still underwater and there's a weird slab of wood behind it". The boats were only about 30 cm above the water with the floor right at the waterline, so they looked swamped. The hulls are now taller, with about 45 cm of side above the water, and the floors sit higher. The "slab" was the flat, squared-off stern of the hull, which looked like a loose board when the flashlight hit it. The boathouse boat and the far rowboat now come to a point at both ends, with a stern post, and the seats were narrowed to fit inside the hull. The canoe was raised the same way.

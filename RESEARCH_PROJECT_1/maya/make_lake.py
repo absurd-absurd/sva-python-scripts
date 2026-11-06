@@ -206,7 +206,7 @@ def canoe(cx, cy, yaw_deg):
         end = min(u, 1 - u)
         k = math.sin(math.pi * min(0.5, end) ) ** 0.7
         rise = 14 * max(0.0, (0.12 - end) / 0.12) ** 2
-        return WATER_Z - 12, WATER_Z + 22 + rise, W / 2 * k * 0.55, W / 2 * k
+        return WATER_Z - 8, WATER_Z + 30 + rise, W / 2 * k * 0.55, W / 2 * k
     a = math.radians(yaw_deg)
     grp = []
     before = len(PARTS)
@@ -215,7 +215,7 @@ def canoe(cx, cy, yaw_deg):
         b, t, w0, w1 = hull(u)
         return b + 4, t + 0.6, max(0.5, w0 - 3), max(0.5, w1 - 3)
     sole_plate(L, lambda u: (lambda b, t, w0, w1: (b + 2, t, max(0.5, w0 - 2), max(0.5, w1 - 2)))(*hull(u * 0.8 + 0.1)),
-               WATER_Z + 1.5, "canoe_inner_mat", Ls=L * 0.8)
+               WATER_Z + 4, "canoe_inner_mat", Ls=L * 0.8)
     for s in (-1, 1):
         pts = []
         for k in range(21):
@@ -227,8 +227,8 @@ def canoe(cx, cy, yaw_deg):
     for u, h in ((0.32, 0), (0.5, 0), (0.68, 0), (0.2, -6), (0.82, -6)):
         b, t, w0, w1 = hull(u)
         tube((-w1 + 1, (u - 0.5) * L, t - 1 + h), (w1 - 1, (u - 0.5) * L, t - 1 + h), 1.4, "dock_wood_mat", sides=8)
-    tube((-30, -60, WATER_Z + 12), (32, 90, WATER_Z + 13), 1.6, "dock_wood_mat", sides=8)       # paddle shaft
-    rbevel(36, 104, WATER_Z + 13, 16, 40, 1.4, "dock_wood_mat", r=0.6, yaw=-22)
+    tube((-30, -60, WATER_Z + 16), (32, 90, WATER_Z + 17), 1.6, "dock_wood_mat", sides=8)       # paddle shaft
+    rbevel(36, 104, WATER_Z + 17, 16, 40, 1.4, "dock_wood_mat", r=0.6, yaw=-22)
     new = PARTS[before:]
     g = cmds.group(new, name="canoe_grp")
     cmds.rotate(0, -yaw_deg, 0, g, pivot=(0, 0, 0))
@@ -295,23 +295,23 @@ def rowboat(cx, cy, yaw_deg):
     L, W = 340.0, 128.0
     def hull(u):
         end = min(u, 1 - u)
-        k = math.sin(math.pi * min(0.5, end + (0.12 if u < 0.5 else 0.0))) ** 0.6   # squared-off stern
-        rise = 10 * max(0.0, (0.15 - (1 - u)) / 0.15) ** 2
-        return WATER_Z - 14, WATER_Z + 26 + rise, W / 2 * k * 0.5, W / 2 * k
+        k = math.sin(math.pi * min(0.5, end)) ** 0.6                  # pointed both ends, no flat stern
+        rise = 10 * max(0.0, (0.15 - end) / 0.15) ** 2
+        return WATER_Z - 8, WATER_Z + 40 + rise, W / 2 * k * 0.5, W / 2 * k
     before = len(PARTS)
     open_hull(L, hull, "dock_dark_mat", "dock_wood_mat", sx=10, sy=6, sz=36, thick=2.5)    # hollow
     def inner(u):
         b, t, w0, w1 = hull(u)
         return b + 4, t + 0.6, max(0.5, w0 - 3), max(0.5, w1 - 3)
     sole_plate(L, lambda u: (lambda b, t, w0, w1: (b + 2.5, t, max(0.5, w0 - 2.5), max(0.5, w1 - 2.5)))(*hull(u * 0.96 + 0.02)),
-               WATER_Z + 1.5, "dock_wood_mat", Ls=L * 0.96)
+               WATER_Z + 4, "dock_wood_mat", Ls=L * 0.96)
     for s_ in (-1, 1):
         pts = [(s_ * hull(k / 20.0)[3], (k / 20.0 - 0.5) * L, hull(k / 20.0)[1] + 0.5) for k in range(21)]
         for p0, p1 in zip(pts, pts[1:]):
             tube(p0, p1, 2.0, "dock_wood_mat", sides=8)
     for u in (0.22, 0.5, 0.78):                                       # seats
         b, t, w0, w1 = hull(u)
-        rbevel(0, (u - 0.5) * L, t - 8, 2 * w1 - 6, 24, 3, "dock_wood_mat", r=0.6)
+        rbevel(0, (u - 0.5) * L, t - 8, 2 * min(hull(u - 0.04)[3], hull(u + 0.04)[3]) - 8, 24, 3, "dock_wood_mat", r=0.6)   # fits the narrowing hull
     b, t, w0, w1 = hull(0.55)
     for s_, (ex, ez) in ((-1, (-200, WATER_Z + 2)), (1, (150, t + 6))):     # oars: one trailing, one shipped
         tube((s_ * w1, 0.05 * L, t + 4), (s_ * w1 + s_ * abs(ex) * 0.9, 0.05 * L - 60 * s_, ez), 2.2, "dock_wood_mat", sides=8)
