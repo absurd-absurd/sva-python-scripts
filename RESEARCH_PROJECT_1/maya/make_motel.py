@@ -220,9 +220,11 @@ def room_row():
         x1 = x0 + ROOM_W
         number = 101 + i
         IN_ROOM[0] = True
-        room_inside(x0, x1, her=(i == HER_ROOM))
+        room_inside(x0, x1, her=(i == HER_ROOM), i=i)
         if i == HER_ROOM:
             room_104(x0, x1)
+        else:
+            room_story(i, x0, x1)          # maya/motel_interiors.py
         IN_ROOM[0] = False
         wx0, wx1 = x0 + WIN[0], x0 + WIN[1]
         IN_ROOM[0] = True
@@ -231,7 +233,7 @@ def room_row():
         facade(x0, x1, i, number)        # the outside (maya/exterior_props.py)
 
 
-def room_inside(x0, x1, her=False):
+def room_inside(x0, x1, her=False, i=-1):
     """One motel room: walls, ceiling, carpet, bed, nightstand + lamp, dresser + TV.
     Every room has the same layout; Room 104 (Cas's) gets its clues from clues.json."""
     t = 20
@@ -275,11 +277,20 @@ def room_inside(x0, x1, her=False):
     box(x0 + t, x1 - t, FRONT + t, BACK - t, 0, 2, "carpet_mat")             # carpet
     # furniture (maya/room_props.py): bed, nightstand + lamp, dresser with an old TV against the
     # left wall facing the bed (kept clear of the doorway). Room 104 dresses its own bed.
-    bed(x0, x1, made=not her)
+    # some rooms' stories (maya/motel_interiors.py) change these: 101's lamp was knocked over,
+    # 102's dresser was dragged to the door, 103 is stripped for a renovation
+    bed(x0, x1, made=not her and i != 2, mattress=(i != 2))
     nightstand(x0)
-    lamp(x0 + 180, BACK - 47, *(("glow_lamp_red_mat", "glow_lamp_red_mat") if her else ()))
-    dresser(x0)
-    crt_tv(x0)
+    if i != 0:
+        lamp(x0 + 180, BACK - 47, *(("glow_lamp_red_mat", "glow_lamp_red_mat") if her else ()))
+    if i == 1:
+        with Moved(x0 + 48, FRONT + 285, -28, 70, -40):
+            dresser(x0)
+            crt_tv(x0)
+    else:
+        dresser(x0)
+        if i != 2:
+            crt_tv(x0)
     ceiling_fan(x0 + 250, (FRONT + BACK) / 2.0, H - 10, lit=her)   # Room 104's is on (Lamp_HerRoom)
 
 
@@ -817,6 +828,8 @@ def lot_dressing():
 exec(open(os.path.join(ROOT, "maya", "room_props.py"), encoding="utf-8").read())
 # detailed outside: room fronts, awning, lamps, payphone, dumpster, lot, car, doors
 exec(open(os.path.join(ROOT, "maya", "exterior_props.py"), encoding="utf-8").read())
+# the office inside (replaces office() above) and the other rooms' stories
+exec(open(os.path.join(ROOT, "maya", "motel_interiors.py"), encoding="utf-8").read())
 
 
 # ---------- build and export ----------

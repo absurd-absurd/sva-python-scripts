@@ -104,7 +104,7 @@ def ring(cx, cy, cz, r, thick, mat, axis="z", sides=12):
 
 # ---------- furniture (every room) ----------
 
-def bed(x0, x1, made=True):
+def bed(x0, x1, made=True, mattress=True):
     """Wood frame on short legs, a panelled headboard, a thick rounded mattress. made=True:
     tucked bedspread, a fold under two plump pillows (Room 104 dresses its own, unmade)."""
     bx0, bx1 = x0 + 220, x1 - 40
@@ -121,6 +121,11 @@ def bed(x0, x1, made=True):
     mid = (bx0 + bx1) / 2.0
     for a, b in ((bx0 + 18, mid - 6), (mid + 6, bx1 - 18)):
         bevel_box(a, b, by1 - 7, by1 - 5.5, 52, 98, "wood_mat", r=1)
+    if not mattress:                                                                 # stripped: slats only
+        for k in range(9):
+            yy = by0 + 12 + k * (by1 - by0 - 40) / 8.0
+            bevel_box(bx0 + 6, bx1 - 6, yy - 4, yy + 4, 31, 34, "wood_mat", r=0.5)
+        return
     top = 56.5 if not made else 55.0
     bevel_box(bx0 + 4, bx1 - 4, by0 + 4, by1 - 11, 34, top, "bed_mat", r=5, seg=3)  # mattress
     if made:
