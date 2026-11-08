@@ -221,6 +221,7 @@ def room_row():
         number = 101 + i
         IN_ROOM[0] = True
         room_inside(x0, x1, her=(i == HER_ROOM), i=i)
+        room_finish(i, x0, x1)             # maya/motel_interiors.py: ceiling, trim, bathroom door, ...
         if i == HER_ROOM:
             room_104(x0, x1)
         else:
@@ -273,7 +274,7 @@ def room_inside(x0, x1, her=False, i=-1):
     bevel_box(x0 + t, x1 - t, BACK - t - 1.5, BACK - t, 1, 12, "wood_mat", r=0.4)
     bevel_box(x0 + t, x0 + t + 1.5, FRONT + t + 2, BACK - t, 1, 12, "wood_mat", r=0.4)
     bevel_box(x1 - t - 1.5, x1 - t, FRONT + t + 2, BACK - t, 1, 12, "wood_mat", r=0.4)
-    box(x0 + 1, x1 - 1, FRONT + 1, BACK - 1, H - 10, H - 1, "plaster_mat")   # ceiling (clear of the awning and front wall)
+    box(x0 + 1, x1 - 1, FRONT + 1, BACK - 1, H - 10, H - 1, "ceiling_mat")   # ceiling (clear of the awning and front wall)
     box(x0 + t, x1 - t, FRONT + t, BACK - t, 0, 2, "carpet_mat")             # carpet
     # furniture (maya/room_props.py): bed, nightstand + lamp, dresser with an old TV against the
     # left wall facing the bed (kept clear of the doorway). Room 104 dresses its own bed.

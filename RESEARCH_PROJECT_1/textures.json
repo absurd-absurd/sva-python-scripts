@@ -109,6 +109,8 @@
   "MI_PS2_leaf_litter_mat": {"texture": "forest_floor", "tint": [0.4, 0.3, 0.2], "size": 60},
   "MI_PS2_log_end_mat": {"texture": "planks", "tint": [0.34, 0.27, 0.18], "size": 40},
   "MI_PS2_weed_mat": {"texture": "bark", "tint": [0.09, 0.11, 0.05], "size": 40},
+  "MI_PS2_ceiling_mat": {"texture": "plaster", "tint": [0.5, 0.48, 0.43], "size": 45},
+  "MI_PS2_mirror_mat": {"texture": "painted_metal", "tint": [0.05, 0.055, 0.06], "size": 60},
   "glow": {
     "_about": "Neon / lit materials from Maya (glow_*): strength = brightness, flicker 0 = steady, 1 = bad neon, glass = its own color when lit by other lights (default dark glass).",
     "glow_neon_red_mat": {"strength": 80.0, "flicker": 0.0},

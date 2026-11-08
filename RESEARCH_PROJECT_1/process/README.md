@@ -627,3 +627,12 @@ You asked for a first pass at every remaining structure, to review them all toge
 ![Office, second pass](2026-11-06_office_room_theme.png)
 
 Feedback: "the office is too plain, make it higher poly and make it go more with the hotel rooms theme". The office now uses the same striped motel wallpaper and patterned carpet as the rooms, over raised-panel wood wainscoting with a chair rail, baseboards and crown moulding. The window has the rooms' casing, sill, brass rod and curtains. The front door and the back-room doorway are cased in wood. The lobby has one of the rooms' lamps on an end table, a dead plant, the motel painting over the couch, and the rooms' ceiling fan with its light. The furniture is more detailed: a panelled counter with a rounded top and a brass foot rail, a desk built like the rooms' dresser with brass drawer pulls, a tufted couch on turned feet, a coffee table with turned legs, and a bookcase with a plinth and crown.
+
+## 2026-11-07: the rooms, the ceilings, the office back room and couch
+
+![Rooms, ceiling, office lobby and back room](2026-11-07_rooms_and_back_room.png)
+
+Feedback: the back room of the office was odd, the lobby couch faced a wall, the room ceilings looked incomplete, and the rooms were low poly and weird.
+- **Rooms (all six):** crown moulding round every ceiling with a finished plaster texture and a smoke detector; a wood casing round the door inside; a closed, panelled bathroom door in the left wall. The made beds now have a fitted sheet, a real draped bedspread turned down below the pillows, and plumper pillows. Every room but 104 also got the motel painting over the bed, a mirror over the dresser, a tufted armchair by the window with a round table, a rotary phone and an ice bucket. Room 104 only got the ceiling, door and trim changes, so Cas's things stay as approved.
+- **Office lobby:** the couch is turned around, with its back to the window, facing the counter and the coffee table.
+- **Office back room:** now the owner's small living space: a made single bed with a headboard, a rug, an armchair turned to the TV (on, on a low cabinet), a stool with a mug and ashtray, a floor lamp on low, a kitchenette (cabinets, hot plate with a pan, kettle, shelf of cans), a coat rack with his coat and hat, boots, a calendar and a photo over the bed.

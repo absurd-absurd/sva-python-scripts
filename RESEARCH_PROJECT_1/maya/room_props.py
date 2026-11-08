@@ -126,14 +126,15 @@ def bed(x0, x1, made=True, mattress=True):
             yy = by0 + 12 + k * (by1 - by0 - 40) / 8.0
             bevel_box(bx0 + 6, bx1 - 6, yy - 4, yy + 4, 31, 34, "wood_mat", r=0.5)
         return
-    top = 56.5 if not made else 55.0
+    top = 56.5
     bevel_box(bx0 + 4, bx1 - 4, by0 + 4, by1 - 11, 34, top, "bed_mat", r=5, seg=3)  # mattress
     if made:
-        # bedspread: over the top and hanging down the sides, stopping short of the pillows
-        bevel_box(bx0 + 1.5, bx1 - 1.5, by0 + 1.5, by1 - 55, 26, 58.5, "bedspread_mat", r=5, seg=3)
-        rsoft(mid, by1 - 58, 60, bx1 - bx0 - 6, 24, 10, "bedspread_mat", jitter=0.6, seed=int(x0))   # fold
-        for k, px in enumerate((bx0 + 60, bx1 - 60)):
-            pillow(px, by1 - 34, 57.5, 70, 44, 14, int(x0) + k, yaw=(-3, 4)[k], tilt_y=-10, dent=1.5)
+        # made up like Room 104's bed: a fitted sheet, a real draped bedspread (cloth) hanging down
+        # the sides and over the foot, turned down in a roll below the pillows, two plump pillows
+        bevel_box(bx0 + 3, bx1 - 3, by0 + 3, by1 - 13, 44, 57.3, "sheet_mat", r=5.5, seg=3)
+        bedspread(bx0, bx1, by0, by1 - 70, 58.3, seed=int(x0) % 97, hang=26)
+        for k, px in enumerate((bx0 + 62, bx1 - 62)):
+            pillow(px, by1 - 40, 57.5, 72, 44, 15, int(x0) + k, yaw=(-4, 5)[k], tilt_y=-12, dent=1.5)
 
 
 def nightstand(x0):
