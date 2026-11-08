@@ -441,7 +441,7 @@ def main():
         c.set_intensity(l["intensity"])
         c.set_light_color(unreal.LinearColor(*l["color"], 1))
         c.set_attenuation_radius(l["radius"])
-        c.set_cast_shadows(False)                # cheap, soft, PS2-like (and no shadow flicker)
+        c.set_cast_shadows(bool(l.get("shadows")))   # off: cheap, soft, PS2-like (only the room fan lights cast them)
         if l.get("room"):
             c.set_editor_property("lighting_channels", ROOM_ONLY)
         if l.get("flicker"):

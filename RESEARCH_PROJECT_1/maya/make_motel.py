@@ -197,7 +197,7 @@ def block_word(text, left, y, z, height, mat, thick, depth=14):
             keep(b, mat)
 
 
-def light(name, x, y, z, color, intensity, radius, flicker=False, room=False):
+def light(name, x, y, z, color, intensity, radius, flicker=False, room=False, shadows=False):
     """A locator that becomes a point light in Unreal (flicker: dims in step with the dead neon).
     No light casts shadows (cheap, soft, PS2-like, and no shadow flicker). So outside light
     can't shine through the walls into the rooms, the room insides are on their own lighting
@@ -206,7 +206,7 @@ def light(name, x, y, z, color, intensity, radius, flicker=False, room=False):
     cmds.move(x, z, y, loc)
     cmds.addAttr(loc, longName="ue_light", dataType="string")
     cmds.setAttr(loc + ".ue_light", json.dumps({"color": color, "intensity": intensity, "radius": radius, "flicker": flicker,
-                                                        "room": room}), type="string")
+                                                        "room": room, "shadows": shadows}), type="string")
     return loc
 
 
@@ -292,7 +292,13 @@ def room_inside(x0, x1, her=False, i=-1):
         dresser(x0)
         if i != 2:
             crt_tv(x0)
-    ceiling_fan(x0 + 250, (FRONT + BACK) / 2.0, H - 10, lit=her)   # Room 104's is on (Lamp_HerRoom)
+    # Room 104's fan light is on (Lamp_HerRoom, blockout.py); 102 and 106 look occupied (lit
+    # curtains), so theirs are on too, the same light: warm, and the one kind of light that casts
+    # shadows, so the fan blades throw shadows on the ceiling like in 104
+    lit_fan = her or i in (1, 5)
+    ceiling_fan(x0 + 250, (FRONT + BACK) / 2.0, H - 10, lit=lit_fan)
+    if lit_fan and not her:
+        light("light_fan_%d" % (101 + i), x0 + 250, (FRONT + BACK) / 2.0, 240, [1.0, 0.8, 0.55], 60, 1000, room=True, shadows=True)
 
 
 def rbox(cx, cy, cz, sx, sy, sz, mat, yaw=0, tilt_x=0, tilt_y=0):
