@@ -27,7 +27,7 @@ def grounds():
     # gravel shoulders both sides of the road, the ditch beyond the far one
     box(-12000, 12000, ROAD_S - 160, ROAD_S, 0, 1.6, "gravel_mat")
     box(-12000, 12000, ROAD_S - 330, ROAD_S - 160, -1, 0.8, "ditch_mat")
-    box(-12000, -3600, ROAD_N, ROAD_N + 150, 0, 1.6, "gravel_mat")                # motel side, past the verges
+    box(-12000, L0 - 8, ROAD_N, ROAD_N + 150, 0, 1.6, "gravel_mat")              # motel side, right up to the lot: it meets the trail
     box(4900, 12000, ROAD_N, ROAD_N + 150, 0, 1.6, "gravel_mat")
     # weeds in the verges and the shoulders
     for _ in range(260):

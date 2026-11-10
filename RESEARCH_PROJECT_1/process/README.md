@@ -745,3 +745,7 @@ Feedback: the in and out arrows should be closer to the road so you see them ear
 ![Trail from the road](2026-11-10_trail_to_road.png)
 
 Feedback: the trail beside the motel should connect to the road. The trail now starts at the road's edge and runs past the west end of the motel straight into the old trail toward the back gate (layout.json, so the map, grass and forest all keep clear of it too).
+
+![Gap between the trail and the roadside path: before (left), after (right)](2026-11-10_trail_meets_shoulder.png)
+
+Feedback: there was a small space between the trail and the path along the road. The gravel shoulder on the motel side of the road stopped 6 m short; it now runs right up to the lot, across the foot of the trail, so the two join.
