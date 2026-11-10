@@ -783,3 +783,7 @@ Feedback: on the left side of the map (facing the road), add a ROAD CLOSED sign 
 ![Sign clear of the road](2026-11-10_road_closed_sign_clear.png)
 
 Feedback: the ROAD CLOSED sign went into the ground. Its low corner reached about 4 cm below the road; the sign is a little smaller (100 x 62 cm), tips less (18 degrees) and is hung so its lowest corner stays about 10 cm off the road.
+
+![Fog past the gate](2026-11-10_edge_fog.png)
+
+Feedback: very thick fog on the right side of the road (facing the motel) so you can't see past the parts we haven't built. unreal/edge_fog.py puts two rows of Local Fog Volumes just past the ROAD CLOSED gate, from the south edge of the map up into the woods: a softer row right behind the gate, a solid one behind that. The gate stays clear; beyond it the road and trees vanish into grey.
