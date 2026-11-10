@@ -680,3 +680,7 @@ Fourth fix list (Nov 9):
 - **OFFICE sign:** the letters were spaced evenly by box, so the narrow I left a gap and it read "OFF ICE". Each letter is now spaced by what it actually covers.
 - **Back room:** the floor lamp stands beside the head of the bed.
 - **Abandoned car:** the trim round the windows and body is the model's original white again (it had gone rust-gold); the rims stay rusted.
+
+![Lamp clear of the calendar, dark car trim](2026-11-09_lamp_clear_dark_trim.png)
+
+Fifth fix list (Nov 9): the back-room floor lamp covered the calendar, so it moved over toward the TV wall and stays by the bed. The abandoned car's trim (window outline, mirrors, wheel hubs) was too bright in white, so it's now just off black and barely shows against the black paint. A colour test (setting the trim slots to red) showed which parts are trim.

@@ -22,9 +22,11 @@ TINT = "/Game/Horror/Materials/PS2/Props/MI_PS2_wreck_glass"          # dark tin
 SURFACE = "/Game/Horror/Materials/PS2/M_PS2_Surface"   # matte: the gloss one flared white in the flashlight
 # which of the Fab car's material slots get what (found by colour-testing them): 0 the blue
 # paint, 2/3/4 the windows (dark tint, can't see in), 9/13 the rims (rusted), 11/12 the tyres
-# (dark matte: the model's own flared white); the white trim (1/5/6/10) and the lights (7/8) keep
-# the model's own (you wanted the trim white, not rust-gold)
-OVERRIDE = {0: PAINT, 2: TINT, 3: TINT, 4: TINT, 11: TINT, 12: TINT, 9: RUST, 13: RUST}
+# (dark matte: the model's own flared white), 1/5/6/10 the trim (dark grey, barely there: white was
+# too bright, rust read gold); the lights (7/8) keep the model's own
+TRIM = "/Game/Horror/Materials/PS2/Props/MI_PS2_wreck_trim"
+OVERRIDE = {0: PAINT, 2: TINT, 3: TINT, 4: TINT, 11: TINT, 12: TINT, 9: RUST, 13: RUST,
+            1: TRIM, 5: TRIM, 6: TRIM, 10: TRIM}
 
 actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 lib = unreal.EditorAssetLibrary
@@ -40,15 +42,21 @@ def paint():
     return mi
 
 
-def glass():
-    if not lib.does_asset_exist(TINT):
+def matte(path, rgb):
+    """A plain matte material instance of M_PS2_Surface in one colour (made once, recoloured each run)."""
+    if not lib.does_asset_exist(path):
         tools = unreal.AssetToolsHelpers.get_asset_tools()
-        folder, name = TINT.rsplit("/", 1)
+        folder, name = path.rsplit("/", 1)
         tools.create_asset(name, folder, unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
-    mi = unreal.load_asset(TINT)
+    mi = unreal.load_asset(path)
     mel.set_material_instance_parent(mi, unreal.load_asset(SURFACE))
-    mel.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(0.006, 0.007, 0.008, 1))
+    mel.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(*rgb, 1))
     lib.save_loaded_asset(mi, False)
+
+
+def glass():
+    matte(TINT, (0.006, 0.007, 0.008))
+    matte(TRIM, (0.011, 0.011, 0.012))           # just off black: barely shows on the black paint
 
 
 def main():

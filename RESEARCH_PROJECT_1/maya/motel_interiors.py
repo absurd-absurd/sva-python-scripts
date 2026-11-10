@@ -778,7 +778,7 @@ def office():
     mug_at(TVX - 81, BY1 - 74, 45)
     ashtray(TVX - 73, BY1 - 62, 45, lit=False)
     # floor lamp by the chair, on low
-    FLX, FLY = bx0 + 28, by0 - 30                        # on the floor beside the head of the bed
+    FLX, FLY = bx0 + 28, by0 - 75                        # by the bed, clear of the calendar on the wall
     frustum(FLX, FLY, 6.8, 9, 17, 17, "brass_mat", sides=24)            # weighted base (on the rug)
     frustum(FLX, FLY, 9, 14, 16, 5, "brass_mat", sides=24)
     frustum(FLX, FLY, 14, 18, 3.2, 2.2, "brass_mat", sides=16)
