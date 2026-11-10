@@ -741,3 +741,7 @@ Feedback: the strip should match the road and the lot so it all reads as one pie
 ![Arrows by the road](2026-11-10_arrows_by_road.png)
 
 Feedback: the in and out arrows should be closer to the road so you see them early when driving. They now sit at the lot's road edge, between the road and the front row of stalls (in on the west driveway, out on the east one).
+
+![Trail from the road](2026-11-10_trail_to_road.png)
+
+Feedback: the trail beside the motel should connect to the road. The trail now starts at the road's edge and runs past the west end of the motel straight into the old trail toward the back gate (layout.json, so the map, grass and forest all keep clear of it too).

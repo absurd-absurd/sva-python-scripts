@@ -1,6 +1,6 @@
 {
   "_about": "Shared layout for Maya and Unreal, in Unreal coordinates (cm). X east-west, Y south-north (road is south, lake is north). In Maya the same spot is (x, 0, y).",
-  "trail": [[-3000, -1700], [-3000, 500], [-1200, 1600], [600, 3200], [-500, 5800], [900, 8400], [-300, 11000], [300, 13600], [1500, 14400]],
+  "trail": [[-3000, -4040], [-3000, -1700], [-3000, 500], [-1200, 1600], [600, 3200], [-500, 5800], [900, 8400], [-300, 11000], [300, 13600], [1500, 14400]],
   "trail_clear": 300,
   "woods": {"x_min": -9000, "x_max": 9000, "y_min": 300, "y_max": 13000},
   "clearings": [

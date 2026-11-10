@@ -198,6 +198,7 @@ def structures():
 def lake():
     # (the dock is built in maya/make_lake.py now)
     # (the three cabins are built in maya/lake_buildings.py now)
+    pass
 
 
 def placeholder_trees():
