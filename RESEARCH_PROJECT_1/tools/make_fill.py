@@ -45,15 +45,22 @@ def near_trail(x, y, clear):
     return False
 
 
-def allowed(x, y):
-    """Where fill may go: not on the road and its shoulders, not on the motel / lot / office /
-    their verges and the yard behind the rooms, not on the trail, not inside the scattered
-    woods (they're already full), not in the lake."""
+def forest(x, y):
+    """Is this forest ground? Everything outside the road and its shoulders/ditch/guardrail, the
+    lot and its verges, the motel, the office and the yard behind them, and the lake."""
     if abs(x) > EDGE - 150 or y < -SOUTH + 150 or y > LAKE_Y:
         return False
-    if -5450 < y < -3800:                                   # road, shoulders, ditch, power poles
+    if -5600 < y < -3800:                                   # road, shoulders, ditch, guardrail, power poles
         return False
-    if -3550 < x < 4800 and -3800 <= y < 450:               # lot, verges, motel, office, back yard
+    if -3700 < x < 5000 and -3800 <= y < 450:               # lot, verges, motel, office, back yard + fence
+        return False
+    return True
+
+
+def allowed(x, y):
+    """Where fill may go: forest ground, not on the trail, not inside the scattered woods
+    (they're already full)."""
+    if not forest(x, y):
         return False
     w = LAYOUT["woods"]
     if w["x_min"] <= x <= w["x_max"] and w["y_min"] <= y <= w["y_max"]:
@@ -88,14 +95,6 @@ def fill(seed=19):
                                 "yaw": round(rng.uniform(0, 360), 1), "scale": round(rng.uniform(0.6, 1.6), 2)})
             x += cell
         y += cell
-    # a low hedge of bushes along the outer verges of the lot, so the trees don't start abruptly
-    for k in range(70):
-        side = rng.choice(("w", "e"))
-        px = rng.uniform(-3800, -3450) if side == "w" else rng.uniform(4600, 4900)
-        py = rng.uniform(-3700, 300)
-        if not near_trail(px, py, 260):
-            out.append({"asset": pick(rng, UNDER[:3]), "x": round(px), "y": round(py),
-                        "yaw": round(rng.uniform(0, 360), 1), "scale": round(rng.uniform(0.8, 1.5), 2)})
     return out
 
 

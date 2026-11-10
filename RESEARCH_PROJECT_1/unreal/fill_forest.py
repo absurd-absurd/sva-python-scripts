@@ -31,9 +31,16 @@ def main():
                 continue
             a = actors.spawn_actor_from_object(mesh, unreal.Vector(it["x"], it["y"], 0), unreal.Rotator(0, 0, it["yaw"]))
             a.set_actor_scale3d(unreal.Vector(it["scale"], it["scale"], it["scale"]))
+            if name.startswith(("bush", "shrub")):                      # you push through small plants
+                a.static_mesh_component.set_collision_profile_name("NoCollision")
             a.set_folder_path("Fill/" + ("Trees" if name.startswith("tree") else "Ground"))
             a.tags = [TAG]
             placed += 1
+    # the woods from the Maya scatter tool too: you push through their bushes and dead shrubs
+    for a in actors.get_all_level_actors():
+        c = a.get_component_by_class(unreal.StaticMeshComponent)
+        if c and c.static_mesh and c.static_mesh.get_name().startswith(("bush", "shrub")):
+            c.set_collision_profile_name("NoCollision")
     # invisible walls just behind the outermost trees (the lake has its own, from make_lake.py)
     cube = unreal.load_asset("/Engine/BasicShapes/Cube")
     E, S = data["edge"], data["south"]

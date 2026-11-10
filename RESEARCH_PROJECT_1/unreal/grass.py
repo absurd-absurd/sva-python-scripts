@@ -17,8 +17,8 @@ SURFACE = "/Game/Horror/Materials/PS2/M_PS2_Surface"
 GRASS = DIR + "/M_PS2_Grass"
 TAG = "grass"
 MESHES = ("grass_dense_A", "grass_dense_B", "grass_sparse_A", "grass_sparse_B")
-LOOK = {"grass_green_mat": ((0.055, 0.075, 0.028), "T_grass", 35.0),        # dark: the flashlight is strong
-        "grass_dry_mat": ((0.13, 0.11, 0.06), "T_grass", 35.0)}
+LOOK = {"grass_green_mat": ((0.1, 0.14, 0.05), "T_grass", 35.0),
+        "grass_dry_mat": ((0.17, 0.15, 0.08), "T_grass", 35.0)}
 DRAW = 4500.0                    # cm
 
 GRASS_HLSL = """
@@ -144,7 +144,7 @@ def main():
             task.enter_progress_frame(1)
             a = actors.spawn_actor_from_object(meshes[it["mesh"]], unreal.Vector(it["x"], it["y"], 0), unreal.Rotator(0, 0, it["yaw"]))
             c = a.static_mesh_component
-            c.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+            c.set_collision_profile_name("NoCollision")                # you walk straight through it
             c.set_cast_shadow(False)
             c.set_editor_property("ld_max_draw_distance", DRAW)
             a.set_folder_path("Grass")
