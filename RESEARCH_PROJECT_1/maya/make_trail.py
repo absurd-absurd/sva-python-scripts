@@ -168,7 +168,7 @@ def road_closed():
     (two leaves from heavy posts on the shoulders, red-and-white striped boards, the leaves chained
     together with a padlock), a ROAD CLOSED sign hung from it by two chains, one chain snapped so
     the sign has swung down at an angle, an amber warning lamp flashing on each post, and a few
-    traffic cones (one knocked over). Behind it, an invisible wall (road_closed_wall)."""
+    traffic cones. Behind it, an invisible wall (road_closed_wall)."""
     X = ROADBLOCK_X
     Y_N, Y_S = -3985.0, -5015.0                              # post centres, on the shoulders
     mid = (Y_N + Y_S) / 2.0
@@ -216,7 +216,7 @@ def road_closed():
     chain_between(X - 7, (hi[0], 112), hi, 6)                                         # the chain that held
     chain_between(X - 7, (lo[0], 112), (lo[0], 112 - 14), 3)                          # the snapped one, dangling
     ring(X - 7, lo[0], lo[1], 1.6, 0.4, "rusty_tool_mat", axis="y", sides=8)          # its last link, in the sign
-    for k, (dy, fallen) in enumerate(((-260, False), (-80, False), (180, True), (330, False))):   # cones
+    for k, (dy, fallen) in enumerate(((-260, False), (-80, False), (330, False))):   # cones (the knocked-over one sank into the road: removed)
         cx = X - 140 - k * 12
         if fallen:
             rbevel(cx, mid + dy, 14, 70, 28, 28, "sign_red_mat", r=8, tilt_x=86, yaw=30)
