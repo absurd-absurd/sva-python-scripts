@@ -767,3 +767,7 @@ Feedback: the fence was missing round the office and on the other side of the mo
 ![No grass inside the fence](2026-11-10_no_grass_inside_fence.png)
 
 Feedback: no grass blades inside the fence. The grass layout now leaves out everything inside the fence round the motel and office; outside it the carpet is unchanged.
+
+![Trees clear of the fence](2026-11-10_trees_clear_of_fence.png)
+
+Feedback: the fence ran through some trees. The forest fill now keeps 3 m clear of the fence on every side (tools/make_fill.py), and unreal/fill_forest.py also pushes any tree, stump, log or rock (including the scatter tool's woods) that is still too close straight out, away from the fence.

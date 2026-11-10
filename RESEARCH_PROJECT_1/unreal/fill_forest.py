@@ -44,6 +44,30 @@ def main():
             actors.destroy_actor(a)
         elif c and c.static_mesh and c.static_mesh.get_name().startswith("shrub"):
             c.set_collision_profile_name("NoCollision")
+    # keep every tree, stump, log and rock (fill and the scatter tool's woods) clear of the fence
+    # round the motel: anything within CLEAR of a fence line is pushed straight out, away from it
+    CLEAR = {"tree": 260.0, "log": 320.0, "stump": 150.0, "rock": 150.0}
+    X0, X1, YB, YF = -3700.0, 4900.0, -100.0, -3880.0                  # maya/make_trail.py's fence
+    pushed = 0
+    for a in actors.get_all_level_actors():
+        c = a.get_component_by_class(unreal.StaticMeshComponent)
+        n = c.static_mesh.get_name() if c and c.static_mesh else ""
+        kind = next((k for k in CLEAR if n.startswith(k)), None)
+        if not kind:
+            continue
+        r = CLEAR[kind] * max(1.0, a.get_actor_scale3d().x)
+        p = a.get_actor_location()
+        x, y = p.x, p.y
+        if YF - r < y < YB + r and abs(x - X0) < r:                      # west side
+            x = X0 - r if x < X0 else X0 + r
+        if YF - r < y < YB + r and abs(x - X1) < r:                      # east side
+            x = X1 + r if x > X1 else X1 - r
+        if X0 - r < x < X1 + r and abs(y - YB) < r:                      # back
+            y = YB + r if y > YB else YB - r
+        if (x, y) != (p.x, p.y):
+            a.set_actor_location(unreal.Vector(x, y, p.z), False, False)
+            pushed += 1
+    print("pushed clear of the fence:", pushed)
     # invisible walls just behind the outermost trees (the lake has its own, from make_lake.py)
     cube = unreal.load_asset("/Engine/BasicShapes/Cube")
     E, S = data["edge"], data["south"]

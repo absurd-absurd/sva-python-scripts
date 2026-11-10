@@ -52,7 +52,7 @@ def forest(x, y):
         return False
     if -5600 < y < -3800:                                   # road, shoulders, ditch, guardrail, power poles
         return False
-    if -3700 < x < 5000 and -3800 <= y < 450:               # lot, verges, motel, office, back yard + fence
+    if -4000 < x < 5200 and -3800 <= y < 200:               # lot, motel, office, inside the fence + 3 m clear of it
         return False
     return True
 
