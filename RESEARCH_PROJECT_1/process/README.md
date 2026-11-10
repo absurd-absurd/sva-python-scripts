@@ -759,3 +759,7 @@ Feedback: grass should cover every part of the ground texture with no missing bi
 - It grows on the ground beside the motel and office too, not only in the forest. It stays off only the road, its shoulders and ditch, the lot, the motel, the office and the trail itself.
 - Round the shack, the cabins and the boathouse it now grows right up to the walls (only their floors and steps are kept clear, so blades don't poke through), and under the lookout tower everywhere except its stairs.
 - Down the bank to the lake it thins out gradually over the last 5 m, each patch sitting on the slope, the last tufts at the water.
+
+![Fence all round the motel](2026-11-10_fence_all_round.png)
+
+Feedback: the fence was missing round the office and on the other side of the motel; it should be complete. The chain-link fence now runs behind the motel and the office (gate where the trail goes into the woods, as before) and down both sides to the road shoulder, so it encloses the motel, the office and the lot (maya/make_trail.py fence(); the map shows it too).

@@ -3,7 +3,8 @@
 Run with mayapy (or in Maya):
     exec(open(r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/maya/make_trail.py").read())
 
-- the BACK GATE: a rusty chain-link fence behind the motel with barbed wire on top, and a gate
+- the BACK GATE: a rusty chain-link fence all round the motel and office (behind and down both
+  sides to the road) with barbed wire on top, and a gate
   where the trail starts, shut with a chain and a new padlock, a NO TRESPASSING sign on it.
   The gate leaf is a door (export/prop_gate.fbx, clues.json "door_backgate", needs the back
   gate key)
@@ -78,27 +79,29 @@ def chain_link(x0, x1, y, z0, z1, gap=10.0, r=0.28):
             s += gap * 1.414
 
 
-def fence():
-    """Posts every 300 cm, top rail, chain link, three strands of barbed wire on leaning arms,
-    sagging and patched; from x -4700 to 3500, with the gate opening at the trail."""
-    xs = list(range(-4700, int(GATE_X0), 300)) + [GATE_X0, GATE_X1] + list(range(int(GATE_X1) + 300, 3501, 300))
-    xs = sorted(set(round(x) for x in xs))
-    for k, x in enumerate(xs):
-        heavy = x in (round(GATE_X0), round(GATE_X1))
+FENCE_X0, FENCE_X1 = -3700.0, 4900.0           # the fence's west and east sides (Nov 10: it encloses the motel)
+FENCE_FRONT = -3880.0                          # the sides run down to the road's gravel shoulder
+
+
+def fence_run(xs, y, gap=None):
+    """One straight run of fence along x at y: posts at xs (heavy ones at the gate), top rail,
+    chain link, tension wire, three strands of barbed wire on arms leaning toward -y, weeds."""
+    for x in xs:
+        heavy = gap is not None and x in gap
         lean = 0 if heavy else rng_t.uniform(-3, 3)
-        tube((x, FENCE_Y, -10), (x + lean, FENCE_Y, 185), 5.5 if heavy else 3.5, "galv_mat", sides=10)
-        sphere(x + lean, FENCE_Y, 186, 6 if heavy else 4.2, "galv_mat", sides=8, scale=(1, 1, 0.6))
-        tube((x + lean, FENCE_Y, 182), (x + lean, FENCE_Y - 28, 210), 1.4, "galv_mat", sides=6)   # barbed wire arm
+        tube((x, y, -10), (x + lean, y, 185), 5.5 if heavy else 3.5, "galv_mat", sides=10)
+        sphere(x + lean, y, 186, 6 if heavy else 4.2, "galv_mat", sides=8, scale=(1, 1, 0.6))
+        tube((x + lean, y, 182), (x + lean, y - 28, 210), 1.4, "galv_mat", sides=6)       # barbed wire arm
     for a, b in zip(xs, xs[1:]):
-        if a == round(GATE_X0):
+        if gap is not None and a == gap[0]:
             continue                                                       # the gate opening
         sag = rng_t.uniform(0, 8)
-        tube((a, FENCE_Y, 180), (b, FENCE_Y, 180), 2.2, "galv_mat", sides=8)                      # top rail
-        chain_link(a + 4, b - 4, FENCE_Y + 1.5, 6 - sag * 0.2, 178 - sag)
-        tube((a, FENCE_Y + 1.5, 8), (b, FENCE_Y + 1.5, 8), 0.5, "galv_mat", sides=4)              # tension wire
+        tube((a, y, 180), (b, y, 180), 2.2, "galv_mat", sides=8)                          # top rail
+        chain_link(a + 4, b - 4, y + 1.5, 6 - sag * 0.2, 178 - sag)
+        tube((a, y + 1.5, 8), (b, y + 1.5, 8), 0.5, "galv_mat", sides=4)                  # tension wire
         for kk in range(3):
             dz, dy = 188 + kk * 9, -7 - kk * 9
-            pts = [(a + (b - a) * t / 6.0, FENCE_Y + dy, dz - 4 * math.sin(math.pi * t / 6.0)) for t in range(7)]
+            pts = [(a + (b - a) * t / 6.0, y + dy, dz - 4 * math.sin(math.pi * t / 6.0)) for t in range(7)]
             for p0, p1 in zip(pts, pts[1:]):
                 tube(p0, p1, 0.3, "rusty_tool_mat", sides=3)
             for p in pts[1:-1]:
@@ -107,8 +110,26 @@ def fence():
             for w in range(10):
                 wx = rng_t.uniform(a, b)
                 hh = rng_t.uniform(30, 90)
-                tube((wx, FENCE_Y + rng_t.uniform(-25, 25), 0), (wx + rng_t.uniform(-10, 10), FENCE_Y + rng_t.uniform(-15, 15), hh),
+                tube((wx, y + rng_t.uniform(-25, 25), 0), (wx + rng_t.uniform(-10, 10), y + rng_t.uniform(-15, 15), hh),
                      0.6, "weed_mat", sides=3)
+
+
+def posts(a, b, step=300):
+    n = max(1, int(round((b - a) / step)))
+    return [round(a + (b - a) * k / n) for k in range(n + 1)]
+
+
+def fence():
+    """A complete chain-link fence round the motel and the office: behind them (with the gate
+    where the trail goes into the woods) and down both sides to the road's shoulder. Posts every
+    ~3 m, top rail, chain link, three strands of barbed wire on leaning arms, sagging, weeds."""
+    xs = posts(FENCE_X0, GATE_X0) + posts(GATE_X1, FENCE_X1)
+    fence_run(sorted(set(xs)), FENCE_Y, gap=(round(GATE_X0), round(GATE_X1)))
+    L = FENCE_Y - FENCE_FRONT
+    mid = (FENCE_Y + FENCE_FRONT) / 2.0
+    for x, yaw in ((FENCE_X0, -90), (FENCE_X1, 90)):                     # barbed arms lean inward
+        with Placed(x, mid, yaw):
+            fence_run(posts(-L / 2.0, L / 2.0), 0.0)
     # the sign on the fence beside the gate, facing the motel (south)
     no_trespassing(GATE_X0 - 150, FENCE_Y - 4)
 
