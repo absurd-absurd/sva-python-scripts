@@ -21,9 +21,10 @@ GRIME = "/Game/Horror/Materials/PS2/Props/MI_PS2_mud_print_mat"
 TINT = "/Game/Horror/Materials/PS2/Props/MI_PS2_wreck_glass"          # dark tinted glass
 SURFACE = "/Game/Horror/Materials/PS2/M_PS2_Surface"   # matte: the gloss one flared white in the flashlight
 # which of the Fab car's material slots get what (found by colour-testing them): 0 the blue
-# paint, 2/3/4 the windows (dark tint, can't see in), 1/5/6/9/10/13 chrome, lights trim and rims
-# (rusted), 11/12 the tyres (dark matte: the model's own flared white); 7/8 the lights keep theirs
-OVERRIDE = {0: PAINT, 2: TINT, 3: TINT, 4: TINT, 11: TINT, 12: TINT, 1: RUST, 5: RUST, 6: RUST, 9: RUST, 10: RUST, 13: RUST}
+# paint, 2/3/4 the windows (dark tint, can't see in), 9/13 the rims (rusted), 11/12 the tyres
+# (dark matte: the model's own flared white); the white trim (1/5/6/10) and the lights (7/8) keep
+# the model's own (you wanted the trim white, not rust-gold)
+OVERRIDE = {0: PAINT, 2: TINT, 3: TINT, 4: TINT, 11: TINT, 12: TINT, 9: RUST, 13: RUST}
 
 actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 lib = unreal.EditorAssetLibrary

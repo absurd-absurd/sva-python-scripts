@@ -496,7 +496,16 @@ def office():
     bevel_box(oc - ow / 2.0 - 12, oc + ow / 2.0 + 12, y0 - 9, y0 - 4, 248, 286, "metal_mat", r=1.2)
     for bx_ in (oc - ow / 2.0, oc + ow / 2.0):
         bevel_box(bx_ - 1.5, bx_ + 1.5, y0 - 4, y0, 262, 272, "metal_mat", r=0.5)
-    neon_word("OFFICE", oc + ow / 2.0, y0 - 11, 257, 20, "glow_neon_red_mat", r=1.6)
+    # spaced by what each letter actually covers, so the narrow I doesn't leave a gap
+    # (plain spacing read as "OFF ICE")
+    u_ = 20 / 6.0
+    ext = {"O": (0, 4), "F": (0, 4), "I": (1, 3), "C": (0, 4), "E": (0, 4)}
+    tw = sum(b - a for a, b in (ext[c] for c in "OFFICE")) * u_ + 5 * 1.5 * u_
+    cur = oc + tw / 2.0
+    for ch in "OFFICE":
+        a, b = ext[ch]
+        neon_word(ch, cur + a * u_, y0 - 11, 257, 20, "glow_neon_red_mat", r=1.6)
+        cur -= (b - a) * u_ + 1.5 * u_
     light("light_office_sign", oc, y0 - 60, 265, [1.0, 0.0, 0.0], 150, 300)
     light("light_open", (wx0 + wx1) / 2.0, y0 - 25, 170, [1.0, 0.0, 0.0], 600, 600)
     ice_machine(X0 + ROOMS * ROOM_W + 120, FRONT - 70)
@@ -769,7 +778,7 @@ def office():
     mug_at(TVX - 81, BY1 - 74, 45)
     ashtray(TVX - 73, BY1 - 62, 45, lit=False)
     # floor lamp by the chair, on low
-    FLX, FLY = TVX + 64, BY1 - 118                       # on the floor beside the armchair
+    FLX, FLY = bx0 + 28, by0 - 30                        # on the floor beside the head of the bed
     frustum(FLX, FLY, 6.8, 9, 17, 17, "brass_mat", sides=24)            # weighted base (on the rug)
     frustum(FLX, FLY, 9, 14, 16, 5, "brass_mat", sides=24)
     frustum(FLX, FLY, 14, 18, 3.2, 2.2, "brass_mat", sides=16)

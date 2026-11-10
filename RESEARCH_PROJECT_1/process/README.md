@@ -673,3 +673,10 @@ Third fix list (Nov 9):
 - **Office front:** an OFFICE sign over the door: a dark board on brackets with red neon letters.
 - **Abandoned car:** black now (rusted), instead of green.
 - **Map:** the red cross in front of the office is gone from the corner map and the full map.
+
+![OFFICE sign spacing, lamp by the bed, white car trim](2026-11-09_sign_lamp_car_trim.png)
+
+Fourth fix list (Nov 9):
+- **OFFICE sign:** the letters were spaced evenly by box, so the narrow I left a gap and it read "OFF ICE". Each letter is now spaced by what it actually covers.
+- **Back room:** the floor lamp stands beside the head of the bed.
+- **Abandoned car:** the trim round the windows and body is the model's original white again (it had gone rust-gold); the rims stay rusted.
