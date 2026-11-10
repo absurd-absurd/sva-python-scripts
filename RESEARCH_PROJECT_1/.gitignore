@@ -9,3 +9,5 @@ maya/cat_rig.ma
 maya/lake_scene.ma
 # big Maya scene: rebuilt by maya/make_trail.py
 maya/trail_scene.ma
+# big Maya scene (58 MB): rebuilt by maya/make_motel.py
+maya/motel_scene.ma

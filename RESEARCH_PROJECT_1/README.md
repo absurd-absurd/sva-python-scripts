@@ -40,3 +40,13 @@ The motel and the lakeside woods, dark and foggy, with a flashlight; one abandon
 ## The riskiest part
 
 The PS2 look. Unreal is built to look modern and realistic, so getting the low-res, wobbly, dithered style means writing a post-process material I've never made. Second: the motel, the woods, the structures and the lake are a lot to build in three weeks. I'll keep the motel small (a few rooms you can enter), start with two or three structures in the woods, and add more only if there's time.
+
+## The Maya scenes aren't in the repo
+
+The Maya scene files (`maya/motel_scene.ma`, `maya/lake_scene.ma`, `maya/trail_scene.ma`) are built entirely by the scripts and are too big for GitHub (over 50 MB each), so they aren't committed. To rebuild them, run each script in Maya (or with `mayapy`):
+
+- `maya/make_motel.py` builds the motel, the rooms, the office, the lot and the roadside, and saves `motel_scene.ma`.
+- `maya/make_lake.py` builds the lake, the dock, the boathouse and the cabins, and saves `lake_scene.ma`.
+- `maya/make_trail.py` builds the gate and fence, the shack, the tower and the overgrowth around the car, and saves `trail_scene.ma`.
+
+Each one also writes the FBX files and the JSON that the Unreal scripts in `unreal/` import.
