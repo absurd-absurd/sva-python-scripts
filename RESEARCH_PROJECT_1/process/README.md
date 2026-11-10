@@ -787,3 +787,7 @@ Feedback: the ROAD CLOSED sign went into the ground. Its low corner reached abou
 ![Fog past the gate](2026-11-10_edge_fog.png)
 
 Feedback: very thick fog on the right side of the road (facing the motel) so you can't see past the parts we haven't built. unreal/edge_fog.py puts two rows of Local Fog Volumes just past the ROAD CLOSED gate, from the south edge of the map up into the woods: a softer row right behind the gate, a solid one behind that. The gate stays clear; beyond it the road and trees vanish into grey.
+
+![Fog at every unbuilt edge](2026-11-10_edge_fog_all_round.png)
+
+Feedback: the fog should also be right behind the road sign and at every part of the map we didn't build. unreal/edge_fog.py now builds fog walls (204 Local Fog Volumes, three rows each, soft to solid, tall enough to swallow the treetops) right behind the ROAD CLOSED gate, along the east and west edges (the road runs into fog both ways), along the south edge past the woods across the road, and far out on the lake past the rowboat. Pictured: behind the gate, the west end of the road, the woods across the road, the lake from the dock.
