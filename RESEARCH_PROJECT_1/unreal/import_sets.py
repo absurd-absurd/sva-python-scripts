@@ -128,6 +128,9 @@ def picture_texture(name):
     tex.set_editor_property("filter", unreal.TextureFilter.TF_NEAREST)
     tex.set_editor_property("address_x", unreal.TextureAddress.TA_CLAMP)
     tex.set_editor_property("address_y", unreal.TextureAddress.TA_CLAMP)
+    if "asphalt" in name:              # the lot and road pictures: no mipmaps, so both stay equally sharp
+        tex.set_editor_property("mip_gen_settings", unreal.TextureMipGenSettings.TMGS_NO_MIPMAPS)
+        tex.set_editor_property("never_stream", True)
     lib.save_loaded_asset(tex, False)
     return tex
 

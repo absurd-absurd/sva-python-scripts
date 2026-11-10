@@ -5,7 +5,7 @@ repair patches with crisp edges, a wet puddle, dirt and grit along the curb. Plu
 
 Run with normal Python (needs Pillow):  python tools/make_asphalt.py
 Writes export/pic_lot_asphalt.png (2048 wide: the lot, LOT below, the same as maya/make_motel.py),
-export/pic_road_asphalt.png (2048 x 116: the road by the motel, x -8000..8000, 900 wide) and
+export/pic_road_asphalt.png ( the road by the motel, x -8000..8000, 900 wide, 4096 x 232) and
 export/pic_car_plate.png. maya/exterior_props.py lays them on the ground as pic_* planes.
 """
 import math
@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageChops
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "export")
-LOT = (-2520, 4150, -3500, -1700)              # must match maya/make_motel.py
+LOT = (-2520, 4150, -4050, -1700)              # must match maya/make_motel.py
 DRIVES = ((-2300, -1700), (2700, 3300))
 X0, ROOM_W, FRONT, WALK = -2500, 500, -1400, 300
 
@@ -88,7 +88,7 @@ def lot():
     sx = W / (LOT[1] - LOT[0])
     sy = H / (LOT[3] - LOT[2])
     to_px = lambda X, Y: ((X - LOT[0]) * sx, (LOT[3] - Y) * sy)       # image top = walkway edge
-    im = base_asphalt(W, H, rng)
+    im = base_asphalt(W, H, rng, tone=52)                             # the same asphalt as the road (one surface)
     # tyre wear: smooth darker, slightly polished lanes (the drive lane and into each stall)
     wear = Image.new("L", (W, H), 0)
     d = ImageDraw.Draw(wear)
@@ -158,14 +158,14 @@ def lot():
     # grit, dirt and leaves along the road curb and the walkway edge
     edge = Image.new("L", (W, H), 0)
     d = ImageDraw.Draw(edge)
-    for y0, y1 in ((H - 22, H), (0, 14)):
+    for y0, y1 in ((0, 14),):                                       # (no curb on the road side: it runs on into the road)
         for _ in range(2500):
             x, y = rng.uniform(0, W), rng.uniform(y0, y1)
             d.point((x, y), fill=rng.randint(100, 255))
     edge = edge.filter(ImageFilter.GaussianBlur(1.2))
     im = stamp(im, edge, (70, 58, 42), 0.6)
     for _ in range(140):                                            # dead leaves
-        x, y = rng.uniform(0, W), rng.choice((rng.uniform(H - 30, H), rng.uniform(0, 20), rng.uniform(0, H)))
+        x, y = rng.uniform(0, W), rng.choice((rng.uniform(0, 20), rng.uniform(0, H)))
         c = rng.choice(((70, 48, 22), (52, 38, 20), (88, 60, 28)))
         ImageDraw.Draw(im).ellipse([x, y, x + rng.uniform(2, 4), y + rng.uniform(1, 3)], fill=c)
     im.save(os.path.join(OUT, "pic_lot_asphalt.png"))
@@ -174,7 +174,7 @@ def lot():
 
 def road():
     rng = random.Random(31)
-    W, H = 2048, 116
+    W, H = 4912, 276                     # 3.26 cm a pixel, exactly like the lot: where they meet reads as one surface
     im = base_asphalt(W, H, rng, tone=52)
     wear = Image.new("L", (W, H), 0)
     d = ImageDraw.Draw(wear)
@@ -184,16 +184,16 @@ def road():
     im = stamp(im, wear, (30, 30, 30), 0.6)
     cr = Image.new("L", (W, H), 0)
     d = ImageDraw.Draw(cr)
-    for _ in range(60):
-        crack_path(d, rng.uniform(0, W), rng.uniform(0, H), rng.uniform(8, 30), rng, 1)
-    for _ in range(6):
-        x = rng.uniform(0, W - 120)
-        patch = base_asphalt(int(rng.uniform(40, 120)), int(rng.uniform(20, 50)), rng, tone=38)
-        im.paste(patch, (int(x), int(rng.uniform(5, H - 55))))
+    for _ in range(120):
+        crack_path(d, rng.uniform(0, W), rng.uniform(0, H), rng.uniform(16, 60), rng, 1)
+    for _ in range(12):
+        x = rng.uniform(0, W - 240)
+        patch = base_asphalt(int(rng.uniform(80, 240)), int(rng.uniform(40, 100)), rng, tone=38)
+        im.paste(patch, (int(x), int(rng.uniform(10, H - 110))))
     im = stamp(im, cr.filter(ImageFilter.GaussianBlur(0.4)), (12, 12, 12), 0.9)
     edge = Image.new("L", (W, H), 0)
     d = ImageDraw.Draw(edge)
-    for y0, y1 in ((0, 8), (H - 8, H)):
+    for y0, y1 in ():                                            # (no grit at the edges: the lot runs straight on)
         for _ in range(1500):
             d.point((rng.uniform(0, W), rng.uniform(y0, y1)), fill=rng.randint(100, 255))
     im = stamp(im, edge.filter(ImageFilter.GaussianBlur(1)), (66, 56, 40), 0.6)

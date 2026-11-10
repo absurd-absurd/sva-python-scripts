@@ -687,7 +687,7 @@ def streetlight(x, y):
 
 # ---------- the lot outside ----------
 
-LOT = (-2520, 4150, -3500, -1700)        # x0, x1, y0 (road side), y1 (walkway edge): ends with the motel (Nov 10)
+LOT = (-2520, 4150, -4050, -1700)        # x0, x1, y0 (road side: meets the road exactly), y1 (walkway edge)
 rng = random.Random(41)                  # same cracks and stains every build
 
 
@@ -765,6 +765,8 @@ def road_lines():
         seg((x, y), (x + 420, y), 12, "paint_yellow_mat", z=z, h=1.0)
     for edge in (-4060, -4940):
         for x in range(-19800, 19800, 1200):
+            if edge == -4060 and LOT[0] - 1200 < x < LOT[1]:
+                continue                        # no edge line where the lot runs into the road (one surface)
             if rng.random() < 0.8:
                 seg((x, edge), (x + rng.uniform(600, 1150), edge), 10, "paint_mat", z=z, h=1.0)
 

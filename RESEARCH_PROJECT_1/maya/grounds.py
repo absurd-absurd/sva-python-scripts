@@ -20,10 +20,9 @@ def grounds():
     L0, L1, Y0, Y1 = LOT
     # the lot's asphalt slab (the painted surface lies on it), running on down to the road as one
     # surface (no separate strip, no curb along the road), curbs only down the lot's two ends
-    box(L0, L1, Y0, Y1, 0, LOT_Z, "lot_base_mat")
-    box(L0, L1, ROAD_N + 10, Y0, 0, LOT_Z, "lot_base_mat")
+    box(L0, L1, Y0, Y1, 0, 2.0, "lot_base_mat")                  # under the asphalt picture (z 2.8, like the road's)
     for x in (L0, L1):
-        bevel_box(x - 8 if x == L0 else x - 1, x + 1 if x == L0 else x + 8, ROAD_N + 10, Y1, 0, 16, "concrete_mat", r=3.0)
+        bevel_box(x - 8 if x == L0 else x - 1, x + 1 if x == L0 else x + 8, Y0 + 2, Y1, 0, 16, "concrete_mat", r=3.0)
     # (beyond the lot's ends the ground is the forest floor itself: the trail starts on the west side)
     # gravel shoulders both sides of the road, the ditch beyond the far one
     box(-12000, 12000, ROAD_S - 160, ROAD_S, 0, 1.6, "gravel_mat")

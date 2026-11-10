@@ -733,3 +733,7 @@ Feedback: remove the fern clumps (you didn't like their shape); the dirt between
 Feedback: the pale concrete strip between the lot and the road should go, with that whole strip the same surface as the lot (not just at the driveways); and the paving past the west end of the motel should be dirt and the trail.
 - The lot's asphalt now runs straight down to the road as one surface: no strip, no curb along the road, only curbs at the lot's two ends.
 - The lot now stops at the motel's west end (it used to run 4 m past it), so beyond it is forest floor leading to the trail. The asphalt texture (it was also drawn off-centre after the last resize) and the map's lot outline were redrawn to match, and that lamp moved in onto the lot.
+
+![Lot meeting the road: before (left) and after (right)](2026-11-10_lot_road_one_surface.png)
+
+Feedback: the strip should match the road and the lot so it all reads as one piece, and there was a small gap between the road and the strip. Fixes: the lot's painted asphalt now reaches the road's edge exactly (the separate plain strip and its 10 cm gap are gone) and lies at the same height as the road; both use the same asphalt tone; the road texture was redrawn at exactly the lot's sharpness (3.26 cm a pixel) and neither has mipmaps, so they stay equally sharp; no white edge line or grit along that edge.
