@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageChops
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "export")
-LOT = (-2900, 4150, -3500, -1700)              # must match maya/make_motel.py
+LOT = (-2520, 4150, -3500, -1700)              # must match maya/make_motel.py
 DRIVES = ((-2300, -1700), (2700, 3300))
 X0, ROOM_W, FRONT, WALK = -2500, 500, -1400, 300
 

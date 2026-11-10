@@ -727,3 +727,9 @@ Feedback: remove the fern clumps (you didn't like their shape); the dirt between
 - **Ferns:** gone everywhere: out of the forest fill (tools/make_fill.py) and deleted from the scatter tool's woods when the forest is planted (unreal/fill_forest.py).
 - **Road to lot:** the strip between the lot's curb and the road is concrete now, with no weeds on it (maya/grounds.py).
 - **Ground round the motel and office:** the strips beside the lot used their own darker dirt; they now use exactly the forest floor's texture and colour, so the ground runs into the forest with no seam.
+
+![One surface from the lot to the road; dirt and trail at the motel's west end](2026-11-10_lot_to_road.png)
+
+Feedback: the pale concrete strip between the lot and the road should go, with that whole strip the same surface as the lot (not just at the driveways); and the paving past the west end of the motel should be dirt and the trail.
+- The lot's asphalt now runs straight down to the road as one surface: no strip, no curb along the road, only curbs at the lot's two ends.
+- The lot now stops at the motel's west end (it used to run 4 m past it), so beyond it is forest floor leading to the trail. The asphalt texture (it was also drawn off-centre after the last resize) and the map's lot outline were redrawn to match, and that lamp moved in onto the lot.

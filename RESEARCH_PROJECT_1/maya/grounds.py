@@ -18,24 +18,13 @@ rng_g = random.Random(41)
 
 def grounds():
     L0, L1, Y0, Y1 = LOT
-    # the lot's asphalt slab (the painted surface lies on it) and the driveways
+    # the lot's asphalt slab (the painted surface lies on it), running on down to the road as one
+    # surface (no separate strip, no curb along the road), curbs only down the lot's two ends
     box(L0, L1, Y0, Y1, 0, LOT_Z, "lot_base_mat")
-    for a, b in DRIVES:
-        box(a, b, ROAD_N + 10, Y0, 0, LOT_Z, "lot_base_mat")
-        seg((a, ROAD_N + 10), (a + 40, Y0), 8, "crack_mat", z=LOT_Z)          # a crumbling edge
-    # curbs: along the road side (open at the driveways) and down both ends of the lot
-    xs = [L0] + [v for d in DRIVES for v in d] + [L1]
-    for a, b in zip(xs[0::2], xs[1::2]):
-        bevel_box(a, b, Y0 - 16, Y0 + 1, 0, 16, "concrete_mat", r=3.0)
+    box(L0, L1, ROAD_N + 10, Y0, 0, LOT_Z, "lot_base_mat")
     for x in (L0, L1):
-        bevel_box(x - 8 if x == L0 else x - 1, x + 1 if x == L0 else x + 8, Y0 - 16, Y1, 0, 16, "concrete_mat", r=3.0)
-    # between the lot and the road: concrete (a sidewalk strip), not dirt
-    for a, b in zip(xs[0::2], xs[1::2]):
-        box(a, b, ROAD_N + 6, Y0 - 16, 0, 1.2, "concrete_mat")
-    # beyond the lot's ends: the same ground as the forest (verge_mat = the forest floor's look)
-    box(-3600, L0 - 8, ROAD_N + 6, Y1 - 20, 0, 1.2, "verge_mat")
-    box(-3600, -3150, Y1 - 20, 300, 0, 1.2, "verge_mat")                          # (the trail runs up past it)
-    box(L1 + 8, 4900, ROAD_N + 6, 300, 0, 1.2, "verge_mat")
+        bevel_box(x - 8 if x == L0 else x - 1, x + 1 if x == L0 else x + 8, ROAD_N + 10, Y1, 0, 16, "concrete_mat", r=3.0)
+    # (beyond the lot's ends the ground is the forest floor itself: the trail starts on the west side)
     # gravel shoulders both sides of the road, the ditch beyond the far one
     box(-12000, 12000, ROAD_S - 160, ROAD_S, 0, 1.6, "gravel_mat")
     box(-12000, 12000, ROAD_S - 330, ROAD_S - 160, -1, 0.8, "ditch_mat")

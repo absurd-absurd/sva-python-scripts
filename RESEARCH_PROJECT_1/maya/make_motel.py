@@ -687,7 +687,7 @@ def streetlight(x, y):
 
 # ---------- the lot outside ----------
 
-LOT = (-2900, 4150, -3500, -1700)        # x0, x1, y0 (road side), y1 (walkway edge): the motel's footprint (Nov 9)
+LOT = (-2520, 4150, -3500, -1700)        # x0, x1, y0 (road side), y1 (walkway edge): ends with the motel (Nov 10)
 rng = random.Random(41)                  # same cracks and stains every build
 
 
@@ -844,7 +844,7 @@ def lot_dressing():
     parking_lot_detail()
     road_lines()
     grounds()                                          # maya/grounds.py: slab, curbs, driveways, verges, road side
-    lot_lamp(-2700, -3300, True)
+    lot_lamp(-2350, -3300, True)
     lot_lamp(-150, -3330, True)                       # the middle one: on (Nov 9)
     payphone(2930, -1830)
     dumpster(3960, -1150)

@@ -432,7 +432,7 @@ def plate(cx, y, z, facing):
 def ground_textures():
     """The lot and the road as one large painted surface each (tools/make_asphalt.py), 8 mm above
     the grey blockout so they never fight it, below the paint lines and the wheel stops."""
-    flat_picture(0, (LOT[2] + LOT[3]) / 2.0, LOT_Z + 0.8, LOT[1] - LOT[0], LOT[3] - LOT[2], "pic_lot_asphalt")
+    flat_picture((LOT[0] + LOT[1]) / 2.0, (LOT[2] + LOT[3]) / 2.0, LOT_Z + 0.8, LOT[1] - LOT[0], LOT[3] - LOT[2], "pic_lot_asphalt")
     flat_picture(0, -4500, 2.8, 16000, 900, "pic_road_asphalt")
 
 

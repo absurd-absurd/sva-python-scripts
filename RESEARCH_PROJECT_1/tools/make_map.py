@@ -135,7 +135,7 @@ def town(d):
     # the road and the motel
     rect(d, B["x_min"], B["x_max"], -4950, -4050, fill=(150, 140, 122))
     label(d, "OLD LAKE ROAD", -6000, -4500, 48)
-    rect(d, -2900, 4150, -3500, -1450, outline=FADED, width=3)               # parking lot
+    rect(d, -2520, 4150, -3500, -1450, outline=FADED, width=3)               # parking lot
     rect(d, -2500, 500, -1400, -700, fill=(120, 96, 76))                     # room row
     for i in range(1, 6):
         x = -2500 + i * 500
