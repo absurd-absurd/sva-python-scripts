@@ -16,7 +16,7 @@ DIR = "/Game/Horror/Grass"
 SURFACE = "/Game/Horror/Materials/PS2/M_PS2_Surface"
 GRASS = DIR + "/M_PS2_Grass"
 TAG = "grass"
-MESHES = ("grass_dense_A", "grass_dense_B", "grass_sparse_A", "grass_sparse_B")
+MESHES = ("grass_dense_A", "grass_dense_B", "grass_sparse_A", "grass_sparse_B", "grass_small_A", "grass_small_B")
 LOOK = {"grass_green_mat": ((0.1, 0.14, 0.05), "T_grass", 35.0),
         "grass_dry_mat": ((0.17, 0.15, 0.08), "T_grass", 35.0)}
 DRAW = 4500.0                    # cm
@@ -142,7 +142,7 @@ def main():
         task.make_dialog(True)
         for it in items:
             task.enter_progress_frame(1)
-            a = actors.spawn_actor_from_object(meshes[it["mesh"]], unreal.Vector(it["x"], it["y"], 0), unreal.Rotator(0, 0, it["yaw"]))
+            a = actors.spawn_actor_from_object(meshes[it["mesh"]], unreal.Vector(it["x"], it["y"], it.get("z", 0)), unreal.Rotator(0, 0, it["yaw"]))
             c = a.static_mesh_component
             c.set_collision_profile_name("NoCollision")                # you walk straight through it
             c.set_cast_shadow(False)

@@ -101,7 +101,9 @@ def build():
     for name, size, tufts, singles, seed, tall in (("grass_dense_A", 400, 70, 160, 1, 1.0),
                                                    ("grass_dense_B", 400, 64, 200, 2, 1.15),
                                                    ("grass_sparse_A", 800, 75, 300, 3, 0.9),
-                                                   ("grass_sparse_B", 800, 65, 340, 4, 0.8)):
+                                                   ("grass_sparse_B", 800, 65, 340, 4, 0.8),
+                                                   ("grass_small_A", 150, 10, 24, 5, 1.0),       # gap fillers
+                                                   ("grass_small_B", 150, 9, 28, 6, 1.1)):
         m = patch(name, size, tufts, singles, seed, tall)
         f = os.path.join(OUT, name + ".fbx").replace("\\", "/")
         cmds.select(m)

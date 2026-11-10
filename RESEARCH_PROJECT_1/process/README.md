@@ -749,3 +749,13 @@ Feedback: the trail beside the motel should connect to the road. The trail now s
 ![Gap between the trail and the roadside path: before (left), after (right)](2026-11-10_trail_meets_shoulder.png)
 
 Feedback: there was a small space between the trail and the path along the road. The gravel shoulder on the motel side of the road stopped 6 m short; it now runs right up to the lot, across the foot of the trail, so the two join.
+
+## 2026-11-10: grass on every bit of ground
+
+![Grass everywhere: by the motel, the lake bank, the shack, a cabin, the tower, by the office](2026-11-10_grass_everywhere.png)
+
+Feedback: grass should cover every part of the ground texture with no missing bits, fade out slowly toward the lake rather than stop, and still grow all round the lookout tower, the hunter's shack and the cabins.
+- tools/make_grass_layout.py now lays big 4 m patches wherever they fit, then fills every gap they leave with small 1.5 m patches (new grass_small_A/B in maya/make_grass.py): along the trail, the lot, the road shoulder and the buildings. 6,558 patches in all.
+- It grows on the ground beside the motel and office too, not only in the forest. It stays off only the road, its shoulders and ditch, the lot, the motel, the office and the trail itself.
+- Round the shack, the cabins and the boathouse it now grows right up to the walls (only their floors and steps are kept clear, so blades don't poke through), and under the lookout tower everywhere except its stairs.
+- Down the bank to the lake it thins out gradually over the last 5 m, each patch sitting on the slope, the last tufts at the water.
