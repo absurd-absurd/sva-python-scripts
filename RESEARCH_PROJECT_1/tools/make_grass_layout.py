@@ -1,5 +1,6 @@
 """Where the grass grows (the patches from maya/make_grass.py): on every bit of bare ground (the
 forest floor and the same ground round the motel and office), as one even carpet with no holes:
+- none inside the fence round the motel and office
 - big 4 m patches wherever they fit, then small 1.5 m patches filling every gap they leave
   (along the trail, the lot, the road shoulder, round the buildings)
 - right up to the walls of the hunter's shack, the cabins, the boathouse and under the lookout
@@ -52,6 +53,8 @@ def bare(x, y):
     if abs(x) > EDGE - 100 or y < -SOUTH + 100:
         return False
     if -5300 < y < -3890:                                     # road, shoulders, ditch, guardrail
+        return False
+    if -3720 < x < 4920 and -3900 < y < -80:                  # inside the fence round the motel (none in there)
         return False
     if -2540 < x < 4170 and -4060 < y < -1690:                # the lot and its end curbs
         return False

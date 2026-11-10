@@ -763,3 +763,7 @@ Feedback: grass should cover every part of the ground texture with no missing bi
 ![Fence all round the motel](2026-11-10_fence_all_round.png)
 
 Feedback: the fence was missing round the office and on the other side of the motel; it should be complete. The chain-link fence now runs behind the motel and the office (gate where the trail goes into the woods, as before) and down both sides to the road shoulder, so it encloses the motel, the office and the lot (maya/make_trail.py fence(); the map shows it too).
+
+![No grass inside the fence](2026-11-10_no_grass_inside_fence.png)
+
+Feedback: no grass blades inside the fence. The grass layout now leaves out everything inside the fence round the motel and office; outside it the carpet is unchanged.
