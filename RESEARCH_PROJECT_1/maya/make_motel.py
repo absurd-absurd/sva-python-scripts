@@ -630,18 +630,23 @@ def office():
     ice_machine(X0 + ROOMS * ROOM_W + 120, FRONT - 70)
 
 
-def cross(cx, y, letter_h):
+def cross(cx, y, letter_h, top=780, post=True, light_at=None):
+    """The neon cross SIN / WILL FIND / YOU OUT, facing -y (read from the road). Any size: the
+    big one stood on a post in front of the office (removed Nov 9); now a small one hangs on the
+    office wall. light_at = (x, y, z, intensity, radius) for a room light, else the old big one."""
     u = letter_h / 6.0
     step = u * 8                     # one stacked letter
     col_w = u * 4
-    top = 780                        # top of the cross, well above the office roof
+    r_t = 0.55 * u                   # neon tube radius (3.5 at the old 38 cm letters)
+    d0, d1 = 0.63 * u, 1.58 * u      # backing board, behind the tubes
     bar_z = top - 3 * step - u * 2   # crossbar letters' bottom
     # backing board (dark metal), vertical and horizontal
     v_bottom = bar_z - 6 * step - u * 4
-    box(cx - col_w, cx + col_w, y + 4, y + 10, v_bottom, top + u * 2, "metal_mat")
-    tube((cx, y + 20, 0), (cx, y + 20, v_bottom + 20), 8, "metal_mat")          # the post it stands on
+    box(cx - col_w, cx + col_w, y + d0, y + d1, v_bottom, top + u * 2, "metal_mat")
+    if post:
+        tube((cx, y + 20, 0), (cx, y + 20, v_bottom + 20), 8, "metal_mat")      # the post it stands on
     bar_half = col_w + 4 * 5.5 * u + u * 2
-    box(cx - bar_half, cx + bar_half, y + 4, y + 10, bar_z - u * 2, bar_z + u * 8, "metal_mat")
+    box(cx - bar_half, cx + bar_half, y + d0, y + d1, bar_z - u * 2, bar_z + u * 8, "metal_mat")
     # red outline tubes around both boards
     for (ax, az, bx, bz) in ((cx - col_w, v_bottom, cx - col_w, bar_z - u * 2), (cx + col_w, v_bottom, cx + col_w, bar_z - u * 2),
                              (cx - col_w, v_bottom, cx + col_w, v_bottom),
@@ -650,13 +655,17 @@ def cross(cx, y, letter_h):
                              (cx - bar_half, bar_z - u * 2, cx - col_w, bar_z - u * 2), (cx + col_w, bar_z - u * 2, cx + bar_half, bar_z - u * 2),
                              (cx - bar_half, bar_z + u * 8, cx - col_w, bar_z + u * 8), (cx + col_w, bar_z + u * 8, cx + bar_half, bar_z + u * 8),
                              (cx - bar_half, bar_z - u * 2, cx - bar_half, bar_z + u * 8), (cx + bar_half, bar_z - u * 2, cx + bar_half, bar_z + u * 8)):
-        tube((ax, y, az), (bx, y, bz), 4, "glow_neon_red_mat")
+        tube((ax, y, az), (bx, y, bz), r_t * 1.14, "glow_neon_red_mat")
     word_w = (4 * 5.5 - 1.5) * u
-    neon_word("SIN", cx + u * 2, y, top - u * 6, letter_h, "glow_neon_red_mat", r=3.5, vertical=True)
-    neon_word("YOUOUT", cx + u * 2, y, bar_z - step, letter_h, "glow_neon_red_mat", r=3.5, vertical=True)
-    neon_word("WILL", cx + col_w + u + word_w, y, bar_z, letter_h, "glow_neon_red_mat", r=3.5)   # left of the column, seen from the road
-    neon_word("FIND", cx - col_w - u, y, bar_z, letter_h, "glow_neon_red_mat", r=3.5)
-    light("light_cross", cx, y - 30, bar_z, [1.0, 0.0, 0.0], 2500, 1100)
+    neon_word("SIN", cx + u * 2, y, top - u * 6, letter_h, "glow_neon_red_mat", r=r_t, vertical=True)
+    neon_word("YOUOUT", cx + u * 2, y, bar_z - step, letter_h, "glow_neon_red_mat", r=r_t, vertical=True)
+    neon_word("WILL", cx + col_w + u + word_w, y, bar_z, letter_h, "glow_neon_red_mat", r=r_t)   # left of the column, seen from the road
+    neon_word("FIND", cx - col_w - u, y, bar_z, letter_h, "glow_neon_red_mat", r=r_t)
+    if light_at:
+        lx, ly, lz, li, lr = light_at
+        light("light_cross", lx, ly, lz, [1.0, 0.0, 0.0], li, lr, room=True)
+    else:
+        light("light_cross", cx, y - 30, bar_z, [1.0, 0.0, 0.0], 2500, 1100)
     print(f"cross bottom at {v_bottom:.0f} cm, top at {top:.0f} cm")
 
 

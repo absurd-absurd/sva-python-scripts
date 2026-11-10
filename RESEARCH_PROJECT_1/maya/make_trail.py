@@ -38,7 +38,7 @@ CLEAR = {c["name"]: c for c in LAYOUT["clearings"]}
 TRAIL_MATS = {
     "galv_mat": (0.3, 0.3, 0.29), "sign_mat": (0.55, 0.53, 0.47), "sign_red_mat": (0.38, 0.03, 0.02),
     "rust_body_mat": (0.24, 0.12, 0.06), "antler_mat": (0.5, 0.45, 0.36), "pelt_mat": (0.24, 0.16, 0.09),
-    "vine_mat": (0.1, 0.13, 0.06), "leaf_litter_mat": (0.2, 0.13, 0.06),
+    "vine_mat": (0.1, 0.13, 0.06), "leaf_litter_mat": (0.2, 0.13, 0.06), "gloss_tint_mat": (0.012, 0.014, 0.016),
 }
 FENCE_Y = -100.0                                 # the old fence line behind the motel (blockout)
 GATE_X0, GATE_X1 = -3105.0, -2895.0             # the gate opening (the trail runs north at x -3000)
@@ -290,9 +290,8 @@ def rusted_car():
         for obj in list(new):
             sg = (cmds.listConnections(cmds.listRelatives(obj, shapes=True) or [obj], type="shadingEngine") or [None])[0]
             mat = sg[:-2] if sg else None
-            if mat == "seeglass_car_mat":
-                PARTS.remove(obj)
-                cmds.delete(obj)
+            if mat == "seeglass_car_mat":                                    # dark tinted, opaque
+                cmds.sets(obj, edit=True, forceElement="gloss_tint_mat" + "SG")
             elif mat in swap:
                 cmds.sets(obj, edit=True, forceElement=swap[mat] + "SG")
         # the driver's door hanging open on its hinges

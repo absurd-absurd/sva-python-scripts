@@ -406,11 +406,8 @@ def room_finish(i, x0, x1):
     py, pz, pw, ph = BACK - 135, 168, 84, 57
     bevel_box(R - 3.5, R, py - pw / 2 - 5, py + pw / 2 + 5, pz - ph / 2 - 5, pz + ph / 2 + 5, "frame_mat", r=1.2)
     picture(R - 4.3, py, pz, pw, ph, "pic_painting", facing=-1)
-    if i != 2:
-        # a mirror over the dresser (102's dresser was dragged away: the mirror stays on the wall)
-        bevel_box(L, L + 3, FRONT + 215, FRONT + 355, 115, 215, "frame_mat", r=1.5)
-        bevel_box(L + 3, L + 3.6, FRONT + 222, FRONT + 348, 122, 208, "mirror_mat", r=0.2)
-        rotary_phone(x0 + 165, BACK - 50, 60, yaw=-15) if i != 1 else None
+    if i not in (1, 2):
+        rotary_phone(x0 + 165, BACK - 50, 60, yaw=-15)
     if i in (0, 4, 5):
         ice_bucket(x0 + 58, FRONT + 228, 80)
     # an armchair by the window, turned toward the TV, a little round table next to it
@@ -446,7 +443,6 @@ def office():
     box(wx0 - 8, wx1 + 8, y0 - 6, y0, 242, 250, "trim_mat")
     neon_word("OPEN", wx1 - 30, y0 - 12, 150, 40, "glow_neon_red_mat", r=3.5)
     light("light_open", (wx0 + wx1) / 2.0, y0 - 25, 170, [1.0, 0.0, 0.0], 600, 600)
-    cross(x0 + 300, y0 - 190, 38)
     ice_machine(X0 + ROOMS * ROOM_W + 120, FRONT - 70)
 
     # ---- inside (lighting channel 1)
@@ -555,8 +551,10 @@ def office():
     frustum(cx_ - 4, cyy, 92, 106, 8, 7, "seeglass_window_mat", sides=14)
     frustum(cx_ - 4, cyy, 92.5, 99, 7.5, 7, "coffee_mat", sides=14)
     sphere(cx_ - 15, cyy + 9, 120, 0.9, "glow_ember_mat", sides=6)                     # the 'on' light
-    for k in range(4):
-        frustum(cx_ + 6, cyy - 40 + k * 6, 91 + k * 9, 100 + k * 9, 3.5, 4, "chair_mat", sides=10, open_ends=True)
+    for k in range(5):                                                    # a nested stack of cups
+        frustum(cx_ + 8, cyy - 38, 91 + k * 1.6, 100 + k * 1.6, 3.5, 4.2, "chair_mat", sides=12, open_ends=True)
+    frustum(cx_ + 8, cyy - 38, 91, 91.6, 3.5, 3.5, "chair_mat", sides=12)
+    frustum(cx_ + 8, cyy - 24, 91, 100, 3.5, 4.2, "chair_mat", sides=12, open_ends=True)       # one on its own
     frustum(cx_ + 2, cyy + 35, 91, 101, 4.5, 4.5, "seeglass_window_mat", sides=12)
     # brochure rack and the lantern photo on the left wall (lobby side)
     bx_ = L + 5                                                   # in front of the wainscot
@@ -571,6 +569,12 @@ def office():
     picture(bx_ + 3.6, F + 285, 180, 80, 60, "pic_lanterns", facing=1)
     rbevel(bx_ + 3.2, F + 285, 140, 0.5, 40, 6, "brass_mat", r=0.2)                     # little plaque
     wall_calendar(L + 1, F + 380, 175, 1)
+
+    # the old roadside cross, small now, hung on the wall behind the counter near the coffee
+    # machine (built facing -y, then turned to face into the office, -x)
+    cyc = -1290.0
+    with Moved(R - 3.4, cyc, -90):
+        cross(R - 3.4, cyc, 7, top=262, post=False, light_at=(R - 40, cyc, 205, 3, 260))
 
     # ---- the counter, across the office, its flap up at the left end
     CY0, CY1 = -1400.0, -1340.0
@@ -687,15 +691,15 @@ def office():
         sphere(xx + (38 if k == 0 else 6), BY0 + 52.5, 33, 1.4, "brass_mat", sides=8)
     tv_small(TVX, BY0 + 26, 58, facing_y=1)
     # the armchair turned to it, an ashtray and a mug on a stool beside it
-    armchair(TVX - 10, BY1 - 70, 180)
-    frustum(TVX + 55, BY1 - 70, 5, 45, 13, 15, "wood_mat", sides=16)
-    mug_at(TVX + 52, BY1 - 74, 45)
-    ashtray(TVX + 60, BY1 - 62, 45, lit=False)
+    armchair(TVX - 10, BY1 - 70, 0)                                     # facing the TV
+    frustum(TVX - 78, BY1 - 70, 5, 45, 13, 15, "wood_mat", sides=16)
+    mug_at(TVX - 81, BY1 - 74, 45)
+    ashtray(TVX - 73, BY1 - 62, 45, lit=False)
     # floor lamp by the chair, on low
-    lathe(TVX - 70, BY1 - 40, [(5, 13), (8, 12), (9, 1.6), (150, 1.4), (151, 2.4)], "brass_mat", sides=16)
-    frustum(TVX - 70, BY1 - 40, 140, 165, 20, 14, "glow_lamp_mat", sides=20, open_ends=True)
-    frustum(TVX - 70, BY1 - 40, 140.3, 164.7, 19.4, 13.4, "glow_lamp_mat", sides=20, open_ends=True, inside=True)
-    light("light_office_back_lamp", TVX - 70, BY1 - 40, 150, [1.0, 0.72, 0.45], 2.5, 380, room=True)
+    lathe(TVX + 60, BY1 - 40, [(5, 13), (8, 12), (9, 1.6), (150, 1.4), (151, 2.4)], "brass_mat", sides=16)
+    frustum(TVX + 60, BY1 - 40, 140, 165, 20, 14, "glow_lamp_mat", sides=20, open_ends=True)
+    frustum(TVX + 60, BY1 - 40, 140.3, 164.7, 19.4, 13.4, "glow_lamp_mat", sides=20, open_ends=True, inside=True)
+    light("light_office_back_lamp", TVX + 60, BY1 - 40, 150, [1.0, 0.72, 0.45], 2.5, 380, room=True)
     # kitchenette on the right of the back wall: base cabinets, counter, hot plate with a pan,
     # a kettle, a shelf with cans and a box of crackers
     KX0, KX1 = R - 230, R - 120
@@ -705,9 +709,6 @@ def office():
         bevel_box(xx, xx + 50, BY1 - 59.5, BY1 - 58, 12, 82, "wood_mat", r=0.8)
         tube((xx + (44 if k == 0 else 6), BY1 - 60.5, 60), (xx + (44 if k == 0 else 6), BY1 - 60.5, 74), 0.7, "brass_mat", sides=6)
     bevel_box(KX0 - 2, KX1 + 2, BY1 - 62, BY1, 86, 90, "linoleum_mat", r=1)
-    rbevel(KX0 + 30, BY1 - 30, 93, 34, 26, 6, "tv_mat", r=1.5)
-    frustum(KX0 + 30, BY1 - 30, 96, 103, 11, 12, "metal_mat", sides=16)
-    tube((KX0 + 42, BY1 - 30, 101), (KX0 + 66, BY1 - 34, 102), 1.2, "trim_mat", sides=6)
     lathe(KX0 + 85, BY1 - 28, [(90, 7), (94, 9), (104, 8.5), (108, 5), (110, 1.5)], "metal_mat", sides=16)
     tube((KX0 + 92, BY1 - 28, 98), (KX0 + 99, BY1 - 26, 105), 1.2, "metal_mat", sides=6)
     bevel_box(KX0, KX1, BY1 - 26, BY1, 150, 153, "wood_mat", r=0.6)
@@ -720,11 +721,6 @@ def office():
     for k in range(4):
         a_ = k * math.pi / 2 + 0.4
         tube((rx, ry, 168), (rx + 14 * math.cos(a_), ry + 14 * math.sin(a_), 176), 1.0, "wood_mat", sides=6)
-    rsoft(rx - 12, ry + 2, 128, 16, 40, 76, "coat_mat", jitter=1.5, smooth=2, seed=12)
-    frustum(rx + 6, ry - 10, 172, 177, 8, 8, "coat_mat", sides=14)
-    frustum(rx + 6, ry - 10, 171, 172, 13, 13, "coat_mat", sides=14)
-    for k in range(2):
-        rsoft(rx - 40 + k * 20, ry + 30, 18, 13, 30, 26, "dark_leather_mat", jitter=0.8, smooth=2, seed=40 + k, yaw=k * 12)
     wall_calendar(L + 1, BY0 + 140, 170, 1)
     # a framed photo over the bed: lanterns on the lake again
     bevel_box(L + 1, L + 4, by0 + 20, by0 + 80, 130, 175, "frame_mat", r=0.8)
@@ -774,14 +770,11 @@ def room_story(i, x0, x1):
         tube((x0 + 172, BACK - 52, 63), (x0 + 178, BACK - 78, 30), 0.5, "trim_mat", sides=4)
         tube((x0 + 178, BACK - 78, 30), (x0 + 175, BACK - 82, 18), 0.5, "trim_mat", sides=4)
         rbevel(x0 + 175, BACK - 84, 12, 6, 6, 21, "phone_mat", r=2.5, tilt_x=10)
-        # drag marks on the carpet where the dresser was pulled to the door and pushed back
-        for k in range(2):
-            rbevel(x0 + 95 + k * 40, FRONT + 160, 2.4, 6, 160, 0.4, "stain_dark_mat", r=0.1, yaw=-25)
         # a Bible face down on the bed
         book(x0 + 340, BACK - 140, 58.6, 15, 22, 4, "book_brown_mat", yaw=30, lie=True)
     elif i == 2:    # 103: renovation stopped
         # the mattress leaning on the right wall
-        rbevel(R - 18, BACK - 250, 115, 22, 190, 230, "bed_mat", r=5, seg=3, tilt_y=0, tilt_x=-10)
+        rbevel(R - 30, FRONT + 330, 116, 22, 190, 230, "bed_mat", r=5, seg=3, tilt_x=6)   # clear of the bed
         dust_sheet(x0 + t + 28, FRONT + 285, 58, 172, 80, seed=7)                          # the dresser under a sheet
         bevel_box(x0 + 52, x0 + 98, BACK - 175, BACK - 135, 0, 52, "tv_mat", r=3)              # the TV on the floor, sheeted
         dust_sheet(x0 + 75, BACK - 155, 46, 40, 52, seed=8)
@@ -792,22 +785,15 @@ def room_story(i, x0, x1):
         rbevel(x0 + 220, BACK - 100, 2.5, 34, 26, 3, "metal_mat", r=0.8, yaw=10)            # roller tray
         tube((x0 + 210, BACK - 110, 6), (x0 + 175, BACK - 150, 4), 1.0, "metal_mat", sides=6)
         tube((x0 + 210, BACK - 110, 6), (x0 + 230, BACK - 110, 6), 3.2, "dustsheet_mat", sides=12)
-        rsoft(x0 + 330, BACK - 260, 2.5, 220, 180, 1.2, "dustsheet_mat", jitter=2.5, smooth=1, seed=21, div=(6, 1, 6))   # drop cloth
         bevel_box(R - 2, R - 1.2, BACK - 200, BACK - 80, 130, 200, "plaster_mat", r=0.2)   # a fresh plaster patch
     elif i == 4:    # 105: water damage
         cx, cy = x0 + 380, BACK - 220
         # a ceiling panel hanging down from one edge, with a dark wet hole above
         box(cx - 60, cx + 60, cy - 45, cy + 45, H - 11.5, H - 11.3, "drip_mat")
-        rbevel(cx - 10, cy, H - 50, 110, 4, 80, "plaster_mat", r=0.6, tilt_x=58)
         for k in range(14):
             rsoft(cx + rng.uniform(-60, 60), cy + rng.uniform(-50, 50), 4, rng.uniform(6, 22), rng.uniform(6, 18),
                   rng.uniform(2, 7), "debris_mat", jitter=1.2, smooth=1, seed=k + 60, yaw=rng.uniform(0, 180))
         bucket(cx + 50, cy - 80)
-        stain(cx + 40, cy - 60, 2, 55, 3)
-        stain(x0 + 330, BACK - 140, 59.5, 40, 4, mat="stain_sheet_mat")                     # soaked bed
-        for k in range(3):                                                                   # streaks down the back wall
-            rbevel(x0 + 260 + k * 70, BI - 0.6, 210 - k * 20, 26 + k * 8, 0.5, 160 - k * 30, "stain_wall_mat", r=0.2)
-        rsoft(x0 + 120, FRONT + 160, 2.5, 60, 30, 3, "pillow_mat", jitter=2, smooth=2, seed=9, yaw=30)    # a towel
     elif i == 5:    # 106: the next guest
         # a duffel bag on the luggage spot, unzipped
         rsoft(x0 + 120, BACK - 85, 18, 70, 34, 36, "duffel_mat", jitter=1.5, smooth=2, seed=1)

@@ -640,3 +640,16 @@ Feedback: the back room of the office was odd, the lobby couch faced a wall, the
 ![Fan lights in 102 and 106, 104 for comparison](2026-11-07_fan_lights_102_106.png)
 
 Feedback: "the other rooms are missing the ceiling texture that is in room 104". All the rooms already used the same ceiling material. What made 104 look different is that its ceiling fan light is on, so the ceiling is lit evenly and the fan blades cast shadows on it. You chose to turn the fan lights on only in the rooms that already look occupied: 102 and 106 (the ones with lit curtains) now have the same fan light as 104 (top left 102, top right 106, bottom right 104). 101, 103 and 105 stay dark.
+
+## 2026-11-09: fixes from the walkthrough
+
+![Walkthrough fixes](2026-11-09_walkthrough_fixes.png)
+
+After the guided tour you listed fixes, all done:
+- **103:** the mattress leans on the wall in front of the bed instead of cutting into the frame; the drop cloth on the floor is gone.
+- **101, 102, 105, 106:** the mirror over the dresser (it read as a black frame behind the TV) is removed.
+- **102:** the two white drag marks by the dresser are removed.
+- **105:** removed the fallen ceiling panel, the water under the bucket, the three streaks above the bed, the towel by the dresser and the stain on the bed.
+- **Office:** the coffee cups are a proper nested stack on the counter (they floated in a diagonal). The big neon cross in front of the office is gone; a small version hangs on the office's right wall behind the counter, near the coffee machine.
+- **Office back room:** the armchair faces the TV, the stool with the mug is on its other side (the floor lamp moved to the TV side), the coat, hat and boots are gone from the rack, and the hot plate and pan are gone from the counter.
+- **Rusted car:** the windows are dark tinted glass you can't see through.
