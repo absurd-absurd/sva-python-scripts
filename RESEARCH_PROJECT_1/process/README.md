@@ -653,3 +653,14 @@ After the guided tour you listed fixes, all done:
 - **Office:** the coffee cups are a proper nested stack on the counter (they floated in a diagonal). The big neon cross in front of the office is gone; a small version hangs on the office's right wall behind the counter, near the coffee machine.
 - **Office back room:** the armchair faces the TV, the stool with the mug is on its other side (the floor lamp moved to the TV side), the coat, hat and boots are gone from the rack, and the hot plate and pan are gone from the counter.
 - **Rusted car:** the windows are dark tinted glass you can't see through.
+
+![Cross, keys, window, lamp, car, bench](2026-11-09_cross_keys_window_lamp_car.png)
+
+Second fix list (Nov 9):
+- **Neon cross:** read "YOUOUT" as one word. Now YOU and OUT have a gap between them.
+- **Key board:** framed board, brass number plates with 101 to 106 (101 on the left), cup hooks, and real keys (round bow, cut blade with teeth) with a coloured diamond fob each; 104's hook is still empty.
+- **Office back room:** the kettle is gone from the counter; the floor lamp has a proper weighted brass base.
+- **Office front:** both windows are real openings now (you can see in and out), and there's a second window between the door and the OPEN window, with its own casing, sill, mullion and blinds.
+- **Parking lot:** the middle lot lamp, which was off, is now on.
+- **Forest car:** it's now the same Fab car as yours in the lot (unreal/place_wreck.py), repainted faded dark green and rusted, with dark windows you can't see through, dark tyres, rusted chrome and rims, sunk into the ground and leaning, with weeds and vines, a fallen branch and drifts of leaves. The Maya-built car is gone. To find the window and tyre material slots I colour-tested them, because the model's slot names don't say which part is which.
+- **Boathouse:** the rag on the workbench (it read as a sheet of paper) is removed.

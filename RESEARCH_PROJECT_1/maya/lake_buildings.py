@@ -526,7 +526,6 @@ def boathouse():
     for k in range(10):
         x0_, y0_ = bx0 + 18 + rng_b.uniform(-4, 4), by0 + 150 + rng_b.uniform(-4, 4)
         tube((x0_, y0_, bz + 14), (x0_ + rng_b.uniform(-2, 2), y0_ + rng_b.uniform(-2, 2), bz + 19), 0.25, "metal_mat", sides=4)
-    rsoft(bx0 + 50, by0 + 120, bz + 1.5, 26, 20, 3, "dark_leather_mat", jitter=1.8, smooth=2, seed=21)
     tube((bx0 + 40, by0 + 92, bz + 3), (bx0 + 56, by0 + 96, bz + 3), 1.0, "metal_mat", sides=6)       # hand drill
     ring(bx0 + 48, by0 + 94, bz + 3, 4.5, 0.5, "metal_mat", sides=12)
     frustum(bx0 + 58, by0 + 96, bz + 0.5, bz + 5.5, 1.8, 1.8, "plank_grey_mat", sides=8)

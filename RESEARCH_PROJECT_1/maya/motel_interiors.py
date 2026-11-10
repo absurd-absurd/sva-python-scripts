@@ -43,6 +43,38 @@ MATS.update({
 })
 
 
+FONT.update({
+    "0": [(1, 0, 3, 0), (3, 0, 4, 1), (4, 1, 4, 5), (4, 5, 3, 6), (3, 6, 1, 6), (1, 6, 0, 5), (0, 5, 0, 1), (0, 1, 1, 0)],
+    "1": [(2, 0, 2, 6), (1, 5, 2, 6), (1, 0, 3, 0)],
+    "2": [(0, 5, 1, 6), (1, 6, 3, 6), (3, 6, 4, 5), (4, 5, 4, 4), (4, 4, 0, 0), (0, 0, 4, 0)],
+    "3": [(0, 6, 4, 6), (4, 6, 2, 3), (2, 3, 3, 3), (3, 3, 4, 2), (4, 2, 4, 1), (4, 1, 3, 0), (3, 0, 1, 0), (1, 0, 0, 1)],
+    "4": [(3, 0, 3, 6), (3, 6, 0, 2), (0, 2, 4, 2)],
+    "5": [(4, 6, 0, 6), (0, 6, 0, 3), (0, 3, 3, 3), (3, 3, 4, 2), (4, 2, 4, 1), (4, 1, 3, 0), (3, 0, 0, 0)],
+    "6": [(4, 6, 1, 6), (1, 6, 0, 5), (0, 5, 0, 1), (0, 1, 1, 0), (1, 0, 3, 0), (3, 0, 4, 1), (4, 1, 4, 2), (4, 2, 3, 3), (3, 3, 0, 3)],
+})
+
+
+def room_key(kx, y_face, z_hook, tag_mat, seed):
+    """A motel room key hanging off a cup hook on a board (board face at y_face, facing -y): split
+    ring, a brass key (round bow with a hole, shoulder, cut blade with teeth), and a plastic
+    diamond fob on its own ring."""
+    r = random.Random(seed)
+    sw = r.uniform(-4, 4)                                                  # hangs a little crooked
+    y = y_face - 4.2
+    ring(kx, y, z_hook - 2.0, 1.5, 0.25, "brass_mat", axis="y", sides=12)           # split ring
+    with Moved(kx, y, 0):
+        bz = z_hook - 6.2
+        ring(kx, y, bz, 1.5, 0.55, "brass_mat", axis="y", sides=12)                  # bow
+        rbevel(kx, y, bz - 2.2, 1.6, 0.35, 1.0, "brass_mat", r=0.1)                    # shoulder
+        rbevel(kx, y, bz - 5.4, 0.9, 0.3, 5.6, "brass_mat", r=0.1)                     # blade
+        for k in range(4):
+            rbevel(kx + 0.7, y, bz - 3.8 - k * 1.2, 0.6 + 0.3 * (k % 2), 0.3, 0.6, "brass_mat", r=0.05)   # teeth
+    # the fob hangs on its own ring beside the key
+    ring(kx + 1.2, y + 0.2, z_hook - 3.5, 1.0, 0.2, "brass_mat", axis="y", sides=10)
+    rbevel(kx + 1.4 + sw * 0.1, y + 0.3, z_hook - 9.5, 4.6, 0.7, 4.6, tag_mat, r=0.6, tilt_x=45 + sw)
+    sphere(kx + 1.4 + sw * 0.1, y - 0.1, z_hook - 7.0, 0.35, "brass_mat", sides=6)   # the fob's eyelet
+
+
 class Moved:
     """Everything made inside the with-block is turned by yaw around (px, py), then moved by (dx, dy)."""
     def __init__(self, px, py, yaw, dx=0.0, dy=0.0):
@@ -427,8 +459,25 @@ def office():
     box(x0, x0 + t / 2, y0, y1, 0, h, "plaster_mat")
     box(x1 - t / 2, x1, y0, y1, 0, h, "plaster_mat")
     box(x0, d0, y0, y0 + t, 0, h, "plaster_mat")
-    box(d1, x1, y0, y0 + t, 0, h, "plaster_mat")
+    wx0, wx1 = x0 + 430, x1 - 30                         # the OPEN window
+    nx0, nx1 = x0 + 215, x0 + 375                        # the second window, between the door and OPEN
+    WZ0, WZ1 = 103, 242
+    xs_ = [d1, nx0, nx1, wx0, wx1, x1]
+    for k, (a_, b_) in enumerate(zip(xs_, xs_[1:])):
+        if k in (1, 3):                                   # under and over a window
+            box(a_, b_, y0, y0 + t, 0, WZ0, "plaster_mat")
+            box(a_, b_, y0, y0 + t, WZ1, h, "plaster_mat")
+        else:
+            box(a_, b_, y0, y0 + t, 0, h, "plaster_mat")
     box(d0, d1, y0, y0 + t, dh, h, "plaster_mat")
+    # the second window, outside: casing, sill, a mullion, glass
+    box(nx0 - 8, nx1 + 8, y0 - 6, y0, 95, 103, "trim_mat")
+    box(nx0 - 8, nx1 + 8, y0 - 6, y0, 242, 250, "trim_mat")
+    for xx in (nx0 - 8, nx1):
+        box(xx, xx + 8, y0 - 6, y0, 103, 242, "trim_mat")
+    bevel_box((nx0 + nx1) / 2.0 - 2.5, (nx0 + nx1) / 2.0 + 2.5, y0 - 4, y0 + 1, 103, 242, "trim_mat", r=0.6)
+    rbevel((nx0 + nx1) / 2.0, y0 - 9, 96.5, nx1 - nx0 + 30, 16, 4, "concrete_mat", r=1.0, tilt_y=-6)
+    box(nx0, nx1, y0 + 2, y0 + 3, WZ0, WZ1, "seeglass_window_mat")
     for a, b in ((x0, d0 - 10), (d1 + 10, x1)):
         box(a, b, y0 - 3, y0, 0, 100, "brick_mat")
     box(x0 - 30, x1 + 30, y0 - 150, y1 + 30, h, h + 15, "roof_metal_mat")
@@ -437,8 +486,7 @@ def office():
     box(d0 - 10, d0, y0 - 5, y0, 0, dh + 8, "trim_mat")
     box(d1, d1 + 10, y0 - 5, y0, 0, dh + 8, "trim_mat")
     box(d0 - 10, d1 + 10, y0 - 5, y0, dh, dh + 8, "trim_mat")
-    # front window: the opening in the wall is real now, so you can see in (and out)
-    wx0, wx1 = x0 + 430, x1 - 30
+    # front window (OPEN sign): a real opening now, you can see in and out
     box(wx0 - 8, wx1 + 8, y0 - 6, y0, 95, 103, "trim_mat")
     box(wx0 - 8, wx1 + 8, y0 - 6, y0, 242, 250, "trim_mat")
     neon_word("OPEN", wx1 - 30, y0 - 12, 150, 40, "glow_neon_red_mat", r=3.5)
@@ -478,7 +526,7 @@ def office():
             if z0_ < 1 and z1_ > 100:
                 wainscot(axis, fixed + d * 0.5, p, q, d)
         crown(axis, fixed + d * 0.5, a, b, d, h - 12)
-    lining("x", F + 0.5, L, R, 1, [(d0 - 10, d1 + 10, 0, dh + 8), (wx0 - 8, wx1 + 8, 99, 250)])
+    lining("x", F + 0.5, L, R, 1, [(d0 - 10, d1 + 10, 0, dh + 8), (nx0 - 8, nx1 + 8, 99, 250), (wx0 - 8, wx1 + 8, 99, 250)])
     lining("x", B - 0.5, L, R, -1)
     lining("y", L + 0.5, F, B, 1)
     lining("y", R - 0.5, F, B, -1)
@@ -503,6 +551,13 @@ def office():
     with Moved(PD0, P1, -62):
         bevel_box(PD0, PD1 - 2, P1, P1 + 4, 1, 213, "door_mat", r=0.8)
         sphere(PD1 - 10, P1 + 6, 100, 2.2, "brass_mat", sides=8)
+    # the second window from inside: casing, sill, old blinds half down
+    bevel_box(nx0 - 7, nx1 + 7, F, F + 9, 98, 103.5, "wood_mat", r=0.8)
+    for a_, b_, c_, e_ in ((nx0 - 7, nx0, 103, 249), (nx1, nx1 + 7, 103, 249), (nx0 - 7, nx1 + 7, 242, 249)):
+        bevel_box(a_, b_, F + 1, F + 3, c_, e_, "wood_mat", r=0.5)
+    for k in range(10):
+        rbevel((nx0 + nx1) / 2.0, F + 6, 236 - k * 5.2, nx1 - nx0 - 6, 4.5, 0.4, "plate_mat", r=0.1, tilt_y=25)
+    rbevel((nx0 + nx1) / 2.0, F + 6, 184, nx1 - nx0 - 4, 5, 2.5, "plate_mat", r=0.5)
     # window like the rooms': glass, casing, sill, a brass rod with the curtains pulled to the
     # sides, the old blinds half down between them
     box(wx0, wx1, y0 + 2, y0 + 3, 103, 242, "seeglass_window_mat")
@@ -629,15 +684,21 @@ def office():
     swivel_chair(DX0 + 70, DY0 - 75, 35)                                                   # pushed back, turned
     # the key board on the partition, left of the desk: hooks 101-106, 104's hook empty
     KX0, KX1 = L + 175, L + 315
-    bevel_box(KX0, KX1, P0 - 3, P0, 140, 215, "wood_mat", r=0.8)
+    bevel_box(KX0, KX1, P0 - 2.2, P0, 140, 215, "wood_mat", r=0.6)                      # board
+    for a_, b_, c_, e_ in ((KX0 - 3, KX1 + 3, 212, 218), (KX0 - 3, KX1 + 3, 137, 143),
+                           (KX0 - 3, KX0 + 3, 137, 218), (KX1 - 3, KX1 + 3, 137, 218)):
+        bevel_box(a_, b_, P0 - 3.4, P0, c_, e_, "trim_mat", r=0.8)                     # moulded frame
     for k in range(6):
         kx = KX0 + 14 + k * 22.5
-        rbevel(kx, P0 - 3.4, 205, 14, 0.4, 5, "paper_mat", r=0.1)                       # number plate
-        tube((kx, P0 - 3, 190), (kx, P0 - 8, 191), 0.5, "brass_mat", sides=6)
-        if k != HER_ROOM:
-            ring(kx, P0 - 7.5, 186, 1.6, 0.35, "brass_mat", axis="y", sides=10)
-            rbevel(kx, P0 - 7.5, 178, 1.2, 1.4, 6, "brass_mat", r=0.2)                    # key
-            rbevel(kx, P0 - 7.2, 167, 5, 0.8, 9, "book_red_mat", r=0.6, tilt_x=45)       # diamond tag
+        bevel_box(kx - 7.5, kx + 7.5, P0 - 2.8, P0 - 2.2, 199.5, 207.5, "brass_mat", r=0.3)   # number plate
+        room_no = 106 - k                                                  # +x is to your left here: 101 on the left
+        block_word(str(room_no), kx + 4.5, P0 - 3.15, 201.6, 3.6, "trim_mat", 0.55, depth=0.5)
+        tube((kx, P0 - 2.2, 192), (kx, P0 - 6.0, 192), 0.45, "brass_mat", sides=6)    # cup hook
+        tube((kx, P0 - 6.0, 192), (kx, P0 - 6.0, 194.2), 0.45, "brass_mat", sides=6)
+        sphere(kx, P0 - 6.0, 194.3, 0.5, "brass_mat", sides=6)
+        if room_no != 104:                                                  # 104's hook is empty
+            room_key(kx, P0 - 2.2, 192, ("book_red_mat", "book_green_mat", "book_brown_mat")[k % 3], k)
+    bevel_box(KX0 + 30, KX1 - 30, P0 - 2.8, P0 - 2.2, 147, 156, "plate_mat", r=0.3)   # little card: "office" spares
     # the bookcase of old guest books (1974 onward), red lanterns on top
     SX0, SX1 = L + 6, L + 160
     bevel_box(SX0, SX1, P0 - 34, P0 - 5, 5, 12, "trim_mat", r=0.6)                        # plinth
@@ -696,7 +757,10 @@ def office():
     mug_at(TVX - 81, BY1 - 74, 45)
     ashtray(TVX - 73, BY1 - 62, 45, lit=False)
     # floor lamp by the chair, on low
-    lathe(TVX + 60, BY1 - 40, [(5, 13), (8, 12), (9, 1.6), (150, 1.4), (151, 2.4)], "brass_mat", sides=16)
+    frustum(TVX + 60, BY1 - 40, 5, 7.5, 17, 17, "brass_mat", sides=24)            # weighted base
+    frustum(TVX + 60, BY1 - 40, 7.5, 13, 16, 5, "brass_mat", sides=24)
+    frustum(TVX + 60, BY1 - 40, 13, 17, 3.2, 2.2, "brass_mat", sides=16)
+    lathe(TVX + 60, BY1 - 40, [(16, 1.6), (150, 1.4), (151, 2.4)], "brass_mat", sides=16)
     frustum(TVX + 60, BY1 - 40, 140, 165, 20, 14, "glow_lamp_mat", sides=20, open_ends=True)
     frustum(TVX + 60, BY1 - 40, 140.3, 164.7, 19.4, 13.4, "glow_lamp_mat", sides=20, open_ends=True, inside=True)
     light("light_office_back_lamp", TVX + 60, BY1 - 40, 150, [1.0, 0.72, 0.45], 2.5, 380, room=True)
@@ -709,8 +773,6 @@ def office():
         bevel_box(xx, xx + 50, BY1 - 59.5, BY1 - 58, 12, 82, "wood_mat", r=0.8)
         tube((xx + (44 if k == 0 else 6), BY1 - 60.5, 60), (xx + (44 if k == 0 else 6), BY1 - 60.5, 74), 0.7, "brass_mat", sides=6)
     bevel_box(KX0 - 2, KX1 + 2, BY1 - 62, BY1, 86, 90, "linoleum_mat", r=1)
-    lathe(KX0 + 85, BY1 - 28, [(90, 7), (94, 9), (104, 8.5), (108, 5), (110, 1.5)], "metal_mat", sides=16)
-    tube((KX0 + 92, BY1 - 28, 98), (KX0 + 99, BY1 - 26, 105), 1.2, "metal_mat", sides=6)
     bevel_box(KX0, KX1, BY1 - 26, BY1, 150, 153, "wood_mat", r=0.6)
     for k in range(4):
         frustum(KX0 + 12 + k * 16, BY1 - 13, 153, 165, 4, 4, "can_mat", sides=12)

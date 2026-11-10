@@ -641,7 +641,7 @@ def cross(cx, y, letter_h, top=780, post=True, light_at=None):
     d0, d1 = 0.63 * u, 1.58 * u      # backing board, behind the tubes
     bar_z = top - 3 * step - u * 2   # crossbar letters' bottom
     # backing board (dark metal), vertical and horizontal
-    v_bottom = bar_z - 6 * step - u * 4
+    v_bottom = bar_z - 7 * step - u * 4             # YOU, a gap, OUT
     box(cx - col_w, cx + col_w, y + d0, y + d1, v_bottom, top + u * 2, "metal_mat")
     if post:
         tube((cx, y + 20, 0), (cx, y + 20, v_bottom + 20), 8, "metal_mat")      # the post it stands on
@@ -658,7 +658,7 @@ def cross(cx, y, letter_h, top=780, post=True, light_at=None):
         tube((ax, y, az), (bx, y, bz), r_t * 1.14, "glow_neon_red_mat")
     word_w = (4 * 5.5 - 1.5) * u
     neon_word("SIN", cx + u * 2, y, top - u * 6, letter_h, "glow_neon_red_mat", r=r_t, vertical=True)
-    neon_word("YOUOUT", cx + u * 2, y, bar_z - step, letter_h, "glow_neon_red_mat", r=r_t, vertical=True)
+    neon_word("YOU OUT", cx + u * 2, y, bar_z - step, letter_h, "glow_neon_red_mat", r=r_t, vertical=True)
     neon_word("WILL", cx + col_w + u + word_w, y, bar_z, letter_h, "glow_neon_red_mat", r=r_t)   # left of the column, seen from the road
     neon_word("FIND", cx - col_w - u, y, bar_z, letter_h, "glow_neon_red_mat", r=r_t)
     if light_at:
@@ -832,7 +832,7 @@ def lot_dressing():
     parking_lot_detail()
     road_lines()
     lot_lamp(-3500, -2500, True)
-    lot_lamp(-150, -3650, False)
+    lot_lamp(-150, -3650, True)                       # the middle one: on (Nov 9)
     payphone(2930, -1830)
     dumpster(3960, -1150)
     # your car is the Fab "Low-Poly Classic Car" (unreal/place_car.py puts it in front of Room 104);

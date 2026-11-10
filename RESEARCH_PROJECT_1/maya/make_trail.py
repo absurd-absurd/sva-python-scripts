@@ -11,9 +11,10 @@ Run with mayapy (or in Maya):
   hinge; inside a cot (someone slept here: a bedroll, a candle stub, cans), antlers over the
   door, an empty gun rack, traps on nails, a stretched pelt, a table; a red lantern burning on
   the porch post
-- the RUSTED CAR (clearing "car"): an old sedan sunk into the ground, rusted through, windows
-  gone, the driver's door hanging open, weeds and leaves over it, its tail lights still glowing
-  red in the fog
+- the ABANDONED CAR (clearing "car"): the car itself is the same Fab car as the one in the lot,
+  repainted faded green and rusted, sunk and leaning (unreal/place_wreck.py); here: weeds and
+  vines growing up it, a fallen branch against it, drifts of dead leaves, and a red glow at its
+  tail lights in the fog
 - the LOOKOUT TOWER (clearing "tower"): four braced legs, six flights of stairs with landings
   and handrails up to the cabin 11 m up, which has windows all round and a table by the window
   (a clue goes there later)
@@ -281,26 +282,16 @@ def rusted_car():
     c = CLEAR["car"]
     n0 = len(PARTS)
     with Placed(c["x"], c["y"], -25):
-        n, m = len(PARTS), len(ROOM_PARTS)
-        car(0, 0)
-        new = PARTS[n:]
-        # repaint: body and chrome rusted, the glass gone (broken out), seats rotted
-        swap = {"gloss_car_paint_mat": "rust_body_mat", "gloss_chrome_mat": "rusty_tool_mat", "seat_mat": "pelt_mat",
-                "metal_mat": "rusty_tool_mat"}
-        for obj in list(new):
-            sg = (cmds.listConnections(cmds.listRelatives(obj, shapes=True) or [obj], type="shadingEngine") or [None])[0]
-            mat = sg[:-2] if sg else None
-            if mat == "seeglass_car_mat":                                    # dark tinted, opaque
-                cmds.sets(obj, edit=True, forceElement="gloss_tint_mat" + "SG")
-            elif mat in swap:
-                cmds.sets(obj, edit=True, forceElement=swap[mat] + "SG")
-        # the driver's door hanging open on its hinges
-        with Moved(-89, 60, 55):
-            rbevel(-91, 0, 75, 5, 118, 70, "rust_body_mat", r=2)
-            rbevel(-93, -20, 88, 2, 16, 3, "rusty_tool_mat", r=0.6)
-        # tyres flat (lumps of rubber at the wheels), weeds and vines, leaves on the roof and hood
-        for (wx, wy) in ((-80, -140), (80, -140), (-80, 130), (80, 130)):
-            rsoft(wx, wy, 8, 22, 64, 16, "tire_mat", jitter=1.2, sag=-3, smooth=2, seed=int(wx + wy))
+        # the car itself is the same Fab car as in the lot, repainted and sunk (unreal/place_wreck.py);
+        # here: the weeds, vines and leaves growing over and around it
+        # a fallen branch leaning against the driver's side, dead leaves drifted against the wheels
+        tube((-230, -30, 0), (-100, 40, 88), 5, "bark_mat", sides=8)
+        tube((-160, 8, 47), (-170, 60, 95), 2.2, "bark_mat", sides=5)
+        tube((-130, 24, 68), (-150, -20, 120), 1.8, "bark_mat", sides=5)
+        for (wx, wy) in ((-95, -150), (95, -150), (-95, 140), (95, 140)):
+            for k in range(6):
+                rsoft(wx + rng_t.uniform(-25, 25), wy + rng_t.uniform(-35, 35), 2, rng_t.uniform(14, 30), rng_t.uniform(10, 24),
+                      rng_t.uniform(3, 8), "leaf_litter_mat", jitter=1.5, smooth=1, seed=int(wx * wy) % 97 + k, yaw=rng_t.uniform(0, 180))
         for k in range(46):
             a = rng_t.uniform(0, 6.28)
             rr = rng_t.uniform(90, 160)
@@ -315,16 +306,7 @@ def rusted_car():
                 q = (s * (92 - st * 2), p[1] + rng_t.uniform(-20, 20), p[2] + 18)
                 tube(p, q, 1.0, "vine_mat", sides=4)
                 p = q
-        for k in range(16):                                                  # dead leaves on the hood and trunk
-            yy = rng_t.uniform(120, 200) if k % 2 else rng_t.uniform(-220, -150)
-            rsoft(rng_t.uniform(-55, 55), yy, 92.5, rng_t.uniform(8, 18), rng_t.uniform(6, 14),
-                  1.2, "leaf_litter_mat", jitter=0.8, smooth=1, seed=k, yaw=rng_t.uniform(0, 180))
-    # sunk into the soft ground, nose down and leaning on the flat front-left tyre
-    g = cmds.group(PARTS[n0:], name="wreck_grp")
-    cmds.rotate(-2.5, 0, 2.0, g, pivot=(c["x"], 0, c["y"]))
-    cmds.move(0, -14, 0, g, relative=True)
-    cmds.ungroup(g)
-    # tail lights still glowing (car() put glow_tail_mat on them); a red light at the back
+    # a red glow at the tail lights
     a = math.radians(-25)
     bx, by = c["x"] - 235 * -math.sin(a), c["y"] - 235 * math.cos(a)
     light("light_car_wreck", bx, by, 70, [1.0, 0.03, 0.0], 40, 600)
