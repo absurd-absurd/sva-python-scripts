@@ -737,3 +737,7 @@ Feedback: the pale concrete strip between the lot and the road should go, with t
 ![Lot meeting the road: before (left) and after (right)](2026-11-10_lot_road_one_surface.png)
 
 Feedback: the strip should match the road and the lot so it all reads as one piece, and there was a small gap between the road and the strip. Fixes: the lot's painted asphalt now reaches the road's edge exactly (the separate plain strip and its 10 cm gap are gone) and lies at the same height as the road; both use the same asphalt tone; the road texture was redrawn at exactly the lot's sharpness (3.26 cm a pixel) and neither has mipmaps, so they stay equally sharp; no white edge line or grit along that edge.
+
+![Arrows by the road](2026-11-10_arrows_by_road.png)
+
+Feedback: the in and out arrows should be closer to the road so you see them early when driving. They now sit at the lot's road edge, between the road and the front row of stalls (in on the west driveway, out on the east one).

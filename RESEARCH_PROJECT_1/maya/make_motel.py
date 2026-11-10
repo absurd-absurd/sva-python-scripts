@@ -750,7 +750,8 @@ def parking_lot():
     for x in (3300, 3550, 3800, 4050):
         flat(x - 6, x + 6, -2350, -1800, "paint_mat")
     # arrows: in at the west driveway, out at the east one
-    for (ax, y0_, y1_) in ((-2000, -3420, -3050), (3000, -3050, -3420)):
+    # just off the road (the strip between the road and the stalls), so they're seen early from a car
+    for (ax, y0_, y1_) in ((-2000, -3980, -3600), (3000, -3600, -3980)):
         seg((ax, y0_), (ax, y1_), 14, "paint_mat")
         d_ = 1 if y1_ > y0_ else -1
         seg((ax, y1_), (ax - 50, y1_ - d_ * 80), 14, "paint_mat")
