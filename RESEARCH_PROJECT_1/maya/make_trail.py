@@ -202,9 +202,11 @@ def road_closed():
     bevel_box(X - 7, X - 1, mid - 4, mid + 4, 47, 58, "brass_mat", r=1.0)
     ring(X - 4, mid, 60, 2.6, 0.6, "chrome_mat", axis="x", sides=12)
     # the ROAD CLOSED sign, hanging from the top rail; one chain snapped, so it's tipped
-    W, Hs = 120.0, 75.0
-    tilt = 24.0
-    cy, cz = mid + 14, 112 - 20 - Hs / 2.0
+    W, Hs = 100.0, 62.5
+    tilt = 18.0
+    # hung so even its low corner stays ~10 cm off the road (it went into the ground before)
+    reach = Hs / 2.0 * math.cos(math.radians(tilt)) + W / 2.0 * math.sin(math.radians(tilt))
+    cy, cz = mid + 14, 112 - 12 - reach
     rbevel(X - 9, cy, cz, 0.8, W + 2, Hs + 2, "galv_mat", r=0.3, tilt_y=tilt)          # the sheet
     picture(X - 9.6, cy, cz, W, Hs, "pic_sign_road_closed", spin=tilt, facing=-1)
     a = math.radians(tilt)
