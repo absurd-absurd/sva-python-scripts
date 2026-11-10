@@ -696,3 +696,13 @@ Feedback: the road and parking lot layout were weird, and the scene had big empt
 - **Forest fill:** 2,535 trees, bushes, dead shrubs, stumps, logs and rocks fill all the empty ground: across the road, both sides of the motel, and down both edges of the map past the scattered woods. They keep clear of the road, lot, motel, trail and lake (tools/make_fill.py writes export/fill.json, unreal/fill_forest.py plants it). Hidden walls behind the outermost trees stop you wandering off; the road disappears into fog both ways.
 - **Map:** shows the new lot outline and the new forest.
 - The grass verges first rendered as a glowing lime green under the flashlight; they're a dark, dead green now.
+
+## 2026-11-09: real grass that moves
+
+![Grass: two moments of wind (top), the player standing in it, the forest floor](2026-11-09_grass_blades.png)
+
+Feedback: the grass shouldn't be a flat texture; it should be real blades with physics that move in the wind and as you walk through.
+- **Blades:** maya/make_grass.py builds every blade as a tapered, curving strip (3 triangles: a wide base, a narrower middle, a point), each leaning and bowed its own way. Blades grow in tufts of 9 to 16, green or dry straw, and tufts make patches: thick 4 x 4 m patches (about 3,000 triangles) and looser 8 x 8 m ones for the forest floor.
+- **Where it grows:** tools/make_grass_layout.py lays out 1,087 patches: thick on the verges and road edges, in the yard behind the motel, along the trail, in the clearings and on the bank above the lake; looser over the rest of the forest floor; never on the road, the lot, the trail itself, inside buildings or on the shore. The verges under it are soil now instead of the flat grass texture.
+- **Movement:** unreal/grass.py gives the grass its own material (M_PS2_Grass) that moves every blade on the graphics card. Wind is slow gusts rolling across the field plus a quicker flutter. As you walk through, blades within about 1 m lean away from you and press down, then spring back once you've passed; it reads your position from MPC_Horror.PlayerPos, which the HUD already updates every frame. The roots stay planted and the tips move most. Top left and top right are the same view a second apart. Bottom left is looking down while standing in the grass: there's a clear circle round your feet with the blades bent away.
+- **Cost:** grass further than 45 m away isn't drawn (it's lost in the fog anyway), it casts no shadows and has no collision.
