@@ -29,9 +29,10 @@ def grounds():
         bevel_box(a, b, Y0 - 16, Y0 + 1, 0, 16, "concrete_mat", r=3.0)
     for x in (L0, L1):
         bevel_box(x - 8 if x == L0 else x - 1, x + 1 if x == L0 else x + 8, Y0 - 16, Y1, 0, 16, "concrete_mat", r=3.0)
-    # grass verges: between the lot and the road, and beyond the lot's ends
+    # between the lot and the road: concrete (a sidewalk strip), not dirt
     for a, b in zip(xs[0::2], xs[1::2]):
-        box(a, b, ROAD_N + 6, Y0 - 16, 0, 1.2, "verge_mat")
+        box(a, b, ROAD_N + 6, Y0 - 16, 0, 1.2, "concrete_mat")
+    # beyond the lot's ends: the same ground as the forest (verge_mat = the forest floor's look)
     box(-3600, L0 - 8, ROAD_N + 6, Y1 - 20, 0, 1.2, "verge_mat")
     box(-3600, -3150, Y1 - 20, 300, 0, 1.2, "verge_mat")                          # (the trail runs up past it)
     box(L1 + 8, 4900, ROAD_N + 6, 300, 0, 1.2, "verge_mat")
@@ -43,9 +44,8 @@ def grounds():
     # weeds in the verges and the shoulders
     for _ in range(260):
         x = rng_g.uniform(-11500, 11500)
-        y = rng_g.choice((rng_g.uniform(ROAD_N + 20, ROAD_N + 140), rng_g.uniform(ROAD_S - 320, ROAD_S - 20),
-                          rng_g.uniform(ROAD_N + 20, Y0 - 30)))
-        if L0 < x < L1 and y > Y0 - 40:
+        y = rng_g.choice((rng_g.uniform(ROAD_N + 20, ROAD_N + 140), rng_g.uniform(ROAD_S - 320, ROAD_S - 20)))
+        if -3600 < x < 4900 and y > ROAD_N:                  # nothing on the concrete strip
             continue
         for b_ in range(rng_g.randint(3, 7)):
             a_ = rng_g.uniform(0, 6.28)

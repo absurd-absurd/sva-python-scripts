@@ -21,7 +21,7 @@ LAKE_Y = 13300                   # trees stop short of the lake shore
 
 TREES = [("tree_pine_A", 5), ("tree_pine_B", 5), ("tree_leafy_A", 2), ("tree_leafy_B", 2),
          ("tree_dead_A", 1), ("tree_dead_B", 1), ("tree_dead_C", 1), ("tree_dead_pine", 1)]
-UNDER = [("bush_A", 4), ("shrub_dead_A", 3), ("shrub_dead_B", 3), ("stump_A", 1), ("log_A", 1)]
+UNDER = [("shrub_dead_A", 3), ("shrub_dead_B", 3), ("stump_A", 1), ("log_A", 1)]       # (no ferns: you didn't like their shape)
 ROCKS = [("rock_A", 1), ("rock_B", 1), ("rock_C", 1)]
 
 

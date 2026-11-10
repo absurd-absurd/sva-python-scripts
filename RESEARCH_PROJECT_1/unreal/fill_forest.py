@@ -36,10 +36,13 @@ def main():
             a.set_folder_path("Fill/" + ("Trees" if name.startswith("tree") else "Ground"))
             a.tags = [TAG]
             placed += 1
-    # the woods from the Maya scatter tool too: you push through their bushes and dead shrubs
+    # the woods from the Maya scatter tool too: no ferns (bush_A; you didn't like their shape),
+    # and you push through their dead shrubs
     for a in actors.get_all_level_actors():
         c = a.get_component_by_class(unreal.StaticMeshComponent)
-        if c and c.static_mesh and c.static_mesh.get_name().startswith(("bush", "shrub")):
+        if c and c.static_mesh and c.static_mesh.get_name() == "bush_A":
+            actors.destroy_actor(a)
+        elif c and c.static_mesh and c.static_mesh.get_name().startswith("shrub"):
             c.set_collision_profile_name("NoCollision")
     # invisible walls just behind the outermost trees (the lake has its own, from make_lake.py)
     cube = unreal.load_asset("/Engine/BasicShapes/Cube")

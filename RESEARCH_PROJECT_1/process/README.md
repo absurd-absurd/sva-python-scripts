@@ -718,3 +718,12 @@ Feedback, with two reference photos (process/refs/): the trees shouldn't be big 
 - **Forest floor:** the blocky green bushes are now fern clumps and the dead shrubs are twiggy bushes with a few brown leaves; you walk through both.
 - **Grass:** now only on forest ground, as one even carpet: none on the road, verges, lot, yard, any concrete, the trail itself, round buildings or down the lake shore. The forest-fill dressing follows the same forest-only rule. Getting stuck: the grass patches (and the bushes) had solid collision, because my "no collision" setting hadn't stuck; they're truly walk-through now (tested by walking straight through thick grass).
 - **What went wrong on the way:** at first every leaf card drew as a solid dark square. Three causes, found one at a time: (1) the old trees carried their materials as per-tree overrides, which beat the new ones; (2) Unreal's auto-generated lower-detail versions broke the cards; (3) the foliage material copied from the PS2 surface material never applied its cut-out (a fresh material made the same way works). So the leaves use a freshly built material, M_PS2_Leaves. Because only the copied material could carry the wind movement (Unreal's Python can't connect that input on a new material), the trees stand still; the grass still sways and parts around you.
+
+## 2026-11-10: no ferns, concrete by the road, one ground colour
+
+![Concrete strip and matching ground](2026-11-10_concrete_and_ground.png)
+
+Feedback: remove the fern clumps (you didn't like their shape); the dirt between the road and the lot should be concrete; the dark brown dirt round the motel and office should match the forest dirt.
+- **Ferns:** gone everywhere: out of the forest fill (tools/make_fill.py) and deleted from the scatter tool's woods when the forest is planted (unreal/fill_forest.py).
+- **Road to lot:** the strip between the lot's curb and the road is concrete now, with no weeds on it (maya/grounds.py).
+- **Ground round the motel and office:** the strips beside the lot used their own darker dirt; they now use exactly the forest floor's texture and colour, so the ground runs into the forest with no seam.

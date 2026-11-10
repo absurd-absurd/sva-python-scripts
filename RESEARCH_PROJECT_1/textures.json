@@ -112,7 +112,7 @@
   "MI_PS2_ceiling_mat": {"texture": "plaster", "tint": [0.5, 0.48, 0.43], "size": 45},
   "MI_PS2_mirror_mat": {"texture": "painted_metal", "tint": [0.05, 0.055, 0.06], "size": 60},
   "MI_PS2_lot_base_mat": {"texture": "asphalt", "tint": [0.35, 0.35, 0.35], "size": 300},
-  "MI_PS2_verge_mat": {"texture": "forest_floor", "tint": [0.32, 0.3, 0.24], "size": 300},
+  "MI_PS2_verge_mat": {"texture": "forest_floor", "tint": [0.75, 0.8, 0.7], "size": 400},
   "MI_PS2_gravel_mat": {"texture": "dirt", "tint": [0.55, 0.52, 0.48], "size": 200},
   "MI_PS2_ditch_mat": {"texture": "dirt", "tint": [0.3, 0.27, 0.22], "size": 200},
   "MI_PS2_pole_wood_mat": {"texture": "bark", "tint": [0.45, 0.38, 0.3], "size": 150},
