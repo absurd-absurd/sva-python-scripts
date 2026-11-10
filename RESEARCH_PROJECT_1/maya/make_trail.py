@@ -41,6 +41,7 @@ TRAIL_MATS = {
     "galv_mat": (0.3, 0.3, 0.29), "sign_mat": (0.55, 0.53, 0.47), "sign_red_mat": (0.38, 0.03, 0.02),
     "rust_body_mat": (0.24, 0.12, 0.06), "antler_mat": (0.5, 0.45, 0.36), "pelt_mat": (0.24, 0.16, 0.09),
     "vine_mat": (0.1, 0.13, 0.06), "leaf_litter_mat": (0.2, 0.13, 0.06), "gloss_tint_mat": (0.012, 0.014, 0.016),
+    "pic_sign_no_trespassing": (1, 1, 1), "pic_sign_road_closed": (1, 1, 1), "glow_amber_mat": (1.0, 0.55, 0.08),
 }
 FENCE_Y = -100.0                                 # the old fence line behind the motel (blockout)
 GATE_X0, GATE_X1 = -3105.0, -2895.0             # the gate opening (the trail runs north at x -3000)
@@ -135,13 +136,100 @@ def fence():
 
 
 def no_trespassing(cx, y):
-    """A metal sign facing -y: NO / TRESPASSING in red on a pale plate, two bolts, rust runs."""
-    bevel_box(cx - 62, cx + 62, y - 1.0, y, 118, 172, "sign_mat", r=0.5)
-    block_word("NO", cx + 10, y - 1.6, 152, 14, "sign_red_mat", 2.6, depth=1)
-    block_word("TRESPASSING", cx + 54, y - 1.6, 126, 14 * 0.62, "sign_red_mat", 1.7, depth=1)
-    for dx in (-55, 55):
-        sphere(cx + dx, y - 1.2, 166, 1.2, "rusty_tool_mat", sides=6)
-        rbevel(cx + dx, y - 1.1, 150, 1.6, 0.3, 26, "rusty_tool_mat", r=0.1)        # rust run
+    """A real NO TRESPASSING sign wired to the chain link, facing -y (the motel): an aluminium
+    sheet, the painted face (tools/make_signs.py: faded, rust from the bolts, bullet holes, dirt),
+    four bolts with washers, wire ties through the link, a touch crooked, one corner bent back."""
+    W, Hs = 92.0, 57.5
+    with Placed(cx, y, 90):                                   # built facing -x, turned to face -y
+        sp = 3.0
+        rbevel(-0.2, 0, 148, 0.6, W + 2, Hs + 2, "galv_mat", r=0.25, tilt_y=sp)        # the sheet
+        picture(-0.6, 0, 148, W, Hs, "pic_sign_no_trespassing", spin=sp, facing=-1)
+        rbevel(1.2, W / 2.0 - 6, 148 + Hs / 2.0 - 6, 1.2, 10, 10, "galv_mat", r=0.3, tilt_x=-14)   # bent corner
+        for dy, dz in ((-W / 2 + 4.5, Hs / 2 - 4.5), (W / 2 - 4.5, Hs / 2 - 4.5),
+                       (-W / 2 + 4.5, -Hs / 2 + 4.5), (W / 2 - 4.5, -Hs / 2 + 4.5)):
+            zz = 148 + dz + dy * math.sin(math.radians(sp))
+            tube((-0.7, dy, zz), (-1.6, dy, zz), 1.1, "galv_mat", sides=8)                 # washer
+            sphere(-1.8, dy, zz, 0.7, "rusty_tool_mat", sides=6)                         # bolt head
+            ring(0.6, dy, zz, 1.4, 0.18, "galv_mat", axis="y", sides=8)                  # wire tie through the link
+
+
+ROADBLOCK_X = 7600.0                          # the road is closed here, east of the motel
+
+
+def chain_between(x, p0, p1, links):
+    for k in range(links):
+        t = (k + 0.5) / links
+        ring(x, p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t, 1.6, 0.4, "rusty_tool_mat",
+             axis="y" if k % 2 else "x", sides=8)
+
+
+def road_closed():
+    """Where the road is closed east of the motel: a galvanized pipe swing gate across the road
+    (two leaves from heavy posts on the shoulders, red-and-white striped boards, the leaves chained
+    together with a padlock), a ROAD CLOSED sign hung from it by two chains, one chain snapped so
+    the sign has swung down at an angle, an amber warning lamp flashing on each post, and a few
+    traffic cones (one knocked over). Behind it, an invisible wall (road_closed_wall)."""
+    X = ROADBLOCK_X
+    Y_N, Y_S = -3985.0, -5015.0                              # post centres, on the shoulders
+    mid = (Y_N + Y_S) / 2.0
+    for y in (Y_N, Y_S):
+        frustum(X, y, -20, 0, 22, 22, "concrete_mat", sides=12)                   # footing
+        tube((X, y, -10), (X, y, 135), 7, "galv_mat", sides=12)                    # post
+        frustum(X, y, 135, 140, 8, 3, "galv_mat", sides=12)                        # cap
+        for z in (50, 112):                                                         # hinge collars
+            ring(X, y + (-6 if y > mid else 6), z, 4.5, 1.4, "rusty_tool_mat", sides=10)
+        tube((X, y, 132), (X - 6, y, 150), 1.6, "galv_mat", sides=6)               # lamp bracket
+        frustum(X - 6, y, 150, 154, 9, 9, "tv_mat", sides=16)
+        frustum(X - 6, y, 154, 166, 8.5, 7.5, "glow_amber_mat", sides=16)          # amber lens
+        frustum(X - 6, y, 166, 168, 8, 4, "tv_mat", sides=16)
+        light("light_roadblock_%s" % ("n" if y > mid else "s"), X - 40, y, 160, [1.0, 0.55, 0.08], 25, 700, flicker=True)
+    for y0, y1 in ((Y_N - 9, mid + 3), (Y_S + 9, mid - 3)):                         # the two leaves
+        for z in (45, 112):
+            tube((X, y0, z), (X, y1, z), 3.0, "galv_mat", sides=10)
+        tube((X, y1, 45), (X, y1, 112), 3.0, "galv_mat", sides=10)
+        for k in range(1, 4):
+            yy = y0 + (y1 - y0) * k / 4.0
+            tube((X, yy, 45), (X, yy, 112), 1.8, "galv_mat", sides=8)
+        tube((X, y0, 47), (X, y1, 110), 1.8, "galv_mat", sides=8)                   # brace
+        n = 10
+        for k in range(n):                                                          # striped board
+            a, b = y0 + (y1 - y0) * k / n, y0 + (y1 - y0) * (k + 1) / n
+            bevel_box(X - 4.5, X - 3, min(a, b), max(a, b), 92, 108, "sign_red_mat" if k % 2 else "sign_mat", r=0.3)
+    for k in range(10):                                                             # chain + padlock
+        a = k * 0.7
+        ring(X + 4 * math.cos(a), mid + 5 * math.sin(a), 75 - k * 2.2, 2.1, 0.6, "rusty_tool_mat",
+             axis="z" if k % 2 else "y", sides=8)
+    bevel_box(X - 7, X - 1, mid - 4, mid + 4, 47, 58, "brass_mat", r=1.0)
+    ring(X - 4, mid, 60, 2.6, 0.6, "chrome_mat", axis="x", sides=12)
+    # the ROAD CLOSED sign, hanging from the top rail; one chain snapped, so it's tipped
+    W, Hs = 120.0, 75.0
+    tilt = 24.0
+    cy, cz = mid + 14, 112 - 20 - Hs / 2.0
+    rbevel(X - 9, cy, cz, 0.8, W + 2, Hs + 2, "galv_mat", r=0.3, tilt_y=tilt)          # the sheet
+    picture(X - 9.6, cy, cz, W, Hs, "pic_sign_road_closed", spin=tilt, facing=-1)
+    a = math.radians(tilt)
+    c1 = (cy - W / 2 * math.cos(a) * 0.85, cz + Hs / 2 - W / 2 * math.sin(a) * 0.85 + 4)
+    c2 = (cy + W / 2 * math.cos(a) * 0.85, cz + Hs / 2 + W / 2 * math.sin(a) * 0.85 - 4)
+    hi, lo = (c1, c2) if c1[1] > c2[1] else (c2, c1)
+    chain_between(X - 7, (hi[0], 112), hi, 6)                                         # the chain that held
+    chain_between(X - 7, (lo[0], 112), (lo[0], 112 - 14), 3)                          # the snapped one, dangling
+    ring(X - 7, lo[0], lo[1], 1.6, 0.4, "rusty_tool_mat", axis="y", sides=8)          # its last link, in the sign
+    for k, (dy, fallen) in enumerate(((-260, False), (-80, False), (180, True), (330, False))):   # cones
+        cx = X - 140 - k * 12
+        if fallen:
+            rbevel(cx, mid + dy, 14, 70, 28, 28, "sign_red_mat", r=8, tilt_x=86, yaw=30)
+            continue
+        frustum(cx, mid + dy, 0, 3, 22, 22, "tv_mat", sides=4)
+        frustum(cx, mid + dy, 3, 70, 15, 3, "sign_red_mat", sides=16)
+        frustum(cx, mid + dy, 34, 46, 10.5, 8.5, "sign_mat", sides=16)
+
+
+def road_closed_wall():
+    """An invisible wall just behind the gate, from the south edge of the map up into the woods
+    (the trees hide where it ends)."""
+    c = cmds.polyCube(w=60, h=800, d=10400, ch=False)[0]
+    cmds.move(ROADBLOCK_X + 60, 400, (-9900 + 500) / 2.0, c)
+    return c
 
 
 def gate_leaf(name):
@@ -472,12 +560,17 @@ def build():
     shack()
     rusted_car()
     tower()
+    road_closed()
     meshes = {}
     for name, parts in (("set_trail", PARTS), ("set_trail_rooms", ROOM_PARTS)):
         m = cmds.polyUnite(parts, name=name, constructionHistory=False)[0]
         cmds.delete(m, constructionHistory=True)
         cmds.xform(m, pivots=(0, 0, 0), worldSpace=True)
         meshes[name] = m
+    wall = road_closed_wall()
+    material("trail_block_mat", (1, 0, 1))
+    cmds.sets(wall, edit=True, forceElement="trail_block_matSG")
+    meshes["set_trail_block"] = cmds.rename(wall, "set_trail_block")
     lights = cmds.ls("light_*", type="transform")
     cmds.file(rename=os.path.join(ROOT, "maya", "trail_scene.ma"))
     cmds.file(save=True, type="mayaAscii")
@@ -502,7 +595,7 @@ def build():
             "lights": [dict(json.loads(cmds.getAttr(l + ".ue_light")), name=l,
                             position=[cmds.xform(l, q=True, t=True, ws=True)[i] for i in (0, 2, 1)]) for l in lights]}
     json.dump(data, open(os.path.join(OUT, "sets_trail.json"), "w"), indent=1)
-    tris = sum(cmds.polyEvaluate(m, triangle=True) for m in meshes.values())
+    tris = sum(cmds.polyEvaluate(m, triangle=True) for n, m in meshes.items() if not n.endswith("_block"))
     print(f"Trail built: {tris} triangles, {len(lights)} lights; gate hinge at ({GATE_X0}, {FENCE_Y}), tower floor {TOWER_FL}")
 
 

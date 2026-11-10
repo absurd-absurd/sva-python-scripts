@@ -125,6 +125,7 @@
     "glow_neon_dead_mat": {"strength": 80.0, "flicker": 1.0},
     "glow_window_mat": {"strength": 0.5, "flicker": 0.0},
     "glow_lamp_mat": {"strength": 2.0, "flicker": 0.0},
+    "glow_amber_mat": {"strength": 8.0, "flicker": 0.6},
     "glow_tv_mat": {"strength": 0.35, "flicker": 0.25},
     "glow_dial_mat": {"strength": 1.2, "flicker": 0.0},
     "glow_ember_mat": {"strength": 6.0, "flicker": 0.1},

@@ -771,3 +771,11 @@ Feedback: no grass blades inside the fence. The grass layout now leaves out ever
 ![Trees clear of the fence](2026-11-10_trees_clear_of_fence.png)
 
 Feedback: the fence ran through some trees. The forest fill now keeps 3 m clear of the fence on every side (tools/make_fill.py), and unreal/fill_forest.py also pushes any tree, stump, log or rock (including the scatter tool's woods) that is still too close straight out, away from the fence.
+
+## 2026-11-10: the road is closed; a real NO TRESPASSING sign
+
+![ROAD CLOSED gate, NO TRESPASSING sign](2026-11-10_road_closed_and_sign.png)
+
+Feedback: on the left side of the map (facing the road), add a ROAD CLOSED sign and a little gate so the player can't go any further, realistic and maybe lit, the sign falling off its chain a bit; and make the NO TRESPASSING sign more realistic.
+- **Road closed** (maya/make_trail.py road_closed(), 76 m east of the motel): a galvanized pipe swing gate across the road, two leaves on heavy posts with red-and-white striped boards, chained together with a padlock; an amber warning lamp flashing on each post; a few traffic cones, one knocked over. The ROAD CLOSED sign hangs from the gate by two chains, one snapped and dangling, so the sign has swung down at an angle. An invisible wall behind it (set_trail_block) runs from the south edge of the map into the woods; a walking test stopped at the gate.
+- **The signs** are painted pictures now (tools/make_signs.py) instead of blocky letters: white aluminium sheets with a border, faded, grime splashed up the bottom, rust bleeding from the bolt holes, scratches, dents, bullet holes. NO TRESPASSING / PRIVATE PROPERTY / VIOLATORS WILL BE PROSECUTED in red and black; ROAD CLOSED in black with cracked reflective sheeting. The fence sign has a metal backing, bolts with washers, wire ties through the chain link, hangs a little crooked with a corner bent back.
