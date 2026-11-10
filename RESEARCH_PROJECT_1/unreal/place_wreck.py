@@ -1,5 +1,5 @@
 """The abandoned car in the woods: the same Fab "Low-Poly Classic Car" as your car in the lot,
-but faded green and rusted through, its chrome rusted, sunk into the ground nose-down and
+but black and rusted through, its chrome rusted, sunk into the ground nose-down and
 leaning, at the "car" clearing of layout.json (the weeds, vines, branch and leaves around it come
 from maya/make_trail.py). Its windows stay the model's dark glass (you can't see in).
 
@@ -34,7 +34,7 @@ def paint():
     if not lib.does_asset_exist(PAINT):
         lib.duplicate_asset(SRC, PAINT)
     mi = unreal.load_asset(PAINT)
-    mel.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(0.045, 0.07, 0.055, 1))   # faded dark green
+    mel.set_material_instance_vector_parameter_value(mi, "Color", unreal.LinearColor(0.014, 0.014, 0.016, 1))   # black, rust showing through
     lib.save_loaded_asset(mi, False)
     return mi
 

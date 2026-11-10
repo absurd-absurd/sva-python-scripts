@@ -12,7 +12,7 @@ Run with mayapy (or in Maya):
   door, an empty gun rack, traps on nails, a stretched pelt, a table; a red lantern burning on
   the porch post
 - the ABANDONED CAR (clearing "car"): the car itself is the same Fab car as the one in the lot,
-  repainted faded green and rusted, sunk and leaning (unreal/place_wreck.py); here: weeds and
+  repainted black and rusted, sunk and leaning (unreal/place_wreck.py); here: weeds and
   vines growing up it, a fallen branch against it, drifts of dead leaves, and a red glow at its
   tail lights in the fog
 - the LOOKOUT TOWER (clearing "tower"): four braced legs, six flights of stairs with landings

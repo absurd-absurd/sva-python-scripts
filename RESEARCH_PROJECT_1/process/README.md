@@ -664,3 +664,12 @@ Second fix list (Nov 9):
 - **Parking lot:** the middle lot lamp, which was off, is now on.
 - **Forest car:** it's now the same Fab car as yours in the lot (unreal/place_wreck.py), repainted faded dark green and rusted, with dark windows you can't see through, dark tyres, rusted chrome and rims, sunk into the ground and leaning, with weeds and vines, a fallen branch and drifts of leaves. The Maya-built car is gone. To find the window and tyre material slots I colour-tested them, because the model's slot names don't say which part is which.
 - **Boathouse:** the rag on the workbench (it read as a sheet of paper) is removed.
+
+![Lamp, blanket, OFFICE sign, black car](2026-11-09_lamp_blanket_sign_black_car.png)
+
+Third fix list (Nov 9):
+- **Office back room lamp:** the floor lamp had ended up standing inside the kitchenette counter, so it looked like a stick with no base. It now stands on the floor beside the armchair with its weighted brass base showing.
+- **Back room bed:** the blanket is one draped cloth like the rooms' bedspreads, hanging down both sides and over the foot to the floor, turned back near the pillow.
+- **Office front:** an OFFICE sign over the door: a dark board on brackets with red neon letters.
+- **Abandoned car:** black now (rusted), instead of green.
+- **Map:** the red cross in front of the office is gone from the corner map and the full map.

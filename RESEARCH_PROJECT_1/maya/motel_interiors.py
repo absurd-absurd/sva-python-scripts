@@ -490,6 +490,14 @@ def office():
     box(wx0 - 8, wx1 + 8, y0 - 6, y0, 95, 103, "trim_mat")
     box(wx0 - 8, wx1 + 8, y0 - 6, y0, 242, 250, "trim_mat")
     neon_word("OPEN", wx1 - 30, y0 - 12, 150, 40, "glow_neon_red_mat", r=3.5)
+    # an OFFICE sign over the door: a dark board on two brackets, red neon letters
+    oc = (d0 + d1) / 2.0
+    ow = (6 * 5.5 - 1.5) * (20 / 6.0)
+    bevel_box(oc - ow / 2.0 - 12, oc + ow / 2.0 + 12, y0 - 9, y0 - 4, 248, 286, "metal_mat", r=1.2)
+    for bx_ in (oc - ow / 2.0, oc + ow / 2.0):
+        bevel_box(bx_ - 1.5, bx_ + 1.5, y0 - 4, y0, 262, 272, "metal_mat", r=0.5)
+    neon_word("OFFICE", oc + ow / 2.0, y0 - 11, 257, 20, "glow_neon_red_mat", r=1.6)
+    light("light_office_sign", oc, y0 - 60, 265, [1.0, 0.0, 0.0], 150, 300)
     light("light_open", (wx0 + wx1) / 2.0, y0 - 25, 170, [1.0, 0.0, 0.0], 600, 600)
     ice_machine(X0 + ROOMS * ROOM_W + 120, FRONT - 70)
 
@@ -740,9 +748,13 @@ def office():
     bevel_box(bx0 - 1, bx0 + 9, by0 - 2, by1 + 2, 95, 105, "wood_mat", r=2.5)
     bevel_box(bx0 + 10, bx1 - 4, by0 + 4, by1 - 4, 37, 54, "mattress_mat", r=5, seg=3)
     bevel_box(bx0 + 11, bx1 - 5, by0 + 3, by1 - 3, 50, 55.3, "sheet_mat", r=2.5, seg=2)
-    rsoft(bx0 + 120, (by0 + by1) / 2.0, 57.5, 158, by1 - by0 + 8, 5, "blanket_mat", jitter=1.6, sag=-1, smooth=2, seed=4, div=(6, 2, 4))
-    for s_ in (-1, 1):                                                     # blanket hanging down the sides
-        rbevel(bx0 + 120, by0 - 2 if s_ < 0 else by1 + 2, 44, 156, 2.5, 26, "blanket_mat", r=1.0)
+    # the blanket: one draped cloth (like the rooms' bedspreads) over the bed and down both sides
+    # and over the foot to the floor, turned back near the pillow. bedspread() lays a bed along y,
+    # so it's built along y round the bed's centre and turned so its foot points to +x
+    bcx, bcy = (bx0 + bx1) / 2.0 + 4, (by0 + by1) / 2.0
+    hl, hw_ = (bx1 - bx0 - 8) / 2.0, (by1 - by0) / 2.0
+    with Moved(bcx, bcy, 90):
+        bedspread(bcx - hw_, bcx + hw_, bcy - hl, bcy + hl - 52, 55.8, seed=12, mat="blanket_mat", hang=48)
     pillow(bx0 + 34, (by0 + by1) / 2.0, 55.5, 44, 62, 13, 7, yaw=90, dent=2.5)
     # the TV on a low cabinet against the partition, still on
     TVX = L + 400
@@ -757,13 +769,14 @@ def office():
     mug_at(TVX - 81, BY1 - 74, 45)
     ashtray(TVX - 73, BY1 - 62, 45, lit=False)
     # floor lamp by the chair, on low
-    frustum(TVX + 60, BY1 - 40, 5, 7.5, 17, 17, "brass_mat", sides=24)            # weighted base
-    frustum(TVX + 60, BY1 - 40, 7.5, 13, 16, 5, "brass_mat", sides=24)
-    frustum(TVX + 60, BY1 - 40, 13, 17, 3.2, 2.2, "brass_mat", sides=16)
-    lathe(TVX + 60, BY1 - 40, [(16, 1.6), (150, 1.4), (151, 2.4)], "brass_mat", sides=16)
-    frustum(TVX + 60, BY1 - 40, 140, 165, 20, 14, "glow_lamp_mat", sides=20, open_ends=True)
-    frustum(TVX + 60, BY1 - 40, 140.3, 164.7, 19.4, 13.4, "glow_lamp_mat", sides=20, open_ends=True, inside=True)
-    light("light_office_back_lamp", TVX + 60, BY1 - 40, 150, [1.0, 0.72, 0.45], 2.5, 380, room=True)
+    FLX, FLY = TVX + 64, BY1 - 118                       # on the floor beside the armchair
+    frustum(FLX, FLY, 6.8, 9, 17, 17, "brass_mat", sides=24)            # weighted base (on the rug)
+    frustum(FLX, FLY, 9, 14, 16, 5, "brass_mat", sides=24)
+    frustum(FLX, FLY, 14, 18, 3.2, 2.2, "brass_mat", sides=16)
+    lathe(FLX, FLY, [(17, 1.6), (150, 1.4), (151, 2.4)], "brass_mat", sides=16)
+    frustum(FLX, FLY, 140, 165, 20, 14, "glow_lamp_mat", sides=20, open_ends=True)
+    frustum(FLX, FLY, 140.3, 164.7, 19.4, 13.4, "glow_lamp_mat", sides=20, open_ends=True, inside=True)
+    light("light_office_back_lamp", FLX, FLY, 150, [1.0, 0.72, 0.45], 2.5, 380, room=True)
     # kitchenette on the right of the back wall: base cabinets, counter, hot plate with a pan,
     # a kettle, a shelf with cans and a box of crackers
     KX0, KX1 = R - 230, R - 120
