@@ -687,7 +687,7 @@ def streetlight(x, y):
 
 # ---------- the lot outside ----------
 
-LOT = (-4000, 4000, -3800, -1700)        # x0, x1, y0 (road side), y1 (walkway edge)
+LOT = (-2900, 4150, -3500, -1700)        # x0, x1, y0 (road side), y1 (walkway edge): the motel's footprint (Nov 9)
 rng = random.Random(41)                  # same cracks and stains every build
 
 
@@ -736,13 +736,25 @@ def parking_lot():
         if rng.random() < 0.25:                              # worn: only part of the line left
             y_end = y_top - rng.uniform(150, 400)
         flat(x - 6, x + 6, y_end, y_top, "paint_mat")
-    # a few stalls by the office, and a painted arrow toward the exit
-    for k in range(4):
-        x = 2800 + k * 260
-        flat(x - 6, x + 6, -2700, -2150, "paint_mat")
-    seg((1200, -3050), (1200, -3350), 14, "paint_mat")
-    seg((1200, -3350), (1150, -3270), 14, "paint_mat")
-    seg((1200, -3350), (1250, -3270), 14, "paint_mat")
+    # a second row of stalls along the road side, facing the rooms across the drive aisle, with
+    # their wheel stops by the curb
+    for k in range(13):
+        x = X0 + k * 250
+        y_top, y_end = -2950, -3450
+        if rng.random() < 0.3:
+            y_top = y_end + rng.uniform(150, 400)
+        flat(x - 6, x + 6, y_end, y_top, "paint_mat")
+        if k < 12:
+            bevel_box(x + 125 - 85, x + 125 + 85, -3412, -3388, LOT_Z + 3.4, LOT_Z + 15, "stop_mat", r=3.0)
+    # three stalls in front of the office (clear of its door)
+    for x in (3300, 3550, 3800, 4050):
+        flat(x - 6, x + 6, -2350, -1800, "paint_mat")
+    # arrows: in at the west driveway, out at the east one
+    for (ax, y0_, y1_) in ((-2000, -3420, -3050), (3000, -3050, -3420)):
+        seg((ax, y0_), (ax, y1_), 14, "paint_mat")
+        d_ = 1 if y1_ > y0_ else -1
+        seg((ax, y1_), (ax - 50, y1_ - d_ * 80), 14, "paint_mat")
+        seg((ax, y1_), (ax + 50, y1_ - d_ * 80), 14, "paint_mat")
     # cracks, patches and oil stains are painted into the asphalt texture (tools/make_asphalt.py)
 
 
@@ -831,8 +843,9 @@ def lot_dressing():
     parking_lot()
     parking_lot_detail()
     road_lines()
-    lot_lamp(-3500, -2500, True)
-    lot_lamp(-150, -3650, True)                       # the middle one: on (Nov 9)
+    grounds()                                          # maya/grounds.py: slab, curbs, driveways, verges, road side
+    lot_lamp(-2700, -3300, True)
+    lot_lamp(-150, -3330, True)                       # the middle one: on (Nov 9)
     payphone(2930, -1830)
     dumpster(3960, -1150)
     # your car is the Fab "Low-Poly Classic Car" (unreal/place_car.py puts it in front of Room 104);
@@ -846,6 +859,8 @@ exec(open(os.path.join(ROOT, "maya", "room_props.py"), encoding="utf-8").read())
 exec(open(os.path.join(ROOT, "maya", "exterior_props.py"), encoding="utf-8").read())
 # the office inside (replaces office() above) and the other rooms' stories
 exec(open(os.path.join(ROOT, "maya", "motel_interiors.py"), encoding="utf-8").read())
+# the lot's slab and curbs, driveways, verges, road shoulders, guardrail, power line
+exec(open(os.path.join(ROOT, "maya", "grounds.py"), encoding="utf-8").read())
 
 
 # ---------- build and export ----------
@@ -861,7 +876,7 @@ def build():
     rooftop_sign()
     office()
     office_trim()
-    streetlight(1500, -3500)
+    streetlight(1500, -3700)                          # on the verge between the lot and the road
     lot_dressing()
     meshes = []
     for name, parts in (("set_motel", PARTS), ("set_motel_rooms", ROOM_PARTS)):

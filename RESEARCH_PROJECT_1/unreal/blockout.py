@@ -128,7 +128,7 @@ def sign_text(x, y, z):
 def road_and_lot():
     asphalt = color("Asphalt", (0.03, 0.03, 0.03))
     strip("Road", "Motel", (-20000, -4500), (20000, -4500), 900, asphalt)
-    box("ParkingLot", "Motel", 0, -2600, 0, 8000, 2400, 3, asphalt)
+    # (the parking lot's slab, curbs and driveways are built in maya/grounds.py now)
     # (the fence behind the motel and its gate are built in maya/make_trail.py now)
     if not unreal.EditorAssetLibrary.does_asset_exist(MOTEL_SET):      # the Maya motel has the real car
         box("Car_Player", "Motel", -1800, -2600, 0, 450, 190, 140, color("Car", (0.1, 0.12, 0.15)))

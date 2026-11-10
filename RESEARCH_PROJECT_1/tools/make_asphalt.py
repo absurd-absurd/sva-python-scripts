@@ -4,7 +4,7 @@ stalls, an oil stain under every stall, branching cracks and crumbling alligator
 repair patches with crisp edges, a wet puddle, dirt and grit along the curb. Plus the car's plate.
 
 Run with normal Python (needs Pillow):  python tools/make_asphalt.py
-Writes export/pic_lot_asphalt.png (2048 x 538: the lot, x -4000..4000, y -3800..-1700),
+Writes export/pic_lot_asphalt.png (2048 wide: the lot, LOT below, the same as maya/make_motel.py),
 export/pic_road_asphalt.png (2048 x 116: the road by the motel, x -8000..8000, 900 wide) and
 export/pic_car_plate.png. maya/exterior_props.py lays them on the ground as pic_* planes.
 """
@@ -15,7 +15,8 @@ from PIL import Image, ImageDraw, ImageFilter, ImageChops
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "export")
-LOT = (-4000, 4000, -3800, -1700)
+LOT = (-2900, 4150, -3500, -1700)              # must match maya/make_motel.py
+DRIVES = ((-2300, -1700), (2700, 3300))
 X0, ROOM_W, FRONT, WALK = -2500, 500, -1400, 300
 
 
@@ -82,7 +83,8 @@ def alligator(d, cx, cy, r, rng):
 
 def lot():
     rng = random.Random(23)
-    W, H = 2048, 538
+    W = 2048
+    H = int(round(W * (LOT[3] - LOT[2]) / float(LOT[1] - LOT[0])))
     sx = W / (LOT[1] - LOT[0])
     sy = H / (LOT[3] - LOT[2])
     to_px = lambda X, Y: ((X - LOT[0]) * sx, (LOT[3] - Y) * sy)       # image top = walkway edge
@@ -90,23 +92,24 @@ def lot():
     # tyre wear: smooth darker, slightly polished lanes (the drive lane and into each stall)
     wear = Image.new("L", (W, H), 0)
     d = ImageDraw.Draw(wear)
-    lane_y = to_px(0, -2950)[1]
+    lane_y = to_px(0, -2640)[1]                                      # the drive aisle between the rows
     d.rectangle([0, lane_y - 40, W, lane_y + 40], fill=110)
     for k in range(12):
         cx = X0 + k * ROOM_W / 2 + 125
         for side in (-55, 55):
             a = to_px(cx + side, -1900)
-            b = to_px(cx + side, -2900)
+            b = to_px(cx + side, -3400)
             d.line([a, b], fill=120, width=14)
-    ent = to_px(1200, -3800)
-    d.polygon([(ent[0] - 70, H), (ent[0] + 70, H), (ent[0] + 50, lane_y), (ent[0] - 50, lane_y)], fill=120)
+    for a_, b_ in DRIVES:                                            # in and out at the driveways
+        p, q = to_px(a_ + 60, LOT[2]), to_px(b_ - 60, LOT[2])
+        d.polygon([(p[0], H), (q[0], H), (q[0] - 20, lane_y), (p[0] + 20, lane_y)], fill=120)
     wear = wear.filter(ImageFilter.GaussianBlur(10))
     im = stamp(im, wear, (30, 30, 31), 0.85)
     # oil stains under every stall, plus a few strays
     oil = Image.new("L", (W, H), 0)
     d = ImageDraw.Draw(oil)
-    for k in range(12):
-        cx, cy = to_px(X0 + k * ROOM_W / 2 + 125 + rng.uniform(-25, 25), -2120 + rng.uniform(-40, 40))
+    for k in range(24):                                              # both rows of stalls
+        cx, cy = to_px(X0 + (k % 12) * ROOM_W / 2 + 125 + rng.uniform(-25, 25), (-2120 if k < 12 else -3200) + rng.uniform(-40, 40))
         for _ in range(rng.randint(2, 5)):
             r = rng.uniform(4, 14)
             ox, oy = rng.uniform(-10, 10), rng.uniform(-8, 8)

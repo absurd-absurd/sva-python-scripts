@@ -684,3 +684,15 @@ Fourth fix list (Nov 9):
 ![Lamp clear of the calendar, dark car trim](2026-11-09_lamp_clear_dark_trim.png)
 
 Fifth fix list (Nov 9): the back-room floor lamp covered the calendar, so it moved over toward the TV wall and stays by the bed. The abandoned car's trim (window outline, mirrors, wheel hubs) was too bright in white, so it's now just off black and barely shows against the black paint. A colour test (setting the trim slots to red) showed which parts are trim.
+
+## 2026-11-09: the ground, the lot, and filling the empty spaces
+
+![Before](2026-11-09_grounds_before.png)
+![After](2026-11-09_grounds_after.png)
+
+Feedback: the road and parking lot layout were weird, and the scene had big empty spaces. It should feel filled in so that wherever you run, you're still in the scene. You picked forest right up to the road on the far side, and thick trees plus fog at the edges.
+- **Parking lot:** it was a huge black rectangle well past both ends of the motel, sitting on bare dirt. Now it covers just the motel's footprint (maya/grounds.py, LOT in make_motel.py). It has a second row of stalls along the road side facing the rooms across a drive aisle, with wheel stops; stalls in front of the office clear of its door; in/out arrows; curbs on every side; and two driveways out to the road. The painted asphalt texture was redrawn to match (tools/make_asphalt.py), and the old grey blockout slab is gone.
+- **Roadside:** grass verges with weeds between the lot and the road, gravel shoulders, a ditch on the far side, a dented galvanized guardrail with a section missing, and wooden power poles every 35 m with three sagging wires and a service drop to the office. The lamps moved onto the lot edge and the verge.
+- **Forest fill:** 2,535 trees, bushes, dead shrubs, stumps, logs and rocks fill all the empty ground: across the road, both sides of the motel, and down both edges of the map past the scattered woods. They keep clear of the road, lot, motel, trail and lake (tools/make_fill.py writes export/fill.json, unreal/fill_forest.py plants it). Hidden walls behind the outermost trees stop you wandering off; the road disappears into fog both ways.
+- **Map:** shows the new lot outline and the new forest.
+- The grass verges first rendered as a glowing lime green under the flashlight; they're a dark, dead green now.

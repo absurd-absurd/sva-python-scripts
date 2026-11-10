@@ -281,7 +281,7 @@ def parking_lot_detail():
         bevel_box(cx - 85, cx + 85, FRONT - WALK - 162, FRONT - WALK - 138, LOT_Z + 3.4, LOT_Z + 15, "stop_mat", r=3.0)
         for s in (-55, 55):
             frustum(cx + s, FRONT - WALK - 150, LOT_Z + 15, LOT_Z + 16.2, 1.6, 1.6, "metal_mat", sides=8)
-    bevel_box(LOT[0], LOT[1], LOT[2] - 16, LOT[2] + 1, 0, 16, "concrete_mat", r=3.0)        # curb
+    # (the curbs are in maya/grounds.py now: open at the driveways)
     # storm drain by the curb and a manhole in the lot
     gx, gy = 600, LOT[2] + 40
     bevel_box(gx - 45, gx + 45, gy - 25, gy + 25, LOT_Z + 3.4, LOT_Z + 4.6, "metal_mat", r=0.8)

@@ -7,6 +7,7 @@
 Everything on it comes from the same data the level is built from:
   layout.json     trail, woods area, clearings (tower, cabins) and the map's world bounds
   export/scatter.json   every tree/rock the Maya scatter tool placed (small ink marks)
+  export/fill.json      the forest filling the ground round the motel (tools/make_fill.py)
   the motel/office/road numbers below match blockout.py and maya/make_motel.py
 The hunting shack and the rusted car are left off on purpose: they're not on a tourist map.
 
@@ -111,6 +112,13 @@ def trees(d):
             d.line([(px, py - r), (px - r, py + r), (px + r, py + r), (px, py - r)], fill=FADED, width=2)
         elif "rock" in prop:
             d.ellipse([px - 3, py - 3, px + 3, py + 3], fill=FADED)
+    fill_path = os.path.join(ROOT, "export", "fill.json")             # the forest round the motel (tools/make_fill.py)
+    if os.path.exists(fill_path):
+        for it in json.load(open(fill_path))["items"]:
+            if "tree" in it["asset"]:
+                px, py = to_px(it["x"], it["y"])
+                r = 7 if "dead" in it["asset"] else 9
+                d.line([(px, py - r), (px - r, py + r), (px + r, py + r), (px, py - r)], fill=FADED, width=2)
 
 
 def trail(d):
@@ -127,7 +135,7 @@ def town(d):
     # the road and the motel
     rect(d, B["x_min"], B["x_max"], -4950, -4050, fill=(150, 140, 122))
     label(d, "OLD LAKE ROAD", -6000, -4500, 48)
-    rect(d, -4000, 4000, -3800, -1450, outline=FADED, width=3)               # parking lot
+    rect(d, -2900, 4150, -3500, -1450, outline=FADED, width=3)               # parking lot
     rect(d, -2500, 500, -1400, -700, fill=(120, 96, 76))                     # room row
     for i in range(1, 6):
         x = -2500 + i * 500
