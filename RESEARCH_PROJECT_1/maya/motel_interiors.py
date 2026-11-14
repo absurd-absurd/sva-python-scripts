@@ -241,9 +241,16 @@ def guest_book(x, y, z, yaw=0):
         tube((x, y - D / 2, z + 0.2), (x, y + D / 2, z + 0.2), 1.2, "ledger_cover_mat", sides=12)   # spine
         def h(u):                                                                    # page surface height
             return z + 0.45 + 2.2 * (1 - math.exp(-abs(u) * 9)) - 0.5 * max(0.0, abs(u) - 0.85) / 0.15
-        for s_ in (-1, 1):                                                            # page block edges
-            a_, b_ = (x - W / 2 + 0.6, x - 2.0) if s_ < 0 else (x + 2.0, x + W / 2 - 0.6)
-            box(a_, b_, y - D / 2 + 0.6, y + D / 2 - 0.6, z + 0.45, z + 2.3, "paper_mat")
+        # the page block: its top follows the pages' curve just under the printed spread, so it
+        # never pokes through near the gutter
+        pb = cmds.polyCube(w=W - 1.6, h=1, d=D - 1.6, sx=30, sy=1, sz=1, ch=False)[0]
+        pts = []
+        for vx, vy, vz in _verts(pb):
+            u = vx / ((W - 1.2) / 2.0)
+            pts.append((vx, (h(u) - 0.25) if vy > 0 else z + 0.45, vz))
+        _set_verts(pb, pts)
+        cmds.move(x, 0, y, pb, relative=True)
+        keep(pb, "paper_mat")
         c = cmds.polyPlane(w=W - 1.2, h=D - 1.2, sx=30, sy=1, ch=False)[0]
         pts = []
         for vx, vy, vz in _verts(c):

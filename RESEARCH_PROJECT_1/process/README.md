@@ -909,3 +909,7 @@ Feedback: make the cigarettes and ashtrays, the lobby sofa and the open register
 - **Lobby sofa**: rebuilt like the rooms' armchairs: boxed base with a pleated skirt, rolled arms that are part of the body, three piped seat cushions (the middle one sagging), a rolled back with three tufted cushions, tapered legs.
 - **Guest register**: cloth-covered boards with a rounded spine, page blocks that rise from the gutter, and the spread printed as a real ledger (tools/make_guest_book.py -> pic_guest_book: GUEST REGISTER, DATE / NAME / ADDRESS / ROOM, guests in different handwriting since October, tonight's line started for 106), a red ribbon.
 - **Getting into the back room**: tested by sweeping the player's capsule (35 cm radius) from the counter flap to the back room. Four things were in the way: the swivel chair (now tucked into the desk's knee hole), papers overhanging the shelf behind the counter (shelf 20 cm deep now, papers lying flat on it), the back-room door standing open into the office across its own doorway (now swung open into the back room), and the coat rack right behind the doorway (moved into the corner). The sweep is clear now.
+
+![The register's pages, nothing cutting through](2026-11-14_register_fixed.png)
+
+Feedback: a grey shape cut off part of the register's pages and writing. It was the page block: a flat-topped box, while the printed pages dip toward the gutter, so near the middle the box stood above the pages. The page block is now a mesh whose top follows the same curve, just under the printed spread.
