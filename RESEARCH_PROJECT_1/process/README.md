@@ -893,3 +893,9 @@ Feedback: the Bible should look like a real one, with a cross and "Holy Bible"; 
 ![The duffel bag](2026-11-14_room106_duffel.png)
 
 Feedback: make the duffel bag more realistic (it was one soft lump with a rod on top). Now duffel_bag(): an olive canvas body that slumps onto a flat base and sags a little on top, darker end panels, dark webbing straps running up both sides into two carry handles with a grip wrap, the zip open along the top with clothes showing, metal D-rings at the ends and the shoulder strap lying loose on the floor. (Gotcha: building the body by swapping the cylinder's axes turned it inside out, so it rendered as an open trough until its normals were reversed.)
+
+### Cabin 2's tree
+
+![Inside cabin 2, the tree gone](2026-11-14_cabin2_no_tree.png)
+
+Found on the sign-off tour: a tree trunk grew through the inside of cabin 2 and leaves poked onto its table. Cause: the fill forest (tools/make_fill.py) kept out of the scattered woods' box but not out of the clearings, and the cabins sit just past that box's north edge. It now leaves every clearing empty (trees by the clearing's radius + 1.5 m for their crowns), filtered at the end so the rest of the forest is unchanged. That took out 13 pieces: the two trees in and against cabin 2, a tree inside cabin 1, trees crowding cabins 1 and 3 and the front of the boathouse, and a few shrubs. Only those actors were removed in the level; the map was redrawn.

@@ -70,6 +70,13 @@ def allowed(x, y):
     return True
 
 
+def in_clearing(item):
+    """Inside a clearing (cabins, boathouse, shack, car, tower): trees keep their crowns 1.5 m
+    further off, so nothing grows through a building."""
+    margin = 150 if item["asset"].startswith("tree_") else 0
+    return any(math.hypot(item["x"] - c["x"], item["y"] - c["y"]) < c["r"] + margin for c in LAYOUT["clearings"])
+
+
 def fill(seed=19):
     rng = random.Random(seed)
     out = []
@@ -95,7 +102,8 @@ def fill(seed=19):
                                 "yaw": round(rng.uniform(0, 360), 1), "scale": round(rng.uniform(0.6, 1.6), 2)})
             x += cell
         y += cell
-    return out
+    # filtered at the end, so the rest of the forest stays exactly as it was
+    return [it for it in out if not in_clearing(it)]
 
 
 if __name__ == "__main__":
