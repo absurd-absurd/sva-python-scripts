@@ -21,7 +21,7 @@ BLD_MATS = {
     "sleeping_bag_lining_mat": (0.34, 0.12, 0.08), "zipper_mat": (0.05, 0.05, 0.05), "wool_mat": (0.2, 0.19, 0.17),
     "dark_leather_mat": (0.09, 0.06, 0.04), "algae_mat": (0.06, 0.09, 0.05), "paint_can_mat": (0.3, 0.29, 0.26),
     "gas_can_mat": (0.34, 0.05, 0.03), "net_mat": (0.22, 0.2, 0.15), "float_mat": (0.45, 0.36, 0.2),
-    "bottle_mat": (0.14, 0.08, 0.03),
+    "bottle_mat": (0.14, 0.08, 0.03), "can_label_mat": (0.42, 0.18, 0.1), "enamel_mat": (0.2, 0.3, 0.4),
 }
 
 BH_X, BH_Y = -3500.0, 14450.0          # boathouse: land wall at BH_Y - 500, lake wall at BH_Y + 650
@@ -115,24 +115,38 @@ def frame(axis, fixed, a, b, zlo, zhi, out, mat="plank_dark_mat", t=4.0, w=9.0):
 
 
 def plank_boards_over(axis, fixed, a, b, zlo, zhi, out, seed):
-    """Boards nailed across an opening (boarded up), slightly crooked, with a dark backing so
-    you never see into an empty house."""
+    """Boards nailed across an opening (boarded up). Outside (toward out): crooked boards that
+    overlap so no gap shows; inside: two or three more boards nailed from that side, so from
+    inside it reads as boarded too (it used to be a flat dark panel), with nail heads."""
     r = random.Random(seed)
-    if axis == "x":
-        bevel_box(a, b, fixed - 1, fixed + 1, zlo, zhi, "plank_dark_mat", r=0.3)
-    else:
-        bevel_box(fixed - 1, fixed + 1, a, b, zlo, zhi, "plank_dark_mat", r=0.3)
-    n = max(2, int((zhi - zlo) / 34))
-    for k in range(n):
-        z = zlo + (k + 0.5) * (zhi - zlo) / n + r.uniform(-4, 4)
-        L = (b - a) + 26
-        c = (a + b) / 2.0 + r.uniform(-5, 5)
-        tilt = r.uniform(-9, 9)
+    sgn = 1 if out > 0 else -1
+    def board(off, c, z, L, tilt, depth):
         if axis == "x":
-            rbevel(c, fixed + out, z, L, 2.5, 17, "plank_grey_mat", r=0.5, tilt_x=tilt)
+            rbevel(c, fixed + off, z, L, depth, 17, "plank_grey_mat" if r.random() > 0.3 else "plank_dark_mat", r=0.5, tilt_x=tilt)
         else:
-            rbevel(fixed + out, c, z, 2.5, L, 17, "plank_grey_mat", r=0.5, tilt_y=tilt)
-
+            rbevel(fixed + off, c, z, depth, L, 17, "plank_grey_mat" if r.random() > 0.3 else "plank_dark_mat", r=0.5, tilt_y=tilt)
+    def nail(off, c, z):
+        if axis == "x":
+            sphere(c, fixed + off, z, 0.6, "rusty_tool_mat", sides=6, scale=(1, 0.4, 1))
+        else:
+            sphere(fixed + off, c, z, 0.6, "rusty_tool_mat", sides=6, scale=(0.4, 1, 1))
+    n = int(math.ceil((zhi - zlo) / 14.0)) + 1
+    for k in range(n):                                   # outside: overlapping, alternately proud
+        z = zlo + 4 + k * (zhi - zlo - 8) / max(1, n - 1)
+        L = (b - a) + 26
+        c = (a + b) / 2.0 + r.uniform(-4, 4)
+        off = out + sgn * (0.6 if k % 2 else 0.0)
+        board(off, c, z, L, r.uniform(-6, 6), 2.4)
+        for e in (-1, 1):
+            nail(off + sgn * 1.3, c + e * (L / 2 - 5), z)
+    inner = -sgn * 3.6
+    for k in range(3 if zhi - zlo > 60 else 2):          # inside: a few boards with gaps
+        z = zlo + 12 + k * (zhi - zlo - 24) / 2.0
+        L = (b - a) + 18
+        c = (a + b) / 2.0 + r.uniform(-3, 3)
+        board(inner, c, z, L, r.uniform(-8, 8), 2.4)
+        for e in (-1, 1):
+            nail(inner - sgn * 1.3, c + e * (L / 2 - 4), z)
 
 def plank_door(width, height, name, lock=False):
     """A plank door built at its hinge (x 0 .. width, outside facing +y): vertical boards, a Z
@@ -249,26 +263,354 @@ def fitted_sheet(cx, cy, z_bot, w, L, h, seed):
           sag=-0.6, smooth=2, seed=seed + 1, div=(4, 2, 8))
 
 
+def polyline(points, r0, r1, mat, sides=10):
+    """A tube along a polyline whose radius runs r0 -> r1, with round joints."""
+    n = len(points) - 1
+    for i, (a, b) in enumerate(zip(points, points[1:])):
+        rr = r0 + (r1 - r0) * (i + 0.5) / n
+        tube(a, b, rr, mat, sides=sides)
+        if i < n - 1:
+            sphere(*b, rr, mat, sides=sides)
+
+
+def chain_link(px, py, pz, yaw, upright, mat="rusty_tool_mat"):
+    """One oval chain link lying along yaw (degrees), flat or standing on edge."""
+    t = cmds.polyTorus(r=1.7, sr=0.45, sx=14, sy=6, ch=False)[0]
+    cmds.scale(1.55, 1, 1, t)
+    if upright:
+        cmds.rotate(90, 0, 0, t)
+    cmds.rotate(0, -yaw, 0, t, relative=True, objectSpace=False)
+    cmds.move(px, pz, py, t)
+    return keep(t, mat)
+
+
+def chain(points, mat="rusty_tool_mat", pitch=4.2):
+    """A chain of alternating links along a polyline (points on the floor or hanging)."""
+    k = 0
+    for (x0, y0, z0), (x1, y1, z1) in zip(points, points[1:]):
+        L = math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2 + (z1 - z0) ** 2)
+        yaw = math.degrees(math.atan2(y1 - y0, x1 - x0))
+        n = max(1, int(L / pitch))
+        for i in range(n):
+            t = (i + 0.5) / n
+            chain_link(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, z0 + (z1 - z0) * t + (0.4 if k % 2 else 1.4), yaw, k % 2 == 0, mat)
+            k += 1
+
+
+def admiralty_anchor(x, y, z, yaw):
+    """An old fisherman's (admiralty) anchor lying on the boards: a tapered shank, the crown,
+    two curved arms ending in spade-shaped flukes with pointed bills, the stock through the top
+    of the shank, the ring - with its chain running off in a loose heap."""
+    with Moved(x, y, yaw):
+        polyline([(x, y - 32, z + 2.4), (x, y, z + 2.6), (x, y + 30, z + 2.6)], 2.4, 1.7, "rusty_tool_mat", sides=12)   # shank
+        sphere(x, y - 32, z + 2.4, 3.0, "rusty_tool_mat", sides=12)                                                    # crown
+        for s_ in (-1, 1):
+            arm = [(x, y - 32, z + 2.4), (x + s_ * 9, y - 33, z + 2.4), (x + s_ * 17, y - 28, z + 2.4), (x + s_ * 22, y - 19, z + 2.4)]
+            polyline(arm, 2.2, 1.6, "rusty_tool_mat", sides=12)
+            # the spade fluke: a flat blade on the arm's end, broad at the base, pointed at the bill
+            rsoft(x + s_ * 21.5, y - 15, z + 2.4, 9.5, 14, 1.6, "rusty_tool_mat", jitter=0.1, smooth=2, seed=7 + s_,
+                  yaw=-s_ * 28, div=(3, 1, 4))
+            rsoft(x + s_ * 22.5, y - 10, z + 2.4, 5.5, 7, 1.4, "rusty_tool_mat", jitter=0.1, smooth=2, seed=9 + s_,
+                  yaw=-s_ * 28, div=(2, 1, 3))
+            sphere(x + s_ * 23, y - 9, z + 2.4, 1.4, "rusty_tool_mat", sides=8, scale=(1, 2.2, 0.7))   # bill
+        polyline([(x - 24, y + 22, z + 4.4), (x + 24, y + 22, z + 4.4)], 1.6, 1.6, "rusty_tool_mat", sides=10)   # stock
+        for s_ in (-1, 1):
+            sphere(x + s_ * 24, y + 22, z + 4.4, 2.4, "rusty_tool_mat", sides=10)
+        t = cmds.polyTorus(r=5, sr=1.0, sx=18, sy=8, ch=False)[0]                                  # ring, lying flat
+        cmds.move(x, z + 1.0, y + 36, t)
+        keep(t, "rusty_tool_mat")
+        chain([(x, y + 41, z), (x + 6, y + 52, z), (x + 16, y + 56, z), (x + 22, y + 48, z), (x + 14, y + 42, z + 1.2),
+               (x + 8, y + 50, z + 2.4), (x + 18, y + 60, z + 1.0)])
+
+
+def rope_coil(x, y, z, r_out, turns, rope_r, mat, seed=0):
+    """A rope coiled flat on the floor in loose loops: a spiral of tube segments, the loops
+    stacking a little where they cross."""
+    rng = random.Random(seed)
+    pts = []
+    n = int(turns * 24)
+    for i in range(n + 1):
+        t = i / 24.0
+        a = t * 2 * math.pi
+        rr = r_out - (r_out * 0.45) * (i / float(n)) + rng.uniform(-0.6, 0.6)
+        zz = z + rope_r + (rope_r * 1.6) * (t % 1.0 > 0.92) + 0.15 * math.sin(a * 3)
+        pts.append((x + rr * math.cos(a), y + rr * math.sin(a), zz))
+    polyline(pts, rope_r, rope_r, mat, sides=8)
+    return pts[-1], pts[0]
+
+
+def sag_rope(p0, p1, sag, rope_r, mat, n=12):
+    """A rope hanging between two points with a catenary-like sag."""
+    pts = []
+    for i in range(n + 1):
+        t = i / float(n)
+        pts.append(tuple(p0[k] + (p1[k] - p0[k]) * t for k in range(3)))
+        pts[-1] = (pts[-1][0], pts[-1][1], pts[-1][2] - sag * 4 * t * (1 - t))
+    polyline(pts, rope_r, rope_r, mat, sides=8)
+
+
+def life_ring(x, y, z, wall_dir=-1):
+    """A cork life ring hanging on a nail, faced away from the wall: a round torus in orange
+    with four white bands, its grab line looped round it and seized at four points."""
+    R, rr = 29.0, 7.0
+    n = 32
+    def at(k, rad, off=0.0):
+        a = 2 * math.pi * k / n
+        return (x + wall_dir * off, y + rad * math.cos(a), z + rad * math.sin(a))
+    for k in range(n):
+        mat = "sheet_mat" if (k % 8) in (2, 3) else "life_ring_mat"
+        tube(at(k, R), at(k + 1, R), rr, mat, sides=16)
+        sphere(*at(k + 1, R), rr, mat, sides=16)
+    for k in range(4):                                                           # grab line seizings
+        q = at(k * 8 + 2.5, R)
+        t = cmds.polyTorus(r=rr + 0.6, sr=0.55, sx=14, sy=6, ch=False)[0]
+        a = 2 * math.pi * (k * 8 + 2.5) / n
+        cmds.rotate(math.degrees(a), 0, 90, t)
+        cmds.move(q[0], q[2], q[1], t)
+        keep(t, "rope_mat")
+    for k in range(4):                                                           # the line between them, sagging
+        a0, a1 = (k * 8 + 2.5), ((k + 1) * 8 + 2.5)
+        pts = []
+        for i in range(7):
+            kk = a0 + (a1 - a0) * i / 6.0
+            pts.append(at(kk, R + rr + 2.5 + 3 * math.sin(math.pi * i / 6.0), wall_dir * -1.0))
+        polyline(pts, 0.7, 0.7, "rope_mat", sides=6)
+    tube((x - wall_dir * 2, y, z + R + rr + 2), (x + wall_dir * 5, y, z + R + rr + 3), 0.6, "rusty_tool_mat", sides=6)   # nail
+
+
+def fishing_net(x_wall, nails, drop, wall_dir=-1, seed=0):
+    """A fishing net hung from nails on a wall (along y): a headrope with cork floats sagging
+    between the nails, a diamond mesh hanging in folds below it, a leaded footrope at the bottom."""
+    rng = random.Random(seed)
+    for (ya, za), (yb, zb) in zip(nails, nails[1:]):
+        cols, rows = 14, 9
+        grid = []
+        for r_ in range(rows + 1):
+            row = []
+            for c_ in range(cols + 1):
+                t = c_ / float(cols)
+                zz = za + (zb - za) * t - 12 * math.sin(math.pi * t) - r_ * drop / rows * (1 + 0.25 * math.sin(math.pi * t))
+                fold = 2.2 * math.sin(t * 9 + r_ * 0.5) * (r_ / rows)
+                row.append((x_wall + wall_dir * (1.5 + abs(fold) + r_ * 0.25), ya + (yb - ya) * t + (r_ % 2) * (yb - ya) / cols / 2.0, zz))
+            grid.append(row)
+        polyline(grid[0], 0.55, 0.55, "rope_mat", sides=5)                          # headrope
+        polyline(grid[-1], 0.6, 0.6, "rope_mat", sides=5)                           # footrope
+        for r_ in range(rows):                                                      # the diamond mesh
+            for c_ in range(cols):
+                a_, b_ = grid[r_][c_], grid[r_ + 1][c_]
+                c2 = grid[r_ + 1][c_ + 1] if r_ % 2 == 0 else grid[r_ + 1][max(0, c_ - 1)]
+                tube(a_, b_, 0.22, "net_mat", sides=3)
+                tube(a_, c2, 0.22, "net_mat", sides=3)
+        for c_ in range(1, cols, 3):                                                # cork floats on the headrope
+            p_ = grid[0][c_]
+            frustum(p_[0] + wall_dir * 1.5, p_[1], p_[2] - 3.5, p_[2] + 3.5, 3.0, 3.0, "float_mat", sides=10)
+        for c_ in range(0, cols + 1, 2):                                            # lead weights on the footrope
+            p_ = grid[-1][c_]
+            sphere(p_[0], p_[1], p_[2], 1.4, "stove_mat", sides=8, scale=(1, 1.6, 1))
+    for yy, zz in nails:
+        tube((x_wall - wall_dir * 1, yy, zz), (x_wall + wall_dir * 4, yy, zz), 0.5, "rusty_tool_mat", sides=4)
+
+
+def cantilever_toolbox(tx, ty, z):
+    """An open red cantilever toolbox: the box with a rolled lip, two tiers of trays swung out on
+    their arms, the carry handle laid flat, a latch; screwdrivers, a wrench, pliers inside."""
+    bevel_box(tx - 23, tx + 23, ty - 10, ty + 10, z, z + 16, "toolbox_mat", r=1.4, seg=3)
+    bevel_box(tx - 21.5, tx + 21.5, ty - 8.5, ty + 8.5, z + 12, z + 16.3, "stove_mat", r=0.6)       # dark inside
+    for s_ in (-1, 1):
+        for tier, (dy, dz) in enumerate(((13, 17.5), (22, 23))):
+            yy = ty + s_ * dy
+            bevel_box(tx - 22, tx + 22, yy - 5, yy + 5, z + dz, z + dz + 5.5, "toolbox_mat", r=0.8, seg=2)
+            bevel_box(tx - 20.8, tx + 20.8, yy - 3.8, yy + 3.8, z + dz + 3, z + dz + 5.6, "stove_mat", r=0.4)
+            for dx in (-19, 19):                                                   # the arms
+                tube((tx + dx, ty + s_ * (dy - 9), z + dz - 4), (tx + dx, yy - s_ * 3, z + dz + 1.5), 0.5, "metal_mat", sides=6)
+                sphere(tx + dx, ty + s_ * (dy - 9), z + dz - 4, 0.8, "metal_mat", sides=6)
+    tube((tx - 9, ty, z + 16.6), (tx + 9, ty, z + 16.6), 1.0, "dark_leather_mat", sides=8)          # handle, flat
+    for dx in (-9, 9):
+        bevel_box(tx + dx - 1, tx + dx + 1, ty - 1.5, ty + 1.5, z + 15.5, z + 17.2, "metal_mat", r=0.3)
+    bevel_box(tx - 2.5, tx + 2.5, ty - 10.7, ty - 10, z + 11, z + 15.5, "metal_mat", r=0.3)        # latch
+    yy = ty + 22                                                                    # in the top tier
+    for k in range(3):                                                              # screwdrivers
+        frustum(tx - 14 + k * 3.5, yy - 1, z + 28, z + 28.4, 1.2, 1.2, "toolbox_mat" if k != 1 else "enamel_mat", sides=8)
+        tube((tx - 14 + k * 3.5, yy - 2, z + 28.5), (tx - 14 + k * 3.5, yy + 3, z + 28.5), 1.2, "toolbox_mat" if k != 1 else "enamel_mat", sides=8)
+        tube((tx - 14 + k * 3.5, yy + 3, z + 28.5), (tx - 14 + k * 3.5, yy - 9, z + 28.4), 0.3, "metal_mat", sides=5)
+    rbevel(tx + 6, ty - 22, z + 28.8, 15, 1.6, 0.6, "metal_mat", r=0.2, yaw=8)                      # wrench
+    for e in (-1, 1):
+        ring(tx + 6 + e * 8, ty - 22 + e * 1.1, z + 28.8, 1.6, 0.5, "metal_mat", sides=10)
+    for e in (-1, 1):                                                               # pliers
+        tube((tx - 8, ty - 13, z + 23.3), (tx - 2, ty - 13 + e * 2.5, z + 23.3), 0.6, "dark_leather_mat", sides=6)
+
+
+def hand_drill(x, y, z, yaw):
+    """An eggbeater hand drill lying on its side: the frame, the big gear wheel with spokes and
+    a crank handle, the pinion, the side handle, the end knob, the chuck and a bit."""
+    with Moved(x, y, yaw):
+        tube((x - 12, y, z + 2.4), (x + 14, y, z + 2.4), 0.8, "metal_mat", sides=8)                   # frame shaft
+        frustum(x - 16, y, z + 0.2, z + 4.6, 2.4, 2.4, "plank_grey_mat", sides=10)                   # end knob (on its side)
+        t = cmds.polyTorus(r=4.5, sr=0.5, sx=20, sy=6, ch=False)[0]                                  # gear wheel
+        cmds.rotate(90, 0, 0, t)
+        cmds.move(x + 2, z + 2.4 + 0.2, y + 2.6, t)
+        keep(t, "metal_mat")
+        for k in range(4):
+            a = k * math.pi / 2
+            tube((x + 2, y + 2.6, z + 2.6), (x + 2 + 4.3 * math.cos(a), y + 2.6, z + 2.6 + 4.3 * math.sin(a)), 0.35, "metal_mat", sides=4)
+        tube((x + 2 + 4.5, y + 2.6, z + 2.6), (x + 2 + 4.5, y + 7, z + 2.6), 0.4, "metal_mat", sides=6)   # crank
+        frustum(x + 6.5, y + 7, z + 1.4, z + 3.8, 0.9, 0.9, "plank_grey_mat", sides=8)
+        tube((x + 4, y - 0.8, z + 2.4), (x + 4, y - 8, z + 2.0), 1.0, "plank_grey_mat", sides=8)       # side handle
+        frustum(x + 15, y, z + 1.0, z + 3.8, 1.4, 0.9, "metal_mat", sides=10)                         # chuck
+        tube((x + 16, y, z + 2.4), (x + 22, y, z + 2.4), 0.25, "metal_mat", sides=5)                   # bit
+
+
+def bench_vise(vx, vy, z):
+    """A bench vise bolted to the corner of the bench: a swivel base with bolts, the body, a fixed
+    and a sliding jaw with serrated jaw plates, the screw and a T-bar handle with ball ends, the
+    little anvil on the back."""
+    frustum(vx, vy, z, z + 2.2, 8.5, 8.5, "stove_mat", sides=16)
+    for k in range(3):
+        a = k * 2.09 + 0.5
+        frustum(vx + 7 * math.cos(a), vy + 7 * math.sin(a), z + 2.2, z + 3.0, 1.2, 1.2, "metal_mat", sides=6)
+    bevel_box(vx - 7, vx + 6, vy - 6, vy + 6, z + 2.2, z + 10, "stove_mat", r=1.2, seg=2)              # body
+    bevel_box(vx - 12, vx - 6, vy - 5, vy + 5, z + 8, z + 11, "stove_mat", r=0.8)                      # anvil
+    for xx, w_ in ((vx - 1, 3), (vx + 6, 3)):
+        bevel_box(xx, xx + w_, vy - 11, vy + 11, z + 10, z + 20, "stove_mat", r=0.8, seg=2)            # jaws
+    for xx in (vx + 1.9, vx + 6.0):
+        bevel_box(xx, xx + 0.4, vy - 10, vy + 10, z + 14, z + 19.5, "metal_mat", r=0.1)                # jaw plates
+        for k in range(10):
+            bevel_box(xx - 0.05, xx + 0.45, vy - 9.5 + k * 2, vy - 9.1 + k * 2, z + 14, z + 19.5, "stove_mat", r=0.02)
+    bevel_box(vx + 9, vx + 18, vy - 4, vy + 4, z + 10, z + 14, "stove_mat", r=0.8)                      # slide
+    tube((vx + 9, vy, z + 15), (vx + 24, vy, z + 15), 1.0, "metal_mat", sides=10)                      # screw
+    frustum(vx + 24, vy, z + 13.4, z + 16.6, 2.0, 2.0, "metal_mat", sides=10)
+    tube((vx + 25, vy - 10, z + 15), (vx + 25, vy + 7, z + 15), 0.7, "metal_mat", sides=8)              # T bar
+    for dy in (-10, 7):
+        sphere(vx + 25, vy + dy, z + 15, 1.4, "metal_mat", sides=8)
+
+
+def screw_jar(x, y, z):
+    """A glass jar of screws with a ridged tin lid screwed on: screws heaped inside."""
+    frustum(x, y, z, z + 13, 4.6, 4.6, "seeglass_cabin_mat", sides=18, open_ends=True)
+    frustum(x, y, z, z + 0.6, 4.6, 4.6, "seeglass_cabin_mat", sides=18)
+    frustum(x, y, z + 13, z + 14.2, 4.0, 4.0, "seeglass_cabin_mat", sides=18)
+    frustum(x, y, z + 13.6, z + 16.0, 4.5, 4.5, "rusty_tool_mat", sides=24)
+    r = random.Random(int(x + y))
+    for k in range(26):
+        a, rr = r.uniform(0, 6.28), r.uniform(0, 3.4)
+        h_ = 1.0 + min(5.0, (3.6 - rr) * 1.6) * r.random()
+        p0 = (x + rr * math.cos(a), y + rr * math.sin(a), z + 0.8 + h_)
+        d = (r.uniform(-1, 1), r.uniform(-1, 1), r.uniform(-0.4, 0.4))
+        tube(p0, (p0[0] + d[0] * 2, p0[1] + d[1] * 2, p0[2] + d[2] * 2), 0.25, "metal_mat", sides=4)
+        sphere(*p0, 0.45, "metal_mat", sides=5, scale=(1, 1, 0.5))
+
+
+def nail_can(x, y, z):
+    """A coffee can of nails: tin can with rims, ribs and a faded label, nails standing in it."""
+    frustum(x, y, z, z + 17, 7, 7, "can_mat", sides=20, open_ends=True)
+    frustum(x, y, z + 0.4, z + 16.6, 6.7, 6.7, "can_mat", sides=20, open_ends=True, inside=True)
+    frustum(x, y, z + 3.5, z + 13, 7.1, 7.1, "can_label_mat", sides=20, open_ends=True)
+    for zz in (0.5, 16.6):
+        ring(x, y, z + zz, 7.0, 0.35, "can_mat", sides=20)
+    frustum(x, y, z + 1, z + 14.5, 6.6, 6.6, "rusty_tool_mat", sides=20)
+    r = random.Random(int(x * 3 + y))
+    for k in range(18):
+        a, rr = r.uniform(0, 6.28), r.uniform(0, 5.5)
+        p0 = (x + rr * math.cos(a), y + rr * math.sin(a), z + 13)
+        p1 = (p0[0] + r.uniform(-1.5, 1.5), p0[1] + r.uniform(-1.5, 1.5), z + 17 + r.uniform(0, 3))
+        tube(p0, p1, 0.22, "metal_mat", sides=4)
+        frustum(p1[0], p1[1], p1[2], p1[2] + 0.25, 0.6, 0.6, "metal_mat", sides=6)
+
+
+def paint_can(x, y, z, k, dent=0):
+    """A gallon paint can: body with rolled rims, a drip-stained label, the lid rim and a wire bail
+    with a wooden grip lying to one side."""
+    frustum(x, y, z, z + 18, 8, 8, "paint_can_mat", sides=22)
+    for zz in (0.5, 17.6):
+        ring(x, y, z + zz, 8.0, 0.4, "paint_can_mat", sides=22)
+    frustum(x, y, z + 18, z + 18.5, 6.8, 6.8, "rusty_tool_mat", sides=22)
+    ring(x, y, z + 18.5, 6.9, 0.45, "rusty_tool_mat", sides=22)
+    for e in (-1, 1):
+        frustum(x + e * 8.1, y, z + 14.5, z + 15.5, 1.0, 1.0, "metal_mat", sides=6)
+    pts = [(x + 8.2 * math.cos(t), y + 6 * math.sin(t) * 0.3 + 2, z + 15 + 6 * math.sin(t) * 0.25) for t in [math.pi * i / 10.0 for i in range(11)]]
+    for p0, p1 in zip(pts, pts[1:]):
+        tube(p0, p1, 0.2, "metal_mat", sides=4)
+    tube((x - 2.5, y + 2.6, z + 16.6), (x + 2.5, y + 2.6, z + 16.6), 0.8, "plank_grey_mat", sides=8)
+    for d in range(2):                                                               # drips down the side
+        a = 0.6 + d * 1.9 + k
+        rbevel(x + 8.05 * math.cos(a), y + 8.05 * math.sin(a), z + 13.5 - d * 2, 0.4, 1.6, 7 + d * 3,
+               "algae_mat" if k % 2 else "toolbox_mat", r=0.2, yaw=math.degrees(a))
+
+
+def mason_jar(x, y, z, fill_mat=None):
+    """A mason jar: shouldered glass with its screw band and lid, something in it."""
+    lathe(x, y, [(z, 4.2), (z + 0.5, 4.6), (z + 11, 4.6), (z + 13, 3.8), (z + 14.5, 3.6)], "seeglass_cabin_mat", sides=18)
+    frustum(x, y, z + 13.5, z + 16, 3.9, 3.9, "rusty_tool_mat", sides=18)
+    if fill_mat:
+        frustum(x, y, z + 0.5, z + 6, 4.2, 4.2, fill_mat, sides=16)
+
+
+def glass_bottle(x, y, z, h=24.0):
+    """A glass bottle: body, rounded shoulder, a neck with a lip, a cork."""
+    lathe(x, y, [(z, 3.6), (z + 0.6, 4.0), (z + h * 0.6, 4.0), (z + h * 0.72, 3.2), (z + h * 0.8, 1.6), (z + h * 0.97, 1.4),
+                 (z + h, 1.7)], "bottle_mat", sides=16)
+    frustum(x, y, z + h, z + h + 1.6, 1.2, 1.3, "split_wood_mat" if "split_wood_mat" in BLD_MATS else "plank_grey_mat", sides=8)
+
+
+def jerry_can(x, y, z, yaw):
+    """A steel jerry can on its base: pressed X panels on both faces, three handles across the top,
+    the spout cap with its clamp."""
+    with Moved(x, y, yaw):
+        bevel_box(x - 8, x + 8, y - 17, y + 17, z, z + 33, "gas_can_mat", r=2.0, seg=2)
+        for e in (-1, 1):                                                           # the X pressings
+            for s_ in (-1, 1):
+                rbevel(x + e * 8.2, y, z + 15, 0.6, 2.0, 34, "gas_can_mat", r=0.3, tilt_y=s_ * 40)
+            bevel_box(x + e * 8.2 - 0.3, x + e * 8.2 + 0.3, y - 15, y + 15, z + 1.5, z + 2.5, "gas_can_mat", r=0.2)
+        for k in range(3):                                                          # handles
+            yy = y - 9 + k * 6
+            polyline([(x - 6, yy, z + 33), (x - 5, yy, z + 37), (x + 5, yy, z + 37), (x + 6, yy, z + 33)], 0.8, 0.8, "gas_can_mat", sides=6)
+        frustum(x, y + 13, z + 33, z + 36.5, 2.6, 2.4, "gas_can_mat", sides=12)    # spout
+        bevel_box(x - 3, x + 3, y + 11, y + 15, z + 36.5, z + 38, "metal_mat", r=0.4)
+
+
+def galv_bucket(x, y, z):
+    """A galvanized bucket: tapered body with two rolled ribs, a rolled rim, the bail with ears."""
+    frustum(x, y, z, z + 22, 11, 13, "can_mat", sides=24, open_ends=True)
+    frustum(x, y, z + 0.4, z + 21.6, 10.6, 12.6, "can_mat", sides=24, open_ends=True, inside=True)
+    frustum(x, y, z, z + 0.5, 11, 11, "can_mat", sides=24)
+    for zz, rr in ((7, 11.7), (14, 12.3)):
+        ring(x, y, z + zz, rr, 0.35, "can_mat", sides=24)
+    ring(x, y, z + 22, 13.1, 0.6, "can_mat", sides=24)
+    for e in (-1, 1):
+        bevel_box(x + e * 13.2 - 0.4, x + e * 13.2 + 0.4, y - 1.5, y + 1.5, z + 17, z + 21, "metal_mat", r=0.2)
+    pts = [(x + 13.3 * math.cos(t), y - 6 * math.sin(t), z + 19 + 4 * math.sin(t)) for t in [math.pi * i / 12.0 for i in range(13)]]
+    polyline(pts, 0.3, 0.3, "metal_mat", sides=5)
+
+
+
 def hurricane_lantern(x, y, z, lit, name=None):
-    """A kerosene hurricane lantern: fuel tank, burner, glass globe with the flame inside, wire
-    guard, cap and bail handle."""
-    frustum(x, y, z, z + 5, 7.5, 8, "rusty_tool_mat", sides=16)
-    frustum(x, y, z + 5, z + 6.5, 8, 4, "rusty_tool_mat", sides=16)
-    frustum(x, y, z + 6.5, z + 8.5, 3, 3, "rusty_tool_mat", sides=10)
+    """A kerosene hurricane lantern: a round fuel tank with a filler cap, the burner with its wick
+    knob, a pear-shaped glass globe with the flame, the two air tubes up the sides to the vented
+    top cap, a wire guard round the globe and the bail handle."""
+    lathe(x, y, [(z, 6.5), (z + 0.6, 7.6), (z + 3.5, 8.0), (z + 5.6, 7.2), (z + 6.6, 4.6), (z + 7.0, 3.4)], "rusty_tool_mat", sides=20)
+    frustum(x + 5.0, y, z + 5.2, z + 6.8, 1.0, 1.0, "rusty_tool_mat", sides=8)                       # filler cap
+    frustum(x, y, z + 7.0, z + 9.0, 3.6, 3.2, "rusty_tool_mat", sides=14)                            # burner
+    tube((x, y - 3.2, z + 8), (x, y - 5.5, z + 8), 0.35, "rusty_tool_mat", sides=6)                   # wick knob
+    frustum(x, y - 5.5, z + 7.2, z + 8.8, 1.1, 1.1, "rusty_tool_mat", sides=8)
     if lit:
-        sphere(x, y, z + 11.5, 1.1, "glow_lamp_mat", sides=8, scale=(1, 1, 2.0))
-    sphere(x, y, z + 13.5, 5.8, "seeglass_cabin_mat", sides=14, scale=(1, 1, 1.35))
-    for k in range(4):
-        a = k * math.pi / 2 + 0.4
-        tube((x + 7.2 * math.cos(a), y + 7.2 * math.sin(a), z + 6), (x + 6.4 * math.cos(a), y + 6.4 * math.sin(a), z + 21),
-             0.35, "rusty_tool_mat", sides=4)
-    ring(x, y, z + 13.5, 7.0, 0.35, "rusty_tool_mat", sides=16)
-    frustum(x, y, z + 21, z + 26, 6.5, 2.5, "rusty_tool_mat", sides=16)
-    frustum(x, y, z + 26, z + 28, 2.5, 2.5, "rusty_tool_mat", sides=10)
-    ring(x, y, z + 25, 8.0, 0.4, "rusty_tool_mat", axis="x", sides=16)
+        sphere(x, y, z + 11.8, 0.9, "glow_lamp_mat", sides=8, scale=(1, 1, 2.2))
+    lathe(x, y, [(z + 9.0, 3.2), (z + 11, 5.0), (z + 14, 5.8), (z + 17, 5.0), (z + 19.5, 3.4), (z + 20.5, 3.0)],
+          "seeglass_cabin_mat", sides=18)                                                             # globe
+    for k in range(4):                                                                               # guard wires
+        a = k * math.pi / 2 + math.pi / 4
+        pts = [(x + rr * math.cos(a), y + rr * math.sin(a), zz) for rr, zz in ((4.0, z + 9), (6.4, z + 13), (6.4, z + 16), (4.0, z + 20.5))]
+        for p0, p1 in zip(pts, pts[1:]):
+            tube(p0, p1, 0.18, "rusty_tool_mat", sides=4)
+    ring(x, y, z + 14.5, 6.4, 0.2, "rusty_tool_mat", sides=18)
+    for s_ in (-1, 1):                                                                               # the air tubes
+        tube((x + s_ * 7.4, y, z + 6.2), (x + s_ * 7.4, y, z + 22.5), 0.55, "rusty_tool_mat", sides=8)
+        tube((x + s_ * 7.4, y, z + 22.5), (x + s_ * 4.5, y, z + 24.5), 0.55, "rusty_tool_mat", sides=8)
+    lathe(x, y, [(z + 20.5, 3.2), (z + 22.5, 6.0), (z + 24.5, 4.8), (z + 26.5, 2.4), (z + 27.5, 1.2)], "rusty_tool_mat", sides=18)   # top
+    pts = [(x + 6.0 * math.cos(t), y, z + 24 + 7 * math.sin(t)) for t in [math.pi * k / 10.0 for k in range(11)]]
+    for p0, p1 in zip(pts, pts[1:]):                                                                 # bail
+        tube(p0, p1, 0.25, "rusty_tool_mat", sides=4)
     if name:
         light(name, x, y, z + 12, [1.0, 0.6, 0.28], 5, 560, room=True)
-
 
 def sleeping_bag(cx, y_head, z, seed=0):
     """Cas's sleeping bag on a bunk, head toward -y... laid along +y from y_head: a quilted
@@ -296,11 +638,30 @@ def sleeping_bag(cx, y_head, z, seed=0):
 
 
 def boot_print(x, y, z, yaw, left):
+    """A muddy work-boot print: a thin flat mud film in a boot's outline (wide ball, narrow waist,
+    separate heel), lug bars of the tread pressed in, a little mud spatter."""
     a = math.radians(yaw)
     fx, fy = -math.sin(a), math.cos(a)                                  # toward the toe
-    rsoft(x + fx * 4, y + fy * 4, z, 9.5, 17, 0.5, "mud_print_mat", smooth=1, yaw=yaw, div=(2, 1, 3))
-    rsoft(x - fx * 10, y - fy * 10, z, 8, 7.5, 0.5, "mud_print_mat", smooth=1, yaw=yaw, div=(2, 1, 2))
-
+    sx_, sy_ = fy, -fx                                                  # across the boot
+    def flat(cx_, cy_, rx, ry):
+        c = cmds.polyCylinder(r=1, h=0.18, sx=16, sy=1, sz=0, ch=False)[0]
+        cmds.scale(rx, 1, ry, c)
+        cmds.rotate(0, -yaw, 0, c)
+        cmds.move(cx_, z + 0.1, cy_, c)
+        keep(c, "mud_print_mat")
+    flat(x + fx * 7, y + fy * 7, 5.0, 8.0)                              # ball and toe
+    flat(x + fx * 0, y + fy * 0, 3.6, 5.0)                              # waist
+    flat(x - fx * 10, y - fy * 10, 4.2, 4.4)                            # heel
+    for k in range(5):                                                  # lugs across the sole
+        t = 12 - k * 3.2
+        for e in (-1, 1):
+            cx_, cy_ = x + fx * t + sx_ * e * 2.1, y + fy * t + sy_ * e * 2.1
+            rbevel(cx_, cy_, z + 0.28, 2.6, 1.0, 0.14, "plank_dark_mat", r=0.05, yaw=yaw + e * 25)
+    for k in range(2):
+        rbevel(x - fx * (8 + k * 3.5), y - fy * (8 + k * 3.5), z + 0.28, 5.5, 1.0, 0.14, "plank_dark_mat", r=0.05, yaw=yaw + 90)
+    r = random.Random(int(x * 7 + y))
+    for k in range(3):
+        sphere(x + r.uniform(-9, 9), y + r.uniform(-12, 14), z + 0.12, r.uniform(0.5, 1.2), "mud_print_mat", sides=6, scale=(1, 1, 0.15))
 
 def oar(p0, p1, mat="plank_grey_mat"):
     """An oar from the grip p0 to the blade tip p1 (lying flat): round loom, flat blade."""
@@ -317,17 +678,28 @@ def oar(p0, p1, mat="plank_grey_mat"):
 
 
 def life_vest(x, y, z_hook, seed, wall_dir=1):
-    """An old life jacket hanging on a hook: two puffy front panels, a collar, straps with
-    buckles. wall_dir: +1 = the wall is toward -x (it hangs toward +x)."""
-    tube((x - wall_dir * 2, y, z_hook), (x + wall_dir * 4, y, z_hook + 2), 0.7, "rusty_tool_mat", sides=6)
-    r = random.Random(seed)
-    for s in (-1, 1):
-        rsoft(x + wall_dir * 7, y + s * 12, z_hook - 34, 9, 21, 46, "lifejacket_mat", jitter=1.2, sag=0, smooth=2,
-              seed=seed + s, tilt_y=s * 4, div=(2, 3, 5))
-    rsoft(x + wall_dir * 5, y, z_hook - 6, 7, 26, 11, "lifejacket_mat", jitter=0.8, smooth=2, seed=seed + 5)
-    for zz in (z_hook - 26, z_hook - 46):
-        bevel_box(x + wall_dir * 11.5 - 0.6, x + wall_dir * 11.5 + 0.6, y - 22, y + 22, zz - 1.6, zz + 1.6, "strap_mat", r=0.3)
-        bevel_box(x + wall_dir * 12.3 - 0.8, x + wall_dir * 12.3 + 0.8, y - 3, y + 3, zz - 2.4, zz + 2.4, "metal_mat", r=0.4)
+    """An old kapok life jacket hanging by its collar loop on a hook: two front panels, each
+    three stitched kapok blocks, a back panel behind, a padded collar, a webbing strap with a
+    metal buckle across the front, ties hanging. wall_dir: +1 = the wall is toward -x."""
+    tube((x - wall_dir * 2, y, z_hook), (x + wall_dir * 5, y, z_hook + 2.5), 0.7, "rusty_tool_mat", sides=6)
+    sphere(x + wall_dir * 5, y, z_hook + 2.5, 1.0, "rusty_tool_mat", sides=6)
+    ring(x + wall_dir * 4, y, z_hook - 1, 2.6, 0.5, "strap_mat", axis="y", sides=10)        # collar loop
+    rsoft(x + wall_dir * 4, y, z_hook - 32, 6, 46, 52, "lifejacket_mat", jitter=0.6, smooth=2, seed=seed, div=(2, 4, 5))   # back
+    for s_ in (-1, 1):
+        for k in range(3):
+            rsoft(x + wall_dir * 10, y + s_ * 11.5, z_hook - 14 - k * 16, 8, 20, 15, "lifejacket_mat", jitter=0.5,
+                  sag=0, smooth=2, seed=seed + s_ * 7 + k, div=(2, 3, 3))
+        for k in range(2):                                                          # seams between blocks
+            bevel_box(x + wall_dir * 14.2 - 0.3, x + wall_dir * 14.2 + 0.3, y + s_ * 11.5 - 9.5, y + s_ * 11.5 + 9.5,
+                      z_hook - 22.5 - k * 16 - 0.4, z_hook - 22.5 - k * 16 + 0.4, "strap_mat", r=0.1)
+    tube((x + wall_dir * 8, y - 13, z_hook - 3), (x + wall_dir * 8, y + 13, z_hook - 3), 4.0, "lifejacket_mat", sides=12)   # collar
+    for s_ in (-1, 1):
+        sphere(x + wall_dir * 8, y + s_ * 13, z_hook - 3, 4.0, "lifejacket_mat", sides=10)
+    zz = z_hook - 36
+    bevel_box(x + wall_dir * 14.6 - 0.5, x + wall_dir * 14.6 + 0.5, y - 22, y + 22, zz - 1.6, zz + 1.6, "strap_mat", r=0.3)
+    bevel_box(x + wall_dir * 15.4 - 0.7, x + wall_dir * 15.4 + 0.7, y + 1, y + 6, zz - 2.6, zz + 2.6, "metal_mat", r=0.4)
+    for s_ in (-1, 1):                                                              # ties hanging down
+        tube((x + wall_dir * 14.6, y + s_ * 4, z_hook - 46), (x + wall_dir * 14.8, y + s_ * 6, z_hook - 70), 0.6, "strap_mat", sides=5)
 
 
 # ---------- boathouse ----------
@@ -422,8 +794,17 @@ def boathouse():
             bevel_box(xx - 7, xx + 7, yy - 7, yy + 7, F - 30, EAVE, "dock_dark_mat", r=1.0)
     for xx in (X - W, X + W):
         bevel_box(xx - 6, xx + 6, Y + S, Y + N, EAVE - 10, EAVE + 2, "dock_dark_mat", r=1.0)
-    # the lake doors: the west leaf hangs open on its hinges, sagging; the east one is gone
-    with Placed(X - SLIP - 4, Y + N + 6, 72):
+    # posts either side of the slip opening, up to the header: the lake doors hang on these
+    for xa, xb in ((X - SLIP - 14, X - SLIP), (X + SLIP, X + SLIP + 14)):
+        bevel_box(xa, xb, Y + N - 6, Y + N + 6, F - 30, F + 252, "dock_dark_mat", r=1.0)
+    # pintle plates on the posts' outer faces
+    for z in (F + 20, F + 196):
+        for xa, xb in ((X - SLIP - 13, X - SLIP - 1), (X + SLIP + 1, X + SLIP + 13)):
+            bevel_box(xa, xb, Y + N + 6, Y + N + 7.2, z - 7, z + 7, "rusty_tool_mat", r=0.4)
+            for zz in (z - 4, z + 4):
+                sphere((xa + xb) / 2.0, Y + N + 7.4, zz, 0.7, "rusty_tool_mat", sides=6, scale=(1, 0.4, 1))
+    # the lake doors: the west leaf hangs open on its hinges off the post, sagging; the east one is gone
+    with Placed(X - SLIP - 7, Y + N + 9.5, 72):
         for k in range(8):
             x0 = k * 21.5
             sag = -0.05 * (x0 + 10)
@@ -431,10 +812,11 @@ def boathouse():
         for z in (F + 20, F + 196):
             bevel_box(4, 168, -4.6, -2.0, z - 8 - 0.05 * 86, z + 8 - 0.05 * 86, "plank_dark_mat", r=0.6)
             bevel_box(-3, 60, 2.0, 2.9, z - 3, z + 3, "rusty_tool_mat", r=0.3)          # strap hinges
-            bevel_box(-6, 0, -3, 3, z - 7, z + 7, "rusty_tool_mat", r=0.5)
+            tube((0, -2.5, z - 7), (0, -2.5, z + 7), 1.3, "rusty_tool_mat", sides=10)       # the knuckle on its pin
         rbevel(86, -3.3, F + 108 - 0.05 * 86, 205, 2.4, 14, "plank_dark_mat", r=0.6, tilt_x=48)   # Z brace
-    for z in (F + 20, F + 196):                                           # the empty hinge pins on the east side
-        bevel_box(X + SLIP - 2, X + SLIP + 4, Y + N + 4, Y + N + 9, z - 7, z + 7, "rusty_tool_mat", r=0.5)
+    for z in (F + 20, F + 196):                                           # the empty hinge pins on the east post
+        tube((X + SLIP + 7, Y + N + 9.5, z - 5), (X + SLIP + 7, Y + N + 9.5, z + 5), 0.8, "rusty_tool_mat", sides=8)
+        bevel_box(X + SLIP + 5, X + SLIP + 9, Y + N + 7.2, Y + N + 9.5, z - 2, z + 2, "rusty_tool_mat", r=0.3)
     # green slime and rot along the bottom of the walls over the water
     for xx in (X - W, X + W):
         bevel_box(xx - 3.4 if xx < X else xx + 2.4, xx - 2.4 if xx < X else xx + 3.4, Y - 160, Y + N, F - 22, F + 4,
@@ -505,76 +887,19 @@ def boathouse():
     for s in (-1, 1):                                                     # pliers
         tube((P + 1, by0 + 225, bz + 96), (P + 1, by0 + 225 + s * 3, bz + 76), 0.6, "dark_leather_mat", sides=6)
     # the vise on the front corner of the bench
-    vx, vy = bx1 - 8, by0 + 26
-    bevel_box(vx - 8, vx + 8, vy - 10, vy + 10, bz, bz + 7, "stove_mat", r=1.0)
-    for dx in (-3, 5):
-        bevel_box(vx + dx - 2, vx + dx + 2, vy - 11, vy + 11, bz + 7, bz + 20, "stove_mat", r=0.6)
-    tube((vx + 5, vy, bz + 11), (vx + 22, vy, bz + 11), 1.0, "metal_mat", sides=8)
-    tube((vx + 22, vy - 9, bz + 11), (vx + 22, vy + 9, bz + 11), 0.7, "metal_mat", sides=6)
-    for dy in (-9, 9):
-        sphere(vx + 22, vy + dy, bz + 11, 1.3, "metal_mat", sides=8)
-    # on the bench: a jar of screws, a coffee can of nails, an oily rag, a hand drill
-    frustum(bx0 + 22, by0 + 60, bz, bz + 13, 4.5, 4.5, "seeglass_cabin_mat", sides=14)
-    frustum(bx0 + 22, by0 + 60, bz + 13, bz + 15, 4.8, 4.8, "rusty_tool_mat", sides=14)
-    for k in range(8):
-        a = k * 0.8
-        tube((bx0 + 22 + 2.4 * math.cos(a), by0 + 60 + 2.4 * math.sin(a), bz + 1), (bx0 + 22 + 2 * math.cos(a + 1), by0 + 60 + 2 * math.sin(a + 1), bz + 5),
-             0.35, "metal_mat", sides=4)
-    frustum(bx0 + 18, by0 + 150, bz, bz + 17, 7, 7, "can_mat", sides=16, open_ends=True)
-    frustum(bx0 + 18, by0 + 150, bz + 1, bz + 15.5, 6.6, 6.6, "rusty_tool_mat", sides=16)          # full of nails
-    rng_b = random.Random(3)
-    for k in range(10):
-        x0_, y0_ = bx0 + 18 + rng_b.uniform(-4, 4), by0 + 150 + rng_b.uniform(-4, 4)
-        tube((x0_, y0_, bz + 14), (x0_ + rng_b.uniform(-2, 2), y0_ + rng_b.uniform(-2, 2), bz + 19), 0.25, "metal_mat", sides=4)
-    tube((bx0 + 40, by0 + 92, bz + 3), (bx0 + 56, by0 + 96, bz + 3), 1.0, "metal_mat", sides=6)       # hand drill
-    ring(bx0 + 48, by0 + 94, bz + 3, 4.5, 0.5, "metal_mat", sides=12)
-    frustum(bx0 + 58, by0 + 96, bz + 0.5, bz + 5.5, 1.8, 1.8, "plank_grey_mat", sides=8)
-    # the open toolbox: a cantilever box, both trays swung out, tools in it
-    tx, ty = bx0 + 40, by1 - 48
-    bevel_box(tx - 23, tx + 23, ty - 10, ty + 10, bz, bz + 17, "toolbox_mat", r=1.2)
-    for s in (-1, 1):
-        bevel_box(tx - 22, tx + 22, ty + s * 15 - 5, ty + s * 15 + 5, bz + 18, bz + 24, "toolbox_mat", r=0.8)
-        for dx in (-18, 18):
-            tube((tx + dx, ty + s * 6, bz + 15), (tx + dx, ty + s * 13, bz + 21), 0.6, "metal_mat", sides=4)
-    for k in range(3):
-        tube((tx - 15 + k * 12, ty - 15, bz + 24), (tx - 9 + k * 12, ty - 13, bz + 27), 0.6, "metal_mat", sides=4)
-    tube((tx - 12, ty + 3, bz + 17), (tx + 14, ty - 2, bz + 18), 1.0, "dark_leather_mat", sides=6)
-    for dx in (-20, 20):
-        bevel_box(tx + dx - 2, tx + dx + 2, ty - 10.6, ty - 10, bz + 12, bz + 16, "metal_mat", r=0.3)
-    # the hurricane lantern, still burning low
-    hurricane_lantern(bx0 + 36, by0 + 205, bz, True, "light_boathouse_lantern")
+    bench_vise(bx1 - 10, by0 + 26, bz)
+    # on the bench: a jar of screws, a coffee can of nails, a hand drill, the open toolbox, the lantern
+    screw_jar(bx0 + 22, by0 + 60, bz)
+    nail_can(bx0 + 20, by0 + 125, bz)
+    hand_drill(bx0 + 46, by0 + 96, bz, 12)
+    cantilever_toolbox(bx0 + 40, by1 - 62, bz)
+    hurricane_lantern(bx0 + 30, by1 - 16, bz, True, "light_boathouse_lantern")      # clear of the toolbox now
     # ---- life jackets on the west wall, a life ring with its grab line on the east wall
     for k, yy in enumerate((Y + 40, Y + 110)):
         life_vest(WI, yy, F + 210, seed=30 + k, wall_dir=1)
-    ring(EI - 7, Y + 230, F + 170, 30, 7, "life_ring_mat", axis="x", sides=28)
-    for k in range(4):
-        a = k * math.pi / 2 + math.pi / 4
-        p = (EI - 7, Y + 230 + 30 * math.cos(a), F + 170 + 30 * math.sin(a))
-        ring(*p, 7.8, 1.2, "sheet_mat", axis="y" if abs(math.cos(a)) > 0.5 else "z", sides=10)    # white tape bands
-    ring(EI - 7, Y + 230, F + 170, 37, 0.8, "rope_mat", axis="x", sides=28)
-    tube((EI - 1, Y + 230, F + 207), (EI - 7, Y + 230, F + 207), 0.8, "rusty_tool_mat", sides=6)
+    life_ring(EI - 8, Y + 230, F + 160, wall_dir=-1)
     # a fishing net hung on three nails, with floats, over the east walkway
-    nails = [(Y + 330, F + 215), (Y + 420, F + 225), (Y + 510, F + 212)]
-    rows = 6
-    for (ya, za), (yb, zb) in zip(nails, nails[1:]):
-        for rr in range(rows):
-            d = rr * 13
-            pts = []
-            for k in range(9):
-                t = k / 8.0
-                pts.append((EI - 1.2 - 0.6 * math.sin(t * 3.14), ya + (yb - ya) * t, za + (zb - za) * t - d - 14 * math.sin(t * math.pi) * (1 + rr * 0.15)))
-            for p0, p1 in zip(pts, pts[1:]):
-                tube(p0, p1, 0.3, "net_mat", sides=3)
-            if rr < rows - 1:
-                for k in range(0, 9, 2):
-                    p0 = pts[k]
-                    tube(p0, (p0[0], p0[1] + 4, p0[2] - 13), 0.3, "net_mat", sides=3)
-        for k in range(3):
-            t = (k + 0.5) / 3
-            yy, zz = ya + (yb - ya) * t, za + (zb - za) * t - 14 * math.sin(t * math.pi)
-            frustum(EI - 3.5, yy, zz - 4, zz + 4, 3.2, 3.2, "float_mat", sides=10)
-    for yy, zz in nails:
-        tube((EI + 1, yy, zz), (EI - 4, yy, zz), 0.5, "rusty_tool_mat", sides=4)
+    fishing_net(EI, [(Y + 330, F + 215), (Y + 420, F + 225), (Y + 510, F + 212)], 80, wall_dir=-1, seed=4)
     # ---- shelves on the east wall, landward: paint cans, a gas can, jars, bottles
     sx1, sx0, sy0, sy1 = EI, EI - 36, Y + S + 190, Y + S + 320
     for yy in (sy0 + 3, sy1 - 3):
@@ -583,30 +908,18 @@ def boathouse():
     for zz in (F + 8, F + 52, F + 96, F + 140):
         bevel_box(sx0, sx1, sy0, sy1, zz, zz + 2.5, "dock_wood_mat", r=0.5)
     rngs = random.Random(9)
-    for k in range(4):                                                    # paint cans
-        cy_ = sy0 + 18 + k * 30
-        z0 = F + 54.5
-        frustum(sx0 + 18, cy_, z0, z0 + 17, 8, 8, "paint_can_mat", sides=16)
-        frustum(sx0 + 18, cy_, z0 + 17, z0 + 18, 7.6, 7.6, "rusty_tool_mat", sides=16)
-        rbevel(sx0 + 10.2, cy_ + 3, z0 + 13, 0.6, 3, 8, "algae_mat" if k % 2 else "toolbox_mat", r=0.2)  # drips
-        ring(sx0 + 18, cy_, z0 + 25, 7.5, 0.3, "metal_mat", axis="x", sides=12)
-    for k in range(5):                                                    # jars and bottles
+    for k in range(4):                                                    # paint cans on the second shelf
+        paint_can(sx0 + 18, sy0 + 18 + k * 30, F + 54.5, k)
+    for k in range(5):                                                    # jars and bottles on the third
         cy_ = sy0 + 14 + k * 24
-        z0 = F + 98.5
         if k % 2:
-            frustum(sx0 + 16, cy_, z0, z0 + 22, 4, 4, "bottle_mat", sides=12)
-            frustum(sx0 + 16, cy_, z0 + 22, z0 + 28, 4, 1.4, "bottle_mat", sides=12)
+            glass_bottle(sx0 + 16, cy_, F + 98.5, 22 + k)
         else:
-            frustum(sx0 + 16, cy_, z0, z0 + 14, 5, 5, "seeglass_cabin_mat", sides=12)
-            frustum(sx0 + 16, cy_, z0 + 14, z0 + 16, 5.2, 5.2, "rusty_tool_mat", sides=12)
-    for k in range(3):                                                    # stacked rags and a box
-        rsoft(sx0 + 16, sy0 + 30 + k * 34, F + 142.5 + 4, 26, 24, 7, "dark_leather_mat" if k == 1 else "tarp_mat", jitter=1.5, smooth=2, seed=40 + k)
-    gx, gy = sx0 + 17, sy0 + 40                                           # the red gas can on the bottom shelf
-    bevel_box(gx - 8, gx + 8, gy - 16, gy + 16, F + 10.5, F + 42, "gas_can_mat", r=2.0)
-    tube((gx, gy - 12, F + 42), (gx, gy + 6, F + 42), 1.8, "gas_can_mat", sides=8)
-    tube((gx, gy + 12, F + 40), (gx - 3, gy + 20, F + 50), 1.4, "dark_leather_mat", sides=6)
-    frustum(sx0 + 18, sy0 + 95, F + 10.5, F + 30, 12, 13, "rusty_tool_mat", sides=16, open_ends=True)   # bucket
-    ring(sx0 + 18, sy0 + 95, F + 31, 12.5, 0.4, "metal_mat", axis="x", sides=16)
+            mason_jar(sx0 + 16, cy_, F + 98.5, ("rusty_tool_mat", "mud_print_mat", None)[k // 2])
+    for k in range(3):                                                    # folded rags on the top shelf
+        folded(sx0 + 17, sy0 + 30 + k * 34, F + 142.5, 22, 26, "tarp_mat" if k != 1 else "sheet_mat", "plain", 40 + k)
+    jerry_can(sx0 + 17, sy0 + 40, F + 10.5, 0)                            # the red gas can on the bottom shelf
+    galv_bucket(sx0 + 18, sy0 + 98, F + 10.5)
     # ---- fishing rods and a landing net in the south-east corner
     for k in range(3):
         base = (EI - 12 - k * 6, SI + 10 + k * 5, F + 0.5)
@@ -660,28 +973,20 @@ def boathouse():
             w_ = 1.2 * math.sin(x_ * 0.11 + y_ * 0.07) + 0.6 * math.sin(x_ * 0.23 - y_ * 0.15)
             if t >= 0.65:
                 w_ = 3.5 * abs(math.sin(x_ * 0.09 + y_ * 0.12)) + rt.uniform(0, 1.5)
-            row.append((x_ - cx, y_, max(F + 1.0, zz + (w_ if (t < 0.45 or t >= 0.65) else 0)) + (0 if t < 0.65 else 0)))
+            zz2 = zz + (w_ if (t < 0.45 or t >= 0.65) else 0)
+            if t < 0.45 and x_ >= cx - 47:
+                zz2 = max(F + 65.6, F + 65.6 + abs(w_))                     # lies on the crate top, never through it
+            row.append((x_ - cx, y_, max(F + 1.0, zz2)))
             if 0.45 <= t < 0.65:
                 row[-1] = (x_ - cx + 2.5 * math.sin(u * 18), y_ + 1.5 * math.sin(u * 12 + 1), zz)
         grid.append(row)
     _cloth(cx, grid, "tarp_mat")
-    # ---- the new rope, coiled on the east walkway, its end running to the slip edge
-    for k in range(6):
-        ring(X + SLIP + 70, Y + 60, F + 1.5 + (k // 3) * 2.6, 17 - (k % 3) * 3.4, 1.3, "rope_new_mat", sides=24)
-    tube((X + SLIP + 87, Y + 60, F + 1.5), (X + SLIP + 8, Y + 140, F + 1.5), 1.3, "rope_new_mat", sides=8)
-    tube((X + SLIP + 8, Y + 140, F + 1.5), (X + SLIP - 6, Y + 175, F - 18), 1.3, "rope_new_mat", sides=8)
+    # ---- the new rope, coiled on the east walkway, its end running to the slip edge and down
+    end_in, end_out = rope_coil(X + SLIP + 70, Y + 60, F + 0.2, 18, 4.5, 1.3, "rope_new_mat", seed=5)
+    polyline([end_out, (X + SLIP + 60, Y + 95, F + 1.5), (X + SLIP + 25, Y + 135, F + 1.5), (X + SLIP + 8, Y + 150, F + 2.5),
+              (X + SLIP - 2, Y + 160, F - 4), (X + SLIP - 5, Y + 166, F - 20)], 1.3, 1.3, "rope_new_mat", sides=8)
     # ---- an anchor and its chain on the west walkway
-    ax, ay = X - SLIP - 60, Y + 200
-    tube((ax, ay - 30, F + 2.5), (ax, ay + 30, F + 2.5), 2.0, "rusty_tool_mat", sides=8)
-    for s in (-1, 1):
-        tube((ax, ay - 30, F + 2.5), (ax + s * 22, ay - 18, F + 2.5), 1.8, "rusty_tool_mat", sides=8)
-        frustum(ax + s * 22, ay - 18, F + 1, F + 4, 3.5, 1, "rusty_tool_mat", sides=6)
-    tube((ax - 12, ay + 20, F + 2.5), (ax + 12, ay + 20, F + 2.5), 1.4, "rusty_tool_mat", sides=6)
-    ring(ax, ay + 34, F + 1.6, 4, 0.9, "rusty_tool_mat", sides=10)
-    for k in range(14):
-        a = k * 0.45
-        ring(ax + 10 + 9 * math.cos(a) + k * 1.3, ay + 40 + 9 * math.sin(a), F + 1.0, 2.4, 0.6, "rusty_tool_mat",
-             axis="z" if k % 2 else "x", sides=8)
+    admiralty_anchor(X - SLIP - 60, Y + 200, F, 0)
     # ---- muddy boot prints: in at the door, to the slip, along the east walkway
     path = [(X + 10, Y + S + 20), (X + 40, Y - 240), (X + SLIP + 60, Y - 140), (X + SLIP + 70, Y + 40)]
     step = 0
@@ -704,8 +1009,20 @@ def boathouse():
     cmds.rotate(0, 3, 2.5, g, pivot=(0, WATER_Z, 0))
     cmds.move(X - 6, 0, Y + 300, g, relative=True)
     cmds.ungroup(g)
-    tube((X - 6, Y + 470, WATER_Z + 55), (X - SLIP + 6, Y + 520, F - 2), 0.9, "rope_mat", sides=6)
-    rbevel(X - SLIP + 2, Y + 520, F + 1, 8, 20, 4, "rusty_tool_mat", r=1.0)            # cleat on the slip edge
+    # the bow line: from the eye on the stem, sagging, to a cleat on the slip edge, turns round it
+    sag_rope((X - 6, Y + 470, WATER_Z + 55), (X - SLIP + 4, Y + 518, F + 3.5), 9, 0.9, "rope_mat", n=14)
+    ring(X - 6, Y + 471, WATER_Z + 55, 1.8, 0.45, "rusty_tool_mat", axis="y", sides=10)
+    cx_, cy_ = X - SLIP - 4, Y + 520
+    bevel_box(cx_ - 3, cx_ + 3, cy_ - 4, cy_ + 4, F, F + 3, "rusty_tool_mat", r=0.6)                # cleat base
+    polyline([(cx_, cy_ - 11, F + 4.5), (cx_, cy_ - 4, F + 4.8), (cx_, cy_ + 4, F + 4.8), (cx_, cy_ + 11, F + 4.5)], 1.4, 1.4,
+             "rusty_tool_mat", sides=10)                                                              # horns
+    for k in range(3):                                                                               # figure-eight turns
+        e = 1 if k % 2 else -1
+        polyline([(cx_ + 2.4, cy_ - 8, F + 5.6 + k * 0.6), (cx_, cy_, F + 6.4 + k * 0.6), (cx_ - 2.4, cy_ + 8, F + 5.6 + k * 0.6)],
+                 0.9, 0.9, "rope_mat", sides=6) if e > 0 else polyline([(cx_ - 2.4, cy_ - 8, F + 5.6 + k * 0.6), (cx_, cy_, F + 6.4 + k * 0.6),
+                 (cx_ + 2.4, cy_ + 8, F + 5.6 + k * 0.6)], 0.9, 0.9, "rope_mat", sides=6)
+    polyline([(cx_ + 2.4, cy_ + 8, F + 5.6), (cx_ + 6, cy_ + 14, F + 1.4), (cx_ + 12, cy_ + 10, F + 1.2), (cx_ + 10, cy_ + 2, F + 1.2)],
+             0.9, 0.9, "rope_mat", sides=6)                                                           # the tail
     oar((X - 30, Y + 220, WATER_Z + 40), (X + 4, Y + 420, WATER_Z + 40))                  # an oar left in the boat
     frustum(X + 28, Y + 250, WATER_Z + 7, WATER_Z + 21, 8, 9, "can_mat", sides=12, open_ends=True)   # bailing can
     # cobwebs in two top corners

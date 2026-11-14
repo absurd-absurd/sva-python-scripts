@@ -947,3 +947,19 @@ Feedback: make the pillow like the motel rooms' and get rid of the open can on t
 ### The rusted car
 
 Feedback: get rid of the branch leaning against it, then the car is done. The fallen branch (three bark tubes in make_trail.py rusted_car()) is removed; approved Nov 14.
+
+### The boathouse, realism pass
+
+![Bench and toolbox, life jackets, net, anchor, boot prints, the shack's window from inside](2026-11-14_boathouse.png)
+
+Feedback list: anchor, life jackets, everything on the bench and in the toolbox, the shelf items, the footprints, the rope on the floor and the boat's line, the life ring and the net should look more realistic; the lantern went into the toolbox; the tarp went through the crate; the lake doors and hinges floated; the boarded windows didn't look boarded from inside (the shack's too). Rebuilt in maya/lake_buildings.py:
+- **Anchor**: an admiralty anchor: tapered shank, crown, curved arms with spade flukes and bills, a stock through the top, the ring, and its chain in real alternating links in a loose heap.
+- **Life jackets**: kapok jackets hanging by a collar loop: three stitched blocks per front panel, a back panel, padded collar, a webbing strap with a buckle, ties hanging.
+- **Bench**: a bench vise (swivel base, serrated jaw plates, screw and T bar), a mason jar of screws with a ridged lid, a labelled coffee can of nails, an eggbeater hand drill, an open cantilever toolbox with both tiers swung out on their arms and tools in the trays, and the hurricane lantern (fuel tank, wick knob, pear globe, air tubes, vented cap, bail) moved clear of the toolbox.
+- **Shelves**: gallon paint cans with rims, bails and drips, mason jars and corked bottles, folded rags, a steel jerry can with X pressings and three handles, a galvanized bucket.
+- **Footprints**: work-boot prints: a thin mud film in a boot outline with tread lugs pressed in and spatter.
+- **Rope**: the new rope is a real loose coil on the boards running to the slip edge; the boat's bow line sags from an eye on the stem to a proper cleat with figure-eight turns and a tail.
+- **Life ring**: a round cork ring with four white bands and its grab line seized at four points; **net**: diamond mesh hung on nails, cork floats on the headrope, lead weights on the footrope.
+- **Tarp**: lies on the crate top instead of cutting into it.
+- **Lake doors**: posts either side of the slip with pintle plates; the open leaf's strap hinges wrap round pins on the west post; the empty pins stay on the east post.
+- **Boarded windows** (boathouse, shack, cabins): boards overlapping outside and two or three boards nailed across the inside too, with nail heads, instead of a flat dark panel.
