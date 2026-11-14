@@ -925,3 +925,17 @@ Feedback: "when I move the camera the frame disappears and artifacts and I can s
 ![Before: frames from the user's playthrough; after: the same doorway and the bookcase](2026-11-14_backroom_doorway_books.png)
 
 Feedback: "it did not work" - so I recorded the screen while the user played (ffmpeg, 90 s) and went through it frame by frame. The flicker was on the BACK-ROOM doorway, not the entrance: its frame's inner faces sat exactly on the partition's papered ends (and the head's underside exactly on the wall above), so the wood and the wallpaper took turns being drawn as the camera moved. The frame now reaches 1.5 cm into the opening, covering the wall's end. The bookcase had the same trouble: shelves flush with the side posts' front faces and books tilted into each other; now the shelves sit between the sides, set back, and the books stand upright with a gap each side.
+
+### The hunter's shack, realism pass
+
+![The shack inside and out](2026-11-14_shack.png)
+
+Feedback: the whole interior looked far too low-poly; the woodpile and the axe outside needed to look real. Rebuilt in maya/make_trail.py (shack()), same layout:
+- **Cot**: an army folding cot: side rails, a canvas sling sagging between them (cloth), X legs with pivot bolts at both ends and the middle, rubber feet; the quilted sleeping bag and a rolled jacket for a pillow on it.
+- **Crate table**: corner posts, slats with gaps, a plank top; a candle stub with wax run down it in a puddle, a matchbox with its striker, spent matches; tin cans on the floor (rims, ribs, faded labels, one with the lid bent back and a spoon in it, one lying on its side).
+- **Antlers** over the door: a shield plaque, a bleached skull cap, two curving beams that taper, with tines.
+- **Gun rack**: shaped back board, rails of upturned hooks, the paler outline where the guns hung.
+- **Traps**: steel leghold traps hanging by their chains: semicircular jaws, the pan, flat leaf springs with eyes.
+- **Pelt**: stretched hide laced into a willow hoop, bulging slightly.
+- **Stove**: cast-iron box stove on curved legs, top plate and lid ring, door with hinges, latch and draft spinner, flue collar; an enamel coffee pot on top; split wood beside it.
+- **Outside**: the chopping block has bark sides and a sawn top with cut marks, chips round it; the axe has a forged head (thin bright bit, thick poll) driven into the block and a curved hickory handle with a knob. The woodpile is a neat stack of round and half-split logs (new firewood(): bark side bark, split face and ends pale wood), each row resting on the one below. (First try stacked them every which way; restacked.)

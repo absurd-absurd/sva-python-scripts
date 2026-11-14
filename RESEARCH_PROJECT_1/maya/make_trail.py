@@ -38,6 +38,10 @@ exec(_src[:_src.rindex("\nbuild()")])           # motel + lake helpers, BLD_MATS
 LAYOUT = json.load(open(os.path.join(ROOT, "layout.json")))
 CLEAR = {c["name"]: c for c in LAYOUT["clearings"]}
 TRAIL_MATS = {
+    "firewood_bark_mat": (0.2, 0.15, 0.1), "split_wood_mat": (0.62, 0.5, 0.34), "axe_handle_mat": (0.55, 0.42, 0.26),
+    "steel_edge_mat": (0.55, 0.55, 0.53), "cot_frame_mat": (0.05, 0.06, 0.04), "canvas_mat": (0.3, 0.29, 0.2),
+    "bone_mat": (0.62, 0.58, 0.48), "fur_mat": (0.26, 0.18, 0.11), "can_label_mat": (0.42, 0.18, 0.1),
+    "matchbox_mat": (0.5, 0.12, 0.06), "enamel_mat": (0.2, 0.3, 0.4), "flame_mat": (1.0, 0.7, 0.3),
     "galv_mat": (0.3, 0.3, 0.29), "sign_mat": (0.55, 0.53, 0.47), "sign_red_mat": (0.38, 0.03, 0.02),
     "rust_body_mat": (0.24, 0.12, 0.06), "antler_mat": (0.5, 0.45, 0.36), "pelt_mat": (0.24, 0.16, 0.09),
     "vine_mat": (0.1, 0.13, 0.06), "leaf_litter_mat": (0.2, 0.13, 0.06), "gloss_tint_mat": (0.012, 0.014, 0.016),
@@ -270,6 +274,107 @@ def gate_leaf(name):
 
 # ---------- the hunter's shack ----------
 
+# ---------- shack props (realistic pass, Nov 14) ----------
+
+def firewood(cx, cy, cz, length, r, span=180.0, roll=0.0, yaw=0.0, tilt_x=0.0, seed=0):
+    """A piece of firewood along x (before yaw): a log of radius r, split so only span degrees
+    of bark remain (360 = a round log). The bark side is bark, the split face and both ends are
+    pale split wood."""
+    rng = random.Random(seed)
+    n = 14
+    c = cmds.polyCylinder(r=1, h=1, sx=n, sy=1, sz=0, ch=False)[0]
+    pts = []
+    for vx, vy, vz in _verts(c):
+        k = int(round((math.atan2(vz, vx) % (2 * math.pi)) / (2 * math.pi / n))) % n
+        a = math.radians(roll) + (2 * math.pi * k / n) * span / 360.0
+        rr = r * (1 + rng.uniform(-0.05, 0.05))
+        pts.append((vy * length + rng.uniform(-0.6, 0.6), rr * math.sin(a), rr * math.cos(a)))
+    _set_verts(c, pts)
+    cmds.polySoftEdge(c, angle=40, ch=False)
+    nf = cmds.polyEvaluate(c, face=True)
+    ends = []
+    for fi in range(nf):
+        vs = [int(t) for t in cmds.polyInfo("%s.f[%d]" % (c, fi), faceToVertex=True)[0].split(":")[1].split()]
+        ring = sorted(set(v % n for v in vs))
+        if len(vs) > 4 or (span < 359 and ring == [0, n - 1]):
+            ends.append("%s.f[%d]" % (c, fi))
+    _place(c, cx, cy, cz, "firewood_bark_mat", yaw=yaw, tilt_x=tilt_x)
+    if ends:
+        cmds.sets(ends, e=True, forceElement="split_wood_matSG")
+    return c
+
+
+def tapered(points, r0, r1, mat, sides=12):
+    """A tube along a polyline whose radius goes from r0 to r1, with round joints."""
+    n = len(points) - 1
+    for i, (a, b) in enumerate(zip(points, points[1:])):
+        rr = r0 + (r1 - r0) * (i + 0.5) / n
+        tube(a, b, rr, mat, sides=sides)
+        if i < n - 1:
+            sphere(*b, rr, mat, sides=sides)
+
+
+def stuck_axe(x, y, z, yaw):
+    """An axe driven into the top of a chopping block (z = the block's top): a forged head with a
+    thin bright bit and a thick poll, a curved hickory handle with a swelled knob, rising away."""
+    with Moved(x, y, yaw):
+        h = cmds.polyCube(w=1, h=1, d=1, ch=False)[0]
+        pts = []
+        for vx, vy, vz in _verts(h):
+            if vy < 0:                                    # the bit, buried in the wood
+                pts.append((vx * 13.0, -4.0, vz * 0.6))
+            else:                                         # the poll
+                pts.append((vx * 5.5, 13.0, vz * 3.4))
+        _set_verts(h, pts)
+        _bevel(h, 0.3, 1)
+        cmds.move(x, z, y, h, relative=True)
+        keep(h, "rusty_tool_mat")
+        rbevel(x, y, z - 2.6, 12.8, 0.9, 1.6, "steel_edge_mat", r=0.2)        # the honed edge, just showing
+        tube((x - 3, y, z + 9.5), (x + 3, y, z + 9.5), 2.2, "rusty_tool_mat", sides=12)       # the eye boss, round the handle
+        handle = [(x + 1, y, z + 9.5), (x + 14, y + 0.5, z + 17), (x + 30, y + 0.8, z + 26),
+                  (x + 46, y + 0.4, z + 33), (x + 60, y - 0.6, z + 38), (x + 68, y - 1.0, z + 41)]
+        tapered(handle, 1.7, 1.5, "axe_handle_mat", sides=12)
+        sphere(x + 69.5, y - 1.1, z + 42, 2.1, "axe_handle_mat", sides=12, scale=(0.8, 1, 1))  # knob
+
+
+def tin_can(x, y, z, opened=True, lying=False, seed=0):
+    """A tin can: body with rolled rims and ribs, a faded paper label, the lid bent up when opened."""
+    if lying:
+        tube((x - 5.5, y, z + 3.9), (x + 5.5, y, z + 3.9), 3.9, "can_mat", sides=16)
+        tube((x - 3.2, y, z + 3.9), (x + 3.2, y, z + 3.9), 4.0, "can_label_mat", sides=16)
+        return
+    frustum(x, y, z, z + 11, 3.9, 3.9, "can_mat", sides=18, open_ends=opened)
+    frustum(x, y, z + 0.3, z + 10.8, 3.7, 3.7, "can_mat", sides=18, open_ends=True, inside=True)
+    frustum(x, y, z + 2.5, z + 8.5, 4.0, 4.0, "can_label_mat", sides=18, open_ends=True)
+    for zz in (0.4, 10.6):
+        ring(x, y, z + zz, 3.9, 0.3, "can_mat", sides=18)
+    if opened:
+        rbevel(x + 2.5, y, z + 13.5, 0.25, 7.4, 7.4, "can_mat", r=0.1, tilt_x=-60)        # lid bent back
+    else:
+        frustum(x, y, z + 10.6, z + 10.8, 3.6, 3.6, "can_mat", sides=18)
+
+
+def leghold_trap(x, y, z, seed=0):
+    """A steel leghold trap hanging flat against an east-facing wall (in the y-z plane) from a
+    nail by its chain: two semicircular jaws, the pan in the middle, a flat leaf spring out each
+    side with an eye over the jaws, the chain."""
+    tube((x + 1, y, z + 30), (x - 4, y, z + 31), 0.4, "rusty_tool_mat", sides=4)            # nail
+    for k in range(6):                                                                        # chain
+        ring(x - 3, y, z + 27 - k * 2.6, 1.3, 0.3, "rusty_tool_mat", axis="z" if k % 2 else "x", sides=8)
+    cz = z
+    for side in (-1, 1):                                                                      # jaws
+        arc = [(x - 3 - (0.8 if side > 0 else 0), y + 9 * math.cos(t), cz - 9 * math.sin(t) if side < 0 else cz + 9 * math.sin(t))
+               for t in [math.pi * k / 10.0 for k in range(11)]]
+        for a, b in zip(arc, arc[1:]):
+            tube(a, b, 0.55, "rusty_tool_mat", sides=6)
+    rbevel(x - 3, y, cz, 0.5, 6, 6, "rusty_tool_mat", r=0.2)                                 # pan
+    rbevel(x - 2.5, y, cz, 0.6, 20, 2.0, "rusty_tool_mat", r=0.2)                            # cross bar
+    for side in (-1, 1):                                                                      # leaf springs
+        rbevel(x - 3, y + side * 17, cz - 1.5, 0.5, 15, 1.8, "rusty_tool_mat", r=0.2, tilt_x=0)
+        ring(x - 3, y + side * 9.5, cz, 2.0, 0.4, "rusty_tool_mat", axis="y", sides=10)
+
+
+
 def shack():
     c = CLEAR["shack"]
     HX, HY, F = 220.0, 190.0, 12.0
@@ -327,68 +432,176 @@ def shack():
         lx, ly = P.world(-66, HY + 35)
         red_lantern(-66, HY + 35, 150)
         light("light_shack_lantern", lx, ly, 168, [1.0, 0.04, 0.01], 3, 520)
-        # a chopping block with an axe, a woodpile against the side wall
-        frustum(150, HY + 120, 0, 45, 24, 26, "log_end_mat", sides=14)
-        tube((150, HY + 120, 45), (190, HY + 140, 75), 1.6, "wood_mat", sides=6)
-        rbevel(145, HY + 118, 47, 4, 14, 10, "rusty_tool_mat", r=0.6, tilt_x=-30)
-        for row in range(4):
-            for k2 in range(6 - row):
-                y_ = -HY + 30 + k2 * 26 + row * 13
-                tube((HX + 12, y_, 12 + row * 22), (HX + 70, y_ + rng.uniform(-4, 4), 12 + row * 22), 11, "log_mat", sides=8)
+        # a chopping block with an axe stuck in it, chips round it, a stacked woodpile along the side wall
+        frustum(150, HY + 120, 0, 44, 25, 27, "firewood_bark_mat", sides=20)                 # the block, bark on
+        frustum(150, HY + 120, 44, 44.6, 24.4, 24.4, "split_wood_mat", sides=20)            # its sawn top
+        for k in range(5):                                                                    # cut marks
+            a = rng.uniform(0, 3.14)
+            rbevel(150 + rng.uniform(-10, 10), HY + 120 + rng.uniform(-10, 10), 44.65, 9, 0.5, 0.15,
+                   "plank_dark_mat", r=0.05, yaw=math.degrees(a))
+        stuck_axe(147, HY + 120, 44.6, 25)
+        for k in range(9):                                                                    # chips
+            ang, d_ = rng.uniform(0, 6.28), rng.uniform(32, 70)
+            rbevel(150 + d_ * math.cos(ang), HY + 120 + d_ * math.sin(ang), 0.8, rng.uniform(4, 9), rng.uniform(2, 4), 0.8,
+                   "split_wood_mat", r=0.2, yaw=rng.uniform(0, 180))
+        firewood(105, HY + 150, 0, 46, 9.5, span=180, roll=0, yaw=70, seed=71)                # a split half by the block
+        firewood(190, HY + 85, 8.5, 44, 8.5, span=360, roll=0, yaw=-20, seed=72)
+        # the woodpile: rounds and half-split logs stacked neatly along the east wall, ends out,
+        # each row resting on the one below (half logs lie flat side down)
+        wseed = 100
+        base = 0.0
+        for row in range(5):
+            y_ = -HY + 20 + (row % 2) * 8
+            r_row = rng.uniform(9.0, 10.5)
+            half_row = (row % 2 == 1)
+            y_end = HY - 30 - row * 16
+            while y_ + 2 * r_row < y_end:
+                r_ = r_row * rng.uniform(0.92, 1.05)
+                L_ = rng.uniform(46, 54)
+                if half_row:                                   # flat side down: arc on top, chord at the base
+                    firewood(HX + 40 + rng.uniform(-2, 2), y_ + r_, base, L_, r_, span=180, roll=0,
+                             yaw=rng.uniform(-3, 3), seed=wseed)
+                else:
+                    firewood(HX + 40 + rng.uniform(-2, 2), y_ + r_, base + r_, L_, r_, span=360,
+                             roll=rng.uniform(0, 360), yaw=rng.uniform(-3, 3), seed=wseed)
+                wseed += 1
+                y_ += 2 * r_ + rng.uniform(0.3, 1.5)
+            base += (r_row if half_row else 2 * r_row) - 0.8
 
         # ---- inside (lighting channel 1)
         IN_ROOM[0] = True
         I = 3.0
-        # the cot along the back wall with a bedroll (someone slept here), a candle stub, cans
-        for xx in (-HX + 30, -HX + 210):
-            for yy in (-HY + 20, -HY + 95):
-                tube((xx, yy, F), (xx, yy, F + 40), 1.2, "rusty_tool_mat", sides=6)
-        for yy in (-HY + 20, -HY + 95):
-            tube((-HX + 30, yy, F + 40), (-HX + 210, yy, F + 40), 1.4, "rusty_tool_mat", sides=6)
-        rsoft(-HX + 120, -HY + 57, F + 43, 180, 74, 6, "tarp_mat", jitter=1.0, sag=2, smooth=2, seed=2)
-        quilted(-HX + 120, -HY + 57, F + 46, 60, 150, 7, "sleeping_bag_mat", baffles=8, seed=3, yaw=90)
-        rsoft(-HX + 45, -HY + 57, F + 56, 44, 30, 12, "wool_mat", jitter=1.5, smooth=2, seed=4)      # rolled jacket as a pillow
-        # a crate as a table: candle stub, matches, empty cans, an open can with a spoon
-        bevel_box(-HX + 230, -HX + 290, -HY + 20, -HY + 70, F, F + 45, "plank_grey_mat", r=1)
-        frustum(-HX + 250, -HY + 40, F + 45, F + 50, 2.2, 2.2, "candle_mat", sides=10)
-        rsoft(-HX + 250, -HY + 40, F + 45.5, 10, 10, 1, "candle_mat", jitter=1, smooth=1, seed=5)       # wax puddle
-        rbevel(-HX + 270, -HY + 55, F + 45.8, 5, 3, 1.6, "toolbox_mat", r=0.3)
+        # an army folding cot along the back wall: two side rails, a canvas sling sagging between
+        # them, X legs with pivot bolts at both ends and the middle, rubber feet
+        X0, X1, Y0, Y1, CZ = -HX + 30, -HX + 210, -HY + 22, -HY + 93, F + 40
+        for yy in (Y0, Y1):
+            tube((X0 - 4, yy, CZ), (X1 + 4, yy, CZ), 1.7, "cot_frame_mat", sides=12)
+        for xx in (X0 - 4, X1 + 4):
+            tube((xx, Y0, CZ), (xx, Y1, CZ), 1.3, "cot_frame_mat", sides=10)
+        for xx in (X0 + 6, (X0 + X1) / 2.0, X1 - 6):
+            for ya, yb in ((Y0, Y1), (Y1, Y0)):
+                tube((xx, ya, CZ - 1), (xx + (0.8 if ya < yb else -0.8), yb, F + 1), 1.2, "cot_frame_mat", sides=10)
+            sphere(xx, (Y0 + Y1) / 2.0, (CZ + F) / 2.0, 1.6, "rusty_tool_mat", sides=8)
+            for yy in (Y0, Y1):
+                sphere(xx, yy, F + 1.2, 1.8, "tire_mat", sides=8, scale=(1, 1, 0.6))
+        sling = []
+        for r_ in range(13):
+            u = r_ / 12.0
+            row = []
+            for c_ in range(9):
+                v = c_ / 8.0
+                sag = 5.5 * math.sin(math.pi * v) * (0.6 + 0.4 * math.sin(math.pi * u))
+                row.append((0, Y0 + 1 + (Y1 - Y0 - 2) * v, CZ + 1.4 - sag))
+            sling.append(row)
+        for r_, row in enumerate(sling):                     # rows run along x
+            sling[r_] = [(X0 + (X1 - X0) * r_ / 12.0 - (X0 + X1) / 2.0, yy, zz) for _, yy, zz in row]
+        _cloth((X0 + X1) / 2.0, sling, "canvas_mat")
+        quilted((X0 + X1) / 2.0, (Y0 + Y1) / 2.0, CZ - 2.5, 60, 150, 7, "sleeping_bag_mat", baffles=8, seed=3, yaw=90)
+        rsoft(X0 + 18, (Y0 + Y1) / 2.0, CZ + 9, 38, 28, 11, "wool_mat", jitter=1.0, sag=1.5, smooth=2, seed=4)   # rolled jacket for a pillow
+        # a slatted crate for a table: corner posts, slats with gaps, a plank top; on it a candle
+        # stub with wax run down its side, a matchbox and two spent matches
+        cx0, cx1, cy0, cy1, ch = -HX + 230, -HX + 290, -HY + 20, -HY + 70, 45.0
+        for xx in (cx0, cx1 - 4):
+            for yy in (cy0, cy1 - 4):
+                bevel_box(xx, xx + 4, yy, yy + 4, F, F + ch, "plank_dark_mat", r=0.5)
         for k in range(3):
-            frustum(-HX + 235 + k * 30, -HY + 85 + k * 8, F, F + 11, 4, 4, "can_mat", sides=12, open_ends=(k != 1))
-        tube((-HX + 265, -HY + 85, F + 1), (-HX + 280, -HY + 105, F + 4), 2.5, "can_mat", sides=10)    # one rolled away
-        # antlers over the door (inside), the empty gun rack on the west wall, traps on nails
-        rbevel(0, HY - I - 1.5, F + 225, 26, 3, 22, "wood_mat", r=1)
-        for s in (-1, 1):
-            base = (s * 5, HY - I - 5, F + 230)
-            tip = (s * 34, HY - I - 14, F + 262)
-            tube(base, tip, 1.6, "antler_mat", sides=6)
-            for t, ln in ((0.35, 15), (0.6, 17), (0.85, 11)):
-                p = tuple(base[i] + (tip[i] - base[i]) * t for i in range(3))
-                tube(p, (p[0] - s * 2, p[1] - 3, p[2] + ln), 1.0, "antler_mat", sides=5)
+            za = F + 3 + k * 14
+            for a_, b_, c_, d_ in ((cx0, cx1, cy0 - 1.2, cy0), (cx0, cx1, cy1, cy1 + 1.2),
+                                   (cx0 - 1.2, cx0, cy0, cy1), (cx1, cx1 + 1.2, cy0, cy1)):
+                bevel_box(a_, b_, c_, d_, za, za + 10, "plank_grey_mat", r=0.3)
+        for k in range(4):
+            bevel_box(cx0 - 1.2, cx1 + 1.2, cy0 - 1.2 + k * 13.5, cy0 - 1.2 + k * 13.5 + 12.6, F + ch, F + ch + 1.6,
+                      "plank_grey_mat", r=0.3)
+        tz = F + ch + 1.6
+        frustum(cx0 + 20, cy0 + 20, tz, tz + 0.6, 6, 6.5, "candle_mat", sides=18)            # wax puddle
+        frustum(cx0 + 20, cy0 + 20, tz + 0.5, tz + 6, 2.3, 2.1, "candle_mat", sides=14)     # the stub
+        for k in range(4):
+            a = k * 1.7
+            sphere(cx0 + 20 + 2.2 * math.cos(a), cy0 + 20 + 2.2 * math.sin(a), tz + 2 + k, 0.8, "candle_mat", sides=6,
+                   scale=(0.7, 0.7, 2.2))
+        tube((cx0 + 20, cy0 + 20, tz + 6), (cx0 + 20, cy0 + 20, tz + 7), 0.15, "char_mat", sides=4)   # wick
+        rbevel(cx0 + 42, cy0 + 32, tz + 0.8, 5.2, 3.6, 1.6, "matchbox_mat", r=0.2, yaw=20)
+        rbevel(cx0 + 42, cy0 + 32 - 1.85, tz + 0.8, 4.6, 0.1, 1.2, "char_mat", r=0.02, yaw=20)          # striker
+        for k in range(2):
+            tube((cx0 + 34 + k * 3, cy0 + 22, tz + 0.15), (cx0 + 38 + k * 3, cy0 + 26, tz + 0.15), 0.12, "split_wood_mat", sides=4)
+            sphere(cx0 + 38 + k * 3, cy0 + 26, tz + 0.15, 0.22, "char_mat", sides=4)
+        tin_can(cx0 + 5, cy1 + 16, F, opened=True)
+        tin_can(cx0 + 28, cy1 + 22, F, opened=False)
+        tin_can(cx0 + 52, cy1 + 34, F, lying=True)
+        tube((cx0 + 5, cy1 + 16, F + 8), (cx0 + 11, cy1 + 19, F + 16), 0.35, "can_mat", sides=6)   # a spoon in it
+        sphere(cx0 + 11.5, cy1 + 19.3, F + 16.5, 1.3, "can_mat", sides=8, scale=(0.6, 0.4, 1))
+        # antlers over the door: a shield plaque, the bleached skull cap, two curving beams with tines
+        rbevel(0, HY - I - 1.2, F + 228, 24, 2.4, 20, "wood_mat", r=1.2)
+        sphere(0, HY - I - 4, F + 222, 7, "wood_mat", sides=12, scale=(1.7, 0.35, 1))
+        sphere(0, HY - I - 5.5, F + 230, 5.5, "bone_mat", sides=12, scale=(1.3, 0.8, 0.8))
+        for s_ in (-1, 1):
+            beam = [(s_ * 5, HY - I - 6, F + 232), (s_ * 14, HY - I - 9, F + 238), (s_ * 24, HY - I - 12, F + 247),
+                    (s_ * 30, HY - I - 14, F + 259), (s_ * 31, HY - I - 13, F + 270)]
+            tapered(beam, 1.9, 1.0, "antler_mat", sides=10)
+            for t, ln, lean in ((1, 15, 3), (2, 17, 1), (3, 11, -2)):
+                p0 = beam[t]
+                tapered([p0, (p0[0] - s_ * lean, p0[1] - 2, p0[2] + ln * 0.6), (p0[0] - s_ * (lean + 1.5), p0[1] - 2.5, p0[2] + ln)],
+                        1.2, 0.6, "antler_mat", sides=8)
+        # the empty gun rack on the west wall: a shaped back board, two rails of upturned hooks, and the
+        # paler outline on the wall where the guns hung
         gx = -HX + I
-        bevel_box(gx, gx + 4, 20, 150, F + 150, F + 160, "wood_mat", r=0.8)
-        bevel_box(gx, gx + 4, 20, 150, F + 60, F + 68, "wood_mat", r=0.8)
+        bevel_box(gx, gx + 2, 15, 155, F + 55, F + 172, "plank_dark_mat", r=0.6)
+        for zr in (F + 64, F + 158):
+            bevel_box(gx + 2, gx + 5, 18, 152, zr - 4, zr + 4, "wood_mat", r=0.8)
+            for k in range(3):
+                yy = 40 + k * 45
+                tapered([(gx + 5, yy, zr), (gx + 10, yy, zr + 0.5), (gx + 12, yy, zr + 5)], 1.3, 1.0, "wood_mat", sides=8)
+        rbevel(gx + 2.1, 90, F + 112, 0.3, 112, 82, "mud_print_mat", r=0.1)
+        # traps hanging on the east wall
         for k in range(3):
-            yy = 40 + k * 45
-            rbevel(gx + 7, yy, F + 166, 8, 3, 8, "wood_mat", r=0.8)                         # empty pegs
-            rbevel(gx + 7, yy, F + 74, 8, 3, 8, "wood_mat", r=0.8)
-        rbevel(gx + 1, 90, F + 110, 0.4, 120, 90, "mud_print_mat", r=0.1)                 # pale outline where guns hung
-        for k in range(3):                                                                   # traps on the east wall
-            x_ = HX - I
-            y_ = -110 + k * 55
-            tube((x_ + 1, y_, F + 195), (x_ - 4, y_, F + 196), 0.4, "rusty_tool_mat", sides=4)
-            for kk in range(5):
-                ring(x_ - 3, y_, F + 191 - kk * 3, 1.4, 0.35, "rusty_tool_mat", axis="z" if kk % 2 else "x", sides=8)
-            ring(x_ - 3, y_, F + 165, 11, 0.8, "rusty_tool_mat", axis="x", sides=16)
-            ring(x_ - 4, y_, F + 165, 11, 0.8, "rusty_tool_mat", axis="x", sides=16)
-        # a stretched pelt on a hoop frame by the stove
-        ring(HX - 9, 60, F + 120, 30, 1.0, "wood_mat", axis="x", sides=18)
-        rbevel(HX - 9, 60, F + 120, 1.0, 46, 50, "pelt_mat", r=0.3)
-        # the little wood stove the pipe comes out of
-        bevel_box(HX - 95, HX - 25, -HY + 25, -HY + 95, F + 14, F + 60, "stove_mat", r=2)
-        for xx in (HX - 90, HX - 30):
-            for yy in (-HY + 30, -HY + 90):
-                tube((xx, yy, F), (xx, yy, F + 14), 1.5, "stove_mat", sides=6)
+            leghold_trap(HX - I, -110 + k * 55, F + 160, seed=k)
+        # a stretched pelt laced into a willow hoop by the stove
+        PX, PY, PZ, RR = HX - 9, 60, F + 122, 30.0
+        tapered([(PX, PY + RR * math.cos(t), PZ + RR * math.sin(t)) for t in [2 * math.pi * k / 24 for k in range(25)]],
+                1.4, 1.4, "wood_mat", sides=8)
+        hide = []
+        for r_ in range(11):
+            v = r_ / 10.0 - 0.5
+            row = []
+            for c_ in range(11):
+                u = c_ / 10.0 - 0.5
+                e = max(0.0, 1 - (u * u / 0.25 + v * v / 0.25))
+                bulge = 3.5 * e
+                row.append((-bulge, PY + u * 2 * (RR - 7) * (0.8 + 0.2 * math.cos(v * 3)), PZ + v * 2 * (RR - 5)))
+            hide.append(row)
+        _cloth(PX - 0.8, hide, "fur_mat")
+        for k in range(12):                                                                  # lacing
+            t = 2 * math.pi * k / 12
+            tube((PX - 0.5, PY + RR * math.cos(t), PZ + RR * math.sin(t)),
+                 (PX - 1.5, PY + (RR - 7) * math.cos(t) * 0.92, PZ + (RR - 5) * math.sin(t) * 0.92), 0.2, "string_mat", sides=4)
+        # the little cast-iron box stove the pipe comes out of: curved legs, a body with a top plate
+        # and a lid ring, a front door with a latch and a draft spinner, a flue collar; an enamel
+        # coffee pot on top, split wood beside it
+        SX0, SX1, SY0, SY1, SZ0, SZ1 = HX - 95, HX - 25, -HY + 25, -HY + 95, F + 14, F + 58
+        bevel_box(SX0, SX1, SY0, SY1, SZ0, SZ1, "stove_mat", r=2.5, seg=3)
+        bevel_box(SX0 - 2, SX1 + 2, SY0 - 2, SY1 + 2, SZ1, SZ1 + 2.5, "stove_mat", r=0.8)
+        ring((SX0 + SX1) / 2.0 - 10, (SY0 + SY1) / 2.0, SZ1 + 2.7, 9, 0.6, "stove_mat", sides=18)
+        frustum((SX0 + SX1) / 2.0 + 15, (SY0 + SY1) / 2.0 + 5, SZ1 + 2.5, SZ1 + 7, 9, 7.5, "stove_mat", sides=16)
+        for xx in (SX0 + 6, SX1 - 6):
+            for yy in (SY0 + 6, SY1 - 6):
+                tapered([(xx, yy, SZ0), (xx + (2 if xx > SX0 + 30 else -2), yy + (2 if yy > SY0 + 30 else -2), SZ0 - 8),
+                         (xx + (4 if xx > SX0 + 30 else -4), yy + (4 if yy > SY0 + 30 else -4), F + 1)], 2.2, 1.5, "stove_mat", sides=8)
+        dx0, dz0 = SX0 + 12, SZ0 + 8
+        bevel_box(dx0, SX1 - 12, SY1, SY1 + 1.8, dz0, SZ1 - 8, "stove_mat", r=0.8)          # door, facing the room
+        frustum((SX0 + SX1) / 2.0, SY1 + 2.5, dz0 + 14, dz0 + 14.5, 4.5, 4.5, "stove_mat", sides=14)
+        tube((SX1 - 18, SY1 + 1.8, SZ1 - 16), (SX1 - 18, SY1 + 6, SZ1 - 16), 0.5, "steel_edge_mat", sides=6)
+        tube((SX1 - 18, SY1 + 6, SZ1 - 16), (SX1 - 24, SY1 + 6, SZ1 - 16), 0.6, "steel_edge_mat", sides=6)    # latch
+        for zz in (dz0 + 4, SZ1 - 12):
+            tube((dx0 - 1, SY1 + 1, zz), (dx0 - 1, SY1 + 1, zz + 5), 1.0, "stove_mat", sides=8)                # hinges
+        PCX, PCY = HX - 60, -HY + 60
+        frustum(PCX, PCY, SZ1 + 2.5, SZ1 + 6, 8.5, 7.5, "stove_mat", sides=14)                                 # flue collar
+        frustum(SX0 + 20, SY0 + 22, SZ1 + 2.6, SZ1 + 16, 7.5, 5.5, "enamel_mat", sides=16)                    # coffee pot
+        frustum(SX0 + 20, SY0 + 22, SZ1 + 16, SZ1 + 18, 5.5, 4, "enamel_mat", sides=16)
+        sphere(SX0 + 20, SY0 + 22, SZ1 + 18.6, 1.1, "can_mat", sides=8)
+        tube((SX0 + 26, SY0 + 22, SZ1 + 8), (SX0 + 32, SY0 + 22, SZ1 + 15), 1.0, "enamel_mat", sides=8)
+        ring(SX0 + 13.5, SY0 + 22, SZ1 + 10, 4.5, 0.6, "enamel_mat", axis="y", sides=12)
+        for k in range(3):
+            firewood(SX0 - 30, SY0 + 15 + k * 17, F, 42, 7.5, span=180, roll=0, yaw=90 + rng.uniform(-6, 6), seed=300 + k)
         cobweb((-HX + I + 1, -HY + I + 1), 1, 1, 40, BACK_H - 6)
         cobweb((HX - I - 1, HY - I - 1), -1, -1, 36, FRONT_H - 6)
         IN_ROOM[0] = False
