@@ -35,7 +35,7 @@ MATS.update({
     "coat_mat": (0.16, 0.13, 0.1), "bear_mat": (0.35, 0.24, 0.14), "dustsheet_mat": (0.52, 0.5, 0.45),
     "drip_mat": (0.18, 0.14, 0.08), "debris_mat": (0.42, 0.4, 0.36), "duffel_mat": (0.14, 0.17, 0.12), "case_lining_mat": (0.16, 0.14, 0.13), "shirt_mat": (0.4, 0.38, 0.35),
     "sweater_mat": (0.2, 0.24, 0.3), "sweater_red_mat": (0.3, 0.08, 0.07),
-    "food_mat": (0.3, 0.16, 0.06), "phone_mat": (0.5, 0.45, 0.36), "phone_dark_mat": (0.03, 0.03, 0.03),
+    "food_mat": (0.3, 0.16, 0.06), "phone_mat": (0.5, 0.45, 0.36), "phone_dark_mat": (0.03, 0.03, 0.03), "paint_white_mat": (0.78, 0.76, 0.7), "roller_mat": (0.72, 0.7, 0.64), "grip_mat": (0.45, 0.08, 0.05),
     # shared with the lake buildings (same colours as BLD_MATS there)
     "rusty_tool_mat": (0.2, 0.11, 0.07), "dark_leather_mat": (0.09, 0.06, 0.04), "can_mat": (0.36, 0.34, 0.31),
     "paint_can_mat": (0.3, 0.29, 0.26), "mattress_mat": (0.38, 0.34, 0.27),
@@ -297,15 +297,75 @@ def wall_calendar(x_wall, y, z, facing, page_mat="paper_mat"):
 
 
 def step_ladder(x, y, yaw):
+    """A wooden A-frame step ladder standing open: flat front rails with four treads, rear legs
+    with cross braces, a top cap, the fold-out paint shelf, metal spreader bars, rubber feet
+    and a few old paint drips."""
+    H_, lean = 160.0, math.degrees(math.atan(30 / 160.0))
+    L = math.hypot(H_, 30)
     with Moved(x, y, yaw):
-        for s in (-1, 1):
-            tube((x + s * 22, y - 30, 0), (x + s * 18, y, 160), 2.2, "wood_mat", sides=6)
-            tube((x + s * 22, y + 30, 0), (x + s * 18, y, 160), 1.8, "wood_mat", sides=6)
-        for k in range(4):
-            z = 35 + k * 35
-            yy = y - 30 + 30 * z / 160.0
-            rbevel(x, yy, z, 44 - z * 0.05, 9, 2.5, "wood_mat", r=0.5)
-        rbevel(x, y, 162, 40, 16, 3, "wood_mat", r=0.6)
+        for s_ in (-1, 1):
+            rbevel(x + s_ * 21, y - 15, H_ / 2, 2.4, 7.5, L, "wood_mat", r=0.5, tilt_y=lean)     # front rails
+            rbevel(x + s_ * 21, y + 15, H_ / 2, 2.4, 5.5, L, "wood_mat", r=0.5, tilt_y=-lean)    # rear legs
+            for yy in (y - 30, y + 30):
+                bevel_box(x + s_ * 21 - 1.6, x + s_ * 21 + 1.6, yy - 3.2, yy + 3.2, 0, 1.2, "tire_mat", r=0.3)   # feet
+            # spreader bar: two flat metal arms hinged in the middle, slightly sagging
+            fy, zz = 30 - 30 * 70 / H_, 70
+            tube((x + s_ * 22.6, y - fy, zz), (x + s_ * 22.6, y, zz - 2.5), 0.5, "metal_mat", sides=6)
+            tube((x + s_ * 22.6, y, zz - 2.5), (x + s_ * 22.6, y + fy, zz), 0.5, "metal_mat", sides=6)
+            sphere(x + s_ * 22.6, y, zz - 2.5, 0.8, "metal_mat", sides=6)
+        for z_ in (38, 76, 114, 150):                                                           # treads
+            yy = y - 30 + 30 * z_ / H_
+            rbevel(x, yy - 1.5, z_, 40.2, 10, 2.2, "wood_mat", r=0.4)
+        for z_ in (40, 105):                                                                    # rear braces
+            yy = y + 30 - 30 * z_ / H_
+            rbevel(x, yy, z_, 40.2, 1.8, 6, "wood_mat", r=0.4)
+        rbevel(x, y + 1, H_ + 2, 48, 24, 3.2, "wood_mat", r=0.6)                                 # top cap
+        rbevel(x, y + 17, 118, 36, 16, 1.6, "wood_mat", r=0.4)                                   # paint shelf
+        for s_ in (-1, 1):
+            tube((x + s_ * 16, y + 9.5, 118), (x + s_ * 16, y + 13, 118), 0.5, "metal_mat", sides=6)
+        for k, (dx, z_) in enumerate(((-8, 39.2), (11, 77.2), (-14, 115.2), (5, 151.2))):
+            yy = y - 30 + 30 * z_ / H_ - 1.5
+            sphere(x + dx, yy, z_ + 0.1, 1.6 + (k % 2), "paint_white_mat", sides=8, scale=(1, 1, 0.18))
+        sphere(x + 2, y + 1, H_ + 3.7, 2.4, "paint_white_mat", sides=8, scale=(1, 1, 0.15))
+
+
+def paint_tray(x, y, yaw):
+    """A metal paint roller tray on the floor: a deep well at the front (-y) with white paint
+    in it, a ribbed ramp rising to the back, a rolled rim, little feet; the roller resting on
+    the ramp (a fluffy paint-covered cover on a bent wire frame, a plastic grip) handle out."""
+    W, D, Hr = 33.0, 40.0, 7.0
+    with Moved(x, y, yaw):
+        hw, hd = W / 2, D / 2
+        for s_ in (-1, 1):
+            box(x + s_ * hw - 0.4, x + s_ * hw + 0.4, y - hd, y + hd, 0.6, Hr, "metal_mat")        # side walls
+        box(x - hw, x + hw, y - hd - 0.4, y - hd + 0.4, 0.6, Hr, "metal_mat")                   # front wall
+        box(x - hw, x + hw, y + hd - 0.4, y + hd + 0.4, Hr - 2.0, Hr, "metal_mat")              # back lip
+        box(x - hw, x + hw, y - hd, y - hd + 12, 0.6, 1.0, "metal_mat")                         # well floor
+        ramp = math.degrees(math.atan((Hr - 2.6) / (D - 12)))
+        rlen = math.hypot(D - 12, Hr - 2.6)
+        rbevel(x, y - hd + 12 + (D - 12) / 2, 0.8 + (Hr - 2.6) / 2, W - 1, rlen, 0.4, "metal_mat", r=0.1, tilt_y=ramp)
+        for k in range(7):                                                                      # ribs on the ramp
+            t_ = (k + 1) / 8.0
+            rbevel(x, y - hd + 12 + (D - 12) * t_, 1.1 + (Hr - 2.6) * t_, W - 4, 1.0, 0.5, "metal_mat", r=0.1, tilt_y=ramp)
+        for s_ in (-1, 1):                                                                      # rolled rim
+            tube((x + s_ * (hw + 0.9), y - hd - 0.9, Hr), (x + s_ * (hw + 0.9), y + hd + 0.9, Hr), 0.6, "metal_mat", sides=6)
+        for yy in (y - hd - 0.9, y + hd + 0.9):
+            tube((x - hw - 0.9, yy, Hr), (x + hw + 0.9, yy, Hr), 0.6, "metal_mat", sides=6)
+        for dx in (-hw + 3, hw - 3):
+            box(x + dx - 1, x + dx + 1, y + hd - 3, y + hd - 1, 0, 0.6, "metal_mat")             # feet
+        box(x - hw + 0.5, x + hw - 0.5, y - hd + 0.5, y - hd + 11.5, 1.0, 3.2, "paint_white_mat")   # paint in the well
+        # the roller lying across the ramp
+        ry = y + 4
+        rz = 0.8 + (Hr - 2.6) * ((4 + hd - 12) / (D - 12)) + 4.0
+        tube((x - 11.5, ry, rz), (x + 11.5, ry, rz), 3.6, "roller_mat", sides=16)
+        for ex in (-11.5, 11.5):
+            sphere(x + ex, ry, rz, 3.6, "roller_mat", sides=12, scale=(0.25, 1, 1))
+        tube((x + 11.5, ry, rz), (x + 14.5, ry, rz), 0.35, "metal_mat", sides=6)               # axle
+        frame = [(x + 14.5, ry, rz), (x + 14.5, ry + 6, rz + 2), (x + 8, ry + 14, rz + 4.5), (x + 6, ry + 22, rz + 6.5)]
+        for a_, b_ in zip(frame, frame[1:]):
+            tube(a_, b_, 0.35, "metal_mat", sides=6)
+        tube(frame[-1], (x + 3.5, ry + 36, rz + 9), 1.6, "grip_mat", sides=12)                  # plastic grip
+        sphere(x + 3.5, ry + 36, rz + 9, 1.6, "grip_mat", sides=10)
 
 
 def bucket(x, y, z=0, mat="metal_mat"):
@@ -334,22 +394,29 @@ def teddy(x, y, z, yaw):
 
 
 def dust_sheet(cx, cy, w, d, h, seed, drop=4):
-    """A sheet thrown over furniture (w x d, h tall): flat on top, falling to the floor in folds."""
+    """A sheet thrown over furniture (w x d, h tall): flat on top with a 1.5 cm margin, folding
+    exactly at the edges and falling to the floor in folds that only ever move outward, so it
+    never cuts into what it covers."""
     rng = random.Random(seed)
+    W2, D2, top = w / 2.0 + 1.5, d / 2.0 + 1.5, h + 1.2
+    side = top - drop * 0.5
+
+    def axis(half, n_top, n_side):
+        a_ = [-half - side + side * k / n_side for k in range(n_side)]
+        t_ = [-half + 2 * half * k / n_top for k in range(n_top + 1)]
+        return a_ + t_ + [-v for v in reversed(a_)]
+    us, vs = axis(W2, 12, 9), axis(D2, 20, 9)
     grid = []
-    rows, cols = 18, 18
-    for r_ in range(rows + 1):
-        v = r_ / rows
+    for sv in vs:
         row = []
-        for c in range(cols + 1):
-            u = c / cols
-            ex = (u - 0.5) * (w + 2 * h * 0.28)
-            ey = (v - 0.5) * (d + 2 * h * 0.28)
-            out = max(abs(ex) - w / 2.0, abs(ey) - d / 2.0, 0.0)
-            z = h + 1.5 - out / 0.28 if out > 0 else h + 1.5
-            z = max(drop * 0.5, z)
-            wob = 2.2 * math.sin(u * 19 + seed) * math.sin(v * 13) * (out > 0) + rng.uniform(-0.4, 0.4)
-            row.append((ex + wob, cy + ey + wob * 0.5, z + (0 if out else rng.uniform(-0.3, 0.3))))
+        for su in us:
+            ou, ov = max(0.0, abs(su) - W2), max(0.0, abs(sv) - D2)
+            out = max(ou, ov)
+            fold = abs(2.4 * math.sin(su * 0.31 + seed) * math.sin(sv * 0.23 + seed * 0.7)) + rng.uniform(0, 0.4)
+            x = math.copysign(min(abs(su), W2) + ou * 0.22 + (fold if ou > 0 else 0), su)
+            y = math.copysign(min(abs(sv), D2) + ov * 0.22 + (fold if ov > 0 else 0), sv)
+            z = top - out if out > 0 else top + rng.uniform(0, 0.25)
+            row.append((x, cy + y, z))
         grid.append(row)
     _cloth(cx, grid, "dustsheet_mat")
 
@@ -448,7 +515,7 @@ def coil_cord(path, coil_r=0.8, wire_r=0.22, pitch=0.6, mat="phone_mat"):
         tube(q0, q1, wire_r, mat, sides=5)
 
 
-def rotary_phone(x, y, z, yaw=0):
+def rotary_phone(x, y, z, yaw=0, handset=True):
     """A 1960s desk rotary phone (like the Western Electric 500), facing -y before yaw: a
     rounded body whose top slopes down to the front, a tilted finger-wheel dial with ten holes,
     a number card and a finger stop, the handset lying across the cradle on two raised
@@ -485,6 +552,8 @@ def rotary_phone(x, y, z, yaw=0):
         for s_ in (-1, 1):
             rbevel(x + s_ * 7.5, hy, hz + 0.6, 4.6, 7, 2.6, "phone_mat", r=1.2, seg=2)
             rbevel(x + s_ * 2.6, hy, hz + 0.4, 1.4, 2.2, 1.6, "plate_mat", r=0.4)
+        if not handset:                                  # knocked off: the cradle is empty
+            return
         # handset across the cradle: receiver and mouthpiece cups joined by a bent handle
         cz = hz + 3.6
         for s_ in (-1, 1):
@@ -533,7 +602,7 @@ def room_finish(i, x0, x1):
     bevel_box(R - 3.5, R, py - pw / 2 - 5, py + pw / 2 + 5, pz - ph / 2 - 5, pz + ph / 2 + 5, "frame_mat", r=1.2)
     picture(R - 4.3, py, pz, pw, ph, "pic_painting", facing=-1)
     if i not in (1, 2):
-        rotary_phone(x0 + 165, BACK - 50, 60, yaw=-15)
+        rotary_phone(x0 + 164, BACK - 50, 60, yaw=-15)
     if i in (0, 4, 5):
         ice_bucket(x0 + 58, FRONT + 228, 80)
     # an armchair by the window, turned toward the TV, a little round table next to it
@@ -991,19 +1060,53 @@ def dropped_shirt(cx, cy, yaw, mat, seed=0):
         rsoft(cx, cy + 20, 1.4, 16, 5, 2.4, mat, jitter=0.3, smooth=2, seed=seed + 7)        # neckline
 
 
-def dropped_drawer(cx, cy, yaw):
-    """The nightstand's drawer, pulled out and dropped on its bottom: a real open drawer
-    (front with the brass knob, sides, back, a thin bottom), papers and a pen spilled."""
+def dropped_drawer(cx, cy, yaw, w=50.0, d=40.0, h=17.0, spill=True):
+    """A drawer pulled out and dropped flat on the floor (front toward -y before yaw): front
+    with a brass knob (or a bar handle when it is wide), sides, back, a thin bottom; papers and
+    a pen spilled when spill."""
+    hw, hd = w / 2.0, d / 2.0
     with Moved(cx, cy, yaw):
-        bevel_box(cx - 25, cx + 25, cy - 21, cy - 19, 0, 17, "wood_mat", r=0.8)                  # front
-        sphere(cx, cy - 21.8, 8.5, 1.6, "brass_mat", sides=8)
-        for a_ in (cx - 22, cx + 20.5):
-            bevel_box(a_, a_ + 1.5, cy - 19, cy + 19, 0, 13, "wood_mat", r=0.4)                  # sides
-        bevel_box(cx - 22, cx + 22, cy + 17.5, cy + 19, 0, 13, "wood_mat", r=0.4)                 # back
-        box(cx - 20.5, cx + 20.5, cy - 19, cy + 17.5, 0, 0.8, "trim_mat")                       # bottom
-        papers(cx - 4, cy + 2, 0.8, 2, 61)
-        papers(cx - 2, cy - 38, 0, 3, 62, spread=8)
-        pen(cx + 22, cy - 30, 0.5, 35)
+        bevel_box(cx - hw, cx + hw, cy - hd - 1, cy - hd + 1, 0, h, "wood_mat", r=0.8)          # front
+        if w > 60:
+            for dx in (-6, 6):
+                box(cx + dx - 0.6, cx + dx + 0.6, cy - hd - 3, cy - hd - 1, h / 2 - 0.6, h / 2 + 0.6, "brass_mat")
+            tube((cx - 7, cy - hd - 3.6, h / 2), (cx + 7, cy - hd - 3.6, h / 2), 0.8, "brass_mat", sides=6)
+        else:
+            sphere(cx, cy - hd - 1.8, h / 2, 1.6, "brass_mat", sides=8)
+        for a_ in (cx - hw + 3, cx + hw - 4.5):
+            bevel_box(a_, a_ + 1.5, cy - hd + 1, cy + hd, 0, h - 4, "wood_mat", r=0.4)        # sides
+        bevel_box(cx - hw + 3, cx + hw - 3, cy + hd - 1.5, cy + hd, 0, h - 4, "wood_mat", r=0.4)   # back
+        box(cx - hw + 4.5, cx + hw - 4.5, cy - hd + 1, cy + hd - 1.5, 0, 0.8, "trim_mat")        # bottom
+        if spill:
+            papers(cx - 4, cy + 2, 0.8, 2, 61)
+            papers(cx - 2, cy - hd - 18, 0, 3, 62, spread=8)
+            pen(cx + 22, cy - hd - 10, 0.5, 35)
+
+
+def hanging_handset(x, y, z_top):
+    """A phone handset hanging by its cord, mouthpiece end up: handle, both cups turned to -y."""
+    zb = z_top - 21
+    tube((x, y, zb + 3.5), (x, y, z_top - 3.5), 1.9, "phone_mat", sides=14)
+    for zc, sgn in ((z_top - 1.5, 1), (zb + 1.5, -1)):
+        tube((x, y, zc - sgn * 2.0), (x, y - 1.2, zc), 1.9, "phone_mat", sides=12)
+        tube((x, y - 1.0, zc), (x, y - 4.2, zc), 3.0, "phone_mat", sides=20)                   # cup
+        sphere(x, y - 4.2, zc, 3.0, "phone_mat", sides=16, scale=(1, 0.45, 1))
+
+
+def bible(x, y, z, yaw):
+    """A Bible lying face down: black leather covers a little bigger than the pages, a rounded
+    spine with raised bands, gilt page edges, a red ribbon marker trailing out."""
+    W, D, T = 15.0, 22.0, 4.2
+    with Moved(x, y, yaw):
+        bevel_box(x - W / 2, x + W / 2, y - D / 2, y + D / 2, z, z + 0.35, "dark_leather_mat", r=0.15)
+        bevel_box(x - W / 2, x + W / 2, y - D / 2, y + D / 2, z + T - 0.35, z + T, "dark_leather_mat", r=0.15)
+        box(x - W / 2 + 0.6, x + W / 2 - 0.35, y - D / 2 + 0.35, y + D / 2 - 0.35, z + 0.35, z + T - 0.35, "brass_mat")
+        tube((x - W / 2 + 0.6, y - D / 2, z + T / 2), (x - W / 2 + 0.6, y + D / 2, z + T / 2), T / 2, "dark_leather_mat", sides=14)
+        for k in range(4):
+            yy = y - D / 2 + 3.5 + k * (D - 7) / 3.0
+            tube((x - W / 2 + 0.6, yy - 0.3, z + T / 2), (x - W / 2 + 0.6, yy + 0.3, z + T / 2), T / 2 + 0.15,
+                 "dark_leather_mat", sides=14)
+        box(x + 1.5, x + 2.3, y - D / 2 - 7, y - D / 2 + 1, z + 0.02, z + 0.12, "red_string_mat")   # ribbon
 
 
 def room_story(i, x0, x1):
@@ -1025,33 +1128,29 @@ def room_story(i, x0, x1):
         rbevel(x0 + 238, FRONT + 124, 2.6, 6, 1.4, 0.8, "brass_mat", r=0.2, yaw=20)
         rbevel(x0 + 222, FRONT + 112, 2.4, 5, 9, 0.8, "book_red_mat", r=0.6, yaw=40)
     elif i == 1:    # 102: barricaded, then broken in
-        # the chair, tipped over just inside the door
-        with Moved(x0 + 200, FRONT + 215, 0):
-            rbevel(x0 + 200, FRONT + 215, 21, 42, 40, 4, "wood_mat", r=1.2, tilt_x=88)
-            for dz in (-18, 18):
-                tube((x0 + 200, FRONT + 200 + dz * 0.2, 0), (x0 + 240, FRONT + 200 + dz * 0.2, 5), 1.8, "wood_mat", sides=8)
-            for k in range(3):
-                rbevel(x0 + 160 - k * 2, FRONT + 230, 10 + k * 3, 4, 34, 6, "wood_mat", r=0.8)
-        # the phone off the hook on the nightstand, the receiver hanging by its cord
-        rbevel(x0 + 165, BACK - 47, 63.5, 20, 18, 7, "phone_mat", r=2)
-        tube((x0 + 172, BACK - 52, 63), (x0 + 178, BACK - 78, 30), 0.5, "trim_mat", sides=4)
-        tube((x0 + 178, BACK - 78, 30), (x0 + 175, BACK - 82, 18), 0.5, "trim_mat", sides=4)
-        rbevel(x0 + 175, BACK - 84, 12, 6, 6, 21, "phone_mat", r=2.5, tilt_x=10)
+        # the dresser was dragged to the door; its top drawer came out and lies on the floor
+        with Moved(x0 + 48, FRONT + 285, -28, 70, -40):
+            dropped_drawer(x0 + 120, FRONT + 330, 104, w=78, d=48, h=19, spill=False)
+        # the phone knocked off the hook: base on the nightstand, the receiver hanging by its cord
+        px, py = x0 + 163, BACK - 50
+        rotary_phone(px, py, 60, yaw=0, handset=False)
+        hx, hy = px - 6, BACK - 78
+        coil_cord([(px - 10.4, py - 8.5, 62.2), (px - 9, BACK - 68.5, 61.2), (px - 8, BACK - 72.5, 58.5),
+                   (px - 7, BACK - 75, 48), (hx, hy + 1, 36.5)])
+        hanging_handset(hx, hy, 36)
         # a Bible face down on the bed
-        book(x0 + 340, BACK - 140, 58.6, 15, 22, 4, "book_brown_mat", yaw=30, lie=True)
+        bible(x0 + 340, BACK - 140, 58.6, 30)
     elif i == 2:    # 103: renovation stopped
         # the mattress leaning on the right wall
         rbevel(R - 30, FRONT + 330, 116, 22, 190, 230, "bed_mat", r=5, seg=3, tilt_x=6)   # clear of the bed
-        dust_sheet(x0 + t + 28, FRONT + 285, 58, 172, 80, seed=7)                          # the dresser under a sheet
+        dust_sheet(x0 + t + 29.5, FRONT + 285, 59, 171, 80, seed=7)                        # the dresser under a sheet
         bevel_box(x0 + 52, x0 + 98, BACK - 175, BACK - 135, 0, 52, "tv_mat", r=3)              # the TV on the floor, sheeted
         dust_sheet(x0 + 75, BACK - 155, 46, 40, 52, seed=8)
         step_ladder(x0 + 330, FRONT + 240, 20)
         for k in range(3):
             frustum(x0 + 270 + k * 25, BACK - 60, 0, 19, 9, 9, "paint_can_mat" if "paint_can_mat" in MATS else "metal_mat", sides=16)
             frustum(x0 + 270 + k * 25, BACK - 60, 19, 20, 8.5, 8.5, "metal_mat", sides=16)
-        rbevel(x0 + 220, BACK - 100, 2.5, 34, 26, 3, "metal_mat", r=0.8, yaw=10)            # roller tray
-        tube((x0 + 210, BACK - 110, 6), (x0 + 175, BACK - 150, 4), 1.0, "metal_mat", sides=6)
-        tube((x0 + 210, BACK - 110, 6), (x0 + 230, BACK - 110, 6), 3.2, "dustsheet_mat", sides=12)
+        paint_tray(x0 + 150, BACK - 125, 190)                                               # clear of the bed frame and nightstand
         bevel_box(R - 2, R - 1.2, BACK - 200, BACK - 80, 130, 200, "plaster_mat", r=0.2)   # a fresh plaster patch
     elif i == 4:    # 105: water damage
         cx, cy = x0 + 380, BACK - 220

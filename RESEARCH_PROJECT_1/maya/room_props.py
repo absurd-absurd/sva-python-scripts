@@ -138,7 +138,7 @@ def bed(x0, x1, made=True, mattress=True):
 
 
 def nightstand(x0, drawer=True):
-    """Top slab with a small overhang, a drawer with a brass knob, an open shelf, short legs.
+    """Top slab with a small overhang, two drawers with brass knobs, short legs.
     drawer=False: the drawer has been pulled out (Room 101), leaving a dark empty slot."""
     nx0, nx1, ny0, ny1 = x0 + 150, x0 + 210, BACK - 70, BACK - 25
     bevel_box(nx0 + 2, nx1 - 2, ny0 + 2, ny1 - 2, 6, 57.5, "wood_mat", r=1)
@@ -151,7 +151,8 @@ def nightstand(x0, drawer=True):
         sphere((nx0 + nx1) / 2.0, ny0 - 0.6, 44.5, 1.6, "brass_mat", sides=8)        # knob
     else:
         box(nx0 + 5, nx1 - 5, ny0 + 1.6, ny0 + 2.2, 36, 53, "stain_mat")              # empty slot
-    bevel_box(nx0 + 5, nx1 - 5, ny0 + 1.5, ny1 - 4, 10, 31, "trim_mat", r=0.5)        # shelf, dark inside
+    bevel_box(nx0 + 5, nx1 - 5, ny0 + 0.5, ny0 + 2.5, 12, 31, "wood_mat", r=0.8)      # bottom drawer, like the top one
+    sphere((nx0 + nx1) / 2.0, ny0 - 0.6, 21.5, 1.6, "brass_mat", sides=8)
 
 
 def lamp(lx, ly, shade="glow_lamp_mat", bulb="glow_lamp_mat"):
@@ -168,7 +169,7 @@ def lamp(lx, ly, shade="glow_lamp_mat", bulb="glow_lamp_mat"):
     sphere(lx, ly, 121, 1.2, "brass_mat", sides=8)                                   # finial
 
 
-def dresser(x0):
+def dresser(x0, missing=None):
     """Against the left wall, facing the bed: six drawers with bar handles, a top slab with
     an overhang (80 high, the office key sits on it), and a plinth."""
     t = 20
@@ -178,8 +179,11 @@ def dresser(x0):
     bevel_box(dx0, dx0 + 56, y0, y1, 77, 80, "wood_mat", r=1)
     bevel_box(dx0 + 3, dx0 + 50, y0 + 6, y1 - 6, 0, 8.5, "trim_mat", r=0.6)
     mid = (y0 + y1) / 2.0
-    for za, zb in ((10, 30), (32, 52), (54, 75)):
-        for ya, yb in ((y0 + 5, mid - 1), (mid + 1, y1 - 5)):
+    for row, (za, zb) in enumerate(((10, 30), (32, 52), (54, 75))):
+        for col, (ya, yb) in enumerate(((y0 + 5, mid - 1), (mid + 1, y1 - 5))):
+            if missing == (row, col):                     # pulled out: a dark empty opening
+                box(dx0 + 52.6, dx0 + 53.3, ya + 1, yb - 1, za + 1, zb - 1, "stain_mat")
+                continue
             bevel_box(dx0 + 52.5, dx0 + 55, ya + 1, yb - 1, za + 1, zb - 1, "wood_mat", r=0.8)
             yc, zc = (ya + yb) / 2.0, (za + zb) / 2.0
             for dy in (-6, 6):

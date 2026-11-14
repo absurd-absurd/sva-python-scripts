@@ -861,3 +861,12 @@ Room 101 notes: the chair, suitcase and clothes didn't look real; the suitcase w
 Feedback after the tour: "I don't like the clothes, just put some folded fabric inside the suitcase, and make the phone on the table more realistic."
 - The jeans on the floor and the shirt spilling out are gone; the suitcase now holds neatly folded clothes (two stacks and a pair of folded jeans).
 - **Phone** (Rooms 101, 105, 106): a 1960s desk rotary like the Western Electric 500: a rounded body whose top slopes to the front, a tilted finger-wheel dial with ten holes, a number card and a finger stop, the handset (receiver and mouthpiece cups joined by the handle) lying across two cradle shoulders with the hook-switch buttons between, a real coiled cord (a helix of short tubes, motel_interiors.py coil_cord()), rubber feet and a line cord off the back.
+
+### Rooms 102 and 103
+
+![Before](2026-11-14_rooms102_103_before.png)
+![After: 102 phone and Bible, 102 dresser, 103 ladder, paint tray, dust sheet](2026-11-14_rooms102_103_after.png)
+
+- **Every room**: the nightstand's lower open shelf is now a second drawer matching the top one (Room 101 keeps the top drawer missing).
+- **102**: the phone is the same rotary as 101, knocked off the hook: the base sits on the nightstand with an empty cradle and the receiver hangs down the front on its coiled cord, clear of the nightstand. The lamp moved to the right so it no longer stands in the phone (rooms 103 and 105 too). The Bible on the bed is a real book now: black leather covers, a rounded spine with raised bands, gilt page edges, a red ribbon. The tipped chair that read as a broken drawer is gone; instead one drawer lies on the floor in front of the dragged dresser, and the dresser has a dark empty slot where it came from.
+- **103**: a proper wooden A-frame step ladder (flat rails, four treads, rear legs with braces, top cap, paint shelf, metal spreader bars, rubber feet, old paint drips); a real paint tray (paint well, ribbed ramp, rolled rim, feet) with a paint roller resting in it (fluffy cover, bent wire frame, red grip), moved out from under the bed frame. The dust sheets over the dresser and the TV were cutting into the furniture at the top edges; dust_sheet() now folds exactly at the edges with a 1.5 cm margin and its folds only push outward.
