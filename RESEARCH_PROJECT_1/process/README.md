@@ -965,3 +965,7 @@ Feedback list: anchor, life jackets, everything on the bench and in the toolbox,
 - **Boarded windows** (boathouse, shack, cabins): boards overlapping outside and two or three boards nailed across the inside too, with nail heads, instead of a flat dark panel.
 
 Second boathouse pass (feedback): the tarp over the crate and the life jackets are removed; the west window by them (it had glass shards) is boarded up like the others, boards on both faces.
+
+![The shack's side window, boarded, inside and out](2026-11-14_shack_side_window.png)
+
+The boathouse is approved. Last note: board up the shack's other window (the side by the cot, which had glass shards); now boarded on both faces like the rest.

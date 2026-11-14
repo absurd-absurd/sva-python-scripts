@@ -397,8 +397,7 @@ def shack():
         frame("x", HY, 60, 150, F + 100, F + 170, 3.5)
         plank_boards_over("x", HY, 60, 150, F + 100, F + 170, 5.5, seed=3)       # front window boarded
         frame("y", -HX, -40, 40, F + 100, F + 160, -3.5)
-        for k in range(2):                                                    # glass shards in the side window
-            rbevel(-HX, -25 + k * 30, F + 110 + k * 12, 0.6, 18, 28, "seeglass_cabin_mat", r=0.2, tilt_y=10 * k - 5)
+        plank_boards_over("y", -HX, -40, 40, F + 100, F + 160, -5.5, seed=4)     # side window (by the cot) boarded up
         for xx in (-HX, HX):
             for yy in (-HY, HY):
                 bevel_box(xx - 6, xx + 6, yy - 6, yy + 6, 0, top(yy), "plank_dark_mat", r=1)
