@@ -250,10 +250,10 @@ def weather():
 
     fog = spawn(unreal.ExponentialHeightFog, "Fog", (0, 0, 0))
     fc = fog.component
-    fc.set_fog_density(0.18)
+    fc.set_fog_density(0.26)                         # hazy (Nov 14 look B)
     fc.set_fog_height_falloff(0.25)
     fc.set_fog_inscattering_color(unreal.LinearColor(0.22, 0.24, 0.3, 1))    # blue-grey
-    fc.set_editor_property("start_distance", 200)
+    fc.set_editor_property("start_distance", 100)
 
     pp = spawn(unreal.PostProcessVolume, "PostProcess_Look", (0, 0, 0))
     pp.set_editor_property("unbound", True)
@@ -261,11 +261,14 @@ def weather():
     for name, value in (
         ("auto_exposure_method", unreal.AutoExposureMethod.AEM_MANUAL),
         ("auto_exposure_bias", 7.3),                 # raise to brighten, lower to darken
-        ("color_saturation", unreal.Vector4(0.85, 0.85, 0.85, 1)),   # washed-out colors
-        ("color_contrast", unreal.Vector4(0.9, 0.9, 0.9, 1)),    # milky, low contrast
+        ("color_saturation", unreal.Vector4(0.82, 0.82, 0.82, 1)),   # washed-out colors
+        ("color_contrast", unreal.Vector4(1.1, 1.1, 1.1, 1)),    # deep blacks under the haze
         ("vignette_intensity", 0.35),
         ("film_grain_intensity", 0.5),
-        ("bloom_intensity", 6.0),                   # big halo around the neon (picked from test shots)
+        # the hazy, bloomy look (Nov 14, option B at contrast 1.1): every light spills a wide soft glow
+        ("bloom_intensity", 9.0),
+        ("bloom_size_scale", 10.0),
+        ("scene_fringe_intensity", 1.0),             # a little colour fringing toward the screen edges
     ):
         s.set_editor_property("override_" + name, True)
         s.set_editor_property(name, value)

@@ -969,3 +969,20 @@ Second boathouse pass (feedback): the tarp over the crate and the life jackets a
 ![The shack's side window, boarded, inside and out](2026-11-14_shack_side_window.png)
 
 The boathouse is approved. Last note: board up the shack's other window (the side by the cot, which had glass shards); now boarded on both faces like the rest.
+
+## 2026-11-14: haze / bloom options for the whole game
+
+![Four looks at four spots](2026-11-14_haze_options.png)
+
+The user asked for a post-process look that makes the whole game hazy / bloomy. Each row is one option, each column the same spot (motel from the lot, inside Room 104, the woods by the trail, inside the boathouse). All four use the existing post-process volume and fog (unreal/blockout.py weather()):
+- **A, now**: bloom 6 (size 4), contrast 0.9, saturation 0.85, fog 0.18.
+- **B, soft haze**: bloom 9 with a much wider spread (size 10), contrast 0.85, saturation 0.82, a little colour fringing at the screen edges, fog 0.26.
+- **C, dreamy glow**: bloom 14, very wide (size 20), contrast 0.8, saturation 0.8, more fringing, fog 0.26: every light bleeds a big soft glow.
+- **D, thick haze**: bloom 11 (size 14), contrast 0.78, saturation 0.75, fog 0.4 starting at the camera: everything sits in milky air.
+(The M on the sign flickers, so it is dark in some shots.)
+
+![B and C with more contrast](2026-11-14_haze_contrast.png)
+
+The user liked B or C but wanted a lot more contrast. Same four spots; B and C at contrast 1.1 and 1.3 (everything else as before). More contrast gives deep blacks back in the woods and the boathouse while the lights keep their glow; in C the flashlight blows the room wall out to white.
+
+**Picked: B at contrast 1.1.** Now the game's look (unreal/blockout.py weather() and the saved level): bloom 9 with a wide spread (size scale 10), colour fringing 1.0, contrast 1.1, saturation 0.82, fog density 0.26 starting 1 m from the camera.
