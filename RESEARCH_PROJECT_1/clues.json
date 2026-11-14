@@ -20,7 +20,7 @@
       "body": "[TEST TEXT]\n\nA page torn out of a sketchbook, folded in four, lying on the asphalt next to the car. A map of the motel and the woods down to the lake, drawn in Cas's handwriting.\n\n[M] to look at the map.",
       "journal": "Found a map Cas drew, lying in the lot next to the car.",
       "gives_key": "map",
-      "objective": "Look inside Room 104.",
+      "objective": "Cas marked room 104 on her map. I should check her room.",
       "pickup": true
     },
     {
@@ -66,7 +66,7 @@
       "title": "A note on the bed",
       "body": "[TEST NOTE]\n\nBug,\n\nIf you're reading this, you came. I knew you would. The office key is still in this room. Don't let them see you take it.\n\n- Cas",
       "journal": "Cas left a note on the bed in Room 104. The office key is somewhere in her room.",
-      "objective": "Find the office key."
+      "objective": "She says the office key is still in here somewhere. I need to find it."
     },
     {
       "id": "key_office",
@@ -77,7 +77,7 @@
       "body": "[TEST KEY]\n\nA brass key on a cracked plastic tag.\n\nOFFICE - DO NOT REMOVE FROM PREMISES",
       "journal": "Found the office key on the dresser next to the TV.",
       "gives_key": "office",
-      "objective": "Open the motel office.",
+      "objective": "The office key. Now I can get into the office.",
       "pickup": true
     },
     {
@@ -86,8 +86,8 @@
       "at": [3101, -1745, 0], "yaw": 0,
       "prompt": "Open",
       "needs_key": "office",
-      "locked_text": "Locked. There must be a key somewhere.",
-      "objective": "Search the office."
+      "locked_text": "It's locked. There has to be a key somewhere.",
+      "objective": "Nobody's here. I should look around before someone comes back."
     },
     {
       "id": "guest_book",
@@ -96,7 +96,7 @@
       "title": "Guest book",
       "body": "[TEST GUEST BOOK]\n\nYears of names in different pens. One name in every year is circled in red.\n\nLast October: Room 104 - C. Byrne. Circled.",
       "journal": "The guest book has Cas's name circled in red. One name is circled every year.",
-      "objective": "Find the trail behind the motel."
+      "objective": "Her name's circled. I need to find that trail behind the motel."
     },
     {
       "id": "key_backgate",
@@ -107,7 +107,7 @@
       "body": "[TEST KEY]\n\nA new key on a red tag, lying on the office desk. Someone wrote on the tag: GATE.",
       "journal": "Found a key marked GATE on the office desk. The trail behind the motel starts at a locked gate.",
       "gives_key": "backgate",
-      "objective": "Open the gate behind the motel."
+      "objective": "A key marked GATE. That has to be the gate out back."
     },
     {
       "id": "door_backgate",
@@ -116,7 +116,7 @@
       "prompt": "Open",
       "needs_key": "backgate",
       "locked_text": "A new chain and padlock. Someone wants this kept shut.",
-      "objective": "Follow the trail to the lake."
+      "objective": "The trail goes down to the lake. I'll follow it."
     },
     {
       "id": "door_cabin2",
@@ -133,7 +133,7 @@
       "body": "[TEST KEY]\n\nA small new key on a loop of fishing line, lying on Cas's lake map. Someone drew a circle around the boathouse.",
       "journal": "Found a new key on the map in the cabin by the lake. The boathouse is circled.",
       "gives_key": "boathouse",
-      "objective": "Open the boathouse.",
+      "objective": "She circled the boathouse. That's where I'm going.",
       "pickup": true
     },
     {
@@ -142,8 +142,8 @@
       "at": [-3448, 13950, 16], "yaw": 180, "open_angle": -95,
       "prompt": "Open",
       "needs_key": "boathouse",
-      "locked_text": "Padlocked. The lock is new. Everything else here is rotting.",
-      "objective": "Search the boathouse."
+      "locked_text": "Padlocked. The lock is new, everything else here is rotting.",
+      "objective": "Someone's been in here recently. I should look around."
     }
   ]
 }
