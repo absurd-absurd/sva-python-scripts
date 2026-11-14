@@ -996,3 +996,8 @@ The user chose all four ideas (the red lanterns are the town's lake ritual in th
 - **Dock**: the red lantern at the end now flickers.
 
 Feedback after the tour: the floating lanterns on the lake are removed (lake_lanterns() is no longer called; kept in maya/make_lake.py in case). The trail lanterns, cabin glow and dock lantern stay.
+
+## 2026-11-14: faster running, no flashlight jolt
+
+- **Running**: Shift now sets MaxWalkSpeed to 800 (it was 550; walking stays 300). Python can't edit Blueprint pin values, so the character's Event Graph was copied out as text, that one number changed, and pasted back; checked all 48 nodes and 84 wires came back, compiled, and tested in Play: 300 walking, 800 with Shift held. (A backup of the Blueprint is at /Game/Horror/Backup/BP_FirstPersonCharacter_bak_nov14.)
+- **Flashlight**: the user wants it to flicker without the camera bump after it cuts out. CS_FlashHit (unreal/flashlight.py) now has zero rotation and movement, so the Blueprint still plays it but the camera doesn't move; the flicker and cut-outs are unchanged.

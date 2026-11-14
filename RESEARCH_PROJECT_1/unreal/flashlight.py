@@ -81,12 +81,14 @@ def hit_shake():
     shake.set_editor_property("oscillation_blend_in_time", 0.02)
     shake.set_editor_property("oscillation_blend_out_time", 0.3)
     rot = unreal.ROscillator()
-    rot.set_editor_property("pitch", osc(3.2, 24.0))     # degrees: a sharp nod down and back
-    rot.set_editor_property("roll", osc(2.0, 20.0))
-    rot.set_editor_property("yaw", osc(1.0, 17.0))
+    # Nov 14: the user wants the flicker without the camera jolt, so the knock is zeroed (the
+    # Blueprint still plays it after a cut-out, it just doesn't move the camera any more)
+    rot.set_editor_property("pitch", osc(0.0, 24.0))
+    rot.set_editor_property("roll", osc(0.0, 20.0))
+    rot.set_editor_property("yaw", osc(0.0, 17.0))
     shake.set_editor_property("rot_oscillation", rot)
     loc = unreal.VOscillator()
-    loc.set_editor_property("z", osc(2.0, 24.0))         # cm
+    loc.set_editor_property("z", osc(0.0, 24.0))         # cm
     shake.set_editor_property("loc_oscillation", loc)
     unreal.BlueprintEditorLibrary.compile_blueprint(bp)
     lib.save_loaded_asset(bp, False)
