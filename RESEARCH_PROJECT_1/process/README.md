@@ -878,3 +878,12 @@ Feedback after the tour: "I don't like the clothes, just put some folded fabric 
 Feedback: the Bible should look like a real one, with a cross and "Holy Bible"; you could see the floor through the dropped drawer.
 - The Bible now lies face up with a printed cover (tools/make_bible.py -> export/pic_bible_cover.png): black pebbled leather, a double gold tooled border, a gold cross, HOLY BIBLE in gold serif capitals; the spine is on the left like a real book. (First try had the picture upside down, so the cross looked inverted; turned round before it went in.)
 - The dropped drawers (102, and 101's) were built from the floor up, but the carpet is 2 cm thick, so their thin bottom sat inside it. They now sit on the carpet with a solid wooden bottom panel.
+
+### Rooms 105 and 106
+
+![Ice bucket clear of the TV, 106's nightstand, the room-service tray](2026-11-14_rooms105_106.png)
+
+- **Ice bucket** (101, 105, 106): moved 16 cm along the dresser so it no longer goes into the TV.
+- **105**: the bucket and the debris lumps (rags) on the floor are gone; the wet hole in the ceiling stays.
+- **106 tray**: a stainless room-service tray (service_tray()): thin base, low rim with a rolled edge, a raised grip at each end. Food and mug unchanged.
+- **106 nightstand**: lamp, red lantern and phone each have their own spot: phone square on the left, lantern front right with the card leaning on it, the lamp behind the lantern (its shade clears the lantern's top).

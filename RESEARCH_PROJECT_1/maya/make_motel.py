@@ -283,7 +283,7 @@ def room_inside(x0, x1, her=False, i=-1):
     bed(x0, x1, made=not her and i != 2, mattress=(i != 2))
     nightstand(x0, drawer=(i != 0))
     if i != 0:
-        lamp(x0 + (180 if her or i == 5 else 190), BACK - 47, *(("glow_lamp_red_mat", "glow_lamp_red_mat") if her else ()))   # clear of the phone
+        lamp(x0 + (180 if her else 198 if i == 5 else 190), BACK - (36 if i == 5 else 47), *(("glow_lamp_red_mat", "glow_lamp_red_mat") if her else ()))   # clear of the phone
     if i == 1:
         with Moved(x0 + 48, FRONT + 285, -28, 70, -40):
             dresser(x0, missing=(2, 1))                  # its top drawer lies on the floor (room_story)

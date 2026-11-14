@@ -570,6 +570,26 @@ def rotary_phone(x, y, z, yaw=0, handset=True):
         tube((x + 6, y + D / 2 + 6, z + 0.25), (x + 9, y + D / 2 + 11, z + 0.25), 0.3, "phone_dark_mat", sides=6)
 
 
+def service_tray(x, y, z, yaw):
+    """A stainless room-service tray: a thin flat base, a low rim all round with a rolled top
+    edge and rounded corners, and a cut-out hand grip raised at each short end."""
+    W, D, Hr = 46.0, 34.0, 2.6
+    with Moved(x, y, yaw):
+        bevel_box(x - W / 2, x + W / 2, y - D / 2, y + D / 2, z, z + 1.2, "plate_mat", r=0.5)     # base
+        for a_, b_, c_, d_ in ((x - W / 2, x + W / 2, y - D / 2, y - D / 2 + 0.5), (x - W / 2, x + W / 2, y + D / 2 - 0.5, y + D / 2),
+                               (x - W / 2, x - W / 2 + 0.5, y - D / 2, y + D / 2), (x + W / 2 - 0.5, x + W / 2, y - D / 2, y + D / 2)):
+            box(a_, b_, c_, d_, z + 1.2, z + Hr, "plate_mat")                                     # rim walls
+        for yy in (y - D / 2 + 0.25, y + D / 2 - 0.25):
+            tube((x - W / 2 + 1, yy, z + Hr), (x + W / 2 - 1, yy, z + Hr), 0.45, "plate_mat", sides=8)   # rolled edge
+        for xx in (x - W / 2 + 0.25, x + W / 2 - 0.25):
+            tube((xx, y - D / 2 + 1, z + Hr), (xx, y + D / 2 - 1, z + Hr), 0.45, "plate_mat", sides=8)
+        for s_ in (-1, 1):                                                                        # end grips
+            gx = x + s_ * (W / 2 + 2.6)
+            tube((x + s_ * W / 2, y - 6, z + Hr), (gx, y - 4.5, z + Hr + 1.0), 0.6, "plate_mat", sides=8)
+            tube((gx, y - 4.5, z + Hr + 1.0), (gx, y + 4.5, z + Hr + 1.0), 0.6, "plate_mat", sides=8)
+            tube((gx, y + 4.5, z + Hr + 1.0), (x + s_ * W / 2, y + 6, z + Hr), 0.6, "plate_mat", sides=8)
+
+
 def ice_bucket(x, y, z):
     frustum(x, y, z, z + 15, 9, 10.5, "plate_mat", sides=18)
     ring(x, y, z + 15, 10.6, 0.6, "plate_mat", sides=18)
@@ -601,10 +621,12 @@ def room_finish(i, x0, x1):
     py, pz, pw, ph = BACK - 135, 168, 84, 57
     bevel_box(R - 3.5, R, py - pw / 2 - 5, py + pw / 2 + 5, pz - ph / 2 - 5, pz + ph / 2 + 5, "frame_mat", r=1.2)
     picture(R - 4.3, py, pz, pw, ph, "pic_painting", facing=-1)
-    if i not in (1, 2):
+    if i == 5:                                       # 106's nightstand also has the lantern: phone square on the left
+        rotary_phone(x0 + 163.5, BACK - 49, 60, yaw=0)
+    elif i not in (1, 2):
         rotary_phone(x0 + 164, BACK - 50, 60, yaw=-15)
     if i in (0, 4, 5):
-        ice_bucket(x0 + 58, FRONT + 228, 80)
+        ice_bucket(x0 + 58, FRONT + 212, 80)                      # clear of the TV
     # an armchair by the window, turned toward the TV, a little round table next to it
     if i != 2:
         armchair(x1 - 85, FRONT + 300, -110)
@@ -1165,21 +1187,17 @@ def room_story(i, x0, x1):
         cx, cy = x0 + 380, BACK - 220
         # a ceiling panel hanging down from one edge, with a dark wet hole above
         box(cx - 60, cx + 60, cy - 45, cy + 45, H - 11.5, H - 11.3, "drip_mat")
-        for k in range(14):
-            rsoft(cx + rng.uniform(-60, 60), cy + rng.uniform(-50, 50), 4, rng.uniform(6, 22), rng.uniform(6, 18),
-                  rng.uniform(2, 7), "debris_mat", jitter=1.2, smooth=1, seed=k + 60, yaw=rng.uniform(0, 180))
-        bucket(cx + 50, cy - 80)
     elif i == 5:    # 106: the next guest
         # a duffel bag on the luggage spot, unzipped
         rsoft(x0 + 120, BACK - 85, 18, 70, 34, 36, "duffel_mat", jitter=1.5, smooth=2, seed=1)
         tube((x0 + 95, BACK - 85, 37), (x0 + 145, BACK - 85, 37), 1.2, "strap_mat", sides=6)
         rsoft(x0 + 135, BACK - 80, 37, 28, 18, 6, "clothes_b_mat", jitter=1.5, smooth=2, seed=2)
         # a room-service tray on the bed, half eaten
-        rbevel(x0 + 300, BACK - 160, 59, 46, 34, 2, "metal_mat", r=0.6, yaw=-12)
+        service_tray(x0 + 300, BACK - 160, 58.6, -12)
         frustum(x0 + 295, BACK - 160, 60, 62, 12, 13, "bowl_mat", sides=18)
         rsoft(x0 + 295, BACK - 160, 62.5, 16, 12, 2.5, "food_mat", jitter=0.8, smooth=1, seed=4)
         mug_at(x0 + 315, BACK - 150, 60)
         # on the nightstand: the red lantern, a card propped on it
-        red_lantern(x0 + 192, BACK - 40, 60)
-        rbevel(x0 + 168, BACK - 52, 64, 10, 1, 7, "plate_mat", r=0.2, tilt_y=-15)
+        red_lantern(x0 + 198, BACK - 60, 60)                      # front right; the lamp stands behind it
+        rbevel(x0 + 198, BACK - 67.8, 63.9, 9, 0.4, 7, "paper_mat", r=0.1, tilt_y=12)   # the card, leaning on it
 
