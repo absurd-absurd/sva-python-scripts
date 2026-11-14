@@ -9,7 +9,7 @@
     "open_angle": "how far a door swings (default 95; negative swings the other way)",
     "shape": "paper, map_ground, key, book, door or room_door (see SHAPES in place_clues.py)"
   },
-  "start_objective": "Find the map.",
+  "start_objective": "There's something on the ground by the car. I should see what that is.",
   "clues": [
     {
       "id": "map_cas",
