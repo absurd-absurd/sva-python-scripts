@@ -963,3 +963,5 @@ Feedback list: anchor, life jackets, everything on the bench and in the toolbox,
 - **Tarp**: lies on the crate top instead of cutting into it.
 - **Lake doors**: posts either side of the slip with pintle plates; the open leaf's strap hinges wrap round pins on the west post; the empty pins stay on the east post.
 - **Boarded windows** (boathouse, shack, cabins): boards overlapping outside and two or three boards nailed across the inside too, with nail heads, instead of a flat dark panel.
+
+Second boathouse pass (feedback): the tarp over the crate and the life jackets are removed; the west window by them (it had glass shards) is boarded up like the others, boards on both faces.

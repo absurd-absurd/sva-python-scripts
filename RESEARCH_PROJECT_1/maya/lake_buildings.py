@@ -786,8 +786,7 @@ def boathouse():
     frame("x", Y + S, X + 200, X + 290, F + 110, F + 190, -1.6)
     plank_boards_over("x", Y + S, X + 200, X + 290, F + 110, F + 190, -3.5, seed=5)
     frame("y", X - W, Y + 80, Y + 190, F + 110, F + 190, -1.6)
-    for k in range(3):                                                    # glass shards left in the west window
-        rbevel(X - W, Y + 90 + k * 38, F + 115 + (k % 2) * 30, 0.6, 22, 30 - k * 6, "seeglass_cabin_mat", r=0.2, tilt_y=12 * k - 10)
+    plank_boards_over("y", X - W, Y + 80, Y + 190, F + 110, F + 190, -3.5, seed=6)     # the west window, boarded up
     # corner posts and the eave plates
     for xx in (X - W, X + W):
         for yy in (Y + S, Y + N):
@@ -895,8 +894,6 @@ def boathouse():
     cantilever_toolbox(bx0 + 40, by1 - 62, bz)
     hurricane_lantern(bx0 + 30, by1 - 16, bz, True, "light_boathouse_lantern")      # clear of the toolbox now
     # ---- life jackets on the west wall, a life ring with its grab line on the east wall
-    for k, yy in enumerate((Y + 40, Y + 110)):
-        life_vest(WI, yy, F + 210, seed=30 + k, wall_dir=1)
     life_ring(EI - 8, Y + 230, F + 160, wall_dir=-1)
     # a fishing net hung on three nails, with floats, over the east walkway
     fishing_net(EI, [(Y + 330, F + 215), (Y + 420, F + 225), (Y + 510, F + 212)], 80, wall_dir=-1, seed=4)
@@ -948,39 +945,6 @@ def boathouse():
     for k in range(5):
         bevel_box(cx - 45 + k * 18.4, cx - 45 + k * 18.4 + 15.6, cy - 36, cy + 36, F + 62, F + 64.5, "dock_wood_mat", r=0.5)
     bevel_box(cx - 43, cx + 43, cy - 33, cy + 33, F + 2, F + 3.5, "plank_dark_mat", r=0.4)             # dark inside
-    grid = []
-    rt = random.Random(12)
-    for r_ in range(23):
-        t = r_ / 22.0
-        # along y: over the crate top, down the front, crumpled on the floor
-        if t < 0.45:
-            y_ = cy - 37 + t / 0.45 * 74
-            z_ = F + 65.5
-        elif t < 0.65:
-            y_ = cy + 37 + (t - 0.45) / 0.2 * 4
-            z_ = F + 65.5 - (t - 0.45) / 0.2 * 63
-        else:
-            y_ = cy + 41 + (t - 0.65) / 0.35 * 55
-            z_ = F + 1.5
-        row = []
-        for c_ in range(19):
-            u = c_ / 18.0
-            x_ = cx - 58 + u * 80
-            zz = z_
-            if t < 0.45 and x_ < cx - 46:
-                zz = z_ - (cx - 46 - x_) * 1.6                        # droops over the crate's side
-                x_ = cx - 47 - (cx - 46 - x_) * 0.25
-            w_ = 1.2 * math.sin(x_ * 0.11 + y_ * 0.07) + 0.6 * math.sin(x_ * 0.23 - y_ * 0.15)
-            if t >= 0.65:
-                w_ = 3.5 * abs(math.sin(x_ * 0.09 + y_ * 0.12)) + rt.uniform(0, 1.5)
-            zz2 = zz + (w_ if (t < 0.45 or t >= 0.65) else 0)
-            if t < 0.45 and x_ >= cx - 47:
-                zz2 = max(F + 65.6, F + 65.6 + abs(w_))                     # lies on the crate top, never through it
-            row.append((x_ - cx, y_, max(F + 1.0, zz2)))
-            if 0.45 <= t < 0.65:
-                row[-1] = (x_ - cx + 2.5 * math.sin(u * 18), y_ + 1.5 * math.sin(u * 12 + 1), zz)
-        grid.append(row)
-    _cloth(cx, grid, "tarp_mat")
     # ---- the new rope, coiled on the east walkway, its end running to the slip edge and down
     end_in, end_out = rope_coil(X + SLIP + 70, Y + 60, F + 0.2, 18, 4.5, 1.3, "rope_new_mat", seed=5)
     polyline([end_out, (X + SLIP + 60, Y + 95, F + 1.5), (X + SLIP + 25, Y + 135, F + 1.5), (X + SLIP + 8, Y + 150, F + 2.5),
