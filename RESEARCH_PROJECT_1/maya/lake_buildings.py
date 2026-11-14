@@ -114,7 +114,7 @@ def frame(axis, fixed, a, b, zlo, zhi, out, mat="plank_dark_mat", t=4.0, w=9.0):
             bevel_box(y0, y1, p0, p1, q0, q1, mat, r=0.6)
 
 
-def plank_boards_over(axis, fixed, a, b, zlo, zhi, out, seed):
+def plank_boards_over(axis, fixed, a, b, zlo, zhi, out, seed, gaps=False):
     """Boards nailed across an opening (boarded up). Outside (toward out): crooked boards that
     overlap so no gap shows; inside: two or three more boards nailed from that side, so from
     inside it reads as boarded too (it used to be a flat dark panel), with nail heads."""
@@ -130,7 +130,7 @@ def plank_boards_over(axis, fixed, a, b, zlo, zhi, out, seed):
             sphere(c, fixed + off, z, 0.6, "rusty_tool_mat", sides=6, scale=(1, 0.4, 1))
         else:
             sphere(fixed + off, c, z, 0.6, "rusty_tool_mat", sides=6, scale=(0.4, 1, 1))
-    n = int(math.ceil((zhi - zlo) / 14.0)) + 1
+    n = int(math.ceil((zhi - zlo) / (21.0 if gaps else 14.0))) + 1        # gaps: thin slits between the boards
     for k in range(n):                                   # outside: overlapping, alternately proud
         z = zlo + 4 + k * (zhi - zlo - 8) / max(1, n - 1)
         L = (b - a) + 26
@@ -140,7 +140,7 @@ def plank_boards_over(axis, fixed, a, b, zlo, zhi, out, seed):
         for e in (-1, 1):
             nail(off + sgn * 1.3, c + e * (L / 2 - 5), z)
     inner = -sgn * 3.6
-    for k in range(3 if zhi - zlo > 60 else 2):          # inside: a few boards with gaps
+    for k in range(0 if gaps else (3 if zhi - zlo > 60 else 2)):   # inside: a few boards with gaps
         z = zlo + 12 + k * (zhi - zlo - 24) / 2.0
         L = (b - a) + 18
         c = (a + b) / 2.0 + r.uniform(-3, 3)
@@ -1109,7 +1109,9 @@ def cabin(index, open_):
         for z, t in ((F + 70, 14), (F + 160, -12)):
             rbevel(0, HY + 14, z, 150, 2.5, 18, "plank_grey_mat", r=0.5, tilt_x=t)
         for a, b, zlo, zhi in wf:
-            plank_boards_over("x", HY, a, b, zlo, zhi, 15.5, seed=int(a) + index)
+            # boarded with slits, and a dim red glow inside showing through them: someone is in there
+            plank_boards_over("x", HY, a, b, zlo, zhi, 15.5, seed=int(a) + index, gaps=True)
+            box(a, b, HY - 9, HY - 8, zlo, zhi, "glow_window_red_mat")
         plank_boards_over("y", -HX, side_w[0], side_w[1], side_w[2], side_w[3], -15.5, seed=index + 9)
         plank_boards_over("x", -HY, back_w[0], back_w[1], back_w[2], back_w[3], -15.5, seed=index + 8)
         for k in range(16):                                                # the chimney
@@ -1241,6 +1243,9 @@ def lake_buildings():
     for i, (cx, cy, yaw, open_) in enumerate(CABINS):
         with Placed(cx, cy, yaw) as P:
             cabin(i + 1, open_)
+        if not open_:                                    # the red glow from the boarded windows spills onto the porch
+            gx, gy = P.world(0, 250 + 70)
+            light("light_cabin_glow_%d" % (i + 1), gx, gy, CAB_FL + 140, [1.0, 0.05, 0.02], 40, 600, flicker=True)
         if open_:
             hx, hy = P.world(-52, 250)
             DOORS.append(("door_cabin%d" % (i + 1), "plank_door", hx, hy, CAB_FL, yaw))

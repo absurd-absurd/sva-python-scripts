@@ -375,6 +375,43 @@ def leghold_trap(x, y, z, seed=0):
 
 
 
+def trail_lanterns():
+    """Red lanterns on posts along the trail from the back gate to the lake, every ~17 m,
+    alternating sides: they lead you on through the woods (the town's ritual colour). Each is a
+    weathered post with an arm, a lantern hanging from it with a red glow inside, a red light."""
+    pts = LAYOUT["trail"]
+    segs = []
+    for (ax, ay), (bx, by) in zip(pts, pts[1:]):
+        segs.append(((ax, ay), (bx, by), math.hypot(bx - ax, by - ay)))
+    total = sum(L for _, _, L in segs)
+    k = 0
+    d = 1300.0                                       # first one a little past the back gate
+    while d < total - 900:
+        acc = 0.0
+        for (ax, ay), (bx, by), L in segs:
+            if acc + L >= d:
+                t = (d - acc) / L
+                x, y = ax + (bx - ax) * t, ay + (by - ay) * t
+                nx, ny = -(by - ay) / L, (bx - ax) / L
+                side = 1 if k % 2 else -1
+                px, py = x + nx * side * 175, y + ny * side * 175
+                if y > 600:
+                    ang = math.degrees(math.atan2(-ny * side, -nx * side))          # the arm reaches toward the path
+                    ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+                    frustum(px, py, 0, 175, 6.5, 5.5, "plank_dark_mat", sides=10)                  # post
+                    tube((px, py, 168), (px + ca * 42, py + sa * 42, 168), 2.4, "plank_dark_mat", sides=8)   # arm
+                    tube((px + ca * 12, py + sa * 12, 168), (px, py, 150), 1.6, "plank_dark_mat", sides=6)  # brace
+                    lx, ly = px + ca * 38, py + sa * 38
+                    tube((lx, ly, 166), (lx, ly, 150), 0.4, "rusty_tool_mat", sides=4)                     # hook
+                    red_lantern(lx, ly, 120)
+                    sphere(lx, ly, 133, 2.6, "glow_lamp_red_mat", sides=10, scale=(1, 1, 1.5))           # the flame glow
+                    light("light_trail_lantern_%d" % k, lx, ly, 133, [1.0, 0.04, 0.01], 4, 650, flicker=(k % 3 == 1))
+                k += 1
+                break
+            acc += L
+        d += 1700.0
+
+
 def shack():
     c = CLEAR["shack"]
     HX, HY, F = 220.0, 190.0, 12.0
@@ -773,6 +810,7 @@ def build():
         material(name, rgb)
     fence()
     shack()
+    trail_lanterns()
     rusted_car()
     tower()
     road_closed()

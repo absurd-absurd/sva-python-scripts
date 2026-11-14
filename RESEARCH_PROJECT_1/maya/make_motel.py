@@ -57,7 +57,7 @@ MATS = {
     "pic_lanterns": (1, 1, 1),
     "camera_mat": (0.04, 0.04, 0.04), "string_mat": (0.4, 0.33, 0.22), "wallpaper_mat": (0.7, 0.64, 0.5),
     "stain_wall_mat": (0.38, 0.3, 0.18), "stain_dark_mat": (0.22, 0.16, 0.09), "cobweb_mat": (0.62, 0.61, 0.58),
-    "glow_lamp_red_mat": (1.0, 0.05, 0.02),
+    "glow_lamp_red_mat": (1.0, 0.05, 0.02), "glow_window_red_mat": (1.0, 0.04, 0.02),
     "room_wall_mat": (1, 1, 1), "seeglass_window_mat": (0.12, 0.14, 0.15), "frame_mat": (0.3, 0.22, 0.1),
     "pic_painting": (1, 1, 1),
     "fan_mat": (0.32, 0.26, 0.17), "bowl_mat": (0.62, 0.6, 0.55),

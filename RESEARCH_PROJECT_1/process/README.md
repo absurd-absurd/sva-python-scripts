@@ -986,3 +986,11 @@ The user asked for a post-process look that makes the whole game hazy / bloomy. 
 The user liked B or C but wanted a lot more contrast. Same four spots; B and C at contrast 1.1 and 1.3 (everything else as before). More contrast gives deep blacks back in the woods and the boathouse while the lights keep their glow; in C the flashlight blows the room wall out to white.
 
 **Picked: B at contrast 1.1.** Now the game's look (unreal/blockout.py weather() and the saved level): bloom 9 with a wide spread (size scale 10), colour fringing 1.0, contrast 1.1, saturation 0.82, fog density 0.26 starting 1 m from the camera.
+
+## 2026-11-14: red lights as a theme
+
+The user chose all four ideas (the red lanterns are the town's lake ritual in the story):
+- **Trail lanterns** (maya/make_trail.py trail_lanterns()): a weathered post with an arm and brace every ~17 m along the trail from the back gate to the lake, alternating sides; a red lantern hangs from a hook with a red glow inside and its own red light (every third one flickers). One scatter tree stood right against a post (tree_dead_C_94) and was removed from the level.
+- **Lanterns on the lake** (maya/make_lake.py lake_lanterns()): 18 red paper lanterns on little wooden floats, far out on the water, with four real red lights among them.
+- **Cabins 1 and 3**: their front windows are boarded with slits now, a dim red glow shows through from inside, and a flickering red light spills onto each porch.
+- **Dock**: the red lantern at the end now flickers.

@@ -194,7 +194,7 @@ def dock():
              0.5, "lantern_metal_mat", sides=4)
     frustum(lx + 30, ly, lz - 6, lz - 2, 7, 7, "lantern_metal_mat", sides=12)            # base
     tube((lx + 30, ly, lz + 26), (lx + 30, ly, DECK_Z + 132), 0.5, "lantern_metal_mat", sides=4)
-    light("light_dock_lantern", lx + 30, ly, lz + 8, [1.0, 0.02, 0.0], 700, 1600)
+    light("light_dock_lantern", lx + 30, ly, lz + 8, [1.0, 0.02, 0.0], 700, 1600, flicker=True)   # it flickers
     return y0, y1
 
 
@@ -331,6 +331,31 @@ def rowboat(cx, cy, yaw_deg):
 exec(open(os.path.join(ROOT, "maya", "lake_buildings.py"), encoding="utf-8").read())
 
 
+def lake_lanterns():
+    """The ritual: red paper lanterns floating far out on the lake, glowing through the mist.
+    Each sits on a little square wooden float: a paper lantern with a red glow, a dark cap and
+    base ring. A few real red lights among them colour the water and the mist."""
+    rng = random.Random(1974)
+    spots = []
+    tries = 0
+    while len(spots) < 18 and tries < 2000:
+        tries += 1
+        x, y = rng.uniform(-5500, 6500), rng.uniform(17200, 21500)
+        if all(math.hypot(x - a, y - b) > 650 for a, b in spots):
+            spots.append((x, y))
+    for k, (x, y) in enumerate(spots):
+        bob = rng.uniform(-2, 2)
+        rbevel(x, y, WATER_Z + 2 + bob, 34, 34, 5, "dock_dark_mat", r=1.0, yaw=rng.uniform(0, 90))        # float
+        frustum(x, y, WATER_Z + 4.5 + bob, WATER_Z + 7 + bob, 9, 9, "lantern_metal_mat", sides=12)       # base ring
+        frustum(x, y, WATER_Z + 7 + bob, WATER_Z + 30 + bob, 10, 8, "glow_lamp_red_mat", sides=14)      # paper body
+        for j in range(4):                                                                              # ribs
+            frustum(x, y, WATER_Z + 11 + j * 5 + bob, WATER_Z + 11.6 + j * 5 + bob, 10 - j * 0.45, 10 - j * 0.45,
+                    "lantern_metal_mat", sides=14)
+        frustum(x, y, WATER_Z + 30 + bob, WATER_Z + 34 + bob, 8.5, 3, "lantern_metal_mat", sides=12)    # cap
+        if k % 5 == 0:
+            light("light_lake_lantern_%d" % k, x, y, WATER_Z + 40, [1.0, 0.05, 0.01], 150, 1800)
+
+
 def build():
     del PARTS[:]
     del ROOM_PARTS[:]
@@ -344,6 +369,7 @@ def build():
     rowboat(-900, 20200, 35)
     tube((DOCK_X + 120, y1 - 120, DECK_Z + 3), (DOCK_X + 175, y1 - 190, WATER_Z + 20), 0.9, "rope_mat", sides=6)   # mooring line
     lake_buildings()
+    lake_lanterns()
     for cx in (-6000, -4700, -1200, 300, 2800, 4400, 6900):
         reeds(cx, shore_y(cx) - 60, 26)
     rocks()
