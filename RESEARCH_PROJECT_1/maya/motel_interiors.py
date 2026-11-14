@@ -35,7 +35,7 @@ MATS.update({
     "coat_mat": (0.16, 0.13, 0.1), "bear_mat": (0.35, 0.24, 0.14), "dustsheet_mat": (0.52, 0.5, 0.45),
     "drip_mat": (0.18, 0.14, 0.08), "debris_mat": (0.42, 0.4, 0.36), "duffel_mat": (0.14, 0.17, 0.12), "case_lining_mat": (0.16, 0.14, 0.13), "shirt_mat": (0.4, 0.38, 0.35),
     "sweater_mat": (0.2, 0.24, 0.3), "sweater_red_mat": (0.3, 0.08, 0.07),
-    "food_mat": (0.3, 0.16, 0.06), "phone_mat": (0.5, 0.45, 0.36),
+    "food_mat": (0.3, 0.16, 0.06), "phone_mat": (0.5, 0.45, 0.36), "phone_dark_mat": (0.03, 0.03, 0.03),
     # shared with the lake buildings (same colours as BLD_MATS there)
     "rusty_tool_mat": (0.2, 0.11, 0.07), "dark_leather_mat": (0.09, 0.06, 0.04), "can_mat": (0.36, 0.34, 0.31),
     "paint_can_mat": (0.3, 0.29, 0.26), "mattress_mat": (0.38, 0.34, 0.27),
@@ -414,15 +414,91 @@ def bathroom_door(x_wall, y0, y1):
     sphere(kx + 6.4, y1 - 13, 97, 2.8, "brass_mat", sides=12)
 
 
+def _sloped_body(x, y, z, w, d, hf, hb, r, mat):
+    """A rounded block w x d whose top slopes from hf high at the front (-y) to hb at the back."""
+    c = cmds.polyCube(w=w, h=1, d=d, sx=1, sy=1, sz=1, ch=False)[0]
+    pts = []
+    for vx, vy, vz in _verts(c):
+        t = (vz + d / 2.0) / d
+        pts.append((vx, 0.0 if vy < 0 else hf + (hb - hf) * t, vz))
+    _set_verts(c, pts)
+    _bevel(c, r, 3)
+    cmds.move(x, z, y, c, relative=True)
+    return keep(c, mat)
+
+
+def coil_cord(path, coil_r=0.8, wire_r=0.22, pitch=0.6, mat="phone_mat"):
+    """A coiled phone cord following a list of points: a helix of short tubes around the path."""
+    pts = []
+    for p0, p1 in zip(path, path[1:]):
+        d = [p1[i] - p0[i] for i in range(3)]
+        L = math.sqrt(sum(v * v for v in d)) or 0.01
+        t = [v / L for v in d]
+        up = (0, 0, 1) if abs(t[2]) < 0.9 else (1, 0, 0)
+        u = (t[1] * up[2] - t[2] * up[1], t[2] * up[0] - t[0] * up[2], t[0] * up[1] - t[1] * up[0])
+        ul = math.sqrt(sum(v * v for v in u)) or 1
+        u = [v / ul for v in u]
+        v_ = (t[1] * u[2] - t[2] * u[1], t[2] * u[0] - t[0] * u[2], t[0] * u[1] - t[1] * u[0])
+        n = max(2, int(L / pitch * 6))
+        for k in range(n):
+            s_ = k / float(n)
+            a = s_ * L / pitch * 2 * math.pi
+            pts.append(tuple(p0[i] + d[i] * s_ + coil_r * (math.cos(a) * u[i] + math.sin(a) * v_[i]) for i in range(3)))
+    for q0, q1 in zip(pts, pts[1:]):
+        tube(q0, q1, wire_r, mat, sides=5)
+
+
 def rotary_phone(x, y, z, yaw=0):
+    """A 1960s desk rotary phone (like the Western Electric 500), facing -y before yaw: a
+    rounded body whose top slopes down to the front, a tilted finger-wheel dial with ten holes,
+    a number card and a finger stop, the handset lying across the cradle on two raised
+    shoulders with the hook-switch buttons between, a coiled cord out of the left end of the
+    handset down to the body, rubber feet and the line cord running off the back."""
+    W, D, HF, HB = 21.5, 23.0, 7.0, 10.5
     with Moved(x, y, yaw):
-        rbevel(x, y, z + 4, 20, 22, 8, "phone_mat", r=3, seg=2)
-        frustum(x, y - 2, z + 8, z + 9.5, 7, 6.5, "phone_mat", sides=18)
-        frustum(x, y - 2, z + 9.5, z + 10, 6, 6, "plate_mat", sides=18)
+        bevel_box(x - W / 2 + 2.5, x + W / 2 - 2.5, y - D / 2 + 2.5, y + D / 2 - 2.5, z + 0.5, z + 1.6, "phone_dark_mat", r=0.5)
+        for dx in (-W / 2 + 2.5, W / 2 - 2.5):
+            for dy in (-D / 2 + 2.5, D / 2 - 2.5):
+                frustum(x + dx, y + dy, z, z + 0.6, 1.1, 1.1, "phone_dark_mat", sides=8)       # feet
+        _sloped_body(x, y, z + 1.4, W, D, HF, HB, 3.2, "phone_mat")
+        # the dial on the front slope
+        slope = (HB - HF) / D
+        nl = math.sqrt(1 + slope * slope)
+        n = (0, -slope / nl, 1 / nl)
+        dy = -4.0
+        top = z + 1.4 + HF + (HB - HF) * (dy + D / 2) / D - 0.2
+        c0 = (x, y + dy, top)
+        def on(r_, ang, h):
+            # a point on the dial face: radius r_, angle ang (0 = +x), lifted h along the normal
+            ux, uy = math.cos(ang) * r_, math.sin(ang) * r_ / nl
+            return (c0[0] + ux + n[0] * h, c0[1] + uy + n[1] * h, c0[2] + math.sin(ang) * r_ * slope / nl + n[2] * h)
+        tube(c0, tuple(c0[i] + n[i] * 0.5 for i in range(3)), 6.6, "phone_mat", sides=28)       # dial bezel
+        tube(tuple(c0[i] + n[i] * 0.5 for i in range(3)), tuple(c0[i] + n[i] * 0.9 for i in range(3)), 6.0, "phone_dark_mat", sides=28)
+        tube(tuple(c0[i] + n[i] * 0.9 for i in range(3)), tuple(c0[i] + n[i] * 1.2 for i in range(3)), 5.8, "plate_mat", sides=28)   # finger wheel
+        for k in range(10):                                                                       # finger holes
+            ang = math.radians(-60 - k * 28)
+            tube(on(4.3, ang, 1.15), on(4.3, ang, 1.3), 0.85, "phone_dark_mat", sides=10)
+        tube(tuple(c0[i] + n[i] * 1.2 for i in range(3)), tuple(c0[i] + n[i] * 1.35 for i in range(3)), 2.3, "paper_mat", sides=20)  # number card
+        tube(on(6.3, math.radians(-40), 1.2), on(6.3, math.radians(-40), 2.2), 0.35, "plate_mat", sides=6)    # finger stop
+        # cradle: raised shoulders at both ends, hook-switch buttons between
+        hy, hz = y + 5.0, z + 1.4 + HF + (HB - HF) * (5.0 + D / 2) / D
         for s_ in (-1, 1):
-            rbevel(x + s_ * 8, y + 4, z + 10, 6, 8, 5, "phone_mat", r=2)
-        rbevel(x, y + 4, z + 13, 24, 5, 4, "phone_mat", r=1.8)
-        tube((x + 10, y + 10, z + 3), (x + 18, y + 14, z + 1), 0.4, "trim_mat", sides=4)
+            rbevel(x + s_ * 7.5, hy, hz + 0.6, 4.6, 7, 2.6, "phone_mat", r=1.2, seg=2)
+            rbevel(x + s_ * 2.6, hy, hz + 0.4, 1.4, 2.2, 1.6, "plate_mat", r=0.4)
+        # handset across the cradle: receiver and mouthpiece cups joined by a bent handle
+        cz = hz + 3.6
+        for s_ in (-1, 1):
+            tube((x + s_ * 8.4, hy, cz - 1.8), (x + s_ * 8.4, hy, cz + 1.4), 3.0, "phone_mat", sides=20)
+            sphere(x + s_ * 8.4, hy, cz - 1.8, 3.0, "phone_mat", sides=16, scale=(1, 1, 0.45))
+            tube((x + s_ * 8.4, hy, cz + 1.4), (x + s_ * 5.6, hy, cz + 2.6), 1.9, "phone_mat", sides=14)
+            sphere(x + s_ * 5.6, hy, cz + 2.6, 1.9, "phone_mat", sides=12)
+        tube((x - 5.6, hy, cz + 2.6), (x + 5.6, hy, cz + 2.6), 1.9, "phone_mat", sides=14)
+        # coiled cord from the left end of the handset, looping down to the body's left side
+        coil_cord([(x - 11.2, hy, cz - 1.0), (x - 13.0, hy - 2, z + 4.5), (x - 13.2, hy - 7, z + 1.2),
+                   (x - 12.0, y - 6, z + 0.9), (x - W / 2 + 0.3, y - 8.5, z + 2.2)])
+        # line cord off the back
+        tube((x + 4, y + D / 2 - 1, z + 1.2), (x + 6, y + D / 2 + 6, z + 0.25), 0.3, "phone_dark_mat", sides=6)
+        tube((x + 6, y + D / 2 + 6, z + 0.25), (x + 9, y + D / 2 + 11, z + 0.25), 0.3, "phone_dark_mat", sides=6)
 
 
 def ice_bucket(x, y, z):
@@ -837,8 +913,8 @@ def office():
 def floor_suitcase(sx, sy, yaw):
     """A hard-shell suitcase lying open on the floor: the case (rounded shell, lining, a rim
     seal, latches, a carry handle, little feet) and its lid opened right back flat on the
-    carpet toward -y (lining, two elastic straps with buckles, hinges along the fold), a
-    flannel shirt half pulled out over the +x side, a folded sweater still inside."""
+    carpet toward -y (lining, two elastic straps with buckles, hinges along the fold), the
+    clothes still folded inside."""
     def shell(y0, y1, top, floor):
         """An open hard shell: a rounded bottom, four walls, a fabric lining inside."""
         bevel_box(sx - 36, sx + 36, y0, y1, 0.6, floor, "suitcase_mat", r=2.5, seg=3)
@@ -869,17 +945,12 @@ def floor_suitcase(sx, sy, yaw):
         for dx in (-22, 22):
             tube((sx + dx - 5, sy - 23, 5), (sx + dx + 5, sy - 23, 5), 1.3, "metal_mat", sides=8)   # hinges
             bevel_box(sx + dx - 3, sx + dx + 3, sy - 69.2, sy - 68, 2, 6, "brass_mat", r=0.3)       # catches
-        # what's left inside: a folded sweater, rumpled things under it
-        rsoft(sx - 4, sy + 2, 6.5, 62, 36, 5, "case_lining_mat", jitter=0.8, sag=-1, smooth=2, seed=40, div=(6, 2, 4))
-        folded(sx - 15, sy + 1, 8.8, 24, 32, "sweater_mat", "sweater", 41)
-        # the shirt: lying in the case, then over the +x side and down onto the carpet
-        with Moved(sx, sy, 90):                        # built along -y, turned to run out over +x
-            path = [(sy - 6, 9.5), (sy - 24, 10.5), (sy - 33, 16.5), (sy - 36.5, 17.9), (sy - 39, 14),
-                    (sy - 41, 6), (sy - 43, 1.2), (sy - 50, 0.7), (sy - 66, 0.6)]
-            _cloth(sx, _drape(path, 30, 32, 10, 0.25, 2.0, 42), "shirt_mat")
-            for side in (-1, 1):                                                                  # sleeves
-                rsoft(sx + side * 20, sy - 56, 1.3, 7, 30, 2.4, "shirt_mat", jitter=0.5, smooth=2,
-                      seed=43 + side, yaw=side * 25)
+        # inside: neatly folded clothes, two stacks and one on its own
+        folded(sx - 21, sy, 3.9, 22, 34, "shirt_mat", "plain", 41)
+        folded(sx - 21, sy + 0.5, 7.3, 21, 32, "sweater_mat", "plain", 42)
+        folded(sx + 1, sy, 3.9, 21, 34, "clothes_b_mat", "jeans", 43)
+        folded(sx + 22, sy, 3.9, 21, 34, "clothes_c_mat", "plain", 44)
+        folded(sx + 22, sy - 0.5, 7.3, 20, 32, "sweater_red_mat", "plain", 45)
 
 
 def dropped_jeans(cx, cy, yaw, seed=0):
@@ -943,9 +1014,8 @@ def room_story(i, x0, x1):
     rng = random.Random(i * 13)
     if i == 0:      # 101: left in a hurry
         # a hard suitcase open on the floor at the foot of the bed, the lid flat on the carpet,
-        # a shirt half pulled out over the side, jeans dropped on the floor
+        # clothes still folded inside
         floor_suitcase(x0 + 300, BACK - 305, 8)
-        dropped_jeans(x0 + 175, BACK - 345, 35, seed=3)
         # the nightstand drawer pulled out and dropped beside it (the nightstand is left with
         # a dark empty slot: room_inside(i=0) builds it without its drawer)
         dropped_drawer(x0 + 100, BACK - 75, 18)

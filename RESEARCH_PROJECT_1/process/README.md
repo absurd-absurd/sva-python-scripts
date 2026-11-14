@@ -853,3 +853,11 @@ Room 101 notes: the chair, suitcase and clothes didn't look real; the suitcase w
 - **Clothes**: the four flat blobs are gone; jeans dropped on the floor (waistband, button, two legs with creases). A dropped sweater was tried and cut: it read as a heap of blobs.
 - **Drawer**: a real open drawer (front with knob, sides, back, bottom) sitting flat on the carpet beside the nightstand, papers and a pen spilled; the nightstand now has a dark empty slot where it came from.
 - **Under the bed**: the knocked-over lamp (the white shapes) is removed.
+
+### Room 101, second pass
+
+![Folded clothes in the suitcase, and the new phone](2026-11-14_room101_suitcase_phone.png)
+
+Feedback after the tour: "I don't like the clothes, just put some folded fabric inside the suitcase, and make the phone on the table more realistic."
+- The jeans on the floor and the shirt spilling out are gone; the suitcase now holds neatly folded clothes (two stacks and a pair of folded jeans).
+- **Phone** (Rooms 101, 105, 106): a 1960s desk rotary like the Western Electric 500: a rounded body whose top slopes to the front, a tilted finger-wheel dial with ten holes, a number card and a finger stop, the handset (receiver and mouthpiece cups joined by the handle) lying across two cradle shoulders with the hook-switch buttons between, a real coiled cord (a helix of short tubes, motel_interiors.py coil_cord()), rubber feet and a line cord off the back.
