@@ -750,8 +750,12 @@ def room_finish(i, x0, x1):
     frustum(x0 + 330, BACK - 380, H - 13.5, H - 10.5, 6.5, 7, "plate_mat", sides=16)
     sphere(x0 + 334, BACK - 380, H - 13.8, 0.6, "glow_ember_mat", sides=6)
     # the door from inside: a casing like the office's
-    for a_, b_, c_, e_ in ((x0 + 131, x0 + 140, 2, 239), (x0 + 280, x0 + 289, 2, 239), (x0 + 131, x0 + 289, 230, 239)):
+    for a_, b_, c_, e_ in ((x0 + 131, x0 + 140, 2, 230), (x0 + 280, x0 + 289, 2, 230), (x0 + 131, x0 + 289, 230, 239)):
         bevel_box(a_, b_, FI, FI + 2, c_, e_, "wood_mat", r=0.6)
+    for a_, b_ in ((x0 + 140, x0 + 142.5), (x0 + 277.5, x0 + 280)):             # jamb liners through the wall
+        box(a_, b_, FRONT - 0.3, FI + 0.2, 2, 230.5, "wood_mat")
+    box(x0 + 140, x0 + 280, FRONT - 0.3, FI + 0.2, 227.5, 230.5, "wood_mat")
+    bevel_box(x0 + 140, x0 + 280, FRONT - 1.0, FI + 0.5, 0, 3.0, "wood_mat", r=0.6)          # threshold
     bathroom_door(L, BACK - 185, BACK - 100)
     if i == HER_ROOM:
         return
@@ -874,8 +878,14 @@ def office():
     box(L + 1, R - 1, F + 1, P0, 0, 5.0, "carpet_mat")                                # motel carpet (the lot is z 3 here)
     box(L + 1, R - 1, P1, B - 1, 0, 5.0, "linoleum_mat")                              # back room: old linoleum
     # the entrance from inside: a casing round the door like the rooms'
-    for a_, b_, c_, e_ in ((d0 - 9, d0, 5, dh + 9), (d1, d1 + 9, 5, dh + 9), (d0 - 9, d1 + 9, dh, dh + 9)):
+    for a_, b_, c_, e_ in ((d0 - 9, d0, 5, dh), (d1, d1 + 9, 5, dh), (d0 - 9, d1 + 9, dh, dh + 9)):
         bevel_box(a_, b_, F + 1, F + 3, c_, e_, "wood_mat", r=0.6)
+    # jamb liners: wood lining the opening right through the wall, so no bare plaster shows
+    # between the door and the casing (and no outside light gets round the door)
+    for a_, b_ in ((d0, d0 + 2.5), (d1 - 2.5, d1)):              # 2.5 cm: past the door's rounded edges, so no hairline
+        box(a_, b_, y0 - 0.3, F + 1.2, 3, dh + 0.5, "wood_mat")
+    box(d0, d1, y0 - 0.3, F + 1.2, dh - 2.5, dh + 0.5, "wood_mat")
+    bevel_box(d0, d1, y0 - 1.0, F + 1.5, 0, 6.0, "wood_mat", r=0.6)     # threshold: no light under the door
     # the partition with its doorway: wallpapered, wainscot on both faces, a cased doorway
     box(L + 1, PD0, P0, P1, 0, h - 12, "room_wall_mat")
     box(PD1, R - 1, P0, P1, 0, h - 12, "room_wall_mat")
@@ -885,7 +895,7 @@ def office():
         wainscot("x", fx, PD1 + 8, R - 1, d_)
         crown("x", fx, L + 1, R - 1, d_, h - 12)
     for x in (PD0 - 8, PD1):
-        bevel_box(x, x + 8, P0 - 3, P1 + 3, 5, 223, "wood_mat", r=0.6)
+        bevel_box(x, x + 8, P0 - 3, P1 + 3, 5, 215, "wood_mat", r=0.6)
     bevel_box(PD0 - 8, PD1 + 8, P0 - 3, P1 + 3, 215, 223, "wood_mat", r=0.6)
     # the back-room door, left ajar
     with Moved(PD0, P1, 85):                         # swung open into the back room, out of the way

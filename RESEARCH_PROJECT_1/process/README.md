@@ -913,3 +913,9 @@ Feedback: make the cigarettes and ashtrays, the lobby sofa and the open register
 ![The register's pages, nothing cutting through](2026-11-14_register_fixed.png)
 
 Feedback: a grey shape cut off part of the register's pages and writing. It was the page block: a flat-topped box, while the printed pages dip toward the gutter, so near the middle the box stood above the pages. The page block is now a mesh whose top follows the same curve, just under the printed spread.
+
+### The office doorframe
+
+![Before (top) and after (bottom): the office entrance from inside, the camera stepping around](2026-11-14_office_doorframe.png)
+
+Feedback: "when I move the camera the frame disappears and artifacts and I can see the wall beneath it." The doorway is cut through a 20 cm wall but nothing lined the opening, so the bare plaster edge of the wall showed between the door and the casing, more or less of it depending where you stood (it read as the frame vanishing), and the neon outside leaked red round the door's 1 cm gaps. Now every doorway (office entrance and rooms 101-106) has wooden jamb liners right through the wall, 2.5 cm thick so the door's rounded edges sit inside them, a threshold so no light gets in under the door, and the casings' side pieces stop under the head piece instead of overlapping it (their front faces were in the same plane, which flickers). Checked with stepped camera shots; the faint lines left on the door are its raised panel edges catching the red neon.
