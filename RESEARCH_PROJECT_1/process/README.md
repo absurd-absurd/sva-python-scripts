@@ -919,3 +919,9 @@ Feedback: a grey shape cut off part of the register's pages and writing. It was 
 ![Before (top) and after (bottom): the office entrance from inside, the camera stepping around](2026-11-14_office_doorframe.png)
 
 Feedback: "when I move the camera the frame disappears and artifacts and I can see the wall beneath it." The doorway is cut through a 20 cm wall but nothing lined the opening, so the bare plaster edge of the wall showed between the door and the casing, more or less of it depending where you stood (it read as the frame vanishing), and the neon outside leaked red round the door's 1 cm gaps. Now every doorway (office entrance and rooms 101-106) has wooden jamb liners right through the wall, 2.5 cm thick so the door's rounded edges sit inside them, a threshold so no light gets in under the door, and the casings' side pieces stop under the head piece instead of overlapping it (their front faces were in the same plane, which flickers). Checked with stepped camera shots; the faint lines left on the door are its raised panel edges catching the red neon.
+
+### The back-room doorway and the bookcase (found by recording a playthrough)
+
+![Before: frames from the user's playthrough; after: the same doorway and the bookcase](2026-11-14_backroom_doorway_books.png)
+
+Feedback: "it did not work" - so I recorded the screen while the user played (ffmpeg, 90 s) and went through it frame by frame. The flicker was on the BACK-ROOM doorway, not the entrance: its frame's inner faces sat exactly on the partition's papered ends (and the head's underside exactly on the wall above), so the wood and the wallpaper took turns being drawn as the camera moved. The frame now reaches 1.5 cm into the opening, covering the wall's end. The bookcase had the same trouble: shelves flush with the side posts' front faces and books tilted into each other; now the shelves sit between the sides, set back, and the books stand upright with a gap each side.

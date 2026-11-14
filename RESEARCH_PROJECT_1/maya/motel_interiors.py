@@ -894,9 +894,11 @@ def office():
         wainscot("x", fx, L + 1, PD0 - 8, d_)
         wainscot("x", fx, PD1 + 8, R - 1, d_)
         crown("x", fx, L + 1, R - 1, d_, h - 12)
-    for x in (PD0 - 8, PD1):
-        bevel_box(x, x + 8, P0 - 3, P1 + 3, 5, 215, "wood_mat", r=0.6)
-    bevel_box(PD0 - 8, PD1 + 8, P0 - 3, P1 + 3, 215, 223, "wood_mat", r=0.6)
+    # the frame reaches 1.5 cm into the opening, so its wood covers the wall's papered end
+    # instead of sitting exactly on it (the two faces in one plane flickered as you moved)
+    for a_, b_ in ((PD0 - 8, PD0 + 1.5), (PD1 - 1.5, PD1 + 8)):
+        bevel_box(a_, b_, P0 - 3, P1 + 3, 5, 213.5, "wood_mat", r=0.6)
+    bevel_box(PD0 - 8, PD1 + 8, P0 - 3, P1 + 3, 213.5, 223, "wood_mat", r=0.6)
     # the back-room door, left ajar
     with Moved(PD0, P1, 85):                         # swung open into the back room, out of the way
         bevel_box(PD0, PD1 - 2, P1, P1 + 4, 1, 213, "door_mat", r=0.8)
@@ -1054,12 +1056,12 @@ def office():
     SX0, SX1 = L + 6, L + 160
     bevel_box(SX0, SX1, P0 - 34, P0 - 5, 5, 12, "trim_mat", r=0.6)                        # plinth
     bevel_box(SX0 + 3, SX1 - 3, P0 - 7, P0 - 5.5, 12, 196, "trim_mat", r=0.3)            # back
-    bevel_box(SX0 - 2, SX1 + 2, P0 - 37, P0 - 5, 196, 202, "wood_mat", r=1.2)            # crown
+    bevel_box(SX0 - 2, SX1 + 2, P0 - 37, P0 - 5, 200, 205, "wood_mat", r=1.2)            # crown, on top of the sides
     for x in (SX0, SX1 - 3):
         bevel_box(x, x + 3, P0 - 34, P0 - 5, 5, 200, "wood_mat", r=0.5)
     rng = random.Random(1974)
     for k, z in enumerate((12, 58, 104, 150, 196)):
-        bevel_box(SX0, SX1, P0 - 34, P0 - 5, z, z + 3, "wood_mat", r=0.5)
+        bevel_box(SX0 + 3, SX1 - 3, P0 - 33, P0 - 7, z, z + (4.6 if z >= 196 else 3), "wood_mat", r=0.5)   # between the sides, set back; the top one reaches up into the crown
         if z >= 196:
             break
         x = SX0 + 5
@@ -1071,10 +1073,11 @@ def office():
                 book(x + 14, P0 - 20, z + 3, 28, 22, 6, mat, yaw=90, lie=True)            # one lying flat
                 x += 30
                 continue
-            book(x + w_ / 2.0, P0 - 19, z + 3, w_ - 0.6, 26, hh, mat, yaw=rng.uniform(-2, 2))
+            rng.uniform(-2, 2)                                                          # (keeps the same books as before)
+            book(x + w_ / 2.0, P0 - 20, z + 3.05, w_ - 0.8, 24, hh, mat)                # upright, a gap each side
             x += w_
     for k in range(3):
-        red_lantern(SX0 + 30 + k * 48, P0 - 20, 202)
+        red_lantern(SX0 + 30 + k * 48, P0 - 20, 205)
 
     # ---- the back room: where the owner lives. A made single bed against the back wall, a rug,
     # an armchair turned to the TV (still on), a little kitchenette with a hot plate and a kettle,
