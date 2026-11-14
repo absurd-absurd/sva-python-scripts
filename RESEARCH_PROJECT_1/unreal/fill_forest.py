@@ -64,6 +64,8 @@ def main():
             x = X1 + r if x > X1 else X1 - r
         if X0 - r < x < X1 + r and abs(y - YB) < r:                      # back
             y = YB + r if y > YB else YB - r
+        if not (X0 < x < X1) and abs(y - YF) < r:                        # along the road (Nov 13)
+            y = YF + r
         if (x, y) != (p.x, p.y):
             a.set_actor_location(unreal.Vector(x, y, p.z), False, False)
             pushed += 1

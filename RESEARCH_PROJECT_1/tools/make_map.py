@@ -153,6 +153,8 @@ def town(d):
     label(d, "OFFICE", 3400, -550, 40)
     label(d, "MARROW FALLS MOTEL", -1000, -2500, 64)
     d.line([to_px(-3700, -3880), to_px(-3700, -100), to_px(4900, -100), to_px(4900, -3880)], fill=FADED, width=4)   # the fence round the motel
+    d.line([to_px(-12000, -3880), to_px(-3700, -3880)], fill=FADED, width=4)   # ... and along the road (Nov 13),
+    d.line([to_px(4900, -3880), to_px(7630, -3880)], fill=FADED, width=4)      # not across the lot's front
     # (the neon cross in front of the office was removed Nov 9: a small one hangs inside now)
 
 

@@ -82,6 +82,8 @@ def chain_link(x0, x1, y, z0, z1, gap=10.0, r=0.28):
 
 FENCE_X0, FENCE_X1 = -3700.0, 4900.0           # the fence's west and east sides (Nov 10: it encloses the motel)
 FENCE_FRONT = -3880.0                          # the sides run down to the road's gravel shoulder
+ROAD_FENCE_WEST = -12000.0                     # along the road: to the map's west wall (fill_forest Wall_West)
+ROAD_FENCE_EAST = 7630.0                       # ... and to the ROAD CLOSED gate's invisible wall (x 7630..7690)
 
 
 def fence_run(xs, y, gap=None):
@@ -131,6 +133,11 @@ def fence():
     for x, yaw in ((FENCE_X0, -90), (FENCE_X1, 90)):                     # barbed arms lean inward
         with Placed(x, mid, yaw):
             fence_run(posts(-L / 2.0, L / 2.0), 0.0)
+    # Nov 13: from both front corners the fence turns and runs along the woods side of the road,
+    # so the back gate is the only way into the woods: west into the map's west wall (in the fog),
+    # east to the ROAD CLOSED gate (its invisible wall starts right there). Barbs lean to the road.
+    fence_run(posts(ROAD_FENCE_WEST, FENCE_X0), FENCE_FRONT)
+    fence_run(posts(FENCE_X1, ROAD_FENCE_EAST), FENCE_FRONT)
     # the sign on the fence beside the gate, facing the motel (south)
     no_trespassing(GATE_X0 - 150, FENCE_Y - 4)
 

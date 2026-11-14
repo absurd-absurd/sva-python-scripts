@@ -819,3 +819,14 @@ The forest floor was bare pale soil with grass. First try: patches of fallen lea
 - maya/make_floor.py: the leaf / needle cards, sticks, fallen branch, sawn stump, brush pile (export/floor/*.fbx)
 - tools/make_floor_layout.py: where everything goes (export/floor.json: 4174 pieces)
 - unreal/forest_floor.py: imports and places them, takes the trees in the view out (build_level.py step after trees.py)
+
+## 2026-11-13: the fence runs along the road, so the back gate is the only way into the woods
+
+![West run from the road](2026-11-13_road_fence_west.png)
+![East run to the ROAD CLOSED gate](2026-11-13_road_fence_east.png)
+
+Feedback (open since Nov 6): the fence round the motel stopped at the road, so you could walk along the road past either front corner and into the woods without the back gate key. Now the fence turns at both front corners and runs along the woods side of the road (maya/make_trail.py fence(), same chain link and barbed wire): west into the fog and the map's west wall, east right up to the ROAD CLOSED gate, whose invisible wall starts where it ends. Tested with sphere sweeps the size of the player every metre along both runs and at both ends: no gaps. 18 trees, logs and stumps that stood in or against the new fence were moved a few metres back into the woods (unreal/fill_forest.py now does this on rebuilds too).
+
+![The map](2026-11-13_map_road_fence.png)
+
+The paper map draws the new fence along the road on both sides of the motel (not across the lot's front).
