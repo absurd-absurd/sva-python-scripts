@@ -35,7 +35,7 @@ MATS.update({
     "coat_mat": (0.16, 0.13, 0.1), "bear_mat": (0.35, 0.24, 0.14), "dustsheet_mat": (0.52, 0.5, 0.45),
     "drip_mat": (0.18, 0.14, 0.08), "debris_mat": (0.42, 0.4, 0.36), "duffel_mat": (0.14, 0.17, 0.12), "case_lining_mat": (0.16, 0.14, 0.13), "shirt_mat": (0.4, 0.38, 0.35),
     "sweater_mat": (0.2, 0.24, 0.3), "sweater_red_mat": (0.3, 0.08, 0.07),
-    "food_mat": (0.3, 0.16, 0.06), "phone_mat": (0.5, 0.45, 0.36), "phone_dark_mat": (0.03, 0.03, 0.03), "paint_white_mat": (0.78, 0.76, 0.7), "roller_mat": (0.72, 0.7, 0.64), "grip_mat": (0.45, 0.08, 0.05),
+    "food_mat": (0.3, 0.16, 0.06), "phone_mat": (0.5, 0.45, 0.36), "phone_dark_mat": (0.03, 0.03, 0.03), "paint_white_mat": (0.78, 0.76, 0.7), "roller_mat": (0.72, 0.7, 0.64), "grip_mat": (0.45, 0.08, 0.05), "bible_leather_mat": (0.03, 0.028, 0.026), "pic_bible_cover": (1, 1, 1),
     # shared with the lake buildings (same colours as BLD_MATS there)
     "rusty_tool_mat": (0.2, 0.11, 0.07), "dark_leather_mat": (0.09, 0.06, 0.04), "can_mat": (0.36, 0.34, 0.31),
     "paint_can_mat": (0.3, 0.29, 0.26), "mattress_mat": (0.38, 0.34, 0.27),
@@ -1065,6 +1065,7 @@ def dropped_drawer(cx, cy, yaw, w=50.0, d=40.0, h=17.0, spill=True):
     with a brass knob (or a bar handle when it is wide), sides, back, a thin bottom; papers and
     a pen spilled when spill."""
     hw, hd = w / 2.0, d / 2.0
+    parts0 = len(ROOM_PARTS)
     with Moved(cx, cy, yaw):
         bevel_box(cx - hw, cx + hw, cy - hd - 1, cy - hd + 1, 0, h, "wood_mat", r=0.8)          # front
         if w > 60:
@@ -1076,11 +1077,13 @@ def dropped_drawer(cx, cy, yaw, w=50.0, d=40.0, h=17.0, spill=True):
         for a_ in (cx - hw + 3, cx + hw - 4.5):
             bevel_box(a_, a_ + 1.5, cy - hd + 1, cy + hd, 0, h - 4, "wood_mat", r=0.4)        # sides
         bevel_box(cx - hw + 3, cx + hw - 3, cy + hd - 1.5, cy + hd, 0, h - 4, "wood_mat", r=0.4)   # back
-        box(cx - hw + 4.5, cx + hw - 4.5, cy - hd + 1, cy + hd - 1.5, 0, 0.8, "trim_mat")        # bottom
+        box(cx - hw + 3, cx + hw - 3, cy - hd + 1, cy + hd - 1.5, 0, 1.0, "wood_mat")            # bottom panel
         if spill:
             papers(cx - 4, cy + 2, 0.8, 2, 61)
             papers(cx - 2, cy - hd - 18, 0, 3, 62, spread=8)
             pen(cx + 22, cy - hd - 10, 0.5, 35)
+    for o in ROOM_PARTS[parts0:]:                    # it sits on the carpet (2 cm thick), not in it
+        cmds.move(0, 2.0, 0, o, relative=True)
 
 
 def hanging_handset(x, y, z_top):
@@ -1094,19 +1097,25 @@ def hanging_handset(x, y, z_top):
 
 
 def bible(x, y, z, yaw):
-    """A Bible lying face down: black leather covers a little bigger than the pages, a rounded
-    spine with raised bands, gilt page edges, a red ribbon marker trailing out."""
+    """A Bible lying face up: black leather covers a little bigger than the pages, the front
+    stamped in gold with a cross and HOLY BIBLE (tools/make_bible.py -> pic_bible_cover), a
+    rounded spine with raised bands, gilt page edges, a red ribbon marker trailing out."""
     W, D, T = 15.0, 22.0, 4.2
     with Moved(x, y, yaw):
-        bevel_box(x - W / 2, x + W / 2, y - D / 2, y + D / 2, z, z + 0.35, "dark_leather_mat", r=0.15)
-        bevel_box(x - W / 2, x + W / 2, y - D / 2, y + D / 2, z + T - 0.35, z + T, "dark_leather_mat", r=0.15)
-        box(x - W / 2 + 0.6, x + W / 2 - 0.35, y - D / 2 + 0.35, y + D / 2 - 0.35, z + 0.35, z + T - 0.35, "brass_mat")
-        tube((x - W / 2 + 0.6, y - D / 2, z + T / 2), (x - W / 2 + 0.6, y + D / 2, z + T / 2), T / 2, "dark_leather_mat", sides=14)
+        bevel_box(x - W / 2, x + W / 2, y - D / 2, y + D / 2, z, z + 0.35, "bible_leather_mat", r=0.15)
+        bevel_box(x - W / 2, x + W / 2, y - D / 2, y + D / 2, z + T - 0.35, z + T, "bible_leather_mat", r=0.15)
+        box(x - W / 2 + 0.35, x + W / 2 - 0.6, y - D / 2 + 0.35, y + D / 2 - 0.35, z + 0.35, z + T - 0.35, "brass_mat")
+        tube((x + W / 2 - 0.6, y - D / 2, z + T / 2), (x + W / 2 - 0.6, y + D / 2, z + T / 2), T / 2, "bible_leather_mat", sides=14)
         for k in range(4):
             yy = y - D / 2 + 3.5 + k * (D - 7) / 3.0
-            tube((x - W / 2 + 0.6, yy - 0.3, z + T / 2), (x - W / 2 + 0.6, yy + 0.3, z + T / 2), T / 2 + 0.15,
-                 "dark_leather_mat", sides=14)
-        box(x + 1.5, x + 2.3, y - D / 2 - 7, y - D / 2 + 1, z + 0.02, z + 0.12, "red_string_mat")   # ribbon
+            tube((x + W / 2 - 0.6, yy - 0.3, z + T / 2), (x + W / 2 - 0.6, yy + 0.3, z + T / 2), T / 2 + 0.15,
+                 "bible_leather_mat", sides=14)
+        box(x - 2.3, x - 1.5, y - D / 2 - 7, y - D / 2 + 1, z + 0.02, z + 0.12, "red_string_mat")   # ribbon
+        # the front cover picture, top of the cover toward +y
+        c = cmds.polyPlane(w=W - 0.5, h=D - 0.5, sx=1, sy=1, ch=False)[0]
+        cmds.rotate(0, 180, 0, c)                    # the picture's top to the cover's top (+y)
+        cmds.move(x - 0.15, z + T + 0.03, y, c)
+        keep(c, "pic_bible_cover")
 
 
 def room_story(i, x0, x1):

@@ -870,3 +870,11 @@ Feedback after the tour: "I don't like the clothes, just put some folded fabric 
 - **Every room**: the nightstand's lower open shelf is now a second drawer matching the top one (Room 101 keeps the top drawer missing).
 - **102**: the phone is the same rotary as 101, knocked off the hook: the base sits on the nightstand with an empty cradle and the receiver hangs down the front on its coiled cord, clear of the nightstand. The lamp moved to the right so it no longer stands in the phone (rooms 103 and 105 too). The Bible on the bed is a real book now: black leather covers, a rounded spine with raised bands, gilt page edges, a red ribbon. The tipped chair that read as a broken drawer is gone; instead one drawer lies on the floor in front of the dragged dresser, and the dresser has a dark empty slot where it came from.
 - **103**: a proper wooden A-frame step ladder (flat rails, four treads, rear legs with braces, top cap, paint shelf, metal spreader bars, rubber feet, old paint drips); a real paint tray (paint well, ribbed ramp, rolled rim, feet) with a paint roller resting in it (fluffy cover, bent wire frame, red grip), moved out from under the bed frame. The dust sheets over the dresser and the TV were cutting into the furniture at the top edges; dust_sheet() now folds exactly at the edges with a 1.5 cm margin and its folds only push outward.
+
+### Room 102, second pass
+
+![The Bible and the dropped drawer](2026-11-14_room102_bible_drawer.png)
+
+Feedback: the Bible should look like a real one, with a cross and "Holy Bible"; you could see the floor through the dropped drawer.
+- The Bible now lies face up with a printed cover (tools/make_bible.py -> export/pic_bible_cover.png): black pebbled leather, a double gold tooled border, a gold cross, HOLY BIBLE in gold serif capitals; the spine is on the left like a real book. (First try had the picture upside down, so the cross looked inverted; turned round before it went in.)
+- The dropped drawers (102, and 101's) were built from the floor up, but the carpet is 2 cm thick, so their thin bottom sat inside it. They now sit on the carpet with a solid wooden bottom panel.
