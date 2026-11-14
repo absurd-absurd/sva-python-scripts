@@ -19,7 +19,7 @@ MATS = "/Game/Horror/Materials/PS2/Props/"
 # A door's origin is its hinge edge, so the Hinge component swings it like a real door.
 SHAPES = {
     "paper": ((21, 28, 0.4), "MI_PS2_curtain_mat", (0, 0, 0.2)),   # yellowed, shows up on a white bed
-    "map":   ((20, 0.6, 26), "MI_PS2_curtain_mat", (0, 0, 13)),    # Cas's map, folded, standing wedged in a door
+    "map_ground": ((20, 26, 0.6), "MI_PS2_curtain_mat", (0, 0, 0.3)),   # Cas's map, folded, lying on the ground
     "key":   ((10, 4, 1.2), "MI_PS2_brass_mat", (0, 0, 0.6)),
     "book":  ((30, 22, 4), "MI_PS2_door_mat", (0, 0, 2)),
     "door":  ((108, 5, 228), "MI_PS2_door_mat", (54, 0, 114)),
