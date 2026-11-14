@@ -887,3 +887,9 @@ Feedback: the Bible should look like a real one, with a cross and "Holy Bible"; 
 - **105**: the bucket and the debris lumps (rags) on the floor are gone; the wet hole in the ceiling stays.
 - **106 tray**: a stainless room-service tray (service_tray()): thin base, low rim with a rolled edge, a raised grip at each end. Food and mug unchanged.
 - **106 nightstand**: lamp, red lantern and phone each have their own spot: phone square on the left, lantern front right with the card leaning on it, the lamp behind the lantern (its shade clears the lantern's top).
+
+### Room 106 duffel bag
+
+![The duffel bag](2026-11-14_room106_duffel.png)
+
+Feedback: make the duffel bag more realistic (it was one soft lump with a rod on top). Now duffel_bag(): an olive canvas body that slumps onto a flat base and sags a little on top, darker end panels, dark webbing straps running up both sides into two carry handles with a grip wrap, the zip open along the top with clothes showing, metal D-rings at the ends and the shoulder strap lying loose on the floor. (Gotcha: building the body by swapping the cylinder's axes turned it inside out, so it rendered as an open trough until its normals were reversed.)

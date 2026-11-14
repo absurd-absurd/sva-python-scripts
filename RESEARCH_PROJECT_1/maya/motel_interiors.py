@@ -33,7 +33,7 @@ MATS.update({
     "seeglass_red_mat": (0.4, 0.02, 0.01), "bakelite_mat": (0.12, 0.06, 0.03), "ash_mat": (0.3, 0.3, 0.29),
     "panel_mat": (0.3, 0.2, 0.12), "linoleum_mat": (0.32, 0.3, 0.24), "blanket_mat": (0.22, 0.2, 0.14),
     "coat_mat": (0.16, 0.13, 0.1), "bear_mat": (0.35, 0.24, 0.14), "dustsheet_mat": (0.52, 0.5, 0.45),
-    "drip_mat": (0.18, 0.14, 0.08), "debris_mat": (0.42, 0.4, 0.36), "duffel_mat": (0.14, 0.17, 0.12), "case_lining_mat": (0.16, 0.14, 0.13), "shirt_mat": (0.4, 0.38, 0.35),
+    "drip_mat": (0.18, 0.14, 0.08), "debris_mat": (0.42, 0.4, 0.36), "duffel_mat": (0.14, 0.17, 0.12), "duffel_trim_mat": (0.05, 0.055, 0.045), "webbing_mat": (0.03, 0.03, 0.028), "case_lining_mat": (0.16, 0.14, 0.13), "shirt_mat": (0.4, 0.38, 0.35),
     "sweater_mat": (0.2, 0.24, 0.3), "sweater_red_mat": (0.3, 0.08, 0.07),
     "food_mat": (0.3, 0.16, 0.06), "phone_mat": (0.5, 0.45, 0.36), "phone_dark_mat": (0.03, 0.03, 0.03), "paint_white_mat": (0.78, 0.76, 0.7), "roller_mat": (0.72, 0.7, 0.64), "grip_mat": (0.45, 0.08, 0.05), "bible_leather_mat": (0.03, 0.028, 0.026), "pic_bible_cover": (1, 1, 1),
     # shared with the lake buildings (same colours as BLD_MATS there)
@@ -568,6 +568,63 @@ def rotary_phone(x, y, z, yaw=0, handset=True):
         # line cord off the back
         tube((x + 4, y + D / 2 - 1, z + 1.2), (x + 6, y + D / 2 + 6, z + 0.25), 0.3, "phone_dark_mat", sides=6)
         tube((x + 6, y + D / 2 + 6, z + 0.25), (x + 9, y + D / 2 + 11, z + 0.25), 0.3, "phone_dark_mat", sides=6)
+
+
+def duffel_bag(cx, cy, yaw):
+    """A soft canvas duffel bag lying on the carpet, long axis along x before yaw: a rounded
+    body that slumps onto a flat base and sags a little on top, darker end panels, webbing
+    straps running up both sides into two carry handles joined by a grip wrap, the zip open
+    along the top with clothes showing, D-rings at the ends and the shoulder strap lying
+    loose on the floor."""
+    L, Wd, Hh, base = 64.0, 31.0, 28.0, 2.0
+    flat = Hh * 0.36                                          # how far below the middle the base is
+    zc = base + flat
+    c = cmds.polyCylinder(r=1, h=1, sx=24, sy=10, sz=1, ch=False)[0]
+    pts = []
+    for vx, vy, vz in _verts(c):
+        t = vy * 2.0
+        f = math.sqrt(max(0.0, 1 - 0.38 * max(0.0, (abs(t) - 0.62) / 0.38) ** 2))     # rounded, pinched ends
+        Y, Z = vz * f * Wd / 2.0, vx * f * Hh / 2.0
+        if Z < -flat:
+            Z = -flat + (Z + flat) * 0.08                     # slumped onto a flat base
+        if Z > 0:
+            Z -= 2.2 * (1 - t * t) * (Z / (Hh / 2.0))          # the top sags where it's half empty
+        pts.append((vy * L, Z, Y))
+    _set_verts(c, pts)
+    cmds.polyNormal(c, normalMode=0, userNormalMode=0, ch=False)   # the axis swap turned it inside out
+    cmds.polySoftEdge(c, angle=70, ch=False)
+    top = zc + Hh / 2.0 - 2.2
+    with Moved(cx, cy, yaw):
+        cmds.move(cx, zc, cy, c)
+        keep(c, "duffel_mat")
+        for s_ in (-1, 1):                                                        # end panels
+            e = cmds.polyCylinder(r=1, h=0.6, sx=20, sy=1, sz=0, ch=False)[0]
+            cmds.rotate(0, 0, 90, e)
+            cmds.scale(Hh / 2.0 * 0.62, 1, Wd / 2.0 * 0.62, e)   # local x = up, y = thickness, z = across
+            cmds.move(cx + s_ * (L / 2.0 - 0.6), zc + 1.0, cy, e)
+            keep(e, "duffel_trim_mat")
+            ring(cx + s_ * (L / 2.0 - 1.0), cy, zc + 9.5, 1.8, 0.35, "metal_mat", axis="x", sides=10)   # D-ring
+        for hx in (cx - 10, cx + 10):                                             # straps + handles
+            for sy_ in (-1, 1):
+                box(hx - 1.6, hx + 1.6, cy + sy_ * (Wd / 2.0 + 0.1) - 0.25, cy + sy_ * (Wd / 2.0 + 0.1) + 0.25, base + 1, zc + 6, "webbing_mat")
+            arch = [(hx, cy - 7, top - 0.5), (hx, cy - 5, top + 6), (hx, cy, top + 9), (hx, cy + 5, top + 6), (hx, cy + 7, top - 0.5)]
+            for a_, b_ in zip(arch, arch[1:]):
+                tube(a_, b_, 0.8, "webbing_mat", sides=6)
+        rbevel(cx, cy, top + 9, 25, 4.2, 2.4, "duffel_trim_mat", r=0.8)            # grip wrap
+        # the open zip along the top, clothes showing in it
+        rbevel(cx - 2, cy, top + 0.2, 42, 5, 0.6, "stain_mat", r=0.2)
+        for sy_ in (-3.0, 3.0):
+            tube((cx - 23, cy + sy_, top + 0.4), (cx + 19, cy + sy_, top + 0.4), 0.35, "metal_mat", sides=5)
+        rbevel(cx + 21, cy, top + 0.6, 3, 1.4, 0.6, "metal_mat", r=0.2)                       # zip pull
+        rbevel(cx + 24, cy, top + 0.4, 4, 1.6, 0.4, "duffel_trim_mat", r=0.2)
+        rsoft(cx - 4, cy + 0.5, top + 1.0, 30, 6, 2.8, "shirt_mat", jitter=0.6, smooth=2, seed=21)
+        rsoft(cx + 9, cy - 0.5, top + 0.8, 12, 5, 2.2, "clothes_b_mat", jitter=0.5, smooth=2, seed=22)
+        # the shoulder strap, clipped to the D-rings, lying loose on the floor
+        path = [(cx + L / 2.0 - 0.5, cy, zc + 8), (cx + L / 2.0 + 5, cy + 6, base + 1.2), (cx + L / 2.0 + 14, cy + 2, base + 0.8),
+                (cx + L / 2.0 + 12, cy - 16, base + 0.8), (cx + 8, cy - Wd / 2.0 - 9, base + 0.8), (cx - L / 2.0 + 4, cy - Wd / 2.0 - 6, base + 0.8),
+                (cx - L / 2.0 - 4, cy - 6, base + 1.2), (cx - L / 2.0 + 0.5, cy, zc + 8)]
+        for a_, b_ in zip(path, path[1:]):
+            tube(a_, b_, 0.7, "webbing_mat", sides=6)
 
 
 def service_tray(x, y, z, yaw):
@@ -1189,9 +1246,7 @@ def room_story(i, x0, x1):
         box(cx - 60, cx + 60, cy - 45, cy + 45, H - 11.5, H - 11.3, "drip_mat")
     elif i == 5:    # 106: the next guest
         # a duffel bag on the luggage spot, unzipped
-        rsoft(x0 + 120, BACK - 85, 18, 70, 34, 36, "duffel_mat", jitter=1.5, smooth=2, seed=1)
-        tube((x0 + 95, BACK - 85, 37), (x0 + 145, BACK - 85, 37), 1.2, "strap_mat", sides=6)
-        rsoft(x0 + 135, BACK - 80, 37, 28, 18, 6, "clothes_b_mat", jitter=1.5, smooth=2, seed=2)
+        duffel_bag(x0 + 108, BACK - 88, 4)
         # a room-service tray on the bed, half eaten
         service_tray(x0 + 300, BACK - 160, 58.6, -12)
         frustum(x0 + 295, BACK - 160, 60, 62, 12, 13, "bowl_mat", sides=18)
