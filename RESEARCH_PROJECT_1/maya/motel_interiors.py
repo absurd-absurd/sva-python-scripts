@@ -35,7 +35,7 @@ MATS.update({
     "coat_mat": (0.16, 0.13, 0.1), "bear_mat": (0.35, 0.24, 0.14), "dustsheet_mat": (0.52, 0.5, 0.45),
     "drip_mat": (0.18, 0.14, 0.08), "debris_mat": (0.42, 0.4, 0.36), "duffel_mat": (0.14, 0.17, 0.12), "duffel_trim_mat": (0.05, 0.055, 0.045), "webbing_mat": (0.03, 0.03, 0.028), "case_lining_mat": (0.16, 0.14, 0.13), "shirt_mat": (0.4, 0.38, 0.35),
     "sweater_mat": (0.2, 0.24, 0.3), "sweater_red_mat": (0.3, 0.08, 0.07),
-    "food_mat": (0.3, 0.16, 0.06), "phone_mat": (0.5, 0.45, 0.36), "phone_dark_mat": (0.03, 0.03, 0.03), "paint_white_mat": (0.78, 0.76, 0.7), "roller_mat": (0.72, 0.7, 0.64), "grip_mat": (0.45, 0.08, 0.05), "bible_leather_mat": (0.03, 0.028, 0.026), "pic_bible_cover": (1, 1, 1),
+    "food_mat": (0.3, 0.16, 0.06), "phone_mat": (0.5, 0.45, 0.36), "phone_dark_mat": (0.03, 0.03, 0.03), "paint_white_mat": (0.78, 0.76, 0.7), "roller_mat": (0.72, 0.7, 0.64), "grip_mat": (0.45, 0.08, 0.05), "filter_mat": (0.62, 0.42, 0.2), "char_mat": (0.06, 0.05, 0.045), "glass_dark_mat": (0.12, 0.13, 0.12), "ledger_cover_mat": (0.16, 0.05, 0.04), "pic_guest_book": (1, 1, 1), "bible_leather_mat": (0.03, 0.028, 0.026), "pic_bible_cover": (1, 1, 1),
     # shared with the lake buildings (same colours as BLD_MATS there)
     "rusty_tool_mat": (0.2, 0.11, 0.07), "dark_leather_mat": (0.09, 0.06, 0.04), "can_mat": (0.36, 0.34, 0.31),
     "paint_can_mat": (0.3, 0.29, 0.26), "mattress_mat": (0.38, 0.34, 0.27),
@@ -120,15 +120,56 @@ def red_lantern(x, y, z, name=None):
         light(name, x, y, z + 14, [1.0, 0.05, 0.02], 2, 260, room=True)
 
 
+def cigarette(p_filter, p_end, mat_tip="char_mat", length_filter=2.4, r=0.42, bend=0.0):
+    """A cigarette (or a butt) from its filter end to its other end: a cork-coloured filter, white
+    paper, a charred or burning tip. bend kinks a stubbed-out butt partway along."""
+    import math as _m
+    d = [p_end[i] - p_filter[i] for i in range(3)]
+    L = _m.sqrt(sum(v * v for v in d)) or 0.01
+    u = [v / L for v in d]
+    pf = tuple(p_filter[i] + u[i] * min(length_filter, L * 0.7) for i in range(3))
+    tube(p_filter, pf, r, "filter_mat", sides=8)
+    if bend:
+        mid = tuple(pf[i] + (p_end[i] - pf[i]) * 0.5 + (bend if i == 2 else 0) for i in range(3))
+        tube(pf, mid, r * 0.95, "paper_mat", sides=8)
+        tube(mid, p_end, r * 0.85, "paper_mat", sides=8)
+    else:
+        tube(pf, p_end, r, "paper_mat", sides=8)
+    sphere(*p_end, r * 0.9, mat_tip, sides=6, scale=(1, 1, 0.8))
+
+
 def ashtray(x, y, z, lit=True):
-    frustum(x, y, z, z + 2.2, 6, 6.5, "glass_mat", sides=14)
-    frustum(x, y, z + 1.2, z + 2.3, 4.8, 5.2, "ash_mat", sides=14)
-    for k in range(3):                                                    # old butts
-        tube((x - 3 + k * 2.5, y - 2 + k, z + 2.4), (x - 1 + k * 2.5, y + 1 + k, z + 2.6), 0.4, "paper_mat", sides=6)
-    # the one still burning, resting on the rim
-    tube((x + 5, y, z + 2.6), (x + 11, y + 1.5, z + 2.9), 0.42, "paper_mat", sides=6)
+    """A heavy round glass ashtray: a thick base, a sloped wall with a rolled rim and three
+    cigarette rests, a grey heap of ash in the bowl, a few stubbed-out butts (filters, crushed
+    paper, charred ends) and, when lit, one still burning in a rest: filter out over the rim, a
+    curl of grey ash and a glowing tip over the bowl."""
+    frustum(x, y, z, z + 1.1, 6.4, 6.8, "glass_mat", sides=20)                                   # base
+    frustum(x, y, z + 1.1, z + 2.8, 6.8, 7.2, "glass_mat", sides=20, open_ends=True)            # outer wall
+    frustum(x, y, z + 1.1, z + 2.8, 4.6, 5.4, "glass_mat", sides=20, open_ends=True, inside=True)
+    ring(x, y, z + 2.8, 6.3, 0.95, "glass_mat", sides=20)                                        # rolled rim
+    for k in range(3):                                                                           # the rests
+        a = math.radians(30 + k * 120)
+        rbevel(x + 6.3 * math.cos(a), y + 6.3 * math.sin(a), z + 3.55, 2.4, 1.4, 0.35, "glass_dark_mat", r=0.1,
+               yaw=math.degrees(a))
+    frustum(x, y, z + 1.1, z + 1.25, 4.6, 4.6, "ash_mat", sides=20)                              # bowl floor
+    rsoft(x - 0.5, y + 0.4, z + 1.6, 6.5, 5.5, 0.9, "ash_mat", jitter=0.3, smooth=1, seed=int(x) % 30)   # ash heap
+    rng_ = random.Random(int(x * 3 + y))
+    for k in range(3 if lit else 4):                                                             # butts
+        a = rng_.uniform(0, 6.28)
+        cx_, cy_ = x + 1.4 * math.cos(a), y + 1.4 * math.sin(a)
+        ln = rng_.uniform(3.2, 4.4)
+        b_ = a + rng_.uniform(-0.6, 0.6)
+        cigarette((cx_ - math.cos(b_) * ln / 2, cy_ - math.sin(b_) * ln / 2, z + 2.0 + k * 0.25),
+                  (cx_ + math.cos(b_) * ln / 2, cy_ + math.sin(b_) * ln / 2, z + 1.8), length_filter=2.2,
+                  bend=-0.35 if k % 2 else 0.0)
     if lit:
-        tube((x + 11, y + 1.5, z + 2.9), (x + 11.6, y + 1.65, z + 2.95), 0.44, "glow_ember_mat", sides=6)
+        a = math.radians(30)
+        ca, sa = math.cos(a), math.sin(a)
+        p_out = (x + 12.5 * ca, y + 12.5 * sa, z + 3.2)
+        p_in = (x + 3.8 * ca, y + 3.8 * sa, z + 3.7)
+        cigarette(p_out, p_in, mat_tip="ash_mat", length_filter=2.4)
+        tube(p_in, (x + 2.7 * ca, y + 2.7 * sa, z + 3.75), 0.4, "ash_mat", sides=8)          # a curl of ash
+        sphere(x + 2.6 * ca, y + 2.6 * sa, z + 3.75, 0.38, "glow_ember_mat", sides=6)        # the ember
 
 
 def mug_at(x, y, z, full=True):
@@ -188,40 +229,73 @@ def bell(x, y, z):
 
 
 def guest_book(x, y, z, yaw=0):
-    """The guest book lying open: two page blocks in a cloth cover, the pages lined (pic texture
-    later; plain paper for now), a ribbon."""
+    """The guest register lying open on the counter: two cloth-covered boards with a rounded
+    spine under the gutter, page blocks that rise from the gutter and flatten toward the
+    edges, the open spread printed with the ledger (tools/make_guest_book.py ->
+    pic_guest_book: ruled columns and guests' handwriting), a red ribbon."""
+    W, D = 62.0, 40.0
     with Moved(x, y, yaw):
-        rbevel(x, y, z + 0.4, 62, 40, 0.8, "book_red_mat", r=0.3)
-        for s in (-1, 1):
-            rsoft(x + s * 15, y, z + 1.8, 28, 37, 2.2, "paper_mat", sag=-0.6, smooth=1, seed=8 + s, div=(4, 1, 2))
-        rbevel(x + 2, y + 22, z + 2.5, 1, 8, 0.2, "red_string_mat", r=0.05)
+        for s_ in (-1, 1):                                                            # boards
+            a_, b_ = (x - W / 2, x - 0.6) if s_ < 0 else (x + 0.6, x + W / 2)
+            bevel_box(a_, b_, y - D / 2, y + D / 2, z, z + 0.45, "ledger_cover_mat", r=0.2)
+        tube((x, y - D / 2, z + 0.2), (x, y + D / 2, z + 0.2), 1.2, "ledger_cover_mat", sides=12)   # spine
+        def h(u):                                                                    # page surface height
+            return z + 0.45 + 2.2 * (1 - math.exp(-abs(u) * 9)) - 0.5 * max(0.0, abs(u) - 0.85) / 0.15
+        for s_ in (-1, 1):                                                            # page block edges
+            a_, b_ = (x - W / 2 + 0.6, x - 2.0) if s_ < 0 else (x + 2.0, x + W / 2 - 0.6)
+            box(a_, b_, y - D / 2 + 0.6, y + D / 2 - 0.6, z + 0.45, z + 2.3, "paper_mat")
+        c = cmds.polyPlane(w=W - 1.2, h=D - 1.2, sx=30, sy=1, ch=False)[0]
+        pts = []
+        for vx, vy, vz in _verts(c):
+            u = vx / ((W - 1.2) / 2.0)
+            pts.append((vx, h(u) + 0.05, vz))
+        _set_verts(c, pts)
+        cmds.rotate(0, 180, 0, c)                    # the picture's top to the book's top (+y)
+        cmds.move(x, 0, y, c, relative=True)
+        keep(c, "pic_guest_book")
+        box(x + 4, x + 4.8, y - D / 2 - 6, y - D / 2 + 2, z + 0.5, z + 0.6, "red_string_mat")    # ribbon
 
 
 def couch(x0, x1, y0, y1):
-    """A tired 70s couch, back against y1 (facing -y): a base on turned wooden feet, three seat
-    cushions with piped edges (the middle one sagging), button-tufted back cushions, rolled arms."""
-    cxm, w_all = (x0 + x1) / 2.0, x1 - x0
-    rsoft(cxm, (y0 + y1) / 2.0 + 4, 24, w_all - 8, y1 - y0 - 10, 22, "couch_mat", jitter=0.4, smooth=2, seed=11, div=(6, 2, 3))
-    bevel_box(x0 + 6, x1 - 6, y1 - 22, y1 - 4, 30, 62, "couch_mat", r=4, seg=3)            # back frame
-    aw = 18.0
-    n = 3
-    w = (w_all - 2 * aw) / n
-    for k in range(n):
-        cx = x0 + aw + w * (k + 0.5)
-        sy0, sy1 = y0 + 4, y1 - 24
-        rsoft(cx, (sy0 + sy1) / 2.0, 41, w - 2, sy1 - sy0, 13, "couch_mat", jitter=0.6, sag=3.0 if k == 1 else 1.2,
-              smooth=2, seed=20 + k, div=(5, 2, 5))
-        tube((cx - w / 2 + 3, sy0 + 1, 44), (cx + w / 2 - 3, sy0 + 1, 44), 0.9, "trim_mat", sides=8)    # piping
-        rsoft(cx, y1 - 15, 70, w - 3, 18, 40, "couch_mat", jitter=0.6, smooth=2, seed=30 + k, tilt_y=8, div=(5, 4, 2))
-        for r_ in range(2):                                                   # tufting buttons
+    """A motel lobby sofa built like the rooms' armchairs, back against y1 (facing -y): a boxed
+    base with a pleated skirt, arms that are part of the body with rolled tops, three seat
+    cushions sitting inside the arms with piping (the middle one sagging a little), a rolled
+    back with three tufted back cushions resting on the seats, tapered wooden legs."""
+    mat = "couch_mat"
+    D = y1 - y0
+    for x in (x0 + 5, x1 - 5):                                                         # legs
+        for y in (y0 + 5, y1 - 5):
+            lathe(x, y, [(0, 1.5), (7, 2.0), (10, 2.4), (11, 2.8)], "wood_mat", sides=12)
+    bevel_box(x0, x1, y0 + 2, y1, 11, 36, mat, r=3, seg=3)                             # base
+    bevel_box(x0 - 0.6, x1 + 0.6, y0 + 1.4, y1 + 0.6, 9.5, 15, mat, r=1, seg=2)       # skirt
+    nk = int((x1 - x0) / 25)
+    for k in range(1, nk):
+        xx = x0 + k * (x1 - x0) / nk
+        box(xx - 0.3, xx + 0.3, y0 + 1.1, y0 + 1.4, 9.6, 14.6, "trim_mat")              # skirt pleats
+    bevel_box(x0, x1, y1 - 12, y1, 11, 88, mat, r=5, seg=3)                            # back frame
+    tube((x0 + 4, y1 - 6, 87), (x1 - 4, y1 - 6, 87), 6.5, mat, sides=16)               # rolled top
+    for xx in (x0 + 4, x1 - 4):
+        sphere(xx, y1 - 6, 87, 6.5, mat, sides=16)
+    for s_, ax in ((-1, x0 + 6), (1, x1 - 6)):                                         # arms
+        bevel_box(ax - 6, ax + 6, y0 + 2, y1 - 4, 11, 58, mat, r=3, seg=3)
+        tube((ax, y0 + 1, 58), (ax, y1 - 8, 58), 7, mat, sides=16)
+        sphere(ax, y1 - 8, 58, 7, mat, sides=16)
+        sphere(ax, y0 + 1, 58, 7, mat, sides=16, scale=(1, 0.35, 1))
+    ix0, ix1 = x0 + 12.5, x1 - 12.5
+    w = (ix1 - ix0) / 3.0
+    sy0, sy1 = y0, y1 - 11
+    for k in range(3):
+        a_, b_ = ix0 + k * w + 0.3, ix0 + (k + 1) * w - 0.3
+        top = 48 - (1.2 if k == 1 else 0)
+        bevel_box(a_, b_, sy0, sy1, 36, top, mat, r=4.5, seg=3)                        # seat cushion
+        for zz in (top - 1.7, 37.7):
+            tube((a_ + 2.5, sy0 + 0.2, zz), (b_ - 2.5, sy0 + 0.2, zz), 0.8, mat, sides=8)   # piping
+        cx = (a_ + b_) / 2.0
+        rbevel(cx, y1 - 17, 68, w - 1.2, 11, 40, mat, r=4.5, seg=3, tilt_y=8)           # back cushion
+        for zz in (61, 75):
             for c_ in range(3):
-                sphere(cx - w / 3.0 + c_ * w / 3.0, y1 - 25 + r_ * 2.5, 60 + r_ * 16, 1.1, "trim_mat", sides=8)
-    for x in (x0 + aw / 2.0, x1 - aw / 2.0):                                   # rolled arms
-        rsoft(x, (y0 + y1) / 2.0, 44, aw, y1 - y0 - 2, 34, "couch_mat", jitter=0.4, smooth=2, seed=int(x), div=(3, 4, 5))
-        tube((x, y0 + 2, 60), (x, y1 - 4, 60), aw * 0.52, "couch_mat", sides=14)
-    for x in (x0 + 10, x1 - 10):
-        for y in (y0 + 10, y1 - 10):
-            lathe(x, y, [(5, 1.6), (8, 2.2), (12, 2.8), (13, 3.4)], "wood_mat", sides=12)
+                yy = y1 - 17 - 5.6 + (zz - 68) * 0.14
+                sphere(cx - w / 3.0 + c_ * w / 3.0, yy, zz, 0.9, "trim_mat", sides=8)
 
 
 def coffee_table(cx, cy):
@@ -807,7 +881,7 @@ def office():
         bevel_box(x, x + 8, P0 - 3, P1 + 3, 5, 223, "wood_mat", r=0.6)
     bevel_box(PD0 - 8, PD1 + 8, P0 - 3, P1 + 3, 215, 223, "wood_mat", r=0.6)
     # the back-room door, left ajar
-    with Moved(PD0, P1, -62):
+    with Moved(PD0, P1, 85):                         # swung open into the back room, out of the way
         bevel_box(PD0, PD1 - 2, P1, P1 + 4, 1, 213, "door_mat", r=0.8)
         sphere(PD1 - 10, P1 + 6, 100, 2.2, "brass_mat", sides=8)
     # the second window from inside: casing, sill, old blinds half down
@@ -915,8 +989,9 @@ def office():
     rbevel(CX0 + 95, CY0 + 14, 108 + 6, 18, 1, 11, "plate_mat", r=0.2, tilt_y=-12)        # RING FOR SERVICE card
     rbevel(CX0 + 95, CY0 + 17, 108 + 5.5, 16, 1, 10, "plate_mat", r=0.2, tilt_y=12)
     # behind the counter: a shelf under the top with papers and a cash box
-    bevel_box(CX0 + 10, R - 10, CY1, CY1 + 25, 60, 63, "wood_mat", r=0.6)
-    papers(CX0 + 80, CY1 + 12, 63, 5, 3)
+    bevel_box(CX0 + 10, R - 10, CY1, CY1 + 20, 60, 63, "wood_mat", r=0.6)          # 20 deep: the way behind stays wide
+    for k in range(5):                                                              # papers lying on it, turned to fit
+        rbevel(CX0 + 80 + k * 3.5, CY1 + 10, 63.15 + k * 0.25, 28, 19, 0.15, "paper_mat", r=0.05, yaw=(k % 3 - 1) * 4)
     bevel_box(CX0 + 200, CX0 + 240, CY1 + 3, CY1 + 22, 63, 73, "dumpster_mat", r=1)
 
     # ---- the desk behind the counter, against the partition
@@ -940,7 +1015,7 @@ def office():
     mug_at(DX0 + 104, DY0 + 18, 77)
     papers(DX0 + 120, DY0 + 35, 77, 6, 9, spread=10)
     pen(DX0 + 75, DY0 + 45, 77.3, -20)
-    swivel_chair(DX0 + 70, DY0 - 75, 35)                                                   # pushed back, turned
+    swivel_chair((DX0 + 46 + DX1 - 46) / 2.0, DY0 + 15, 180)                                # tucked into the knee hole: the way to the back room stays clear
     # the key board on the partition, left of the desk: hooks 101-106, 104's hook empty
     KX0, KX1 = L + 175, L + 315
     bevel_box(KX0, KX1, P0 - 2.2, P0, 140, 215, "wood_mat", r=0.6)                      # board
@@ -1042,7 +1117,7 @@ def office():
         frustum(KX0 + 12 + k * 16, BY1 - 13, 153, 165, 4, 4, "can_mat", sides=12)
     rbevel(KX1 - 18, BY1 - 13, 165, 14, 9, 24, "magazine_mat", r=0.6)
     # coat rack by the doorway with his coat and hat; boots under it
-    rx, ry = R - 40, BY0 + 40
+    rx, ry = R - 24, BY0 + 16                       # in the corner beside the doorway, out of the way in
     lathe(rx, ry, [(5, 16), (8, 15), (9, 2), (175, 1.8), (180, 3)], "wood_mat", sides=14)
     for k in range(4):
         a_ = k * math.pi / 2 + 0.4

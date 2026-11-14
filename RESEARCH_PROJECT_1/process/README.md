@@ -899,3 +899,13 @@ Feedback: make the duffel bag more realistic (it was one soft lump with a rod on
 ![Inside cabin 2, the tree gone](2026-11-14_cabin2_no_tree.png)
 
 Found on the sign-off tour: a tree trunk grew through the inside of cabin 2 and leaves poked onto its table. Cause: the fill forest (tools/make_fill.py) kept out of the scattered woods' box but not out of the clearings, and the cabins sit just past that box's north edge. It now leaves every clearing empty (trees by the clearing's radius + 1.5 m for their crowns), filtered at the end so the rest of the forest is unchanged. That took out 13 pieces: the two trees in and against cabin 2, a tree inside cabin 1, trees crowding cabins 1 and 3 and the front of the boathouse, and a few shrubs. Only those actors were removed in the level; the map was redrawn.
+
+### The office
+
+![Guest register, lobby sofa, the way into the back room](2026-11-14_office.png)
+
+Feedback: make the cigarettes and ashtrays, the lobby sofa and the open register more realistic; the office chair blocked the way into the back room.
+- **Ashtrays** (desk, coffee table, back room): heavy round glass (thick base, sloped wall, rolled rim, three cigarette rests), a heap of ash, stubbed-out butts (cork filters, crushed paper, charred ends); on the desk one still burning in a rest, filter out over the rim, a curl of ash and a glowing tip.
+- **Lobby sofa**: rebuilt like the rooms' armchairs: boxed base with a pleated skirt, rolled arms that are part of the body, three piped seat cushions (the middle one sagging), a rolled back with three tufted cushions, tapered legs.
+- **Guest register**: cloth-covered boards with a rounded spine, page blocks that rise from the gutter, and the spread printed as a real ledger (tools/make_guest_book.py -> pic_guest_book: GUEST REGISTER, DATE / NAME / ADDRESS / ROOM, guests in different handwriting since October, tonight's line started for 106), a red ribbon.
+- **Getting into the back room**: tested by sweeping the player's capsule (35 cm radius) from the counter flap to the back room. Four things were in the way: the swivel chair (now tucked into the desk's knee hole), papers overhanging the shelf behind the counter (shelf 20 cm deep now, papers lying flat on it), the back-room door standing open into the office across its own doorway (now swung open into the back room), and the coat rack right behind the doorway (moved into the corner). The sweep is clear now.
