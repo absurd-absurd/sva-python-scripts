@@ -369,7 +369,7 @@ def build():
     rowboat(-900, 20200, 35)
     tube((DOCK_X + 120, y1 - 120, DECK_Z + 3), (DOCK_X + 175, y1 - 190, WATER_Z + 20), 0.9, "rope_mat", sides=6)   # mooring line
     lake_buildings()
-    lake_lanterns()
+    # lake_lanterns()   (floating red lanterns on the lake: tried Nov 14, the user didn't like them)
     for cx in (-6000, -4700, -1200, 300, 2800, 4400, 6900):
         reeds(cx, shore_y(cx) - 60, 26)
     rocks()

@@ -994,3 +994,5 @@ The user chose all four ideas (the red lanterns are the town's lake ritual in th
 - **Lanterns on the lake** (maya/make_lake.py lake_lanterns()): 18 red paper lanterns on little wooden floats, far out on the water, with four real red lights among them.
 - **Cabins 1 and 3**: their front windows are boarded with slits now, a dim red glow shows through from inside, and a flickering red light spills onto each porch.
 - **Dock**: the red lantern at the end now flickers.
+
+Feedback after the tour: the floating lanterns on the lake are removed (lake_lanterns() is no longer called; kept in maya/make_lake.py in case). The trail lanterns, cabin glow and dock lantern stay.
