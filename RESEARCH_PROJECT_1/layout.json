@@ -12,5 +12,6 @@
     {"name": "cabin3",    "x": 7500,  "y": 12400, "r": 650},
     {"name": "boathouse", "x": -3500, "y": 14000, "r": 700}
   ],
+  "tower_view": {"_about": "the gap cut through the woods so you can see the lake from the lookout tower: a wedge from the tower, aim_deg = its direction (0 = +X east, 90 = +Y north), half_deg either side, plus margin cm so no crown hangs into it; tools/tower_view.py", "x": 2800, "y": 10000, "aim_deg": 106, "half_deg": 20, "margin": 400},
   "map": {"_about": "world area the in-game map covers (square, cm); tools/make_map.py draws it, the HUD reads it", "x_min": -13000, "x_max": 13000, "y_min": -6000, "y_max": 20000, "px": 2048}
 }

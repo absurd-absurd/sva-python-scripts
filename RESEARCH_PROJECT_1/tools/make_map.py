@@ -20,7 +20,12 @@ import math
 import os
 import random
 
+import sys
+
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from tower_view import in_view                     # trees cut for the lookout's view aren't drawn
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 LAYOUT = json.load(open(os.path.join(ROOT, "layout.json")))
@@ -107,6 +112,8 @@ def trees(d):
         m, prop = c["matrix"], c.get("asset", "")
         x, y = m[12], m[14]                          # Maya (x, y, z) -> Unreal (x, z, y)
         px, py = to_px(x, y)
+        if "tree" in prop and in_view(x, y):
+            continue
         if "tree" in prop:
             r = 7 if "dead" in prop else 9
             d.line([(px, py - r), (px - r, py + r), (px + r, py + r), (px, py - r)], fill=FADED, width=2)
@@ -115,7 +122,7 @@ def trees(d):
     fill_path = os.path.join(ROOT, "export", "fill.json")             # the forest round the motel (tools/make_fill.py)
     if os.path.exists(fill_path):
         for it in json.load(open(fill_path))["items"]:
-            if "tree" in it["asset"]:
+            if "tree" in it["asset"] and not in_view(it["x"], it["y"]):
                 px, py = to_px(it["x"], it["y"])
                 r = 7 if "dead" in it["asset"] else 9
                 d.line([(px, py - r), (px - r, py + r), (px + r, py + r), (px, py - r)], fill=FADED, width=2)

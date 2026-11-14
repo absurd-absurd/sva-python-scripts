@@ -793,3 +793,29 @@ Feedback: very thick fog on the right side of the road (facing the motel) so you
 Feedback: the fog should also be right behind the road sign and at every part of the map we didn't build. unreal/edge_fog.py now builds fog walls (204 Local Fog Volumes, three rows each, soft to solid, tall enough to swallow the treetops) right behind the ROAD CLOSED gate, along the east and west edges (the road runs into fog both ways), along the south edge past the woods across the road, and far out on the lake past the rowboat. Pictured: behind the gate, the west end of the road, the woods across the road, the lake from the dock.
 
 Feedback: a cone at the ROAD CLOSED gate went into the road. That was the knocked-over cone; it is removed (three standing cones remain).
+
+## 2026-11-13: the tower can see the lake; leaves, needles and sticks on the forest floor
+
+![Tower view before and after](2026-11-13_tower_view_before_after.png)
+
+Feedback (left open from Nov 9): the view from the lookout tower was blocked by trees. The new realistic trees are 16-28 m tall and the tower cabin is 11 m up, so from the cabin you looked straight into trunks and crowns. Real fire lookouts keep a sightline logged clear, so a wedge of woods between the tower and the lake has been cut: layout.json "tower_view" (aimed at the dock, 20 degrees each side plus 4 m so no crown hangs in), tools/tower_view.py decides what is in it. The 16 trees in it are gone; a sawn stump stands where each one was, with brush piles and fallen branches left by the loggers. The paper map no longer draws those trees.
+
+![Tower view in game](2026-11-13_tower_view_ingame.png)
+![The cut from the ground](2026-11-13_view_cut_from_ground.png)
+
+In game from the tower cabin: the dock's red lantern, the dock, the railing and the lake through the fog. From the ground the cut is an open clearing with stumps and brush piles.
+
+![Trail before and after](2026-11-13_trail_before_after.png)
+![Trail with the flashlight](2026-11-13_trail_flashlight.png)
+
+The trail was a flat, hard-edged pink strip. Now it is packed dirt with leaves trodden into it (textures/trail_leaves.jpg, drawn by tools/make_litter.py), and patches of fallen leaves lie across both edges every metre or so, half on the path and half off, so the edge is ragged and leaf-covered with the grass coming up to it. Now and then a drift of leaves lies across the middle.
+
+![Forest floor before and after](2026-11-13_forest_floor_before_after.png)
+![Leaf patches from above](2026-11-13_litter_patches_from_above.png)
+![Forest floor with the flashlight](2026-11-13_forest_floor_flashlight.png)
+
+The forest floor was bare pale soil with grass. First try: patches of fallen leaves (flat see-through cards) on their own. From above they read as separate round spots on bare ground (middle picture). So the ground texture itself is now leaf-covered soil (textures/forest_litter.jpg: the forest-floor photo, darker, almost covered in leaves and needles; MI_Ground in textures.json), and the patches stay on top as thicker drifts: needles under the pines, leaves under the others. Sticks, forked sticks, little bundles and the occasional big fallen branch lie around (never on the trail). No ferns (you didn't like their shape).
+- tools/make_litter.py: the leaf / needle patch pictures and the trail and ground textures
+- maya/make_floor.py: the leaf / needle cards, sticks, fallen branch, sawn stump, brush pile (export/floor/*.fbx)
+- tools/make_floor_layout.py: where everything goes (export/floor.json: 4174 pieces)
+- unreal/forest_floor.py: imports and places them, takes the trees in the view out (build_level.py step after trees.py)
