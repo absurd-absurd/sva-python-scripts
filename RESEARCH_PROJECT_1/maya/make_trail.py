@@ -497,7 +497,7 @@ def shack():
             sling[r_] = [(X0 + (X1 - X0) * r_ / 12.0 - (X0 + X1) / 2.0, yy, zz) for _, yy, zz in row]
         _cloth((X0 + X1) / 2.0, sling, "canvas_mat")
         quilted((X0 + X1) / 2.0, (Y0 + Y1) / 2.0, CZ - 2.5, 60, 150, 7, "sleeping_bag_mat", baffles=8, seed=3, yaw=90)
-        rsoft(X0 + 18, (Y0 + Y1) / 2.0, CZ + 9, 38, 28, 11, "wool_mat", jitter=1.0, sag=1.5, smooth=2, seed=4)   # rolled jacket for a pillow
+        pillow(X0 + 24, (Y0 + Y1) / 2.0, CZ + 3.5, 60, 40, 13, 31, yaw=90, tilt_y=-8, dent=2.0)   # a pillow like the motel's
         # a slatted crate for a table: corner posts, slats with gaps, a plank top; on it a candle
         # stub with wax run down its side, a matchbox and two spent matches
         cx0, cx1, cy0, cy1, ch = -HX + 230, -HX + 290, -HY + 20, -HY + 70, 45.0
@@ -525,11 +525,8 @@ def shack():
         for k in range(2):
             tube((cx0 + 34 + k * 3, cy0 + 22, tz + 0.15), (cx0 + 38 + k * 3, cy0 + 26, tz + 0.15), 0.12, "split_wood_mat", sides=4)
             sphere(cx0 + 38 + k * 3, cy0 + 26, tz + 0.15, 0.22, "char_mat", sides=4)
-        tin_can(cx0 + 5, cy1 + 16, F, opened=True)
         tin_can(cx0 + 28, cy1 + 22, F, opened=False)
         tin_can(cx0 + 52, cy1 + 34, F, lying=True)
-        tube((cx0 + 5, cy1 + 16, F + 8), (cx0 + 11, cy1 + 19, F + 16), 0.35, "can_mat", sides=6)   # a spoon in it
-        sphere(cx0 + 11.5, cy1 + 19.3, F + 16.5, 1.3, "can_mat", sides=8, scale=(0.6, 0.4, 1))
         # antlers over the door: a shield plaque, the bleached skull cap, two curving beams with tines
         rbevel(0, HY - I - 1.2, F + 228, 24, 2.4, 20, "wood_mat", r=1.2)
         sphere(0, HY - I - 4, F + 222, 7, "wood_mat", sides=12, scale=(1.7, 0.35, 1))

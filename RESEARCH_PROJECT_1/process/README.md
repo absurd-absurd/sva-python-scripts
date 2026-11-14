@@ -939,3 +939,7 @@ Feedback: the whole interior looked far too low-poly; the woodpile and the axe o
 - **Pelt**: stretched hide laced into a willow hoop, bulging slightly.
 - **Stove**: cast-iron box stove on curved legs, top plate and lid ring, door with hinges, latch and draft spinner, flue collar; an enamel coffee pot on top; split wood beside it.
 - **Outside**: the chopping block has bark sides and a sawn top with cut marks, chips round it; the axe has a forged head (thin bright bit, thick poll) driven into the block and a curved hickory handle with a knob. The woodpile is a neat stack of round and half-split logs (new firewood(): bark side bark, split face and ends pale wood), each row resting on the one below. (First try stacked them every which way; restacked.)
+
+![The cot with a motel pillow](2026-11-14_shack_pillow.png)
+
+Feedback: make the pillow like the motel rooms' and get rid of the open can on the floor. The rolled jacket is now the rooms' pillow() (plump middle, pinched seams, a head dent), and the open can with the spoon is gone.
