@@ -469,7 +469,10 @@ def hud_graph():
     # +X is west (left on the map), so U grows as X shrinks
     U = g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.mul(pX, -1.0 / MAP_SIZE)), ("B", "real", MAP["x_max"] / MAP_SIZE - half)])
     V = g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.mul(pY, -1.0 / MAP_SIZE)), ("B", "real", MAP["y_max"] / MAP_SIZE - half)])
-    border = g.call(HUD, "DrawRect", after, [
+    # only once you've picked up Cas's map (clue map_cas gives the key "map")
+    has_map, no_map = g.branch(g.pure(STR, "Contains", [("SearchIn", "string", g.get("Keys", "string")),
+                                                        ("Substring", "string", "map")], ty="bool"), after)
+    border = g.call(HUD, "DrawRect", has_map, [
         ("RectColor", "color", "(R=0.02,G=0.015,B=0.01,A=0.3)"),
         ("ScreenX", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MX), ("B", "real", 3.0)])),
         ("ScreenY", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MY), ("B", "real", 3.0)])),
@@ -509,7 +512,7 @@ def hud_graph():
             ("Font", "font", FONT), ("Scale", "float", g.mul(TS, 0.5))]).then
     fresh = g.pure(MATH, "Less_DoubleDouble", [("A", "real", g.pure(MATH, "Subtract_DoubleDouble", [
         ("A", "real", g.now()), ("B", "real", g.get("ToastTime", "real"))])), ("B", "real", 3.0)], ty="bool")
-    t_yes, t_no = g.branch(fresh, after)
+    t_yes, t_no = g.branch(fresh, [after, no_map])
     toast_done = draw(g.get("Toast", "string"), t_yes, 0.04, 0.8, 0.9, TEXT, True)
 
     # reading screen
@@ -640,7 +643,9 @@ def hud_graph():
     mkey = g.input_event("IA_Map")
     _, free = g.branch(g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Reading", "bool")),
                                                  ("B", "bool", g.get("JournalOpen", "bool"))], ty="bool"), mkey)
-    shut, opn = g.branch(g.get("MapOpen", "bool"), free)
+    got_map, _ = g.branch(g.pure(STR, "Contains", [("SearchIn", "string", g.get("Keys", "string")),
+                                                   ("Substring", "string", "map")], ty="bool"), free)   # only once you have the map
+    shut, opn = g.branch(g.get("MapOpen", "bool"), got_map)
     g.call(STATICS, "SetGamePaused", g.set("MapOpen", "bool", False, shut).then, [("bPaused", "bool", False)])
     g.row(340 * 2, 11900)
     g.call(STATICS, "SetGamePaused", g.set("MapOpen", "bool", True, opn).then, [("bPaused", "bool", True)])

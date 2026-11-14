@@ -1001,3 +1001,13 @@ Feedback after the tour: the floating lanterns on the lake are removed (lake_lan
 
 - **Running**: Shift now sets MaxWalkSpeed to 800 (it was 550; walking stays 300). Python can't edit Blueprint pin values, so the character's Event Graph was copied out as text, that one number changed, and pasted back; checked all 48 nodes and 84 wires came back, compiled, and tested in Play: 300 walking, 800 with Shift held. (A backup of the Blueprint is at /Game/Horror/Backup/BP_FirstPersonCharacter_bak_nov14.)
 - **Flashlight**: the user wants it to flicker without the camera bump after it cuts out. CS_FlashHit (unreal/flashlight.py) now has zero rotation and movement, so the Blueprint still plays it but the camera doesn't move; the flicker and cut-outs are unchanged.
+
+## 2026-11-14: Cas's hand-drawn map, picked up at Room 104
+
+![The map](2026-11-14_cas_map.png)
+![Picking it up: aim, the reading screen, the corner map appearing, M](2026-11-14_map_pickup.png)
+
+The user wanted the map to look like an old, torn, hand-drawn map that Cas drew, and to be something you find in front of the motel as the first thing you do, not something you start with. Their reference: hand-drawn hiking maps (black pen on cream paper, the trail as one wobbly line, boxed and ringed landmarks, handwritten notes with arrows, a title box, a note box).
+- **tools/make_map.py** redrawn in that style: a cream sketchbook page folded in four and torn out (ragged left edge from the binding, a corner ripped off); black felt-tip wobbly lines; MOTEL boxed, 104 marked with an X and "room 104 (mine)"; cabins and shack ringed, boathouse boxed, the lookout tower drawn; notes in her handwriting ("trail starts behind the motel", "follow the red lanterns all the way down", "old lookout tower - nice view of the lake from up here", "old car - weird"); "Black Hollow Lake HIKE" title box; a north arrow; a Note box ("stay on the trail. don't go out on the water at night. - C."). First pass was more detailed (every tree, red pen, coffee rings); the user pointed at their references and asked for it more like those, then to drop "for Bug" and "(?)" and write "north" in full.
+- **The pickup** (clues.json map_cas, shape "map"): folded and wedged in Room 104's door. You start with objective "Look around the motel." and no map; 104's door won't open until you've taken it ("Something's wedged in the door."). Taking it gives the key "map", the objective "Look inside Room 104." and a journal line.
+- **HUD** (tools/make_interact_nodes.py): the corner map and the M key only work once Keys contains "map". The HUD graph was replaced by copy/paste (backup /Game/Horror/Backup/BP_HorrorHUD_bak_nov14; before: 409 nodes / 1076 wires, matched the generator; after: 415 / 1090). Play-tested end to end.

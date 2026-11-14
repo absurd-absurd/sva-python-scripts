@@ -7,10 +7,22 @@
     "objective": "new objective line after using it",
     "pickup": "disappears after you take it",
     "open_angle": "how far a door swings (default 95; negative swings the other way)",
-    "shape": "paper, key, book, door or room_door (see SHAPES in place_clues.py)"
+    "shape": "paper, map, key, book, door or room_door (see SHAPES in place_clues.py)"
   },
-  "start_objective": "Find Room 104.",
+  "start_objective": "Look around the motel.",
   "clues": [
+    {
+      "id": "map_cas",
+      "shape": "map",
+      "at": [-838, -1398.3, 92], "yaw": 0,
+      "prompt": "Take",
+      "title": "A hand-drawn map",
+      "body": "[TEST TEXT]\n\nA page torn out of a sketchbook, folded in four and wedged in the door of 104. A map of the motel and the woods down to the lake, drawn in Cas's handwriting.\n\n[M] to look at the map.",
+      "journal": "Found a map Cas drew, wedged in the door of Room 104.",
+      "gives_key": "map",
+      "objective": "Look inside Room 104.",
+      "pickup": true
+    },
     {
       "id": "door_101",
       "shape": "room_door",
@@ -33,7 +45,8 @@
       "id": "door_104",
       "shape": "room_door",
       "at": [-721, -1395, 0], "yaw": 180, "open_angle": -95,
-      "prompt": "Open"
+      "prompt": "Open",
+      "needs_key": "map", "locked_text": "Something's wedged in the door."
     },
     {
       "id": "door_105",
