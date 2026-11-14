@@ -943,3 +943,7 @@ Feedback: the whole interior looked far too low-poly; the woodpile and the axe o
 ![The cot with a motel pillow](2026-11-14_shack_pillow.png)
 
 Feedback: make the pillow like the motel rooms' and get rid of the open can on the floor. The rolled jacket is now the rooms' pillow() (plump middle, pinched seams, a head dent), and the open can with the spoon is gone.
+
+### The rusted car
+
+Feedback: get rid of the branch leaning against it, then the car is done. The fallen branch (three bark tubes in make_trail.py rusted_car()) is removed; approved Nov 14.

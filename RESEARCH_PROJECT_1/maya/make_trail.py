@@ -612,10 +612,7 @@ def rusted_car():
     with Placed(c["x"], c["y"], -25):
         # the car itself is the same Fab car as in the lot, repainted and sunk (unreal/place_wreck.py);
         # here: the weeds, vines and leaves growing over and around it
-        # a fallen branch leaning against the driver's side, dead leaves drifted against the wheels
-        tube((-230, -30, 0), (-100, 40, 88), 5, "bark_mat", sides=8)
-        tube((-160, 8, 47), (-170, 60, 95), 2.2, "bark_mat", sides=5)
-        tube((-130, 24, 68), (-150, -20, 120), 1.8, "bark_mat", sides=5)
+        # dead leaves drifted against the wheels (the leaning branch was taken out Nov 14)
         for (wx, wy) in ((-95, -150), (95, -150), (-95, 140), (95, 140)):
             for k in range(6):
                 rsoft(wx + rng_t.uniform(-25, 25), wy + rng_t.uniform(-35, 35), 2, rng_t.uniform(14, 30), rng_t.uniform(10, 24),
