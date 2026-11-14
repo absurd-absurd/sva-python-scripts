@@ -61,7 +61,7 @@ MATS = {
     "room_wall_mat": (1, 1, 1), "seeglass_window_mat": (0.12, 0.14, 0.15), "frame_mat": (0.3, 0.22, 0.1),
     "pic_painting": (1, 1, 1),
     "fan_mat": (0.32, 0.26, 0.17), "bowl_mat": (0.62, 0.6, 0.55),
-    "ac_mat": (0.55, 0.53, 0.48), "doormat_mat": (0.14, 0.11, 0.08), "post_mat": (0.18, 0.17, 0.16),
+    "ac_mat": (0.55, 0.53, 0.48), "ac_wet_mat": (0.17, 0.165, 0.155), "rust_streak_mat": (0.3, 0.16, 0.08), "doormat_mat": (0.14, 0.11, 0.08), "post_mat": (0.18, 0.17, 0.16),
     "lid_mat": (0.06, 0.07, 0.06), "chrome_mat": (0.5, 0.5, 0.52), "plate_mat": (0.75, 0.72, 0.6),
     "weed_mat": (0.16, 0.2, 0.09),
     "gloss_car_paint_mat": (0.22, 0.035, 0.03), "gloss_chrome_mat": (0.55, 0.55, 0.57),
@@ -281,7 +281,7 @@ def room_inside(x0, x1, her=False, i=-1):
     # some rooms' stories (maya/motel_interiors.py) change these: 101's lamp was knocked over,
     # 102's dresser was dragged to the door, 103 is stripped for a renovation
     bed(x0, x1, made=not her and i != 2, mattress=(i != 2))
-    nightstand(x0)
+    nightstand(x0, drawer=(i != 0))
     if i != 0:
         lamp(x0 + 180, BACK - 47, *(("glow_lamp_red_mat", "glow_lamp_red_mat") if her else ()))
     if i == 1:

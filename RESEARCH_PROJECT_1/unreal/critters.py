@@ -44,7 +44,11 @@ if (Mode > 6.5 && Mode < 7.5) {                            // bugs around you: a
     rel.xy = (frac(rel.xy / (2.0 * Radius) + 0.5) - 0.5) * 2.0 * Radius;
     rel.z = (frac((rel.z - 40.0) / (2.0 * Height) + 0.5) - 0.5) * 2.0 * Height + 40.0;
     float flapn = max(0.0, abs(L.x) - Body) * sin(T * Flap + R * 30.0) * 0.9;
-    return PPos + rel - OPos + float3(0, 0, flapn);
+    float3 W = PPos + rel;                                 // where this bug is in the world
+    float inRooms = step(-2500.0, W.x) * step(W.x, 500.0) * step(-1400.0, W.y) * step(W.y, -700.0);
+    float inOffice = step(3050.0, W.x) * step(W.x, 3750.0) * step(-1750.0, W.y) * step(W.y, -850.0);
+    float gone = saturate(inRooms + inOffice) * step(W.z, 340.0);   // none inside the motel rooms / office
+    return PPos + rel - OPos + float3(0, 0, flapn) - L * gone;
 }
 if (Mode > 5.5) {                                          // a cat sitting far off, watching you
     float2 toP = PPos.xy - OPos.xy;

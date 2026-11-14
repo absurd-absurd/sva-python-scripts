@@ -58,7 +58,11 @@ def facade(x0, x1, i, number):
             box(ax - 30 + k * 15, ax - 28 + k * 15, FRONT - 26, FRONT - 7, 92.2, 92.9, "trim_mat")  # top vents
         for sx in (-30, 30):
             tube((ax + sx, FRONT - 36, 48), (ax + sx, FRONT - 8, 26), 1.2, "metal_mat", sides=6)    # brackets
-        blot(ax + 10, FRONT - 34, 14, "stain_mat", z=12)                     # drip stain on the walkway
+        # condensation drips off the front lip: a damp, darker patch of concrete (not an oil blot)
+        # where it lands, and a faint rust streak run down the wall from the bracket
+        damp_patch(ax + 8, FRONT - 36, 15, 11, i + 3)
+        damp_patch(ax + 21, FRONT - 29, 6, 4.5, i + 9)
+        bevel_box(ax + 27, ax + 31, FRONT - 0.6, FRONT - 0.15, 13, 47, "rust_streak_mat", r=0.1)
     # a worn doormat in front of some doors
     if i in (1, 3, 4):
         rsoft(px, FRONT - 40, 13.4, 90, 55, 1.2, "doormat_mat", jitter=0.15, seed=i)
@@ -490,3 +494,18 @@ def export_doors():
         data["materials"].setdefault(mt, list(MATS[mt]))
     json.dump(data, open(p, "w"), indent=1)
     print("doors exported", list(made))
+
+
+def damp_patch(cx, cy, rx, ry, seed, z=12.0):
+    """A thin flat patch of damp concrete with a wobbly edge, lying just on the surface at z."""
+    r = random.Random(seed)
+    c = cmds.polyCylinder(r=1, h=0.25, sx=20, sy=1, sz=0, ch=False)[0]
+    pts = []
+    for x, y, zz in _verts(c):
+        k = 1.0 + r.uniform(-0.22, 0.22) if abs(x) + abs(zz) > 0.01 else 1.0
+        pts.append((x * rx * k, y, zz * ry * k))
+    _set_verts(c, pts)
+    cmds.rotate(0, r.uniform(0, 180), 0, c)
+    cmds.move(cx, z + 0.15, cy, c)
+    return keep(c, "ac_wet_mat")
+

@@ -137,16 +137,20 @@ def bed(x0, x1, made=True, mattress=True):
             pillow(px, by1 - 40, 57.5, 72, 44, 15, int(x0) + k, yaw=(-4, 5)[k], tilt_y=-12, dent=1.5)
 
 
-def nightstand(x0):
-    """Top slab with a small overhang, a drawer with a brass knob, an open shelf, short legs."""
+def nightstand(x0, drawer=True):
+    """Top slab with a small overhang, a drawer with a brass knob, an open shelf, short legs.
+    drawer=False: the drawer has been pulled out (Room 101), leaving a dark empty slot."""
     nx0, nx1, ny0, ny1 = x0 + 150, x0 + 210, BACK - 70, BACK - 25
     bevel_box(nx0 + 2, nx1 - 2, ny0 + 2, ny1 - 2, 6, 57.5, "wood_mat", r=1)
     bevel_box(nx0, nx1, ny0, ny1, 57, 60, "wood_mat", r=1)                            # top: 60 high
     for lx in (nx0 + 3, nx1 - 7):
         for ly in (ny0 + 3, ny1 - 7):
             bevel_box(lx, lx + 4, ly, ly + 4, 0, 6.5, "wood_mat", r=0.8)
-    bevel_box(nx0 + 5, nx1 - 5, ny0 + 0.5, ny0 + 2.5, 36, 53, "wood_mat", r=0.8)      # drawer front
-    sphere((nx0 + nx1) / 2.0, ny0 - 0.6, 44.5, 1.6, "brass_mat", sides=8)            # knob
+    if drawer:
+        bevel_box(nx0 + 5, nx1 - 5, ny0 + 0.5, ny0 + 2.5, 36, 53, "wood_mat", r=0.8)  # drawer front
+        sphere((nx0 + nx1) / 2.0, ny0 - 0.6, 44.5, 1.6, "brass_mat", sides=8)        # knob
+    else:
+        box(nx0 + 5, nx1 - 5, ny0 + 1.6, ny0 + 2.2, 36, 53, "stain_mat")              # empty slot
     bevel_box(nx0 + 5, nx1 - 5, ny0 + 1.5, ny1 - 4, 10, 31, "trim_mat", r=0.5)        # shelf, dark inside
 
 

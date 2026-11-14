@@ -830,3 +830,26 @@ Feedback (open since Nov 6): the fence round the motel stopped at the road, so y
 ![The map](2026-11-13_map_road_fence.png)
 
 The paper map draws the new fence along the road on both sides of the motel (not across the lot's front).
+
+## 2026-11-14: sign-off tour, then Room 101 and two motel-wide fixes
+
+Walked the six areas still waiting for a look (rooms 101-106, office, lot and road edges, shack, rusted car, boathouse and cabins). Found on the way: a tree trunk grows through the inside of cabin 2 (not fixed yet). Then the bedrooms, one at a time, starting with 101.
+
+Two notes for every room:
+- **The "oil" stain under the AC units** was a near-black disc on the walkway. Condensation from a window AC is water, so it's now a thin, flat, irregular patch of the walkway's concrete, darker as if wet (exterior_props.py damp_patch(), MI_PS2_ac_wet_mat = concrete texture at half brightness), plus a faint rust streak down the wall from a bracket.
+- **No bugs inside the rooms.** The specks and moths that float around the player follow you indoors; the critter shader now shrinks any of them to nothing while it's inside the motel rooms or the office (unreal/critters.py MOVE_HLSL).
+
+![The damp patch under Room 101's AC](2026-11-14_ac_damp_patch.png)
+
+![Room 101 before](2026-11-14_room101_before.png)
+![The old armchair](2026-11-14_armchair_before.png)
+
+Room 101 notes: the chair, suitcase and clothes didn't look real; the suitcase went through the nightstand; the dropped drawer sank into the floor; white things under the bed.
+
+![Room 101 after](2026-11-14_room101_after.png)
+
+- **Armchair** (every room that has one, plus the office back room): rebuilt as one solid upholstered chair: boxed base with a pleated skirt, arms that are part of the body with rolled tops, a seat cushion sitting inside the arms with piping, a rolled back with a tufted cushion resting on the seat, tapered legs. The old one was soft lumps with a gap between back and seat.
+- **Suitcase**: a real open hard-shell case at the foot of the bed, clear of the furniture: hollow shell with a fabric lining, rim seal, latches, handle, feet; the lid opened right back flat on the carpet with elastic straps and hinges. A folded sweater still inside, a flannel shirt half pulled out over the side onto the floor.
+- **Clothes**: the four flat blobs are gone; jeans dropped on the floor (waistband, button, two legs with creases). A dropped sweater was tried and cut: it read as a heap of blobs.
+- **Drawer**: a real open drawer (front with knob, sides, back, bottom) sitting flat on the carpet beside the nightstand, papers and a pen spilled; the nightstand now has a dark empty slot where it came from.
+- **Under the bed**: the knocked-over lamp (the white shapes) is removed.

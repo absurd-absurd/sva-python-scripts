@@ -33,7 +33,8 @@ MATS.update({
     "seeglass_red_mat": (0.4, 0.02, 0.01), "bakelite_mat": (0.12, 0.06, 0.03), "ash_mat": (0.3, 0.3, 0.29),
     "panel_mat": (0.3, 0.2, 0.12), "linoleum_mat": (0.32, 0.3, 0.24), "blanket_mat": (0.22, 0.2, 0.14),
     "coat_mat": (0.16, 0.13, 0.1), "bear_mat": (0.35, 0.24, 0.14), "dustsheet_mat": (0.52, 0.5, 0.45),
-    "drip_mat": (0.18, 0.14, 0.08), "debris_mat": (0.42, 0.4, 0.36), "duffel_mat": (0.14, 0.17, 0.12),
+    "drip_mat": (0.18, 0.14, 0.08), "debris_mat": (0.42, 0.4, 0.36), "duffel_mat": (0.14, 0.17, 0.12), "case_lining_mat": (0.16, 0.14, 0.13), "shirt_mat": (0.4, 0.38, 0.35),
+    "sweater_mat": (0.2, 0.24, 0.3), "sweater_red_mat": (0.3, 0.08, 0.07),
     "food_mat": (0.3, 0.16, 0.06), "phone_mat": (0.5, 0.45, 0.36),
     # shared with the lake buildings (same colours as BLD_MATS there)
     "rusty_tool_mat": (0.2, 0.11, 0.07), "dark_leather_mat": (0.09, 0.06, 0.04), "can_mat": (0.36, 0.34, 0.31),
@@ -365,21 +366,38 @@ def tv_small(x, y, z, facing_y=-1, on=True):
 
 
 def armchair(cx, cy, yaw, mat="couch_mat"):
-    """An upholstered motel armchair, facing -y before yaw: seat cushion, tufted back, rolled
-    arms, turned wooden feet."""
+    """An upholstered motel armchair, facing -y before yaw, built as one solid piece like a
+    real one: a boxed base with a short skirt, rolled arms that are part of the body, a seat
+    cushion sitting down inside the arms with piping along its front, a back frame with a
+    rolled top and a tufted back cushion resting on the seat, on four tapered wooden legs."""
+    W, B0, B1 = 39.0, -37.0, 39.0                   # half width, front and back of the body
     with Moved(cx, cy, yaw):
-        rsoft(cx, cy + 2, 26, 74, 70, 24, mat, jitter=0.4, smooth=2, seed=int(cx) % 50, div=(4, 2, 4))
-        rsoft(cx, cy - 4, 43, 50, 56, 12, mat, jitter=0.6, sag=1.5, smooth=2, seed=int(cy) % 50, div=(4, 2, 4))
-        rsoft(cx, cy + 28, 72, 56, 16, 46, mat, jitter=0.6, smooth=2, seed=7, tilt_y=8, div=(4, 4, 2))
-        for c_ in range(3):
-            for r_ in range(2):
-                sphere(cx - 16 + c_ * 16, cy + 18.5 + r_ * 2.5, 63 + r_ * 16, 1.0, "trim_mat", sides=8)
+        for x in (cx - W + 5, cx + W - 5):                                               # legs
+            for y in (cy + B0 + 5, cy + B1 - 5):
+                lathe(x, y, [(0, 1.5), (7, 2.0), (10, 2.4), (11, 2.8)], "wood_mat", sides=12)
+        bevel_box(cx - W, cx + W, cy + B0, cy + B1, 11, 36, mat, r=3, seg=3)             # base
+        bevel_box(cx - W - 0.6, cx + W + 0.6, cy + B0 - 0.6, cy + B1 + 0.6, 9.5, 15, mat, r=1, seg=2)   # skirt
+        for k in range(1, 4):                                                            # skirt pleats
+            xx = cx - W + k * W / 2.0
+            box(xx - 0.3, xx + 0.3, cy + B0 - 0.9, cy + B0 - 0.6, 9.6, 14.6, "trim_mat")
+        bevel_box(cx - W, cx + W, cy + B1 - 12, cy + B1, 11, 88, mat, r=5, seg=3)        # back frame
+        tube((cx - W + 4, cy + B1 - 6, 87), (cx + W - 4, cy + B1 - 6, 87), 6.5, mat, sides=16)   # rolled top
         for s_ in (-1, 1):
-            rsoft(cx + s_ * 31, cy + 2, 46, 12, 68, 30, mat, jitter=0.4, smooth=2, seed=11 + s_, div=(2, 3, 4))
-            tube((cx + s_ * 31, cy - 32, 60), (cx + s_ * 31, cy + 34, 60), 7, mat, sides=12)
-        for x in (cx - 30, cx + 30):
-            for y in (cy - 28, cy + 30):
-                lathe(x, y, [(5, 1.5), (8, 2.1), (13, 2.7), (14, 3.2)], "wood_mat", sides=10)
+            sphere(cx + s_ * (W - 4), cy + B1 - 6, 87, 6.5, mat, sides=16)
+        for s_ in (-1, 1):                                                               # arms
+            ax = cx + s_ * (W - 6)
+            bevel_box(ax - 6, ax + 6, cy + B0, cy + B1 - 4, 11, 58, mat, r=3, seg=3)
+            tube((ax, cy + B0 - 1, 58), (ax, cy + B1 - 8, 58), 7, mat, sides=16)       # rolled arm top
+            sphere(ax, cy + B1 - 8, 58, 7, mat, sides=16)
+        seat_y0, seat_y1 = cy + B0 - 2, cy + B1 - 11
+        bevel_box(cx - W + 12.5, cx + W - 12.5, seat_y0, seat_y1, 36, 48, mat, r=4.5, seg=3)   # seat cushion
+        tube((cx - W + 15, seat_y0 + 0.2, 46.3), (cx + W - 15, seat_y0 + 0.2, 46.3), 0.8, mat, sides=8)  # piping
+        tube((cx - W + 15, seat_y0 + 0.2, 37.7), (cx + W - 15, seat_y0 + 0.2, 37.7), 0.8, mat, sides=8)
+        rbevel(cx, cy + B1 - 17, 68, 2 * W - 25, 11, 40, mat, r=4.5, seg=3, tilt_y=8)    # back cushion
+        for zz in (61, 75):                                                              # tufting buttons
+            for k in range(3):
+                yy = cy + B1 - 17 - 5.6 + (zz - 68) * 0.14
+                sphere(cx - 13 + k * 13, yy, zz, 0.9, "trim_mat", sides=8)
 
 
 def bathroom_door(x_wall, y0, y1):
@@ -816,6 +834,107 @@ def office():
 
 # ---------- the other rooms' stories ----------
 
+def floor_suitcase(sx, sy, yaw):
+    """A hard-shell suitcase lying open on the floor: the case (rounded shell, lining, a rim
+    seal, latches, a carry handle, little feet) and its lid opened right back flat on the
+    carpet toward -y (lining, two elastic straps with buckles, hinges along the fold), a
+    flannel shirt half pulled out over the +x side, a folded sweater still inside."""
+    def shell(y0, y1, top, floor):
+        """An open hard shell: a rounded bottom, four walls, a fabric lining inside."""
+        bevel_box(sx - 36, sx + 36, y0, y1, 0.6, floor, "suitcase_mat", r=2.5, seg=3)
+        for a_, b_, c_, d_ in ((sx - 36, sx + 36, y0, y0 + 2.4), (sx - 36, sx + 36, y1 - 2.4, y1),
+                               (sx - 36, sx - 33.6, y0, y1), (sx + 33.6, sx + 36, y0, y1)):
+            bevel_box(a_, b_, c_, d_, 0.6, top, "suitcase_mat", r=1.1, seg=2)
+        box(sx - 33.6, sx + 33.6, y0 + 2.4, y1 - 2.4, floor, floor + 0.4, "case_lining_mat")
+        for a_, b_, c_, d_ in ((sx - 33.6, sx + 33.6, y0 + 2.4, y0 + 2.8), (sx - 33.6, sx + 33.6, y1 - 2.8, y1 - 2.4),
+                               (sx - 33.6, sx - 33.2, y0 + 2.4, y1 - 2.4), (sx + 33.2, sx + 33.6, y0 + 2.4, y1 - 2.4)):
+            box(a_, b_, c_, d_, floor, top - 0.6, "case_lining_mat")
+    with Moved(sx, sy, yaw):
+        shell(sy - 22, sy + 22, 17, 3.5)                                                          # the case
+        for a_, b_, c_, d_ in ((sx - 36, sx + 36, sy - 22, sy - 21), (sx - 36, sx + 36, sy + 21, sy + 22)):
+            box(a_, b_, c_, d_, 17, 17.5, "strap_mat")                                            # rim seal
+        for dx in (-22, 22):
+            bevel_box(sx + dx - 3, sx + dx + 3, sy + 21.8, sy + 23, 11, 16.5, "brass_mat", r=0.4)   # latches
+        for dx in (-9, 9):
+            bevel_box(sx + dx - 2, sx + dx + 2, sy + 21.8, sy + 24, 6.5, 10.5, "strap_mat", r=0.5)  # handle mounts
+        tube((sx - 9, sy + 25.5, 8.5), (sx + 9, sy + 25.5, 8.5), 1.6, "strap_mat", sides=10)        # handle
+        for dx in (-30, 30):
+            for dy in (-16, 16):
+                frustum(sx + dx, sy + dy, 0, 0.7, 1.8, 1.8, "strap_mat", sides=8)                   # feet
+        # the lid, opened right back flat on the carpet toward -y
+        shell(sy - 68, sy - 24, 11, 2.8)
+        for dx in (-14, 14):
+            box(sx + dx - 1.8, sx + dx + 1.8, sy - 65, sy - 27, 3.2, 3.6, "strap_mat")               # elastic straps
+            bevel_box(sx + dx - 2.6, sx + dx + 2.6, sy - 47.5, sy - 44.5, 3.4, 4.6, "brass_mat", r=0.3)
+        for dx in (-22, 22):
+            tube((sx + dx - 5, sy - 23, 5), (sx + dx + 5, sy - 23, 5), 1.3, "metal_mat", sides=8)   # hinges
+            bevel_box(sx + dx - 3, sx + dx + 3, sy - 69.2, sy - 68, 2, 6, "brass_mat", r=0.3)       # catches
+        # what's left inside: a folded sweater, rumpled things under it
+        rsoft(sx - 4, sy + 2, 6.5, 62, 36, 5, "case_lining_mat", jitter=0.8, sag=-1, smooth=2, seed=40, div=(6, 2, 4))
+        folded(sx - 15, sy + 1, 8.8, 24, 32, "sweater_mat", "sweater", 41)
+        # the shirt: lying in the case, then over the +x side and down onto the carpet
+        with Moved(sx, sy, 90):                        # built along -y, turned to run out over +x
+            path = [(sy - 6, 9.5), (sy - 24, 10.5), (sy - 33, 16.5), (sy - 36.5, 17.9), (sy - 39, 14),
+                    (sy - 41, 6), (sy - 43, 1.2), (sy - 50, 0.7), (sy - 66, 0.6)]
+            _cloth(sx, _drape(path, 30, 32, 10, 0.25, 2.0, 42), "shirt_mat")
+            for side in (-1, 1):                                                                  # sleeves
+                rsoft(sx + side * 20, sy - 56, 1.3, 7, 30, 2.4, "shirt_mat", jitter=0.5, smooth=2,
+                      seed=43 + side, yaw=side * 25)
+
+
+def dropped_jeans(cx, cy, yaw, seed=0):
+    """A pair of jeans dropped on the floor: waistband, two legs splayed and creased, cuffs."""
+    with Moved(cx, cy, yaw):
+        rsoft(cx, cy + 22, 1.6, 36, 18, 3.2, "clothes_b_mat", jitter=0.6, sag=0.6, smooth=2, seed=seed, div=(5, 2, 3))
+        rsoft(cx, cy + 30.5, 1.8, 36, 4.5, 3.0, "clothes_b_mat", jitter=0.3, smooth=2, seed=seed + 1)   # waistband
+        sphere(cx, cy + 32.5, 3.3, 0.8, "brass_mat", sides=8)
+        for side, ang in ((-1, 3), (1, -9)):
+            rsoft(cx + side * 8, cy - 12, 1.3 + (side > 0) * 0.6, 16, 56, 2.6, "clothes_b_mat", jitter=0.7, sag=0.3, smooth=2,
+                  seed=seed + 2 + side, div=(3, 2, 6), yaw=ang)
+            for k in range(3):                                                                   # creases
+                rsoft(cx + side * 8 + side * k * 1.5, cy - 2 - k * 15, 2.7, 15, 3, 1.4, "clothes_b_mat",
+                      smooth=1, seed=seed + 10 + k, yaw=ang + 75)
+
+
+def dropped_shirt(cx, cy, yaw, mat, seed=0):
+    """A knit sweater dropped in a heap: a cloth sheet over the floor with soft folds and a
+    raised ruck, the sleeves lying out to the sides."""
+    rng = random.Random(seed)
+    rows, cols, w, d = 14, 14, 50, 44
+    grid = []
+    for r_ in range(rows + 1):
+        row = []
+        for c_ in range(cols + 1):
+            u, v = c_ / cols - 0.5, r_ / rows - 0.5
+            edge = 1 - max(abs(u), abs(v)) * 2
+            ruck = 3.0 * math.exp(-((u + 0.12) ** 2 + (v - 0.08) ** 2) * 14)
+            folds = 1.1 * abs(math.sin(u * 11 + v * 5 + seed)) * max(0, edge)
+            row.append((u * w + rng.uniform(-1, 1), cy + v * d + rng.uniform(-1, 1),
+                        0.5 + max(0.0, ruck + folds) * min(1.0, edge * 3) + rng.uniform(0, 0.3)))
+        grid.append(row)
+    with Moved(cx, cy, yaw):
+        _cloth(cx, grid, mat)
+        for side in (-1, 1):                                    # sleeves running out from the shoulders
+            rsoft(cx + side * 33, cy + 12 - side * 4, 1.2, 30, 9, 2.2, mat, jitter=0.4, smooth=2,
+                  seed=seed + side, yaw=side * 18)
+        rsoft(cx, cy + 20, 1.4, 16, 5, 2.4, mat, jitter=0.3, smooth=2, seed=seed + 7)        # neckline
+
+
+def dropped_drawer(cx, cy, yaw):
+    """The nightstand's drawer, pulled out and dropped on its bottom: a real open drawer
+    (front with the brass knob, sides, back, a thin bottom), papers and a pen spilled."""
+    with Moved(cx, cy, yaw):
+        bevel_box(cx - 25, cx + 25, cy - 21, cy - 19, 0, 17, "wood_mat", r=0.8)                  # front
+        sphere(cx, cy - 21.8, 8.5, 1.6, "brass_mat", sides=8)
+        for a_ in (cx - 22, cx + 20.5):
+            bevel_box(a_, a_ + 1.5, cy - 19, cy + 19, 0, 13, "wood_mat", r=0.4)                  # sides
+        bevel_box(cx - 22, cx + 22, cy + 17.5, cy + 19, 0, 13, "wood_mat", r=0.4)                 # back
+        box(cx - 20.5, cx + 20.5, cy - 19, cy + 17.5, 0, 0.8, "trim_mat")                       # bottom
+        papers(cx - 4, cy + 2, 0.8, 2, 61)
+        papers(cx - 2, cy - 38, 0, 3, 62, spread=8)
+        pen(cx + 22, cy - 30, 0.5, 35)
+
+
 def room_story(i, x0, x1):
     """Extra dressing for each room but 104 (index 3). Runs with IN_ROOM on."""
     t = 20
@@ -823,19 +942,13 @@ def room_story(i, x0, x1):
     FI, BI = FRONT + t + 2, BACK - t - 1
     rng = random.Random(i * 13)
     if i == 0:      # 101: left in a hurry
-        # suitcase on the floor, open, clothes spilled out of it
-        sx, sy = x0 + 120, BACK - 90
-        bevel_box(sx - 38, sx + 38, sy - 24, sy + 24, 0, 16, "suitcase_mat", r=3, seg=3)
-        bevel_box(sx - 35, sx + 35, sy - 21, sy + 21, 12, 16.6, "lining_mat", r=1)
-        rbevel(sx, sy + 26, 38, 76, 5, 46, "suitcase_mat", r=2.5, tilt_y=-30)
-        for k, m in enumerate(("clothes_a_mat", "clothes_b_mat", "clothes_c_mat", "clothes_a_mat")):
-            rsoft(sx - 40 + k * 22, sy - 45 - k * 9, 3, 30, 22, 4, m, jitter=2, smooth=2, seed=k + 50, yaw=k * 40)
-        # the nightstand drawer pulled out and dropped
-        rbevel(x0 + 185, BACK - 120, 9, 48, 36, 17, "wood_mat", r=1, tilt_x=12, yaw=25)
-        # the lamp knocked over on the floor, shade rolled away
-        tube((x0 + 210, BACK - 150, 5), (x0 + 240, BACK - 165, 5), 1.0, "brass_mat", sides=8)
-        frustum(x0 + 250, BACK - 190, 0, 16, 10, 10, "brass_mat", sides=16)
-        rbevel(x0 + 255, BACK - 220, 14, 34, 24, 28, "curtain_mat", r=8, tilt_x=80)
+        # a hard suitcase open on the floor at the foot of the bed, the lid flat on the carpet,
+        # a shirt half pulled out over the side, jeans dropped on the floor
+        floor_suitcase(x0 + 300, BACK - 305, 8)
+        dropped_jeans(x0 + 175, BACK - 345, 35, seed=3)
+        # the nightstand drawer pulled out and dropped beside it (the nightstand is left with
+        # a dark empty slot: room_inside(i=0) builds it without its drawer)
+        dropped_drawer(x0 + 100, BACK - 75, 18)
         teddy(x0 + 300, FRONT + 230, 0, 160)
         # the room key on the carpet by the door
         ring(x0 + 230, FRONT + 120, 2.6, 1.6, 0.35, "brass_mat", sides=10)
