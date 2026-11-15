@@ -62,10 +62,10 @@
       "id": "note_bed",
       "shape": "paper",
       "at": [-708, -914, 58.9], "yaw": 15,
-      "title": "A note on the bed",
-      "body": "[TEST NOTE]\n\nBug,\n\nIf you're reading this, you came. I knew you would. The office key is still in this room. Don't let them see you take it.\n\n- Cas",
-      "journal": "Cas left a note on the bed in Room 104. The office key is somewhere in her room.",
-      "objective": "She says the office key is still in here somewhere. I need to find it."
+      "title": "A letter on the bed",
+      "body": "Mom,\n\nI'm in 104, the same room you stayed in. The man working the front desk of the office wouldn't even look at me when I asked for 104.\n\nI found your name in their register book. They kept it all these years, almost like they knew someone would come looking.\n\nI took the office key off the board. I'm going to find out what they wrote about you.\n\nI haven't told anyone I'm here. Not even Bug.\n\n- C",
+      "journal": "A letter Cas wrote to her mom and never sent. Her mom stayed in this same room. She never told me any of this.",
+      "objective": "She never told me any of this. She took the office key, so it might still be in here somewhere."
     },
     {
       "id": "key_office",
