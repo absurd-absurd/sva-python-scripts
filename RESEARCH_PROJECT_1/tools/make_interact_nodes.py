@@ -50,12 +50,14 @@ MAP_VIEW = 4500.0              # cm of the world shown in the corner window
 MAP_SCREEN = 0.18              # corner window size, as a fraction of screen height (small, out of the way)
 MAP_TEX = "/Game/Horror/UI/T_Map.T_Map"
 MARKER_TEX = "/Game/Horror/UI/T_MapMarker.T_MapMarker"
+MAP_FRAME_TEX = "/Game/Horror/UI/T_MapFrame.T_MapFrame"   # torn edge round the corner map
+FRAME_HOLE = 0.08                                          # = FRAME_HOLE in tools/make_map.py
 WHITE = "(R=1.0,G=1.0,B=1.0,A=1.0)"
-MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=0.5)"      # half see-through while you play
+MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=1.0)"      # solid paper (it was half see-through; with the torn edge the overlap showed)
 MARKER_TINT = "(R=1.0,G=1.0,B=1.0,A=0.8)"
 MAP_FULL_TEX = "/Game/Horror/UI/T_MapFull.T_MapFull"
-MAP_FULL = 0.76                # the M screen: torn-paper map this tall (fraction of screen height), near the top,
-                               # leaving room under it for a line of text (her line when you pick it up)
+MAP_BIG = 0.96                 # the M screen: torn-paper map this tall (fraction of screen height), centred
+MAP_FULL = 0.76                # ... and this tall, near the top, while her first-time line shows under it
 import re as _re
 _FL = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "unreal", "flashlight.py"), encoding="utf-8").read()
 FLASH_INTENSITY = float(_re.search(r"^INTENSITY = ([0-9.]+)", _FL, _re.M).group(1))   # same as flashlight.py
@@ -473,17 +475,20 @@ def hud_graph():
     # only once you've picked up Cas's map (clue map_cas gives the key "map")
     has_map, no_map = g.branch(g.pure(STR, "Contains", [("SearchIn", "string", g.get("Keys", "string")),
                                                         ("Substring", "string", "map")], ty="bool"), after)
-    border = g.call(HUD, "DrawRect", has_map, [
-        ("RectColor", "color", "(R=0.02,G=0.015,B=0.01,A=0.3)"),
-        ("ScreenX", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MX), ("B", "real", 3.0)])),
-        ("ScreenY", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MY), ("B", "real", 3.0)])),
-        ("ScreenW", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", S), ("B", "real", 6.0)])),
-        ("ScreenH", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", S), ("B", "real", 6.0)]))]).then
-    paper = g.call(HUD, "DrawTexture", border, [
+    paper = g.call(HUD, "DrawTexture", has_map, [
         ("Texture", "texture", MAP_TEX), ("ScreenX", "float", MX), ("ScreenY", "float", MY),
         ("ScreenW", "float", S), ("ScreenH", "float", S),
         ("TextureU", "float", U), ("TextureV", "float", V),
         ("TextureUWidth", "float", 2 * half), ("TextureVHeight", "float", 2 * half),
+        ("TintColor", "color", MAP_TINT)]).then
+    # the torn paper edge round it (tools/make_map.py frame_edge): its hole is exactly the map window
+    FRS = g.mul(S, 1.0 / (1 - 2 * FRAME_HOLE))
+    paper = g.call(HUD, "DrawTexture", paper, [
+        ("Texture", "texture", MAP_FRAME_TEX),
+        ("ScreenX", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MX), ("B", "real", g.mul(FRS, FRAME_HOLE))])),
+        ("ScreenY", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", MY), ("B", "real", g.mul(FRS, FRAME_HOLE))])),
+        ("ScreenW", "float", FRS), ("ScreenH", "float", FRS),
+        ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
         ("TintColor", "color", MAP_TINT)]).then
     M = g.mul(S, 0.16)
     centre = lambda base: g.pure(MATH, "Subtract_DoubleDouble", [
@@ -505,9 +510,9 @@ def hud_graph():
     under = g.pure(MATH, "Add_DoubleDouble", [("A", "real", MY), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [
         ("A", "real", S), ("B", "real", g.mul(H, 0.03))]))])
     inside = g.pure(MATH, "Add_DoubleDouble", [("A", "real", MX), ("B", "real", g.mul(H, 0.008))])
-    for dx, dy, col in ((1.5, 2.0, SHADOW), (0.0, 0.0, DIM)):
+    for dx, dy, col in ((0.0, 0.0, "(R=0.03,G=0.025,B=0.03,A=0.85)"),):     # dark ink, on the solid paper
         after = g.call(HUD, "DrawText", after, [
-            ("Text", "string", "[M]  Map"), ("TextColor", "color", col if dx else TEXT),
+            ("Text", "string", "[M]  Map"), ("TextColor", "color", col),
             ("ScreenX", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", inside), ("B", "real", dx)])),
             ("ScreenY", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", under), ("B", "real", dy)])),
             ("Font", "font", FONT), ("Scale", "float", g.mul(TS, 0.5))]).then
@@ -534,9 +539,14 @@ def hud_graph():
     # the full map (M): the whole torn-paper map, opaque, with you on it; the game is paused
     g.row(340 * 9, 1700)
     m_yes, m_no = g.branch(g.get("MapOpen", "bool"), j_no)
-    FS = g.mul(H, MAP_FULL)
+    # full size; a little smaller and higher only while her first-time line is showing under it
+    # (M clears the message, so any map opened with M is full size)
+    with_text = g.not_(g.empty(g.get("Toast", "string")))
+    FS = g.pure(MATH, "SelectFloat", [("A", "real", g.mul(H, MAP_FULL)), ("B", "real", g.mul(H, MAP_BIG)),
+                                      ("bPickA", "bool", with_text)], ty="real")
     FX = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(FS, 0.5))])
-    FY = g.mul(H, 0.02)
+    FY = g.pure(MATH, "SelectFloat", [("A", "real", g.mul(H, 0.02)), ("B", "real", g.mul(H, (1 - MAP_BIG) / 2)),
+                                      ("bPickA", "bool", with_text)], ty="real")
     a = dark(m_yes)
     a = g.call(HUD, "DrawTexture", a, [
         ("Texture", "texture", MAP_FULL_TEX), ("ScreenX", "float", FX), ("ScreenY", "float", FY),

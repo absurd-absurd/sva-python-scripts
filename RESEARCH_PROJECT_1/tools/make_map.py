@@ -35,6 +35,8 @@ SCATTER = os.path.join(ROOT, "export", "scatter.json")
 OUT = os.path.join(ROOT, "export", "map.png")
 MARKER = os.path.join(ROOT, "export", "map_marker.png")
 FULL = os.path.join(ROOT, "export", "map_full.png")      # the torn-paper version for the M screen
+FRAME = os.path.join(ROOT, "export", "map_frame.png")    # torn paper edge laid round the corner map
+FRAME_HOLE = 0.08                                        # the hole (where the map shows) starts this far in, each side
 B = LAYOUT["map"]                                   # world bounds of the picture (square)
 PX = B["px"]
 FONT = r"C:/Windows/Fonts/Inkfree.ttf"
@@ -294,6 +296,52 @@ def torn(img):
     return out
 
 
+def frame_edge():
+    """The corner map's torn edge: a margin of the same paper round a square hole, whose outer
+    edge is ragged and darkened like the full sheet's. The HUD draws the moving map window in
+    the hole and this on top, with the same tint, so map and margin read as one torn scrap."""
+    n = 512
+    hole = int(n * FRAME_HOLE)
+    img = Image.new("RGB", (n, n), PAPER)
+    d = ImageDraw.Draw(img)
+    for _ in range(2500):
+        x, y = rng.randrange(n), rng.randrange(n)
+        v = rng.randint(-14, 8)
+        d.point((x, y), fill=tuple(max(0, min(255, c + v)) for c in PAPER))
+    edge = []
+    steps = 160
+    for side in range(4):
+        walk = 0.0
+        for i in range(steps):
+            t = i / steps
+            walk = walk * 0.85 + rng.uniform(-2.2, 2.2)
+            inset = 9 + walk + 4 * math.sin(t * 9 + side * 1.7)
+            inset = max(1.0, min(hole - 6.0, inset))
+            if side == 0:
+                edge.append((t * n, inset))
+            elif side == 1:
+                edge.append((n - inset, t * n))
+            elif side == 2:
+                edge.append((n - t * n, n - inset))
+            else:
+                edge.append((inset, n - t * n))
+    mask = Image.new("L", (n, n), 0)
+    ImageDraw.Draw(mask).polygon(edge, fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(0.8))
+    burn = mask.filter(ImageFilter.GaussianBlur(7))
+    shade = Image.eval(burn, lambda v: 255 - v if v < 255 else 0)
+    img = Image.composite(Image.new("RGB", (n, n), (150, 118, 80)), img, shade.point(lambda v: min(255, v * 2)))
+    # the hole the map shows through: a few px smaller than the map window and feathered, so the
+    # margin fades over the map's edge instead of leaving a hairline seam between them
+    holem = Image.new("L", (n, n), 0)
+    ImageDraw.Draw(holem).rectangle([hole + 7, hole + 7, n - 1 - hole - 7, n - 1 - hole - 7], fill=255)
+    holem = holem.filter(ImageFilter.GaussianBlur(3.5))
+    mask = Image.composite(Image.new("L", (n, n), 0), mask, holem)
+    out = img.convert("RGBA")
+    out.putalpha(mask)
+    out.save(FRAME)
+
+
 def marker():
     """The 'you are here' arrow: red ink, pointing up (the HUD turns it with your view)."""
     m = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
@@ -322,6 +370,7 @@ def main():
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     img.save(OUT)
     torn(img)
+    frame_edge()
     marker()
     print("map ->", OUT, "+", MARKER)
 
