@@ -656,6 +656,10 @@ def hud_graph():
     got_map, _ = g.branch(g.pure(STR, "Contains", [("SearchIn", "string", g.get("Keys", "string")),
                                                    ("Substring", "string", "map")], ty="bool"), free)   # only once you have the map
     shut, opn = g.branch(g.get("MapOpen", "bool"), got_map)
+    # opening or closing the map with M clears the message, so her line only ever shows the
+    # first time (when picking it up opens the map) and no other message lands on the map screen
+    shut = g.set("Toast", "string", "", shut).then
+    opn = g.set("Toast", "string", "", opn).then
     g.call(STATICS, "SetGamePaused", g.set("MapOpen", "bool", False, shut).then, [("bPaused", "bool", False)])
     g.row(340 * 2, 11900)
     g.call(STATICS, "SetGamePaused", g.set("MapOpen", "bool", True, opn).then, [("bPaused", "bool", True)])

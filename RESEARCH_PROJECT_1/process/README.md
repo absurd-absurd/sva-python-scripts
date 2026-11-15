@@ -1019,3 +1019,5 @@ Feedback: the messages in the corner should be first person, like the character 
 ![Picking up the map now](2026-11-14_map_pickup_screen.png)
 
 Feedback: picking up the map shouldn't show the grey text page, just the map, with a line like "this is Cas's handwriting, it looks like she made a map of this place". Now taking the map opens the map screen straight away (paused, like M), with "This is Cas's handwriting. It looks like she made a map of this place." under it (also the journal line); M closes it. The map screen is a little smaller and higher so the line fits under it. HUD graph swapped again (generator 436 nodes / 1150 wires, matched after paste).
+
+Feedback: her line should only show the first time. Opening or closing the map with M now clears the message, so it appears only when picking the map up opens it; later M views show just the map. Tested: pickup shows the line, close, reopen with M shows the map alone. (HUD 438 nodes / 1154 wires, matched.)
