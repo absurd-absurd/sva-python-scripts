@@ -45,17 +45,24 @@ def fear_collection():
     else:
         mpc = tools.create_asset("MPC_Horror", MPC.rsplit("/", 1)[0], unreal.MaterialParameterCollection,
                                  unreal.MaterialParameterCollectionFactoryNew())
-    params = []
+    # keep parameters that already exist: rebuilding them gives each a new hidden ID, and every
+    # material that reads them (grass, critters) then cooks with a broken link
+    have = {str(p.get_editor_property("parameter_name")): p for p in mpc.get_editor_property("scalar_parameters")}
+    params = list(have.values())
     for name, value in (("Fear", 0.0),) + AUTO_DIM:
-        p = unreal.CollectionScalarParameter()
-        p.set_editor_property("parameter_name", name)
-        p.set_editor_property("default_value", value)
-        params.append(p)
+        if name not in have:
+            p = unreal.CollectionScalarParameter()
+            p.set_editor_property("parameter_name", name)
+            p.set_editor_property("default_value", value)
+            params.append(p)
     mpc.set_editor_property("scalar_parameters", params)
-    pos = unreal.CollectionVectorParameter()                 # where the player is (BP_HorrorHUD sets it
-    pos.set_editor_property("parameter_name", "PlayerPos")   # every frame; critters react to it)
-    pos.set_editor_property("default_value", unreal.LinearColor(0, 0, -100000, 0))
-    mpc.set_editor_property("vector_parameters", [pos])
+    vecs = list(mpc.get_editor_property("vector_parameters"))
+    if "PlayerPos" not in [str(v.get_editor_property("parameter_name")) for v in vecs]:
+        pos = unreal.CollectionVectorParameter()                 # where the player is (BP_HorrorHUD sets it
+        pos.set_editor_property("parameter_name", "PlayerPos")   # every frame; critters react to it)
+        pos.set_editor_property("default_value", unreal.LinearColor(0, 0, -100000, 0))
+        vecs.append(pos)
+        mpc.set_editor_property("vector_parameters", vecs)
     lib.save_loaded_asset(mpc, False)
     return mpc
 
