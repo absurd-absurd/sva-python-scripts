@@ -3,7 +3,7 @@
 Run in the Unreal editor after tools/make_map.py. Imports export/map.png and
 export/map_marker.png / export/map_full.png as /Game/Horror/UI/T_Map, T_MapMarker
 and T_MapFull, set up as UI textures
-(no mipmaps, no streaming, clamped edges) so the map stays sharp and never smears at the border.
+(sharpened mipmaps, no streaming, clamped edges) so the map stays sharp and never smears at the border.
 """
 import unreal
 
@@ -21,7 +21,10 @@ def bring(png, name):
     tex = unreal.load_asset(f"{DEST}/{name}")
     tex.set_editor_property("compression_settings", unreal.TextureCompressionSettings.TC_EDITOR_ICON)   # "UserInterface2D"
     tex.set_editor_property("lod_group", unreal.TextureGroup.TEXTUREGROUP_UI)
-    tex.set_editor_property("mip_gen_settings", unreal.TextureMipGenSettings.TMGS_NO_MIPMAPS)
+    # smaller, sharpened copies (mipmaps): on a smaller screen the 2048 px map is shrunk a lot, and
+    # without them the pen lines and handwriting come out jagged/pixelated in the game
+    tex.set_editor_property("mip_gen_settings", unreal.TextureMipGenSettings.TMGS_SHARPEN4)
+    tex.set_editor_property("filter", unreal.TextureFilter.TF_TRILINEAR)
     tex.set_editor_property("never_stream", True)
     tex.set_editor_property("srgb", True)
     tex.set_editor_property("address_x", unreal.TextureAddress.TA_CLAMP)
