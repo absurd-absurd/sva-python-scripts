@@ -71,7 +71,6 @@ FLICK_OFF = (0.25, 0.55)                # share of flickers that are a full cut-
 FLUTTER = (0.1, 0.4)                    # how long a flutter lasts (s)
 CUTOUT = (0.3, 0.8)                     # how long a cut-out lasts (s); under a second
 HIT_CHANCE = 0.75                       # share of cut-outs that end with a hit (camera jolt)
-BLOW_IN = 1.6                  # seconds the corner line takes to blow in when it changes
 TEXT_SCALE = 0.0008            # text size = screen height * this; the font is rendered at size 40 (interact_setup.py),
                                # so this is 0.8 at 1000 px tall - same size as before (size 10 x 3.2) but sharp
 REACH, NEAR = 260.0, 40.0      # aim line from 40 cm in front of the eyes (outside the capsule) to 2.6 m
@@ -458,38 +457,7 @@ def hud_graph():
 
     # objective + message
     g.row(340 * 9, 0)
-    # the corner line blows in like it's carried on the wind whenever it changes (ObjTime): it
-    # drifts in from the right with a wavering flutter and fades up, a few faint wisps of the
-    # same words trailing behind it, and settles after BLOW_IN seconds
-    sub_ = lambda a, b: g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", a), ("B", "real", b)])
-    add_ = lambda a, b: g.pure(MATH, "Add_DoubleDouble", [("A", "real", a), ("B", "real", b)])
-    mulv = lambda a, b: g.pure(MATH, "Multiply_DoubleDouble", [("A", "real", a), ("B", "real", b)])
-    t_in = g.pure(MATH, "FClamp", [("Value", "real", g.mul(sub_(g.now(), g.get("ObjTime", "real")), 1.0 / BLOW_IN)),
-                                   ("Min", "real", 0.0), ("Max", "real", 1.0)])
-    left = sub_(1.0, t_in)
-    gone = mulv(mulv(left, left), left)                        # (1-t)^3: how much of the gust is still to come
-    ease = sub_(1.0, gone)                                     # ease-out: fast at first, settling gently
-    sway = g.pure(MATH, "Sin", [("A", "real", g.mul(g.now(), 9.0))])
-    sway2 = g.pure(MATH, "Sin", [("A", "real", g.mul(g.now(), 5.3))])
-
-    def blown(after_, off, alpha_k, dx=0.0, dy=0.0, color=(0.55, 0.53, 0.5)):
-        """One copy of the line: off = how far right it starts (fraction of width), alpha_k scales
-        its opacity; dx/dy in px for the shadow copy."""
-        x = add_(g.mul(W, 0.04), add_(mulv(g.mul(W, off), gone), dx))
-        y = add_(g.mul(H, 0.05), add_(mulv(g.mul(H, 0.014), mulv(sway, gone)), add_(mulv(g.mul(H, 0.006), mulv(sway2, gone)), dy)))
-        a = g.pure(MATH, "FClamp", [("Value", "real", g.mul(alpha_k, 1.0) if isinstance(alpha_k, float) else alpha_k),
-                                    ("Min", "real", 0.0), ("Max", "real", 1.0)])
-        col = g.pure(MATH, "MakeColor", [("R", "float", color[0]), ("G", "float", color[1]), ("B", "float", color[2]),
-                                         ("A", "float", a)], ty="color")
-        return g.call(HUD, "DrawText", after_, [
-            ("Text", "string", g.get("Objective", "string")), ("TextColor", "color", col),
-            ("ScreenX", "float", x), ("ScreenY", "float", y),
-            ("Font", "font", FONT), ("Scale", "float", g.mul(TS, 0.8))]).then
-    after = [lit.then, spot_fail]
-    for k, (off, share) in enumerate(((0.30, 0.10), (0.22, 0.16), (0.14, 0.22))):     # the wisps, furthest first
-        after = blown(after, off, mulv(gone, share * 4.0))
-    after = blown(after, 0.10, g.mul(ease, 0.85), 1.2, 1.8, (0.0, 0.0, 0.0))          # its shadow
-    after = blown(after, 0.10, ease)                                                  # the line itself
+    after = draw(g.get("Objective", "string"), [lit.then, spot_fail], 0.04, 0.05, 0.8, DIM, True)
 
     # corner map: a MAP_VIEW-wide window of the paper map centred on you, top right,
     # with the red arrow in the middle turned the way you face (north is always up)
@@ -675,7 +643,7 @@ def hud_graph():
     g.call(STATICS, "SetGamePaused", g.set("MapOpen", "bool", True, a).then, [("bPaused", "bool", True)])
     g.row(340 * 7, 7600)
     y, _ = g.branch(g.not_(g.empty(fget("Objective"))), sub[2])
-    g.set("ObjTime", "real", g.now(), g.set("Objective", "string", fget("Objective"), y).then)   # the new line blows in
+    g.set("Objective", "string", fget("Objective"), y)
     g.row(340 * 7, 8200)
     g.set("Done", "bool", True, sub[3], target=focus())
     # 2: doors swing open

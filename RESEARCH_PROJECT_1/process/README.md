@@ -1042,8 +1042,4 @@ Feedback: the text looked pixelated. The HUD font was rasterised at size 10 and 
 
 Feedback: something better than the grey box around the text. The "[E] ..." prompt now sits on a little torn scrap of the map's paper (tools/make_map.py prompt_scrap() -> export/prompt_scrap.png -> T_PromptScrap), ragged and darkened at the edges, written on in dark ink (no shadow). HUD 438 nodes / 1150 wires, matched.
 
-## 2026-11-14: the corner line blows in on the wind
-
-![Frames 1/6 s apart: the new line arriving and settling](2026-11-14_text_blow_in.png)
-
-The user asked for the corner text to fade in like it's blown in by wind. When the line changes (and at the start), it drifts in from the right with a wavering flutter (two sine sways that die away), fades up from nothing, with three faint wisps of the same words trailing further out that fade first, settling after 1.6 s (BLOW_IN) with an ease-out. New HUD variable ObjTime (unreal/interact_setup.py) is stamped whenever the objective changes. While the map is open the game is paused, so a line set by picking up the map blows in when you close it. HUD 550 nodes / 1478 wires, matched; recorded in play to check.
+Tried a "blown in on the wind" effect for the corner line (drift, flutter, fading wisps); the user didn't like it, so it was removed (reverted) and the corner line just appears again.
