@@ -1,1045 +1,144 @@
-# Process images
+# Process
 
-Pictures from along the way, kept for the final presentation.
+How MARROW was built and changed along the way, area by area. Each part says what I asked
+for, what changed, and what was decided. Every image in this folder is from the work; only
+the key ones are shown here (the full day-by-day log is in this file's git history).
 
-## 2026-11-05: lighting balance test
+**How the work went:** everything is built by scripts (Maya for the models, Python in Unreal
+for placing and setting up), so a change means editing a script and rebuilding. After each
+round of changes I watched an in-game tour of just the new edits and gave notes.
 
-![Lighting options](2026-11-05_lighting_options.png)
+---
 
-Four views (payphone, motel front, woods, Room 104), one row per lighting option:
+## 1. The look
 
-- **Now**: the current lighting (exposure bias 7.3, flashlight 560). Bright flashlight pool, but whatever the beam hits head-on (tree trunk, payphone) goes nearly white.
-- **A**: flashlight at about a third, everything else 2.5x brighter.
-- **B**: flashlight at about half, everything else 2.5x brighter.
-- **C**: like A, everything else 3.5x brighter, lamps a little dimmer.
+![Haze options](2026-11-14_haze_options.png)
 
-A, B and C stopped the white burn-out, but the flashlight lost its pool of light on the ground.
-**Decision: keep "Now".** The strong beam is part of the look.
+- **Lighting balance (Nov 5):** tested three brighter/dimmer setups against the original.
+  The others stopped the flashlight burning surfaces white, but lost its pool of light.
+  **Kept the original**: the strong beam is part of the look.
+- **Haze and bloom (Nov 14):** four post-process looks at the same four spots, then the two
+  I liked with more contrast. **Picked option B at contrast 1.1**: a wide soft glow round
+  every light, light fog, deep blacks.
 
-Made with a test script that changed every light at once, played the game, jumped the player to each view and took a screenshot.
+![More contrast](2026-11-14_haze_contrast.png)
 
-## 2026-11-05: Room 104 (Cas's room), "frozen in time"
+- **Red lights as a theme (Nov 14):** in the story the red lanterns are the town's lake
+  ritual. Added red lanterns on posts along the trail (some flicker), a red glow through the
+  slits of the boarded cabins, and a flickering lantern at the end of the dock. Floating
+  lanterns on the lake were tried and removed.
 
-Chosen direction: her things are where she left them a year ago, as if she meant to come back
-that night, under a year of damp. Extras: her lake photos taped over the dresser and her camera by
-the TV, a twig figure hanging over the bed, a red bulb in the bedside lamp (the red-light theme),
-grime (ceiling water stain with a drip streak, peeling wallpaper, cobwebs, yellowed sheets).
-Every shot: entering from the door · the photo wall over the dresser · the table by the window · the bed.
+## 2. Room 104 (Cas's room)
 
-### Her photos
+![Room 104](2026-11-05_room104_diary_pillows_curtains.png)
 
-![Cas's photos](2026-11-05_cas_photos.png)
-
-Drawn by `tools/make_photos.py` (128 x 96, like cheap disposable-camera prints): lake at dusk,
-lake in fog, the dock, the lake at night, and the odd one out, red lights out on the water
-(a hint at the lantern ritual).
-
-### First pass
-
-![Room 104 v1](2026-11-05_room104_v1.png)
-
-Layout works, but: the new colors came out near-white (the texture tint replaced the Maya color),
-the blanket roll read as pipes, the red lamp light tinted the whole room pink, and the photos were
-blank grey cards.
-
-### Second pass
-
-![Room 104 v2](2026-11-05_room104_v2.png)
-
-Photos now have pictures but were mapped sideways (stripes); the suitcase lid and jacket were tilted
-on the wrong axis. The flashlight state differed from v1, which showed the real problem: inside a
-small room the beam burns everything white (screen mean 200-220 of 255).
-
-### Third pass: flashlight off vs on
-
-![Room 104 v3](2026-11-05_room104_v3_flashlight_off_on.png)
-
-Photos upright, bedspread bunched at the foot, jacket over the chair, suitcase lid leaning back.
-Left (flashlight off) shows the dressing itself (mean ~100); right (on) is still burnt out.
-**Decision:** the flashlight auto-dims when what it points at is close (like your eyes adjusting),
-and stays exactly the same outdoors.
-
-### Flashlight indoors: how strong?
-
-![Indoor flashlight levels](2026-11-05_room104_indoor_flashlight_levels.png)
-
-First try dimmed the beam by distance to what it hits, but the room is 5 m deep, so most walls
-were "far" and nothing changed. Now the HUD also checks for a ceiling within 2.5 m above your
-eyes: indoors, the beam drops to a set share of its power; outside nothing changes (woods and
-motel front measured the same as before). Rows: flashlight off, 35%, 15%, 8% (the 35% bed shot
-caught a flicker cut-out). **Picked: 15%**: a soft pool on the wall, photos and table readable.
-
-### Red lamp, new carpet, red kept outside
-
-![Red lamp and carpet](2026-11-05_room104_red_lamp_carpet.png)
-
-Your notes: "change the carpet color", "I don't want the whole room red, just the lamp", and the lamp
-looked pink, not like a real light. Causes and fixes:
-- **Whole room red:** the big outside lights (sign letters, cross, OPEN, lot lamps, streetlight) cast no
-  shadows, so their light went straight through the walls. They now cast shadows, so walls block them.
-  That also took the red glow off the motel's front wall (the awning blocked the sign), so six red
-  wash lights under the awning (one per room, also shadowed) put it back. The front looks close to before.
-- **Pink lamp:** the shade's glow was so strong it bloomed to pinky white. Turned down (3 to 0.6) so
-  it reads as red, and the bulb is now a real point light with inverse-square falloff right at the
-  lamp: hot at the bulb, fading across the wall and nightstand.
-- **Carpet:** from red to a worn khaki brown (all rooms).
-
-### The lamp, still pink → deep red
-
-![Lamp options](2026-11-05_room104_lamp_red_options.png)
-
-Your note: "the lamp color is still pink". Very bright red bleaches toward pink and white on screen,
-and it was too bright in two places: the shade's glow, and the bulb light sitting inside the shade
-(it burnt a white spot into it and turned the cream wall pink). Tried three dimmer, pure-red versions
-(A, B, C, with the bulb moved under the shade). B was the reddest but its shade went dark grey.
-
-![Lamp final](2026-11-05_room104_lamp_deep_red.png)
-
-Final: bulb under the shade, pure red, dim (9); the shade is now red fabric itself (it showed grey in
-the flashlight before) with a soft glow (0.5).
-
-## 2026-11-05: "really bad artifacting everywhere"
-
-![Artifacts found](2026-11-05_artifacts_found.png)
-
-Two frames from recording your screen while you played: saw-tooth shadow edges along the awning and
-posts, thin bright lines leaking along the window and door frames, and shadow bands that crawled as
-you moved. Cause: the shadows turned on for the outside lights earlier today (to stop the sign's red
-shining through the walls into the rooms). Point-light shadows at this resolution, with no
-anti-aliasing, look like this. (A first guess, turning off motion blur and ambient occlusion, didn't
-help and changed the look, so it was undone.)
-
-![Lighting channels fix](2026-11-05_lighting_channels_fix.png)
-
-Fix without any shadows: **lighting channels**. The motel is now two meshes: the outside
-(`set_motel`) and the room insides (`set_motel_rooms`, with a thin lining on the inside of the front
-wall). The room insides and the room lamps are on channel 1; the sign, cross, lot and street lights
-are on channel 0, so they can't reach inside. The flashlight and the moonlight light both. All lights
-are back to no shadows, the six extra awning lights are gone, and the motel front looks like it did
-originally (top row: the shadowed version; middle/bottom: now, flashlight off/on).
-
-### The real culprit: the flashlight's own shadow
-
-![Flashlight shadows](2026-11-05_flashlight_shadows.png)
-
-Your note: "it did not fix it at all" (worst on the walkway). The lighting-channel change was still
-worth keeping, but the artifacts came from the one light that still cast shadows: the flashlight.
-It's held off to the right and bobs with every step, so its hard, low-resolution shadow (the dark
-band beside the TV and dresser, the patch by the chair, the post and frame edges on the walkway)
-jittered and crawled all the time. Rows: now · shadows off · softer, sharper shadows (only blurs it).
-**Fix: flashlight casts no shadows.**
-
-### What you actually meant: textures flashing in and out (z-fighting)
-
-![Z-fighting test](2026-11-05_zfighting_test.png)
-
-Your note: "I'm talking about all the textures that keep flashing in and out of the screen."
-That's **z-fighting**: two surfaces in (almost) the same place, so the GPU can't tell which is
-in front and they flash between each other as you move. Found and fixed:
-- **Parking lot:** paint lines, cracks, patches and oil stains were 3-6 mm apart and overlapping.
-  Now each kind has its own layer, 8 mm apart (stains 0.8 cm, patches 1.6, cracks 2.4, paint 3.2).
-- **Road lines** 4 mm above the road: now 1 cm. **Trail** top 5 mm under the lot: now 1 cm.
-- **Motel front:** the room side walls and ceilings were flush with the outside wall. Once the
-  room insides got their own lighting this morning, they flashed through as dark/red strips.
-  They now stop 1 cm short.
-- **Room 104:** photos 1 mm off their borders (now 8 mm), bed stains under the sheet, papers/leaves
-  on the table, ceiling stains on the ceiling.
-- Also off: occlusion culling (objects popping in late at the screen edge when you turn).
-
-Test: two screenshots 2 cm apart. White = pixels that changed a lot: only outlines moving by a
-pixel and the dead "M" (it flickers on purpose). Nothing flashes on the lot or the walls.
-
-### Last flashing: the ground under Room 104 and the lot
-
-![Wobble ground fix](2026-11-05_wobble_ground_fix.png)
-
-Your note: "it worked except in Room 104 I still see flashing of the ground underneath, and sometimes
-the parking lot too." Cause: the PS2 vertex wobble snaps vertices to a grid that gets coarser with
-distance. The ground is one giant flat piece whose corners are up to 200 m away, and vertices behind
-the camera counted as "corner", so they were snapped by up to ~12 cm. That tilted the whole ground a
-little, enough to poke up through the carpet (2 cm above it) and the lot (3 cm) now and then.
-Fix: the wobble only moves vertices in front of you, by at most half a centimetre. Test: turning in
-Room 104 and on the lot, no ground shows through.
-
-### Room 104: last three flickering spots
-
-![Room 104 last flicker](2026-11-05_room104_last_flicker.png)
-
-Your note: "it's just on one of the photos in Room 104, the top of the lamp, and a weird white thing
-in the top right corner." All three were z-fighting:
-- **Photo:** the red-lanterns photo was placed exactly on top of another photo in the grid. Moved to
-  the empty fourth spot in the top row (now 8 photos, 4 + 4).
-- **Lamp top:** the red shade was built over the room's normal shade with the caps at the same height.
-  It's now a little bigger in every direction.
-- **White thing:** the cobwebs, flat triangles, one lying right on the wall. They didn't read as
-  cobwebs anyway, so they're now thin grey strands strung across three top corners, 1.5 cm off the walls.
-Test: two shots 1 cm apart; white = changed pixels, only outlines (the big circle in the middle top
-row is the flashlight flickering between the two shots).
-
-## 2026-11-05: Room 104 detail pass
-
-![Detail pass 1](2026-11-05_room104_detail_pass1.png)
-
-Your note: "all of the objects look way too low poly, I want them to have a lot more detail."
-New `maya/room_props.py` builds the furniture from richer shapes (bevelled boxes, smoothed soft
-shapes, tapered cylinders, spheres) for all six rooms: panelled bed on legs with a rounded mattress,
-nightstand with drawer and knob, lamp with base, bulb, tapered lined shade and finial, dresser with six
-drawers and bar handles, an old CRT TV (curved screen, knobs, grille, rabbit ears). Room 104: diary,
-mug, plant, table, slatted chair, suitcase, camera rebuilt. Motel: 39k -> ~160k triangles.
+Direction: "frozen in time": her things are where she left them a year ago, under a year of
+damp. Built over many rounds of notes:
+- An investigation wall: her lake photos, notes ("same night every year", "the rattle stops
+  when I stop"), a 1997 newspaper clipping, a map with red pins and string.
+- Detailed props (bed, nightstand, dresser, CRT TV, fan), real fabric for the clothes and
+  bedding, motel wallpaper and a worn 70s carpet, a window with curtains, her diary.
+- A deep-red bedside lamp (bright red kept reading as pink; fixed by dimming it).
+- The flashlight burnt the small room white, so it **auto-dims indoors** (picked 15%).
 
 ![Her notes](2026-11-05_cas_notes.png)
 
-![Detail pass 2](2026-11-05_room104_detail_pass2.png)
+## 3. Getting rid of flicker
 
-Your notes: the sneakers still looked weird, the jacket too, no coffee in the mug, the plant could be
-more detailed, the blank "pages" on the wall should have scribbles like she was investigating, a
-weird item on the left wall, and cobwebs more noticeable and not in every corner.
-- **Investigation wall:** the blank "pages" were my peeling-wallpaper strips; gone. Around her lake
-  photos are now her notes (drawn by `tools/make_photos.py`: years and names circled in red, "same
-  night every year", "red lights on the water", "the rattle stops when I stop"), a newspaper clipping
-  ("GUEST MISSING AT BLACK HOLLOW LAKE", 1997 circled), her hand-drawn lake map with red X's, red pins
-  and red string between them. Also fixed: all pictures had been upside down.
-- **Sneakers:** built from a real side profile (heel collar, tongue, low toe), dark canvas, white
-  sole, toe cap and laces.
-- **Jacket:** a two-sided draped cloth over the chair back with folds, a collar and two sleeves.
-- **Mug:** open top with a lining and rim, coffee 2 cm down. **Plant:** saucer, rolled rim, lumpy
-  soil, nine curving drooping stems with curled leaves.
-- **Left wall:** the "weird item" was the water streak (two flat slabs); removed.
-- **Cobwebs:** one big web in the back corner over the bed, one small one over the door.
+![Z-fighting test](2026-11-05_zfighting_test.png)
 
-### Note on the bedspread, cleaner bed and wall, written pages, a pen, a patterned carpet
+"Textures flashing in and out" was **z-fighting**: two surfaces in the same place taking turns
+being drawn. Fixed by spacing layers apart (lot markings, road lines, walls, photos), stopping
+the PS2 vertex wobble from tilting the ground, and later lining every doorway so the wall's
+edge doesn't show. Other causes found on the way: the flashlight's own shadow crawling
+(flashlight now casts no shadows) and Unreal's Nanite crushing the motel's thin details
+(turned off). The last flicker was found by **recording my screen while I played** and
+going through it frame by frame.
 
-![Carpet pattern](2026-11-05_carpet_pattern.png)
-![Room 104 now](2026-11-05_room104_carpet_note_pages.png)
+![Back-room doorway](2026-11-14_backroom_doorway_books.png)
 
-Your notes: move the note onto the blanket, get rid of the shoes, the stains on the bed, the red string
-going over the photos and the jacket; scribbles on the papers on the table and floor; a pen on the table;
-a pattern on the carpet.
-- The note (clue) now lies on the bunched bedspread at the foot of the bed (that lump has a flatter top).
-- Shoes, bed stains, jacket and the string across the photos removed.
-- The torn pages are her diary pages (ruled lines, red margin, torn edge, handwriting), and a ballpoint
-  pen with its cap and clip lies by the mug.
-- Carpet: `tools/make_carpet.py` draws a worn 70s motel pattern (mustard diamond lattice, rust
-  centres, dots on dark olive-brown) woven into the photo carpet so it still looks like pile; tiles
-  seamlessly, one repeat per 1.6 m, toned down so it looks worn. In every room.
+## 4. Life around the motel
 
-### Wallpaper, muted carpet, a real window, a painting
+![Crows, owl](2026-11-05_critters_crows_owl_cat.png)
 
-![Carpet and wallpaper](2026-11-05_carpet_muted_wallpaper.png)
-![Room 104](2026-11-05_room104_wallpaper_window_painting.png)
+Moths at the lights, fireflies, gnats, bats, flocks and crows that fly off as you get close,
+and an owl that watches you. All of it moves in the material (no Blueprints). Bugs were made
+smaller and darker, ignore the flashlight, and don't follow you indoors. A black cat went
+through four versions (shader walk, Fab model, a full Maya rig) and was **removed**: it never
+looked right.
 
-Your notes: carpet too intense, walls look like concrete, add a window over the parking lot, a painting
-on the left wall.
-- Carpet redrawn in faded colours. Walls: the inside of every room now has old motel wallpaper
-  (`tools/make_wallpaper.py`: cream, thin olive stripes, a small motif, water marks) and wooden
-  baseboards; the outside keeps its plaster (each wall is two halves).
-- Window: a real opening in every room's front wall (where the outside window was), see-through glass
-  (new translucent `M_PS2_Glass`), the outside frame opened up with a middle bar, and inside a sill,
-  casing, a brass rod and curtains: pulled back in most rooms, closed and glowing in 102 and 106.
-- Painting: a framed sunset-lake landscape over the bed on the left wall.
+## 5. The motel outside, the lot and the road
 
-### What broke the outside, and the fix
+![Motel exterior](2026-11-05_exterior_detail.png)
 
-![Nanite broke it](2026-11-05_nanite_broke_outside.png)
+- Detail pass on everything except the sign (which I loved as it was): brick, panelled
+  doors, awning, AC units, payphone, dumpster, lamp posts. My Fab classic car replaced the
+  Maya one.
+- The lot was refitted to the motel and painted as one asphalt surface that runs straight
+  into the road; verges, a guardrail and power lines along the road.
+- Forest fills every empty space, with hidden walls and **fog** at every unbuilt edge.
+- A **ROAD CLOSED** gate and a weathered NO TRESPASSING sign; the fence runs along the road
+  so the back gate is the only way into the woods.
 
-Your note: "you just ruined the whole outside of the motel and parking lot." Left: how it looked;
-right: how it should look. The Maya model was fine (same faces as before). Cause: with the motel mesh
-now ~4x bigger, Unreal's import switched on **Nanite** (automatic mesh simplification), which
-crushed the thin sign letters, window frames and flat lot details (only 3,367 vertices were left).
-Fix: `import_sets.py` turns Nanite off on the motel meshes every import.
+![Road closed](2026-11-10_road_closed_and_sign.png)
 
-![Outside fixed](2026-11-05_outside_fixed.png)
+## 6. The woods
 
-Top: now. Bottom: earlier today. Motel front, lot and walkway match again (plus the new windows).
+![Forest before](2026-11-09_forest_before.png)
+![Forest after](2026-11-09_forest_after.png)
 
-### Ceiling fan light, a real bedspread, floor-length curtains
+From my reference photos: tall dark trunks with the crowns high up, a mix of living, dying
+and dead trees. Real grass blades that sway in the wind and part as you walk through them.
+A forest floor of leaves, needles and sticks, and the trail as packed dirt with leaves. A
+sightline was logged clear from the lookout tower so you can see the lake.
 
-![Fan, bedspread, curtains](2026-11-05_room104_fan_bedspread_curtains.png)
+![Tower view](2026-11-13_tower_view_before_after.png)
 
-Your notes: make the ceiling lamp higher poly and a fan light, the blanket more realistic, the
-curtains all the way to the floor.
-- Ceiling fan with a light kit in every room (canopy, downrod, motor housing with a brass ring, five
-  wooden blades on brass irons, frosted bowl, pull chain). Room 104's bowl glows and the room light
-  now sits just under it. (The bulb shape in these editor shots is only Unreal's light icon.)
-- Bedspread: one piece of cloth instead of lumps. It lies over the foot half, hangs down both sides
-  and over the foot with folds, and is turned back on itself in a loose roll; the note lies on it.
-- Curtains: pleated cloth from the rod down to the carpet (closed and glowing in 102 and 106).
-- Outside checked after the rebuild: unchanged.
-
-### Curtains clear of the frame, a smoother blanket, detailed clothes
-
-![Curtains, blanket, clothes](2026-11-05_room104_curtains_blanket_clothes.png)
-
-Your notes: the curtains went through the wooden window frame, too many lumps on the blanket, the
-clothes in the suitcase should be higher poly.
-- Rod and curtains moved forward, in front of the sill, on brass brackets.
-- Bedspread: only a few broad, gentle folds.
-- Suitcase: three properly folded garments (smoother, two layers and a rounded fold): a sweater with a
-  ribbed hem, jeans with a centre seam and stitched back pocket, a shirt with collar, placket and buttons.
-
-### Better clothes, no circles on the ceiling
-
-![Fabrics](2026-11-05_fabrics.png)
-![Clothes and ceiling](2026-11-05_room104_clothes_ceiling.png)
-
-Your notes: make the clothes better, get rid of the weird circles on the ceiling.
-- The circles were the water-stain discs on the ceiling: removed.
-- Clothes now have real fabric (`tools/make_fabrics.py`): a red/black flannel shirt with a proper
-  collar, placket, buttons and one sleeve hanging out over the front of the case; denim jeans with a
-  waistband, belt loops, button and fly stitching; an oatmeal knit sweater folded with its sleeves
-  crossed and a ribbed hem. (Flannel redrawn once: the first version was mostly black.)
-- Outside re-checked after the rebuild: unchanged.
-
-### The diary, pillows, closed curtains
-
-![Diary, pillows, curtains](2026-11-05_room104_diary_pillows_curtains.png)
-
-Your notes: fix the journal (wonky), make the pillows look better, close the curtains so you only see
-a little out of Room 104, and close every other room's curtains.
-- Diary: the spine was placed on the wrong side once the book was turned, and the pages weren't turned
-  with it. Rebuilt in the book's own frame: covers, page block, rounded spine, torn-out stubs, an
-  elastic strap and a red ribbon bookmark.
-- Pillows (every bed): plump in the middle, pinched at the seam and corners, a soft head dent.
-- Curtains drawn in every room (102 and 106 still glow); Room 104's leave a 16 cm crack to look out.
-- Also: the bedside lamp's base showed dark speckled facets (two stacked pieces cutting into each
-  other); it's now one smooth turned piece (`lathe()`), and the fan housing parts no longer share faces.
-
-![Lamp base fixed](2026-11-05_lamp_base_fixed.png)
-
-## 2026-11-05: Life around the motel, stage 1 (bugs, bats, flock)
-
-![Critters stage 1](2026-11-05_critters_stage1.png)
-
-Your idea: a black cat around the motel (sometimes seen elsewhere), birds, little bugs in the air.
-You picked: the cat wanders and watches; crows, an owl, bats and a flock overhead; moths at the
-lights, fireflies in the woods, gnats/dust.
-Stage 1: `maya/make_critters.py` builds a moth, firefly, gnat, bat and flock bird; `unreal/critters.py`
-places 30 moths at the outside lights, ~190 fireflies along the trail and lake shore, 8 gnat clouds,
-10 bats (lot lamp, streetlight, over the lake) and a flock of 12 over the dock. They move with no
-Blueprint logic at all: `M_PS2_Critter` (a copy of the PS2 surface material) moves each one along its
-own looping path in the vertex shader, turns it to face where it's going and flaps its wings;
-fireflies blink. Shots: a bat moving between two frames by the lot lamp, the woods, the flock.
-
-## 2026-11-05: Life around the motel, stages 2 and 3 (crows, owl, the black cat)
-
-![Crows, owl, cat](2026-11-05_critters_crows_owl_cat.png)
-
-Row 1: the black cat on its walk along the front of the lot (walking, sitting and staring at you,
-walking). Row 2: the payphone crow from 13 m, then flying off when you get within ~5 m; the owl's spot.
-Row 3: a "watching" cat by the shack: there in one shot out of three (they only show up now and then).
-- The HUD now tells the materials where you are every frame (`MPC_Horror.PlayerPos`).
-- 15 crows on the lamps, streetlight, payphone, dumpster, roof and fence: they lift off and fly away
-  as you come within ~9 m and drift back after you leave.
-- An owl with glowing yellow eyes on a dead tree off the trail; its head turns in little jerks to watch you.
-- The black cat walks a loop round the rooms (18 s walking, 7 s sitting and staring at you), bolts
-  away if you come within 4 m, and is gone if you get right up to it. Seven more sitting cats wait at
-  the trail, the shack, the car, the tower, the dock, the cabins and the boathouse: each shows up only
-  part of the time, only when you're between 11 and 45 m away, always facing you; its eyes shine
-  green when you look straight at it.
-All of it runs in the vertex shader of `M_PS2_Critter` (no Blueprints).
-
-### The cat, take two: higher poly, a slow elegant walk
-
-![Cat v2](2026-11-05_cat_v2.png)
-
-Your note: "make the cat higher poly, he looks really bad, give him a slow elegant and mysterious walk."
-- Model (~20k triangles): one smooth torso (rounded haunches, narrow waist, deeper chest), a neck, a
-  round head with cheeks, muzzle, nose, pointed ears and almond eyes, slender jointed legs (the back
-  legs bend backwards at the hock like a real cat's), paws, a long tapering tail that rises and curls.
-- Walk: ~30 cm/s; each leg lifts and reaches in a cat's walking order and the steps follow the
-  distance walked, so the paws don't slide; a soft bob and sway; the tail waves slowly from base to
-  tip; it turns its head to keep watching you as it walks (shots 2 and 3, eyes shining); every 22 s it
-  sits for 10 s and stares. The watching cats use the same new model, sitting.
-
-### The cat, take three: your Fab black cat
-
-![Fab cat](2026-11-05_cat_fab.png)
-
-Your note: "I just added a black cat from Fab to the project, I want a cat like that." Now the walking
-cat and the seven watching cats are your Fab model ("Black Cat, available for 3D printing", ~64k
-triangles, its own colour and normal textures), scaled to 75% so it's cat-sized, and driven by the same
-slow walk as before (legs, body bob, tail wave, head following you, sitting to stare). Its eyes are
-only painted on, so a small pair of glowing eyes is added on top for the eyeshine.
-How: `M_PS2_Critter` got a "UVMode" switch that uses a model's own UVs and normal map instead of the
-PS2 world projection, and the walk's leg/tail/head cut-offs were re-measured for this model.
-Two fixes along the way: the creature material is now rebuilt under a spare name and the instances
-moved onto it (Unreal wouldn't delete the old one while it was in use, so changes weren't applied),
-and creatures now move around their true pivot (the eyes had drifted off the head).
-
-### The cat, take four: rigged in Maya with a real walk cycle
-
-![Reference, test, in the game](2026-11-05_cat_rigged_walk.png)
-
-Your note: "the cat's walk is really bad and not natural", then: rig it in Maya (plus your reference video).
-The Fab cat was one rigid statue, so the shader could only bend it. Now `maya/make_cat_rig.py` turns
-it straight, finds its anatomy in the mesh (feet, leg centres, torso, head, the hanging tail) and
-builds a 34-joint skeleton: spine, neck, head, four legs (the back legs bend backwards at the hock),
-an 8-joint tail. It skins the mesh (bone-based, tail and leg weights cleaned up) and keys a walk with
-IK so the paws plant and never slide: the reference's order (back left, front left, back right,
-front right), one stride a second, hips and shoulders rolling, a small bob, the head held level, the
-tail hanging with a gentle sway; plus an 8 s idle (breathing, looking around).
-`unreal/cat_rig_import.py` brings it in (SK_Cat, A_Cat_Walk, A_Cat_Idle), `unreal/cat_material.py`
-gives it the PS2 look, and `unreal/cat_walk.py` makes a looping Level Sequence that walks it round the
-motel at ~20 cm/s (matching the stride), stopping at two corners to stand and look around. It starts
-by itself with the game.
-Top: your reference. Middle: the walk on the spot (quarter speed). Bottom: walking along the rooms.
-On the way: raising the tail tore the mesh (the model's tail hangs, so it now hangs and sways), the
-first skin gave the back legs to the tail, and a bob key dropped the body to the floor.
-
-![Skin weights](2026-11-05_cat_rig_weights.png)
-
-### The cat: removed
-
-Your note: "just get rid of the cat, it looks really bad." The walking cat, its sequence, the seven
-watching cats and the rig scripts are gone (they stay in the git history if you ever want them
-back). Your Fab download itself is untouched in Content/Fab. The bugs, bats, crows, owl and flock stay.
-
-### Fewer bugs at the lights, bugs around you, many more birds
-
-![Bugs and birds](2026-11-05_bugs_birds_more.png)
-
-Your notes: only two or three bugs around a light, bugs around the screen, more birds flying and
-more swarms in the sky, and birds must fly away when you get close.
-- Moths: 2-3 per light (13 in all, was 30).
-- Bugs around you: 45 drifting specks and 4 moths in a field that wraps round the player wherever you
-  go (a new shader mode), so something is always floating past the camera, mostly seen in the flashlight.
-- Birds: 6 flocks (77 birds) circling over the lake, the woods, the motel and the road at different
-  heights and speeds, plus 8 crows gliding low in wide circles; 35 perched crows (15 on lamps, roof,
-  fence, payphone, dumpster; 20 on the ground along the trail and at the clearings).
-- Fly-away: perched crows lift off from ~12 m (was 9), and any flying bird you walk under climbs away.
-Shots: specks in the lot and woods, the lake flock, two moths and a bat at the lot lamp; bottom: two
-crows on the trail from 18 m, gone when you walk up.
-
-### Smaller bugs, hardly any glow
-
-![Small dim bugs](2026-11-05_bugs_small_dim.png)
-
-Your notes: make all the bugs smaller and not glow; only a few with light, and very dim. Moths and
-fireflies are half size, gnats 60%, the floating specks a third of before; moths, gnats and specks are
-darker so they don't read as glowing dots. Only about 1 firefly in 8 (26 of 192) still glows, at a
-twentieth of the old brightness; the rest are plain dark bugs.
-
-### Bugs don't shine in the flashlight
-
-![Bugs in the beam](2026-11-05_bugs_no_flashlight.png)
-
-Your note: "make them unaffected by the flashlight, it's making them glow." The bugs (moths, fireflies,
-gnats, the floating specks) are on lighting channel 2 only; the flashlight lights channels 0 and 1, so
-the beam passes over them and they stay dark little shapes in the night light. Birds are unchanged.
-
-## 2026-11-05: Motel outside, detail pass
-
-![Exterior detail](2026-11-05_exterior_detail.png)
-
-Your notes: the sign is perfect, leave it; everything else outside more high poly and detailed,
-including the parking lot and the car; make all the lamp posts the cool colour of the one on the left.
-New `maya/exterior_props.py` (rooftop sign and neon cross untouched):
-- Room fronts: brick base with a concrete cap, stepped door casings with a cornice, framed windows
-  with inner stops, a middle bar and a sloped sill, number plates with screws, through-wall AC units
-  (louvres, vents, brackets, a drip stain) under four windows, doormats.
-- Doors: real panelled doors (six raised panels each side, brass knob and backplate, peephole, kick
-  plate, hinges) replace the plain slabs; they still swing on E (`place_clues.py` uses the new mesh).
-- Awning: a rippled corrugated roof, fascia, gutter and downspouts, steel posts with base plates,
-  bolts and knee braces, walkway expansion joints. Plastic patio chairs with slats, arms and feet.
-- Office: brick cap, door cornice, window mullions and sill, gutter. ICE machine: bevelled cabinet on
-  legs, lit sign, steel door with handle and hinges, vent, coin plate.
-- Lamp posts: concrete footing, bolted flange, tapered pole, curved arm, cobra head with a lens; all
-  in the streetlight's cool green-white (the dead lamp stays dark).
-- Payphone: keypad, coin slot, return chute, handset on its hooks, armoured cord, shelf, lit hood.
-  Dumpster: tapered body, ribs, lifting pockets, one lid propped open on a bag, castors, more bags.
-- Parking lot: bevelled wheel stops with rebar pins, a bevelled curb, a storm drain, a manhole cover,
-  weeds in the cracks and along the curb.
-- The car: a shaped sedan body (sloped nose and trunk), glass greenhouse with pillars and a roof
-  panel, tyres with hubcaps, chrome bumpers and side trim, a grille, headlights and red tail lights,
-  mirrors, door seams and handles, wipers, plates, an aerial, an exhaust.
-Motel: ~255k -> ~333k triangles.
-
-### Door gap, a higher-resolution car and dumpster
-
-![Doors, car, dumpster](2026-11-05_doors_car_dumpster_hires.png)
-
-Your notes: a gap under the doors, the car and the garbage bin higher resolution.
-- The "gap" was the brass kick plate: the only light part of the door, right where it meets the
-  walkway. Removed, and the doors are 3 cm taller so they tuck into the frame.
-- Car: body and cabin built from twice as many cross-sections and smoothed twice; tyres with
-  rounded sidewalls and tread (48 sides), dished hubcaps (40 sides) with five lug nuts, rounder
-  bumpers, pillars, roof, mirrors and exhaust.
-- Dumpster: well-rounded body edges, ribs front and back, lifting pockets with a rim, rounder lids
-  with hinge rods, smoother castors and bags.
-Motel now ~515k triangles (most of the new ones are the car).
-
-### A more realistic parking lot and car
-
-![Lot and car](2026-11-05_lot_car_realism.png)
-
-Your note: "make the parking lot look most realistic, and the car too."
-- Lot: one large painted asphalt surface instead of scattered crack and stain pieces
-  (`tools/make_asphalt.py`, ~4 cm per pixel, top image): aggregate grain and tone variation, darker
-  worn lanes into the stalls, an oil stain under every stall, branching cracks and crumbling
-  alligator cracking, repair patches with irregular edges and sealed seams, a puddle with a dried
-  rim, grit and dead leaves along the curb and the walkway. The road got the same (worn tyre lanes,
-  patches, cracks). The painted lines, wheel stops, drain, manhole and weeds sit on top.
-- Car: real wheel arches cut into the body with dark wheel wells, a dark underside, a slightly
-  glossy paint and chrome (new `M_PS2_Gloss`), tinted glass you can see the interior through (front
-  seats with headrests, rear bench, dashboard with a gauge hood, steering wheel, parcel shelf), and
-  real number plates ("4KJ 219").
-
-### Your car: the Fab classic car
-
-![Fab car](2026-11-05_fab_car.png)
-
-Your note: "I added a car from Fab, replace the car with that one." The Maya-built sedan is out of the
-motel build; `unreal/place_car.py` (a build_level step) puts your Fab "Low-Poly Classic Car (Free)"
-in the same stall in front of Room 104: turned so the nose faces the motel (its front is at its local
--x), lifted so the wheels sit on the asphalt (its pivot is mid-body), centred on the stall, with
-collision so you can't walk through it and Nanite off. The red tail-light glow on the asphalt stays.
-The model stays in Content/Fab (your download), not in this repo.
-
-## 2026-11-05: Black Hollow Lake
+## 7. The lake, boathouse and cabins
 
 ![The lake](2026-11-05_lake.png)
 
-Top: first pass (the water read pale grey, like fog). Bottom: now.
-New `maya/make_lake.py` (exported as its own set, `export/sets_lake.json`, which `import_sets.py`
-now merges with the motel's):
-- A real shore: one ground sheet sloping down into the lake along a wavy edge, with a point of land at
-  the dock so the trail ends on solid ground; dry forest floor, wet mud at the waterline, a dark bed.
-  The flat blockout ground now stops at the shore, and the old black lake plane and box dock are gone.
-- Water 45 cm below the shore: dark, a faint slow ripple, a little gloss so the dock lantern lays a
-  red streak on it (`M_PS2_Water`). Low mist banks drifting over it, fading where they meet the
-  ground (`M_PS2_Mist`).
-- The dock: weathered planks with gaps (a few missing, one broken and sagging), stringers on pilings
-  with cross bracing, cleats, a coil of rope, a swim ladder going down into the water, and a red
-  lantern on a post at the end (its light reflects on the water: the red-light theme).
-- A split-rail railing along the shore where the trail comes out, with a gap onto the dock; the red
-  canoe moored by the dock with a line to a cleat, a paddle inside; reeds and cattails along the edge,
-  rocks, and a fallen tree lying out into the water.
-Boathouse and cabins come next (their own plan rows).
+A real shore, dark water with mist, a low dock you can walk onto, a far rowboat. The
+boathouse (padlocked, signs someone was here recently) and three log cabins (two boarded,
+one open where Cas slept). Final pass on Nov 14: realistic anchor and chain, bench, toolbox,
+lantern, shelves, rope, life ring and net; windows boarded on both sides.
 
-### 2026-11-05 — Lake fixes: low dock, rowboat, wavier shore
+![Boathouse](2026-11-14_boathouse.png)
 
-![Dock, now low](2026-11-05_lake_dock_low.png)
-
-The dock was 50 cm above the trail, so you couldn't step onto it. Now it sits just above the ground (deck at 16 cm) and starts on dry land, with a timber sill and two worn boards bridging the step. A railing post that stood in the middle of the dock entrance was moved to the sides of the opening. While testing I found the player could walk on top of the low mist and on the water. The water and mist are now a separate mesh with no collision, and invisible walls run along the knee-deep line of the shore and the dock's sides and end, so you can walk the dock but not into the lake.
-
-![Rowboat in the distance](2026-11-05_lake_rowboat.png)
-
-An empty rowboat far out on the lake (about 35 m from the end of the dock), one oar trailing in the water, with a very faint lantern so you can only just make it out through the mist.
-
-![Shoreline](2026-11-05_lake_shoreline.png)
-
-The water's edge now goes in and out in small coves and points (two more, shorter waves added to the shoreline curve), instead of one long smooth bend.
-
-![Rowboat lantern basically off](2026-11-05_lake_rowboat_dim.png)
-
-Rowboat lantern turned down until it's basically off: the glass is no longer glowing and the light is at 0.3. Even at 3 the glossy water still showed a bright streak under the boat. Now it's a dark shape with the smallest glint.
-
-### 2026-11-05 — Boathouse and the three cabins
-
-![Boathouse from the shore](2026-11-05_boathouse_outside.png)
-
-The boathouse, half over the water west of the dock (maya/lake_buildings.py). Grey board-and-batten walls, a rusted tin roof that sags in the middle with a loose panel and a hole near the lake end, pilings standing in the water. The lantern inside glows through the gaps at the lake end.
-
-![The padlocked door](2026-11-05_boathouse_padlock.png)
-
-The way in from land: a plank door with strap hinges and a hasp with a new brass padlock. It needs the boathouse key ("Padlocked. The lock is new. Everything else here is rotting."), so it's abandoned, locked, and recently used all at once.
-
-![Workbench](2026-11-05_boathouse_bench.png)
-
-Inside: the workbench with a vise, hammer, wrench, a can of nails and a saw on the wall, and the signs someone was here recently: an open red toolbox and a kerosene lantern still burning low (a small warm light). The boat slip runs down the middle (you can't fall in, invisible walls).
-
-![East walkway](2026-11-05_boathouse_walkway.png)
-
-The east walkway: muddy footprints from the door to the slip, a new coil of rope, a life ring on the wall, the tarp pulled half off a crate, and the half-sunk rowboat in the slip.
-
-![Cabin 2, the open one](2026-11-05_cabin2_outside.png)
-
-The cabins are log cabins on stone piers, porches facing the lake, with shingle roofs, railings and two steps. Cabin 2 (nearest the dock) is the one you can go into: grimy glass in the windows, one boarded from inside, a stove pipe through the roof, and a plank door that opens.
-
-![Cabin 1, boarded](2026-11-05_cabin1_boarded.png)
-
-Cabins 1 and 3 are boarded up: the door nailed shut with boards across, every window boarded (with a dark backing so you never see into an empty house), a stone chimney, a missing row of shingles, broken porch boards, a chair tipped over.
-
-![Cabin 2 bunks](2026-11-05_cabin2_bunks.png)
-
-Inside cabin 2 (all on the room lighting channel, so only the flashlight lights it): a bunk bed with Cas's green sleeping bag and a rolled flannel for a pillow on the bottom bunk, her backpack on the floor.
-
-![Cabin 2 table](2026-11-05_cabin2_table.png)
-
-The table with Cas's lake map (the boathouse marked) and a torn page, a candle stub, a tin cup and matches. The boathouse key (test clue) lies on the map. Also a wood stove, a rag rug, a shelf of cans, a hanging lamp and cobwebs.
-
-Fix found on the way: since the lake got its own set file, the import had stopped passing on which meshes are "room insides", so Room 104's insides had lost their own lighting channel. The import now merges that list too.
-
-### 2026-11-05 — More realistic bedding, boathouse and boats
-
-![The boat in the slip](2026-11-05_boathouse_boat_fixed.png)
-
-The boat in the boathouse looked underwater: I had sunk it on purpose, and the inside of every hull was really a solid block, so they looked filled up. Now the hulls are truly hollow (an outer shell with the top cut away plus a thinner inner shell facing in), the boat floats, tied off at the bow, and you look down into it: ribs, floorboards laid just above the waterline (so the lake never shows inside), seats, oarlocks, keel, stem, transom, an oar and a bailing can. The canoe and the far rowboat got the same hollow hull. The plank that sat in front of the boat (meant as a fallen boat door) is gone; the remaining door is now a proper plank door hanging open on its strap hinges, with the empty hinge pins where the other one was.
-
-![Sleeping bag](2026-11-05_sleeping_bag.png)
-
-Cas's sleeping bag: a quilted shell with sewn channels, the top corner unzipped and folded back showing the red flannel lining, the zipper down the side with its pull, the hood bunched with a drawcord, the empty stuff sack at the foot.
-
-![Bunks with bedding](2026-11-05_cabin2_bunks_bedding.png)
-
-Both bunks now have fitted sheets (the mattress ticking showing at the bottom edge) and real pillows, and the top bunk has a grey wool blanket turned down. The bunk was moved a little off the walls so the blanket can hang over the side rails.
-
-![Pegboard and bench](2026-11-05_boathouse_pegboard.png)
-
-The workbench got a pegboard with hanging tools (hammer, screwdrivers, wrench, hand saw, wire, pliers), a proper vise, a jar of screws, a coffee can full of nails, an oily rag, a hand drill, and a cantilever toolbox with both trays open.
-
-![Shelves](2026-11-05_boathouse_shelves.png)
-
-New shelves on the east wall: paint cans with drips and handles, jars and bottles, stacked rags, a red gas can, a bucket. Also new: fishing rods and a landing net in the corner, two oars stored across the roof beams, an anchor with its chain, life jackets shaped like vests with straps and buckles, a net with floats hung on nails, the life ring with tape bands and a grab line, a slatted crate with the tarp draped over it, and boot-shaped muddy prints.
-
-![The lantern](2026-11-05_boathouse_lantern.png)
-
-The lantern is now a hurricane lantern (tank, burner, glass globe with the flame inside, wire guard, cap, bail handle). From the door you see its glow on the bench.
-
-Plain untextured colours were washing out to near-white in the flashlight, so the new materials all have textures with darker tints now.
-
-## 2026-11-06: boats ride higher, no more "slab"
-
-![Boat fix, before (left) and after (right)](2026-11-06_boathouse_boat_fix.png)
-
-Feedback: "the boat is still underwater and there's a weird slab of wood behind it". The boats were only about 30 cm above the water with the floor right at the waterline, so they looked swamped. The hulls are now taller, with about 45 cm of side above the water, and the floors sit higher. The "slab" was the flat, squared-off stern of the hull, which looked like a loose board when the flashlight hit it. The boathouse boat and the far rowboat now come to a point at both ends, with a stern post, and the seats were narrowed to fit inside the hull. The canoe was raised the same way.
-
-## 2026-11-06: first pass at the office, the other rooms and the trail
-
-You asked for a first pass at every remaining structure, to review them all together afterwards. These are the shots I checked them with.
-
-![Office](2026-11-06_office_first_pass.png)
-
-**Office** ("someone just left"): front counter with a bell, the open guest book and a pen, and the flap lifted. Behind it are the desk (lamp on, radio on, a cigarette still burning, a coffee mug), the swivel chair pushed back, the key board with 104's hook empty, and a bookcase of old guest books with three red lanterns on top. The lobby has a couch under the window, a coffee table, a coffee station, a brochure rack and the framed photo of red lanterns on the lake. Through a door left ajar is the owner's back room with a cot, a TV that's still on, a hot plate, and a coat and boots. The first shots were too bright and orange, so the lamps were turned down and the wood panelling darkened.
-
-![Rooms](2026-11-06_rooms_102_103_105_106.png)
-
-**Rooms** (bottom right of the office sheet is 101): 101 was left in a hurry (spilled suitcase, drawer on the floor, lamp knocked over, teddy bear, key on the carpet). 102 was barricaded and then broken into (dresser dragged to the door, chair tipped over, phone off the hook). 103 is a renovation that stopped (bare bed frame, mattress against the wall, dust sheets, ladder, paint). 105 has water damage (ceiling panel hanging down, debris, a bucket, stains). 106 is the next guest (duffel bag, meal tray, and a red lantern on the nightstand).
-
-![Gate and shack](2026-11-06_gate_and_shack.png)
-
-**Back gate**: a chain-link fence with barbed wire along the back of the motel. The gate is chained with a new padlock and has a NO TRESPASSING sign. It's a locked door that needs the back gate key; for testing, that key is on the office desk. **Hunter's shack**: board walls, a tin roof, the door hanging off one hinge, a red lantern burning on the porch post. Inside are a cot with a sleeping bag (someone slept here), a candle stub and cans, antlers, an empty gun rack, traps, a pelt and a small stove.
-
-![Car and tower](2026-11-06_car_and_tower.png)
-
-**Rusted car**: an old sedan sunk into the ground, rusted, windows gone, the driver's door hanging open, weeds and vines, its tail lights still glowing red. **Lookout tower**: four braced legs, six flights of stairs with landings and handrails, and a cabin 11 m up with windows all round and a table for a clue. An automated walk climbed all six flights to the top without getting stuck (the first try caught on low braces and a floor joist, both fixed).
-
-![Office, second pass](2026-11-06_office_room_theme.png)
-
-Feedback: "the office is too plain, make it higher poly and make it go more with the hotel rooms theme". The office now uses the same striped motel wallpaper and patterned carpet as the rooms, over raised-panel wood wainscoting with a chair rail, baseboards and crown moulding. The window has the rooms' casing, sill, brass rod and curtains. The front door and the back-room doorway are cased in wood. The lobby has one of the rooms' lamps on an end table, a dead plant, the motel painting over the couch, and the rooms' ceiling fan with its light. The furniture is more detailed: a panelled counter with a rounded top and a brass foot rail, a desk built like the rooms' dresser with brass drawer pulls, a tufted couch on turned feet, a coffee table with turned legs, and a bookcase with a plinth and crown.
-
-## 2026-11-07: the rooms, the ceilings, the office back room and couch
-
-![Rooms, ceiling, office lobby and back room](2026-11-07_rooms_and_back_room.png)
-
-Feedback: the back room of the office was odd, the lobby couch faced a wall, the room ceilings looked incomplete, and the rooms were low poly and weird.
-- **Rooms (all six):** crown moulding round every ceiling with a finished plaster texture and a smoke detector; a wood casing round the door inside; a closed, panelled bathroom door in the left wall. The made beds now have a fitted sheet, a real draped bedspread turned down below the pillows, and plumper pillows. Every room but 104 also got the motel painting over the bed, a mirror over the dresser, a tufted armchair by the window with a round table, a rotary phone and an ice bucket. Room 104 only got the ceiling, door and trim changes, so Cas's things stay as approved.
-- **Office lobby:** the couch is turned around, with its back to the window, facing the counter and the coffee table.
-- **Office back room:** now the owner's small living space: a made single bed with a headboard, a rug, an armchair turned to the TV (on, on a low cabinet), a stool with a mug and ashtray, a floor lamp on low, a kitchenette (cabinets, hot plate with a pan, kettle, shelf of cans), a coat rack with his coat and hat, boots, a calendar and a photo over the bed.
-
-![Fan lights in 102 and 106, 104 for comparison](2026-11-07_fan_lights_102_106.png)
-
-Feedback: "the other rooms are missing the ceiling texture that is in room 104". All the rooms already used the same ceiling material. What made 104 look different is that its ceiling fan light is on, so the ceiling is lit evenly and the fan blades cast shadows on it. You chose to turn the fan lights on only in the rooms that already look occupied: 102 and 106 (the ones with lit curtains) now have the same fan light as 104 (top left 102, top right 106, bottom right 104). 101, 103 and 105 stay dark.
-
-## 2026-11-09: fixes from the walkthrough
-
-![Walkthrough fixes](2026-11-09_walkthrough_fixes.png)
-
-After the guided tour you listed fixes, all done:
-- **103:** the mattress leans on the wall in front of the bed instead of cutting into the frame; the drop cloth on the floor is gone.
-- **101, 102, 105, 106:** the mirror over the dresser (it read as a black frame behind the TV) is removed.
-- **102:** the two white drag marks by the dresser are removed.
-- **105:** removed the fallen ceiling panel, the water under the bucket, the three streaks above the bed, the towel by the dresser and the stain on the bed.
-- **Office:** the coffee cups are a proper nested stack on the counter (they floated in a diagonal). The big neon cross in front of the office is gone; a small version hangs on the office's right wall behind the counter, near the coffee machine.
-- **Office back room:** the armchair faces the TV, the stool with the mug is on its other side (the floor lamp moved to the TV side), the coat, hat and boots are gone from the rack, and the hot plate and pan are gone from the counter.
-- **Rusted car:** the windows are dark tinted glass you can't see through.
-
-![Cross, keys, window, lamp, car, bench](2026-11-09_cross_keys_window_lamp_car.png)
-
-Second fix list (Nov 9):
-- **Neon cross:** read "YOUOUT" as one word. Now YOU and OUT have a gap between them.
-- **Key board:** framed board, brass number plates with 101 to 106 (101 on the left), cup hooks, and real keys (round bow, cut blade with teeth) with a coloured diamond fob each; 104's hook is still empty.
-- **Office back room:** the kettle is gone from the counter; the floor lamp has a proper weighted brass base.
-- **Office front:** both windows are real openings now (you can see in and out), and there's a second window between the door and the OPEN window, with its own casing, sill, mullion and blinds.
-- **Parking lot:** the middle lot lamp, which was off, is now on.
-- **Forest car:** it's now the same Fab car as yours in the lot (unreal/place_wreck.py), repainted faded dark green and rusted, with dark windows you can't see through, dark tyres, rusted chrome and rims, sunk into the ground and leaning, with weeds and vines, a fallen branch and drifts of leaves. The Maya-built car is gone. To find the window and tyre material slots I colour-tested them, because the model's slot names don't say which part is which.
-- **Boathouse:** the rag on the workbench (it read as a sheet of paper) is removed.
-
-![Lamp, blanket, OFFICE sign, black car](2026-11-09_lamp_blanket_sign_black_car.png)
-
-Third fix list (Nov 9):
-- **Office back room lamp:** the floor lamp had ended up standing inside the kitchenette counter, so it looked like a stick with no base. It now stands on the floor beside the armchair with its weighted brass base showing.
-- **Back room bed:** the blanket is one draped cloth like the rooms' bedspreads, hanging down both sides and over the foot to the floor, turned back near the pillow.
-- **Office front:** an OFFICE sign over the door: a dark board on brackets with red neon letters.
-- **Abandoned car:** black now (rusted), instead of green.
-- **Map:** the red cross in front of the office is gone from the corner map and the full map.
-
-![OFFICE sign spacing, lamp by the bed, white car trim](2026-11-09_sign_lamp_car_trim.png)
-
-Fourth fix list (Nov 9):
-- **OFFICE sign:** the letters were spaced evenly by box, so the narrow I left a gap and it read "OFF ICE". Each letter is now spaced by what it actually covers.
-- **Back room:** the floor lamp stands beside the head of the bed.
-- **Abandoned car:** the trim round the windows and body is the model's original white again (it had gone rust-gold); the rims stay rusted.
-
-![Lamp clear of the calendar, dark car trim](2026-11-09_lamp_clear_dark_trim.png)
-
-Fifth fix list (Nov 9): the back-room floor lamp covered the calendar, so it moved over toward the TV wall and stays by the bed. The abandoned car's trim (window outline, mirrors, wheel hubs) was too bright in white, so it's now just off black and barely shows against the black paint. A colour test (setting the trim slots to red) showed which parts are trim.
-
-## 2026-11-09: the ground, the lot, and filling the empty spaces
-
-![Before](2026-11-09_grounds_before.png)
-![After](2026-11-09_grounds_after.png)
-
-Feedback: the road and parking lot layout were weird, and the scene had big empty spaces. It should feel filled in so that wherever you run, you're still in the scene. You picked forest right up to the road on the far side, and thick trees plus fog at the edges.
-- **Parking lot:** it was a huge black rectangle well past both ends of the motel, sitting on bare dirt. Now it covers just the motel's footprint (maya/grounds.py, LOT in make_motel.py). It has a second row of stalls along the road side facing the rooms across a drive aisle, with wheel stops; stalls in front of the office clear of its door; in/out arrows; curbs on every side; and two driveways out to the road. The painted asphalt texture was redrawn to match (tools/make_asphalt.py), and the old grey blockout slab is gone.
-- **Roadside:** grass verges with weeds between the lot and the road, gravel shoulders, a ditch on the far side, a dented galvanized guardrail with a section missing, and wooden power poles every 35 m with three sagging wires and a service drop to the office. The lamps moved onto the lot edge and the verge.
-- **Forest fill:** 2,535 trees, bushes, dead shrubs, stumps, logs and rocks fill all the empty ground: across the road, both sides of the motel, and down both edges of the map past the scattered woods. They keep clear of the road, lot, motel, trail and lake (tools/make_fill.py writes export/fill.json, unreal/fill_forest.py plants it). Hidden walls behind the outermost trees stop you wandering off; the road disappears into fog both ways.
-- **Map:** shows the new lot outline and the new forest.
-- The grass verges first rendered as a glowing lime green under the flashlight; they're a dark, dead green now.
-
-## 2026-11-09: real grass that moves
-
-![Grass: two moments of wind (top), the player standing in it, the forest floor](2026-11-09_grass_blades.png)
-
-Feedback: the grass shouldn't be a flat texture; it should be real blades with physics that move in the wind and as you walk through.
-- **Blades:** maya/make_grass.py builds every blade as a tapered, curving strip (3 triangles: a wide base, a narrower middle, a point), each leaning and bowed its own way. Blades grow in tufts of 9 to 16, green or dry straw, and tufts make patches: thick 4 x 4 m patches (about 3,000 triangles) and looser 8 x 8 m ones for the forest floor.
-- **Where it grows:** tools/make_grass_layout.py lays out 1,087 patches: thick on the verges and road edges, in the yard behind the motel, along the trail, in the clearings and on the bank above the lake; looser over the rest of the forest floor; never on the road, the lot, the trail itself, inside buildings or on the shore. The verges under it are soil now instead of the flat grass texture.
-- **Movement:** unreal/grass.py gives the grass its own material (M_PS2_Grass) that moves every blade on the graphics card. Wind is slow gusts rolling across the field plus a quicker flutter. As you walk through, blades within about 1 m lean away from you and press down, then spring back once you've passed; it reads your position from MPC_Horror.PlayerPos, which the HUD already updates every frame. The roots stay planted and the tips move most. Top left and top right are the same view a second apart. Bottom left is looking down while standing in the grass: there's a clear circle round your feet with the blades bent away.
-- **Cost:** grass further than 45 m away isn't drawn (it's lost in the fog anyway), it casts no shadows and has no collision.
-
-## 2026-11-09: a realistic forest
-
-![Before: blocky trees and bushes](2026-11-09_forest_before.png)
-![After: tall trunks, real crowns, ferns](2026-11-09_forest_after.png)
-
-Feedback, with two reference photos (process/refs/): the trees shouldn't be big blocks but realistic, a mix of dead and alive, full, thinner and leafless; the grass was placed oddly (on concrete in places), it should only be in the forest; and you got stuck walking through the grass.
-- **What the references show:** tall straight dark trunks close together, the crowns high overhead, bare trunks below them (spruces with dead stubs); a spruce wood and a beech wood; ferns, grass and leaf litter on the floor.
-- **Trees** (maya/make_trees.py, eight kinds under the old names so every placed tree turned into a new one): full spruce, taller thinner spruce, full beech, thinner beech, a dying tree with a few brown leaves, two bare dead trees (one with its top snapped off), and a dead spruce with a few rust-brown sprays. Trunks and branches are real tapered tubes that fork into limbs, branches and twigs, with a root flare at the base. Leaves and needles are cards: flat panels carrying a leaf-cluster, pine-spray or fern picture with a see-through background (tools/make_foliage.py), two crossed per spot. Their normals point out from the middle of the crown so the foliage lights like one mass. Each tree collides only at the bottom of its trunk.
-- **Forest floor:** the blocky green bushes are now fern clumps and the dead shrubs are twiggy bushes with a few brown leaves; you walk through both.
-- **Grass:** now only on forest ground, as one even carpet: none on the road, verges, lot, yard, any concrete, the trail itself, round buildings or down the lake shore. The forest-fill dressing follows the same forest-only rule. Getting stuck: the grass patches (and the bushes) had solid collision, because my "no collision" setting hadn't stuck; they're truly walk-through now (tested by walking straight through thick grass).
-- **What went wrong on the way:** at first every leaf card drew as a solid dark square. Three causes, found one at a time: (1) the old trees carried their materials as per-tree overrides, which beat the new ones; (2) Unreal's auto-generated lower-detail versions broke the cards; (3) the foliage material copied from the PS2 surface material never applied its cut-out (a fresh material made the same way works). So the leaves use a freshly built material, M_PS2_Leaves. Because only the copied material could carry the wind movement (Unreal's Python can't connect that input on a new material), the trees stand still; the grass still sways and parts around you.
-
-## 2026-11-10: no ferns, concrete by the road, one ground colour
-
-![Concrete strip and matching ground](2026-11-10_concrete_and_ground.png)
-
-Feedback: remove the fern clumps (you didn't like their shape); the dirt between the road and the lot should be concrete; the dark brown dirt round the motel and office should match the forest dirt.
-- **Ferns:** gone everywhere: out of the forest fill (tools/make_fill.py) and deleted from the scatter tool's woods when the forest is planted (unreal/fill_forest.py).
-- **Road to lot:** the strip between the lot's curb and the road is concrete now, with no weeds on it (maya/grounds.py).
-- **Ground round the motel and office:** the strips beside the lot used their own darker dirt; they now use exactly the forest floor's texture and colour, so the ground runs into the forest with no seam.
-
-![One surface from the lot to the road; dirt and trail at the motel's west end](2026-11-10_lot_to_road.png)
-
-Feedback: the pale concrete strip between the lot and the road should go, with that whole strip the same surface as the lot (not just at the driveways); and the paving past the west end of the motel should be dirt and the trail.
-- The lot's asphalt now runs straight down to the road as one surface: no strip, no curb along the road, only curbs at the lot's two ends.
-- The lot now stops at the motel's west end (it used to run 4 m past it), so beyond it is forest floor leading to the trail. The asphalt texture (it was also drawn off-centre after the last resize) and the map's lot outline were redrawn to match, and that lamp moved in onto the lot.
-
-![Lot meeting the road: before (left) and after (right)](2026-11-10_lot_road_one_surface.png)
-
-Feedback: the strip should match the road and the lot so it all reads as one piece, and there was a small gap between the road and the strip. Fixes: the lot's painted asphalt now reaches the road's edge exactly (the separate plain strip and its 10 cm gap are gone) and lies at the same height as the road; both use the same asphalt tone; the road texture was redrawn at exactly the lot's sharpness (3.26 cm a pixel) and neither has mipmaps, so they stay equally sharp; no white edge line or grit along that edge.
-
-![Arrows by the road](2026-11-10_arrows_by_road.png)
-
-Feedback: the in and out arrows should be closer to the road so you see them early when driving. They now sit at the lot's road edge, between the road and the front row of stalls (in on the west driveway, out on the east one).
-
-![Trail from the road](2026-11-10_trail_to_road.png)
-
-Feedback: the trail beside the motel should connect to the road. The trail now starts at the road's edge and runs past the west end of the motel straight into the old trail toward the back gate (layout.json, so the map, grass and forest all keep clear of it too).
-
-![Gap between the trail and the roadside path: before (left), after (right)](2026-11-10_trail_meets_shoulder.png)
-
-Feedback: there was a small space between the trail and the path along the road. The gravel shoulder on the motel side of the road stopped 6 m short; it now runs right up to the lot, across the foot of the trail, so the two join.
-
-## 2026-11-10: grass on every bit of ground
-
-![Grass everywhere: by the motel, the lake bank, the shack, a cabin, the tower, by the office](2026-11-10_grass_everywhere.png)
-
-Feedback: grass should cover every part of the ground texture with no missing bits, fade out slowly toward the lake rather than stop, and still grow all round the lookout tower, the hunter's shack and the cabins.
-- tools/make_grass_layout.py now lays big 4 m patches wherever they fit, then fills every gap they leave with small 1.5 m patches (new grass_small_A/B in maya/make_grass.py): along the trail, the lot, the road shoulder and the buildings. 6,558 patches in all.
-- It grows on the ground beside the motel and office too, not only in the forest. It stays off only the road, its shoulders and ditch, the lot, the motel, the office and the trail itself.
-- Round the shack, the cabins and the boathouse it now grows right up to the walls (only their floors and steps are kept clear, so blades don't poke through), and under the lookout tower everywhere except its stairs.
-- Down the bank to the lake it thins out gradually over the last 5 m, each patch sitting on the slope, the last tufts at the water.
-
-![Fence all round the motel](2026-11-10_fence_all_round.png)
-
-Feedback: the fence was missing round the office and on the other side of the motel; it should be complete. The chain-link fence now runs behind the motel and the office (gate where the trail goes into the woods, as before) and down both sides to the road shoulder, so it encloses the motel, the office and the lot (maya/make_trail.py fence(); the map shows it too).
-
-![No grass inside the fence](2026-11-10_no_grass_inside_fence.png)
-
-Feedback: no grass blades inside the fence. The grass layout now leaves out everything inside the fence round the motel and office; outside it the carpet is unchanged.
-
-![Trees clear of the fence](2026-11-10_trees_clear_of_fence.png)
-
-Feedback: the fence ran through some trees. The forest fill now keeps 3 m clear of the fence on every side (tools/make_fill.py), and unreal/fill_forest.py also pushes any tree, stump, log or rock (including the scatter tool's woods) that is still too close straight out, away from the fence.
-
-## 2026-11-10: the road is closed; a real NO TRESPASSING sign
-
-![ROAD CLOSED gate, NO TRESPASSING sign](2026-11-10_road_closed_and_sign.png)
-
-Feedback: on the left side of the map (facing the road), add a ROAD CLOSED sign and a little gate so the player can't go any further, realistic and maybe lit, the sign falling off its chain a bit; and make the NO TRESPASSING sign more realistic.
-- **Road closed** (maya/make_trail.py road_closed(), 76 m east of the motel): a galvanized pipe swing gate across the road, two leaves on heavy posts with red-and-white striped boards, chained together with a padlock; an amber warning lamp flashing on each post; a few traffic cones, one knocked over. The ROAD CLOSED sign hangs from the gate by two chains, one snapped and dangling, so the sign has swung down at an angle. An invisible wall behind it (set_trail_block) runs from the south edge of the map into the woods; a walking test stopped at the gate.
-- **The signs** are painted pictures now (tools/make_signs.py) instead of blocky letters: white aluminium sheets with a border, faded, grime splashed up the bottom, rust bleeding from the bolt holes, scratches, dents, bullet holes. NO TRESPASSING / PRIVATE PROPERTY / VIOLATORS WILL BE PROSECUTED in red and black; ROAD CLOSED in black with cracked reflective sheeting. The fence sign has a metal backing, bolts with washers, wire ties through the chain link, hangs a little crooked with a corner bent back.
-
-![Sign clear of the road](2026-11-10_road_closed_sign_clear.png)
-
-Feedback: the ROAD CLOSED sign went into the ground. Its low corner reached about 4 cm below the road; the sign is a little smaller (100 x 62 cm), tips less (18 degrees) and is hung so its lowest corner stays about 10 cm off the road.
-
-![Fog past the gate](2026-11-10_edge_fog.png)
-
-Feedback: very thick fog on the right side of the road (facing the motel) so you can't see past the parts we haven't built. unreal/edge_fog.py puts two rows of Local Fog Volumes just past the ROAD CLOSED gate, from the south edge of the map up into the woods: a softer row right behind the gate, a solid one behind that. The gate stays clear; beyond it the road and trees vanish into grey.
-
-![Fog at every unbuilt edge](2026-11-10_edge_fog_all_round.png)
-
-Feedback: the fog should also be right behind the road sign and at every part of the map we didn't build. unreal/edge_fog.py now builds fog walls (204 Local Fog Volumes, three rows each, soft to solid, tall enough to swallow the treetops) right behind the ROAD CLOSED gate, along the east and west edges (the road runs into fog both ways), along the south edge past the woods across the road, and far out on the lake past the rowboat. Pictured: behind the gate, the west end of the road, the woods across the road, the lake from the dock.
-
-Feedback: a cone at the ROAD CLOSED gate went into the road. That was the knocked-over cone; it is removed (three standing cones remain).
-
-## 2026-11-13: the tower can see the lake; leaves, needles and sticks on the forest floor
-
-![Tower view before and after](2026-11-13_tower_view_before_after.png)
-
-Feedback (left open from Nov 9): the view from the lookout tower was blocked by trees. The new realistic trees are 16-28 m tall and the tower cabin is 11 m up, so from the cabin you looked straight into trunks and crowns. Real fire lookouts keep a sightline logged clear, so a wedge of woods between the tower and the lake has been cut: layout.json "tower_view" (aimed at the dock, 20 degrees each side plus 4 m so no crown hangs in), tools/tower_view.py decides what is in it. The 16 trees in it are gone; a sawn stump stands where each one was, with brush piles and fallen branches left by the loggers. The paper map no longer draws those trees.
-
-![Tower view in game](2026-11-13_tower_view_ingame.png)
-![The cut from the ground](2026-11-13_view_cut_from_ground.png)
-
-In game from the tower cabin: the dock's red lantern, the dock, the railing and the lake through the fog. From the ground the cut is an open clearing with stumps and brush piles.
-
-![Trail before and after](2026-11-13_trail_before_after.png)
-![Trail with the flashlight](2026-11-13_trail_flashlight.png)
-
-The trail was a flat, hard-edged pink strip. Now it is packed dirt with leaves trodden into it (textures/trail_leaves.jpg, drawn by tools/make_litter.py), and patches of fallen leaves lie across both edges every metre or so, half on the path and half off, so the edge is ragged and leaf-covered with the grass coming up to it. Now and then a drift of leaves lies across the middle.
-
-![Forest floor before and after](2026-11-13_forest_floor_before_after.png)
-![Leaf patches from above](2026-11-13_litter_patches_from_above.png)
-![Forest floor with the flashlight](2026-11-13_forest_floor_flashlight.png)
-
-The forest floor was bare pale soil with grass. First try: patches of fallen leaves (flat see-through cards) on their own. From above they read as separate round spots on bare ground (middle picture). So the ground texture itself is now leaf-covered soil (textures/forest_litter.jpg: the forest-floor photo, darker, almost covered in leaves and needles; MI_Ground in textures.json), and the patches stay on top as thicker drifts: needles under the pines, leaves under the others. Sticks, forked sticks, little bundles and the occasional big fallen branch lie around (never on the trail). No ferns (you didn't like their shape).
-- tools/make_litter.py: the leaf / needle patch pictures and the trail and ground textures
-- maya/make_floor.py: the leaf / needle cards, sticks, fallen branch, sawn stump, brush pile (export/floor/*.fbx)
-- tools/make_floor_layout.py: where everything goes (export/floor.json: 4174 pieces)
-- unreal/forest_floor.py: imports and places them, takes the trees in the view out (build_level.py step after trees.py)
-
-## 2026-11-13: the fence runs along the road, so the back gate is the only way into the woods
-
-![West run from the road](2026-11-13_road_fence_west.png)
-![East run to the ROAD CLOSED gate](2026-11-13_road_fence_east.png)
-
-Feedback (open since Nov 6): the fence round the motel stopped at the road, so you could walk along the road past either front corner and into the woods without the back gate key. Now the fence turns at both front corners and runs along the woods side of the road (maya/make_trail.py fence(), same chain link and barbed wire): west into the fog and the map's west wall, east right up to the ROAD CLOSED gate, whose invisible wall starts where it ends. Tested with sphere sweeps the size of the player every metre along both runs and at both ends: no gaps. 18 trees, logs and stumps that stood in or against the new fence were moved a few metres back into the woods (unreal/fill_forest.py now does this on rebuilds too).
-
-![The map](2026-11-13_map_road_fence.png)
-
-The paper map draws the new fence along the road on both sides of the motel (not across the lot's front).
-
-## 2026-11-14: sign-off tour, then Room 101 and two motel-wide fixes
-
-Walked the six areas still waiting for a look (rooms 101-106, office, lot and road edges, shack, rusted car, boathouse and cabins). Found on the way: a tree trunk grows through the inside of cabin 2 (not fixed yet). Then the bedrooms, one at a time, starting with 101.
-
-Two notes for every room:
-- **The "oil" stain under the AC units** was a near-black disc on the walkway. Condensation from a window AC is water, so it's now a thin, flat, irregular patch of the walkway's concrete, darker as if wet (exterior_props.py damp_patch(), MI_PS2_ac_wet_mat = concrete texture at half brightness), plus a faint rust streak down the wall from a bracket.
-- **No bugs inside the rooms.** The specks and moths that float around the player follow you indoors; the critter shader now shrinks any of them to nothing while it's inside the motel rooms or the office (unreal/critters.py MOVE_HLSL).
-
-![The damp patch under Room 101's AC](2026-11-14_ac_damp_patch.png)
+## 8. The other rooms and the office
 
 ![Room 101 before](2026-11-14_room101_before.png)
-![The old armchair](2026-11-14_armchair_before.png)
-
-Room 101 notes: the chair, suitcase and clothes didn't look real; the suitcase went through the nightstand; the dropped drawer sank into the floor; white things under the bed.
-
 ![Room 101 after](2026-11-14_room101_after.png)
 
-- **Armchair** (every room that has one, plus the office back room): rebuilt as one solid upholstered chair: boxed base with a pleated skirt, arms that are part of the body with rolled tops, a seat cushion sitting inside the arms with piping, a rolled back with a tufted cushion resting on the seat, tapered legs. The old one was soft lumps with a gap between back and seat.
-- **Suitcase**: a real open hard-shell case at the foot of the bed, clear of the furniture: hollow shell with a fabric lining, rim seal, latches, handle, feet; the lid opened right back flat on the carpet with elastic straps and hinges. A folded sweater still inside, a flannel shirt half pulled out over the side onto the floor.
-- **Clothes**: the four flat blobs are gone; jeans dropped on the floor (waistband, button, two legs with creases). A dropped sweater was tried and cut: it read as a heap of blobs.
-- **Drawer**: a real open drawer (front with knob, sides, back, bottom) sitting flat on the carpet beside the nightstand, papers and a pen spilled; the nightstand now has a dark empty slot where it came from.
-- **Under the bed**: the knocked-over lamp (the white shapes) is removed.
+Each room tells a small story: 101 left in a hurry, 102 barricaded then broken into, 103 a
+renovation that stopped, 105 water damage, 106 the next guest. The office: "someone just
+left" (cigarette still burning, guest register open, 104's key missing from the board).
+Reviewed room by room on Nov 14, with two rules for everything:
+- **Props must look like the real thing** (armchair, rotary phone, Bible, ladder, duffel...).
+- **Nothing may cut into anything else** (checked up close from several angles).
 
-### Room 101, second pass
+![The office](2026-11-14_office.png)
 
-![Folded clothes in the suitcase, and the new phone](2026-11-14_room101_suitcase_phone.png)
+## 9. On the trail
 
-Feedback after the tour: "I don't like the clothes, just put some folded fabric inside the suitcase, and make the phone on the table more realistic."
-- The jeans on the floor and the shirt spilling out are gone; the suitcase now holds neatly folded clothes (two stacks and a pair of folded jeans).
-- **Phone** (Rooms 101, 105, 106): a 1960s desk rotary like the Western Electric 500: a rounded body whose top slopes to the front, a tilted finger-wheel dial with ten holes, a number card and a finger stop, the handset (receiver and mouthpiece cups joined by the handle) lying across two cradle shoulders with the hook-switch buttons between, a real coiled cord (a helix of short tubes, motel_interiors.py coil_cord()), rubber feet and a line cord off the back.
+![Shack](2026-11-14_shack.png)
 
-### Rooms 102 and 103
+The hunter's shack (Cas camped here: cot, stove, traps, antlers, woodpile and axe outside),
+the rusted car with its tail lights still glowing, and the climbable lookout tower.
 
-![Before](2026-11-14_rooms102_103_before.png)
-![After: 102 phone and Bible, 102 dresser, 103 ladder, paint tray, dust sheet](2026-11-14_rooms102_103_after.png)
+## 10. Playing it: the map and the on-screen text
 
-- **Every room**: the nightstand's lower open shelf is now a second drawer matching the top one (Room 101 keeps the top drawer missing).
-- **102**: the phone is the same rotary as 101, knocked off the hook: the base sits on the nightstand with an empty cradle and the receiver hangs down the front on its coiled cord, clear of the nightstand. The lamp moved to the right so it no longer stands in the phone (rooms 103 and 105 too). The Bible on the bed is a real book now: black leather covers, a rounded spine with raised bands, gilt page edges, a red ribbon. The tipped chair that read as a broken drawer is gone; instead one drawer lies on the floor in front of the dragged dresser, and the dresser has a dark empty slot where it came from.
-- **103**: a proper wooden A-frame step ladder (flat rails, four treads, rear legs with braces, top cap, paint shelf, metal spreader bars, rubber feet, old paint drips); a real paint tray (paint well, ribbed ramp, rolled rim, feet) with a paint roller resting in it (fluffy cover, bent wire frame, red grip), moved out from under the bed frame. The dust sheets over the dresser and the TV were cutting into the furniture at the top edges; dust_sheet() now folds exactly at the edges with a 1.5 cm margin and its folds only push outward.
+![Cas's map](2026-11-14_cas_map.png)
 
-### Room 102, second pass
+- **Cas's map:** redrawn to look hand-drawn, following my references (hand-drawn hiking
+  maps): black pen on a torn sketchbook page, her notes and arrows. You don't start with it.
+  It lies on the ground by your car: the first message is *"There's something on the ground
+  by the car. I should see what that is."* Picking it up opens it with *"This is Cas's
+  handwriting. It looks like she made a map of this place."* After that, M opens it full
+  screen and a torn scrap of it sits in the corner.
+- **Messages** are first person, the character talking, in the map's handwriting font.
+  Prompts sit on a torn paper scrap instead of a grey box.
+- **Movement:** faster running, and the flashlight flickers without jolting the camera.
 
-![The Bible and the dropped drawer](2026-11-14_room102_bible_drawer.png)
-
-Feedback: the Bible should look like a real one, with a cross and "Holy Bible"; you could see the floor through the dropped drawer.
-- The Bible now lies face up with a printed cover (tools/make_bible.py -> export/pic_bible_cover.png): black pebbled leather, a double gold tooled border, a gold cross, HOLY BIBLE in gold serif capitals; the spine is on the left like a real book. (First try had the picture upside down, so the cross looked inverted; turned round before it went in.)
-- The dropped drawers (102, and 101's) were built from the floor up, but the carpet is 2 cm thick, so their thin bottom sat inside it. They now sit on the carpet with a solid wooden bottom panel.
-
-### Rooms 105 and 106
-
-![Ice bucket clear of the TV, 106's nightstand, the room-service tray](2026-11-14_rooms105_106.png)
-
-- **Ice bucket** (101, 105, 106): moved 16 cm along the dresser so it no longer goes into the TV.
-- **105**: the bucket and the debris lumps (rags) on the floor are gone; the wet hole in the ceiling stays.
-- **106 tray**: a stainless room-service tray (service_tray()): thin base, low rim with a rolled edge, a raised grip at each end. Food and mug unchanged.
-- **106 nightstand**: lamp, red lantern and phone each have their own spot: phone square on the left, lantern front right with the card leaning on it, the lamp behind the lantern (its shade clears the lantern's top).
-
-### Room 106 duffel bag
-
-![The duffel bag](2026-11-14_room106_duffel.png)
-
-Feedback: make the duffel bag more realistic (it was one soft lump with a rod on top). Now duffel_bag(): an olive canvas body that slumps onto a flat base and sags a little on top, darker end panels, dark webbing straps running up both sides into two carry handles with a grip wrap, the zip open along the top with clothes showing, metal D-rings at the ends and the shoulder strap lying loose on the floor. (Gotcha: building the body by swapping the cylinder's axes turned it inside out, so it rendered as an open trough until its normals were reversed.)
-
-### Cabin 2's tree
-
-![Inside cabin 2, the tree gone](2026-11-14_cabin2_no_tree.png)
-
-Found on the sign-off tour: a tree trunk grew through the inside of cabin 2 and leaves poked onto its table. Cause: the fill forest (tools/make_fill.py) kept out of the scattered woods' box but not out of the clearings, and the cabins sit just past that box's north edge. It now leaves every clearing empty (trees by the clearing's radius + 1.5 m for their crowns), filtered at the end so the rest of the forest is unchanged. That took out 13 pieces: the two trees in and against cabin 2, a tree inside cabin 1, trees crowding cabins 1 and 3 and the front of the boathouse, and a few shrubs. Only those actors were removed in the level; the map was redrawn.
-
-### The office
-
-![Guest register, lobby sofa, the way into the back room](2026-11-14_office.png)
-
-Feedback: make the cigarettes and ashtrays, the lobby sofa and the open register more realistic; the office chair blocked the way into the back room.
-- **Ashtrays** (desk, coffee table, back room): heavy round glass (thick base, sloped wall, rolled rim, three cigarette rests), a heap of ash, stubbed-out butts (cork filters, crushed paper, charred ends); on the desk one still burning in a rest, filter out over the rim, a curl of ash and a glowing tip.
-- **Lobby sofa**: rebuilt like the rooms' armchairs: boxed base with a pleated skirt, rolled arms that are part of the body, three piped seat cushions (the middle one sagging), a rolled back with three tufted cushions, tapered legs.
-- **Guest register**: cloth-covered boards with a rounded spine, page blocks that rise from the gutter, and the spread printed as a real ledger (tools/make_guest_book.py -> pic_guest_book: GUEST REGISTER, DATE / NAME / ADDRESS / ROOM, guests in different handwriting since October, tonight's line started for 106), a red ribbon.
-- **Getting into the back room**: tested by sweeping the player's capsule (35 cm radius) from the counter flap to the back room. Four things were in the way: the swivel chair (now tucked into the desk's knee hole), papers overhanging the shelf behind the counter (shelf 20 cm deep now, papers lying flat on it), the back-room door standing open into the office across its own doorway (now swung open into the back room), and the coat rack right behind the doorway (moved into the corner). The sweep is clear now.
-
-![The register's pages, nothing cutting through](2026-11-14_register_fixed.png)
-
-Feedback: a grey shape cut off part of the register's pages and writing. It was the page block: a flat-topped box, while the printed pages dip toward the gutter, so near the middle the box stood above the pages. The page block is now a mesh whose top follows the same curve, just under the printed spread.
-
-### The office doorframe
-
-![Before (top) and after (bottom): the office entrance from inside, the camera stepping around](2026-11-14_office_doorframe.png)
-
-Feedback: "when I move the camera the frame disappears and artifacts and I can see the wall beneath it." The doorway is cut through a 20 cm wall but nothing lined the opening, so the bare plaster edge of the wall showed between the door and the casing, more or less of it depending where you stood (it read as the frame vanishing), and the neon outside leaked red round the door's 1 cm gaps. Now every doorway (office entrance and rooms 101-106) has wooden jamb liners right through the wall, 2.5 cm thick so the door's rounded edges sit inside them, a threshold so no light gets in under the door, and the casings' side pieces stop under the head piece instead of overlapping it (their front faces were in the same plane, which flickers). Checked with stepped camera shots; the faint lines left on the door are its raised panel edges catching the red neon.
-
-### The back-room doorway and the bookcase (found by recording a playthrough)
-
-![Before: frames from the user's playthrough; after: the same doorway and the bookcase](2026-11-14_backroom_doorway_books.png)
-
-Feedback: "it did not work" - so I recorded the screen while the user played (ffmpeg, 90 s) and went through it frame by frame. The flicker was on the BACK-ROOM doorway, not the entrance: its frame's inner faces sat exactly on the partition's papered ends (and the head's underside exactly on the wall above), so the wood and the wallpaper took turns being drawn as the camera moved. The frame now reaches 1.5 cm into the opening, covering the wall's end. The bookcase had the same trouble: shelves flush with the side posts' front faces and books tilted into each other; now the shelves sit between the sides, set back, and the books stand upright with a gap each side.
-
-### The hunter's shack, realism pass
-
-![The shack inside and out](2026-11-14_shack.png)
-
-Feedback: the whole interior looked far too low-poly; the woodpile and the axe outside needed to look real. Rebuilt in maya/make_trail.py (shack()), same layout:
-- **Cot**: an army folding cot: side rails, a canvas sling sagging between them (cloth), X legs with pivot bolts at both ends and the middle, rubber feet; the quilted sleeping bag and a rolled jacket for a pillow on it.
-- **Crate table**: corner posts, slats with gaps, a plank top; a candle stub with wax run down it in a puddle, a matchbox with its striker, spent matches; tin cans on the floor (rims, ribs, faded labels, one with the lid bent back and a spoon in it, one lying on its side).
-- **Antlers** over the door: a shield plaque, a bleached skull cap, two curving beams that taper, with tines.
-- **Gun rack**: shaped back board, rails of upturned hooks, the paler outline where the guns hung.
-- **Traps**: steel leghold traps hanging by their chains: semicircular jaws, the pan, flat leaf springs with eyes.
-- **Pelt**: stretched hide laced into a willow hoop, bulging slightly.
-- **Stove**: cast-iron box stove on curved legs, top plate and lid ring, door with hinges, latch and draft spinner, flue collar; an enamel coffee pot on top; split wood beside it.
-- **Outside**: the chopping block has bark sides and a sawn top with cut marks, chips round it; the axe has a forged head (thin bright bit, thick poll) driven into the block and a curved hickory handle with a knob. The woodpile is a neat stack of round and half-split logs (new firewood(): bark side bark, split face and ends pale wood), each row resting on the one below. (First try stacked them every which way; restacked.)
-
-![The cot with a motel pillow](2026-11-14_shack_pillow.png)
-
-Feedback: make the pillow like the motel rooms' and get rid of the open can on the floor. The rolled jacket is now the rooms' pillow() (plump middle, pinched seams, a head dent), and the open can with the spoon is gone.
-
-### The rusted car
-
-Feedback: get rid of the branch leaning against it, then the car is done. The fallen branch (three bark tubes in make_trail.py rusted_car()) is removed; approved Nov 14.
-
-### The boathouse, realism pass
-
-![Bench and toolbox, life jackets, net, anchor, boot prints, the shack's window from inside](2026-11-14_boathouse.png)
-
-Feedback list: anchor, life jackets, everything on the bench and in the toolbox, the shelf items, the footprints, the rope on the floor and the boat's line, the life ring and the net should look more realistic; the lantern went into the toolbox; the tarp went through the crate; the lake doors and hinges floated; the boarded windows didn't look boarded from inside (the shack's too). Rebuilt in maya/lake_buildings.py:
-- **Anchor**: an admiralty anchor: tapered shank, crown, curved arms with spade flukes and bills, a stock through the top, the ring, and its chain in real alternating links in a loose heap.
-- **Life jackets**: kapok jackets hanging by a collar loop: three stitched blocks per front panel, a back panel, padded collar, a webbing strap with a buckle, ties hanging.
-- **Bench**: a bench vise (swivel base, serrated jaw plates, screw and T bar), a mason jar of screws with a ridged lid, a labelled coffee can of nails, an eggbeater hand drill, an open cantilever toolbox with both tiers swung out on their arms and tools in the trays, and the hurricane lantern (fuel tank, wick knob, pear globe, air tubes, vented cap, bail) moved clear of the toolbox.
-- **Shelves**: gallon paint cans with rims, bails and drips, mason jars and corked bottles, folded rags, a steel jerry can with X pressings and three handles, a galvanized bucket.
-- **Footprints**: work-boot prints: a thin mud film in a boot outline with tread lugs pressed in and spatter.
-- **Rope**: the new rope is a real loose coil on the boards running to the slip edge; the boat's bow line sags from an eye on the stem to a proper cleat with figure-eight turns and a tail.
-- **Life ring**: a round cork ring with four white bands and its grab line seized at four points; **net**: diamond mesh hung on nails, cork floats on the headrope, lead weights on the footrope.
-- **Tarp**: lies on the crate top instead of cutting into it.
-- **Lake doors**: posts either side of the slip with pintle plates; the open leaf's strap hinges wrap round pins on the west post; the empty pins stay on the east post.
-- **Boarded windows** (boathouse, shack, cabins): boards overlapping outside and two or three boards nailed across the inside too, with nail heads, instead of a flat dark panel.
-
-Second boathouse pass (feedback): the tarp over the crate and the life jackets are removed; the west window by them (it had glass shards) is boarded up like the others, boards on both faces.
-
-![The shack's side window, boarded, inside and out](2026-11-14_shack_side_window.png)
-
-The boathouse is approved. Last note: board up the shack's other window (the side by the cot, which had glass shards); now boarded on both faces like the rest.
-
-## 2026-11-14: haze / bloom options for the whole game
-
-![Four looks at four spots](2026-11-14_haze_options.png)
-
-The user asked for a post-process look that makes the whole game hazy / bloomy. Each row is one option, each column the same spot (motel from the lot, inside Room 104, the woods by the trail, inside the boathouse). All four use the existing post-process volume and fog (unreal/blockout.py weather()):
-- **A, now**: bloom 6 (size 4), contrast 0.9, saturation 0.85, fog 0.18.
-- **B, soft haze**: bloom 9 with a much wider spread (size 10), contrast 0.85, saturation 0.82, a little colour fringing at the screen edges, fog 0.26.
-- **C, dreamy glow**: bloom 14, very wide (size 20), contrast 0.8, saturation 0.8, more fringing, fog 0.26: every light bleeds a big soft glow.
-- **D, thick haze**: bloom 11 (size 14), contrast 0.78, saturation 0.75, fog 0.4 starting at the camera: everything sits in milky air.
-(The M on the sign flickers, so it is dark in some shots.)
-
-![B and C with more contrast](2026-11-14_haze_contrast.png)
-
-The user liked B or C but wanted a lot more contrast. Same four spots; B and C at contrast 1.1 and 1.3 (everything else as before). More contrast gives deep blacks back in the woods and the boathouse while the lights keep their glow; in C the flashlight blows the room wall out to white.
-
-**Picked: B at contrast 1.1.** Now the game's look (unreal/blockout.py weather() and the saved level): bloom 9 with a wide spread (size scale 10), colour fringing 1.0, contrast 1.1, saturation 0.82, fog density 0.26 starting 1 m from the camera.
-
-## 2026-11-14: red lights as a theme
-
-The user chose all four ideas (the red lanterns are the town's lake ritual in the story):
-- **Trail lanterns** (maya/make_trail.py trail_lanterns()): a weathered post with an arm and brace every ~17 m along the trail from the back gate to the lake, alternating sides; a red lantern hangs from a hook with a red glow inside and its own red light (every third one flickers). One scatter tree stood right against a post (tree_dead_C_94) and was removed from the level.
-- **Lanterns on the lake** (maya/make_lake.py lake_lanterns()): 18 red paper lanterns on little wooden floats, far out on the water, with four real red lights among them.
-- **Cabins 1 and 3**: their front windows are boarded with slits now, a dim red glow shows through from inside, and a flickering red light spills onto each porch.
-- **Dock**: the red lantern at the end now flickers.
-
-Feedback after the tour: the floating lanterns on the lake are removed (lake_lanterns() is no longer called; kept in maya/make_lake.py in case). The trail lanterns, cabin glow and dock lantern stay.
-
-## 2026-11-14: faster running, no flashlight jolt
-
-- **Running**: Shift now sets MaxWalkSpeed to 800 (it was 550; walking stays 300). Python can't edit Blueprint pin values, so the character's Event Graph was copied out as text, that one number changed, and pasted back; checked all 48 nodes and 84 wires came back, compiled, and tested in Play: 300 walking, 800 with Shift held. (A backup of the Blueprint is at /Game/Horror/Backup/BP_FirstPersonCharacter_bak_nov14.)
-- **Flashlight**: the user wants it to flicker without the camera bump after it cuts out. CS_FlashHit (unreal/flashlight.py) now has zero rotation and movement, so the Blueprint still plays it but the camera doesn't move; the flicker and cut-outs are unchanged.
-
-## 2026-11-14: Cas's hand-drawn map, picked up at Room 104
-
-![The map](2026-11-14_cas_map.png)
-![Picking it up: aim, the reading screen, the corner map appearing, M](2026-11-14_map_pickup.png)
-
-The user wanted the map to look like an old, torn, hand-drawn map that Cas drew, and to be something you find in front of the motel as the first thing you do, not something you start with. Their reference: hand-drawn hiking maps (black pen on cream paper, the trail as one wobbly line, boxed and ringed landmarks, handwritten notes with arrows, a title box, a note box).
-- **tools/make_map.py** redrawn in that style: a cream sketchbook page folded in four and torn out (ragged left edge from the binding, a corner ripped off); black felt-tip wobbly lines; MOTEL boxed, 104 marked with an X and "room 104 (mine)"; cabins and shack ringed, boathouse boxed, the lookout tower drawn; notes in her handwriting ("trail starts behind the motel", "follow the red lanterns all the way down", "old lookout tower - nice view of the lake from up here", "old car - weird"); "Black Hollow Lake HIKE" title box; a north arrow; a Note box ("stay on the trail. don't go out on the water at night. - C."). First pass was more detailed (every tree, red pen, coffee rings); the user pointed at their references and asked for it more like those, then to drop "for Bug" and "(?)" and write "north" in full.
-- **The pickup** (clues.json map_cas, shape "map"): folded and wedged in Room 104's door. You start with objective "Look around the motel." and no map; 104's door won't open until you've taken it ("Something's wedged in the door."). Taking it gives the key "map", the objective "Look inside Room 104." and a journal line.
-- **HUD** (tools/make_interact_nodes.py): the corner map and the M key only work once Keys contains "map". The HUD graph was replaced by copy/paste (backup /Game/Horror/Backup/BP_HorrorHUD_bak_nov14; before: 409 nodes / 1076 wires, matched the generator; after: 415 / 1090). Play-tested end to end.
-
-Feedback: the first message should say "Find the map", and the map should lie on the ground on the right side of the car. Now the start objective is "Find the map."; the folded map (shape map_ground) lies on the asphalt just past the car's right rear wheel (-885, -2160); Room 104's door is no longer locked (that was only because the map was wedged in it). Play-tested: you can see it from the start, take it, and the corner map and M turn on.
-
-Feedback: the messages in the corner should be first person, like the character talking. Every objective and locked-door message in clues.json was rewritten in Bug's voice (e.g. "Look inside Room 104." -> "Cas marked room 104 on her map. I should check her room."; "Search the office." -> "Nobody's here. I should look around before someone comes back."). The lines are still placeholders until the story pass.
-
-![Picking up the map now](2026-11-14_map_pickup_screen.png)
-
-Feedback: picking up the map shouldn't show the grey text page, just the map, with a line like "this is Cas's handwriting, it looks like she made a map of this place". Now taking the map opens the map screen straight away (paused, like M), with "This is Cas's handwriting. It looks like she made a map of this place." under it (also the journal line); M closes it. The map screen is a little smaller and higher so the line fits under it. HUD graph swapped again (generator 436 nodes / 1150 wires, matched after paste).
-
-Feedback: her line should only show the first time. Opening or closing the map with M now clears the message, so it appears only when picking the map up opens it; later M views show just the map. Tested: pickup shows the line, close, reopen with M shows the map alone. (HUD 438 nodes / 1154 wires, matched.)
-
-![Full-screen map, and the torn corner map](2026-11-14_map_full_and_corner.png)
-
-Feedback: the map should be bigger, full screen, once the text is gone; and the corner map should have torn-paper edges too.
-- The M screen draws the sheet 96% of the screen height, centred; only while her first-time line is showing is it smaller and higher (76%) to leave room for it.
-- Corner map: tools/make_map.py frame_edge() makes export/map_frame.png (T_MapFrame): a margin of the same paper round a square hole, ragged and darkened outside; the HUD draws it round the moving map window, its hole exactly the window, feathered so they blend. The corner map is solid paper now (it was half see-through, which showed the overlap as a lighter square), the dark border rect is gone, and "[M] Map" is in dark ink.
-
-## 2026-11-14: on-screen text in Cas's handwriting font
-
-![The HUD in Ink Free](2026-11-14_handwriting_font.png)
-
-The user wanted the on-screen messages in the handwriting font used on the map. unreal/interact_setup.py now imports Windows' Ink Free as /Game/Horror/UI/FF_InkFree and makes it the face of the HUD font asset (F_HUD_Italic keeps its name, so the HUD graph didn't change). Every HUD line uses it: objectives, messages, prompts, reading pages, the journal, the map screen.
-
-![Before (top) and after (bottom)](2026-11-14_text_sharp.png)
-
-Feedback: the text looked pixelated. The HUD font was rasterised at size 10 and the HUD scaled it up 3.2x, so every stroke was blocky (Ink Free's thin strokes showed it most). Now the font renders at size 40 (F_HUD_Italic legacy_font_size) and the HUD scale is a quarter (TEXT_SCALE 0.0008): same size on screen, smooth strokes. Changing the font in place while the editor ran crashed Unreal once on the next Play ("Cast of None to FontFaceInterface"); after a restart it was fine, and the font face now loads inline (all at once) to be safe.
-
-![The prompt on a torn scrap](2026-11-14_prompt_scrap.png)
-
-Feedback: something better than the grey box around the text. The "[E] ..." prompt now sits on a little torn scrap of the map's paper (tools/make_map.py prompt_scrap() -> export/prompt_scrap.png -> T_PromptScrap), ragged and darkened at the edges, written on in dark ink (no shadow). HUD 438 nodes / 1150 wires, matched.
-
-Tried a "blown in on the wind" effect for the corner line (drift, flutter, fading wisps); the user didn't like it, so it was removed (reverted) and the corner line just appears again.
+![Map full and corner](2026-11-14_map_full_and_corner.png)
+![Prompt](2026-11-14_prompt_scrap.png)
