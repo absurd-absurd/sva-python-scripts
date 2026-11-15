@@ -125,6 +125,9 @@ def italic_font():
         t.destination_path, t.destination_name = "/Game/Horror/UI", "FF_InkFree"
         t.automated, t.save, t.replace_existing = True, True, True
         unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([t])
+        ffa = unreal.load_asset(ff)
+        ffa.set_editor_property("loading_policy", unreal.FontLoadingPolicy.INLINE)   # all loaded up front
+        lib.save_loaded_asset(ffa, False)
     face = "/Script/Engine.FontFace'/Game/Horror/UI/FF_InkFree.FF_InkFree'" if lib.does_asset_exist(ff) else \
         "/Script/Engine.FontFace'/Engine/EngineFonts/Faces/RobotoItalic.RobotoItalic'"
     cf = font.get_editor_property("composite_font")
@@ -132,6 +135,7 @@ def italic_font():
     fallback = text[text.index("FallbackTypeface="):]
     cf.import_text(f'(DefaultTypeface=(Fonts=((Name="Regular",Font=(FontFaceAsset="{face}")))),{fallback}')
     font.set_editor_property("composite_font", cf)
+    font.set_editor_property("legacy_font_size", 40)   # rendered big and scaled down by the HUD (TEXT_SCALE): sharp, not pixelated
     lib.save_loaded_asset(font, False)   # save even if Unreal did not mark it changed
 
 

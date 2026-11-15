@@ -1033,3 +1033,7 @@ Feedback: the map should be bigger, full screen, once the text is gone; and the 
 ![The HUD in Ink Free](2026-11-14_handwriting_font.png)
 
 The user wanted the on-screen messages in the handwriting font used on the map. unreal/interact_setup.py now imports Windows' Ink Free as /Game/Horror/UI/FF_InkFree and makes it the face of the HUD font asset (F_HUD_Italic keeps its name, so the HUD graph didn't change). Every HUD line uses it: objectives, messages, prompts, reading pages, the journal, the map screen.
+
+![Before (top) and after (bottom)](2026-11-14_text_sharp.png)
+
+Feedback: the text looked pixelated. The HUD font was rasterised at size 10 and the HUD scaled it up 3.2x, so every stroke was blocky (Ink Free's thin strokes showed it most). Now the font renders at size 40 (F_HUD_Italic legacy_font_size) and the HUD scale is a quarter (TEXT_SCALE 0.0008): same size on screen, smooth strokes. Changing the font in place while the editor ran crashed Unreal once on the next Play ("Cast of None to FontFaceInterface"); after a restart it was fine, and the font face now loads inline (all at once) to be safe.
