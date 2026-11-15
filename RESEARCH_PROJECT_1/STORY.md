@@ -10,13 +10,20 @@ records are in the office. The red lanterns were their way of keeping it asleep;
 still lights them every year and won't say why. The road is closed.
 
 ## Cas
-Cassidy "Cas" Byrne. Her mother vanished at the lake in 1997. Cas researched it for years
-without telling her best friend (you, "Bug"), then came here a year ago to get her back.
+Cassidy "Cas" Byrne. Her mother, **Eileen Byrne**, vanished here in **October 1997** (room 104).
+Cas researched it for years without telling her best friend (you, "Bug"), then came here in
+**2001** to look for her, stayed in room 104, and went missing.
+
+## Timeline
+- **Oct 17, 1997:** Eileen Byrne checks into room 104 and is never seen again ("104 - kept").
+- **2001:** Cas comes to the motel to find her mother and disappears.
+- **2002 (the game):** a year later, you (Bug) come looking for Cas.
 
 ## The clue trail
 1. **Cas's map**, on the ground by your car, in her handwriting (built).
 2. **Room 104**: her wall is all about her *mother*. She never told you.
-3. **The office**: the researchers' records, and her mother's name in the 1997 guest register.
+3. **The office**: the guest register, left open at 1997: *Eileen Byrne - Rm 104*, the next days
+   blank, and "104 - kept" in pencil under her name. Then the researchers' records.
 4. **The shack**: Cas's notes get stranger, and halfway through **the handwriting changes**.
    It's not hers anymore (second font).
 5. **The boathouse**: her boots by the water; the last notes signed "Cas" in the wrong handwriting.

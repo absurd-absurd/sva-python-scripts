@@ -92,10 +92,10 @@
       "id": "guest_book",
       "shape": "book",
       "at": [3450, -1340, 109], "yaw": -10,
-      "title": "Guest book",
-      "body": "[TEST GUEST BOOK]\n\nYears of names in different pens. One name in every year is circled in red.\n\nLast October: Room 104 - C. Byrne. Circled.",
-      "journal": "The guest book has Cas's name circled in red. One name is circled every year.",
-      "objective": "Her name's circled. I need to find that trail behind the motel."
+      "title": "Guest register",
+      "body": "MARROW FALLS MOTEL - GUEST REGISTER\n\nOct 14 1997 - D. Hollis - Rm 102 - 2 nights\nOct 15 1997 - The Carvers (2) - Rm 106 - 1 night\nOct 17 1997 - Eileen Byrne - Rm 104 - 1 night\nOct 18 1997 -\nOct 19 1997 -\nOct 20 1997 -\n\nBelow her name, in pencil, in a different hand:\n\n104 - kept.",
+      "journal": "Her mom's name is in the motel's register: Eileen Byrne, October 17, 1997, Room 104. Someone wrote 'kept' under it. Nobody checked in after her.",
+      "objective": "Her mom's name. October 1997. Room 104. Someone wrote 'kept' under it. There might be more in this office."
     },
     {
       "id": "key_backgate",
