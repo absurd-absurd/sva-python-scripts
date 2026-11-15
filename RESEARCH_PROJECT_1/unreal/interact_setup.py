@@ -161,12 +161,12 @@ def main():
     add_vars(hud, [("Focus", BPL.get_object_reference_type(BPL.generated_class(ex))),
                    ("Reading", b), ("JournalOpen", b), ("ReadTitle", s), ("ReadBody", s),
                    ("Journal", s), ("Keys", s), ("Objective", s), ("Toast", s), ("ToastTime", r),
-                   ("Gap", s), ("MapOpen", b),
+                   ("Gap", s), ("MapOpen", b), ("ObjTime", r),   # ObjTime: when the corner line last changed (it blows in)
                    # flashlight flicker timer: mode 0 on / 1 flutter / 2 off, next start, end, hit on return
                    ("FlMode", T("int")), ("FlNext", r), ("FlEnd", r), ("FlHit", b),
                    ("FlDim", r)], editable=False)   # flashlight auto-dim near walls (0..1)
     BPL.compile_blueprint(hud)
-    defaults(hud, {"Gap": "\n\n", "ToastTime": -100.0, "Objective": "", "FlNext": 4.0, "FlDim": 1.0})
+    defaults(hud, {"Gap": "\n\n", "ToastTime": -100.0, "Objective": "", "FlNext": 4.0, "FlDim": 1.0, "ObjTime": 0.4})
     BPL.compile_blueprint(hud)
     lib.save_loaded_asset(hud, False)   # save even if Unreal did not mark it changed
 
