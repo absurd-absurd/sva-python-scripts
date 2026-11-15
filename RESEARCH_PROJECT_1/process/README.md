@@ -149,4 +149,7 @@ the rusted car with its tail lights still glowing, and the climbable lookout tow
 
 Every person in the game is a silhouette, no faces: Eileen (1997), Cas (2001) and Bug (2002)
 each get their own outline. First rough of Bug as a photo-booth frame: short bob, oversized
-jacket, headphones round her neck.
+jacket, headphones round her neck. Then Eileen and Cas to match; I liked the style (flat black on an
+aged photo), shapes to refine.
+
+![All three](2026-11-15_silhouettes_three.png)
