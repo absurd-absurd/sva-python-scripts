@@ -142,3 +142,11 @@ the rusted car with its tail lights still glowing, and the climbable lookout tow
 
 ![Map full and corner](2026-11-14_map_full_and_corner.png)
 ![Prompt](2026-11-14_prompt_scrap.png)
+
+## 11. Silhouettes (Nov 15)
+
+![Bug, rough](2026-11-15_bug_silhouette_rough.png)
+
+Every person in the game is a silhouette, no faces: Eileen (1997), Cas (2001) and Bug (2002)
+each get their own outline. First rough of Bug as a photo-booth frame: short bob, oversized
+jacket, headphones round her neck.
