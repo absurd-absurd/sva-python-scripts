@@ -1037,3 +1037,7 @@ The user wanted the on-screen messages in the handwriting font used on the map. 
 ![Before (top) and after (bottom)](2026-11-14_text_sharp.png)
 
 Feedback: the text looked pixelated. The HUD font was rasterised at size 10 and the HUD scaled it up 3.2x, so every stroke was blocky (Ink Free's thin strokes showed it most). Now the font renders at size 40 (F_HUD_Italic legacy_font_size) and the HUD scale is a quarter (TEXT_SCALE 0.0008): same size on screen, smooth strokes. Changing the font in place while the editor ran crashed Unreal once on the next Play ("Cast of None to FontFaceInterface"); after a restart it was fine, and the font face now loads inline (all at once) to be safe.
+
+![The prompt on a torn scrap](2026-11-14_prompt_scrap.png)
+
+Feedback: something better than the grey box around the text. The "[E] ..." prompt now sits on a little torn scrap of the map's paper (tools/make_map.py prompt_scrap() -> export/prompt_scrap.png -> T_PromptScrap), ragged and darkened at the edges, written on in dark ink (no shadow). HUD 438 nodes / 1150 wires, matched.

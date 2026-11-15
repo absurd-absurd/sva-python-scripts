@@ -36,6 +36,7 @@ OUT = os.path.join(ROOT, "export", "map.png")
 MARKER = os.path.join(ROOT, "export", "map_marker.png")
 FULL = os.path.join(ROOT, "export", "map_full.png")      # the torn-paper version for the M screen
 FRAME = os.path.join(ROOT, "export", "map_frame.png")    # torn paper edge laid round the corner map
+SCRAP = os.path.join(ROOT, "export", "prompt_scrap.png")  # torn scrap behind the [E] prompt
 FRAME_HOLE = 0.08                                        # the hole (where the map shows) starts this far in, each side
 B = LAYOUT["map"]                                   # world bounds of the picture (square)
 PX = B["px"]
@@ -342,6 +343,43 @@ def frame_edge():
     out.save(FRAME)
 
 
+def prompt_scrap():
+    """A little torn scrap of the same paper for the '[E] Take' prompt (instead of a grey box):
+    ragged on all four sides, darkened at the tears, slightly crooked."""
+    w, h = 512, 150
+    img = Image.new("RGB", (w, h), PAPER)
+    d = ImageDraw.Draw(img)
+    for _ in range(1500):
+        d.point((rng.randrange(w), rng.randrange(h)), fill=tuple(max(0, min(255, c + rng.randint(-14, 8))) for c in PAPER))
+    edge = []
+    for side, steps in ((0, 120), (1, 36), (2, 120), (3, 36)):
+        walk = 0.0
+        for i in range(steps):
+            t = i / steps
+            walk = walk * 0.8 + rng.uniform(-1.8, 1.8)
+            inset = 10 + walk + (3 * math.sin(t * 6) if side in (0, 2) else 0)
+            if side == 0:
+                edge.append((t * w, inset + 6 * t))           # a slight slant along the top
+            elif side == 1:
+                edge.append((w - inset, t * h))
+            elif side == 2:
+                edge.append((w - t * w, h - inset - 6 * (1 - t)))
+            else:
+                edge.append((inset, h - t * h))
+    mask = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mask).polygon(edge, fill=255)
+    clip = Image.new("L", (w, h), 0)                               # no spikes at the corners
+    ImageDraw.Draw(clip).rounded_rectangle([8, 8, w - 9, h - 9], radius=14, fill=255)
+    mask = Image.composite(mask, clip, clip)
+    mask = mask.filter(ImageFilter.GaussianBlur(0.8))
+    burn = mask.filter(ImageFilter.GaussianBlur(6))
+    shade = Image.eval(burn, lambda v: 255 - v if v < 255 else 0)
+    img = Image.composite(Image.new("RGB", (w, h), (150, 118, 80)), img, shade.point(lambda v: min(255, v * 2)))
+    out = img.convert("RGBA")
+    out.putalpha(mask)
+    out.save(SCRAP)
+
+
 def marker():
     """The 'you are here' arrow: red ink, pointing up (the HUD turns it with your view)."""
     m = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
@@ -371,6 +409,7 @@ def main():
     img.save(OUT)
     torn(img)
     frame_edge()
+    prompt_scrap()
     marker()
     print("map ->", OUT, "+", MARKER)
 

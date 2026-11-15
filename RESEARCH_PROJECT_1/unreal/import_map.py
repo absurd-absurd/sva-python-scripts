@@ -34,4 +34,5 @@ bring("map.png", "T_Map")
 bring("map_marker.png", "T_MapMarker")
 bring("map_full.png", "T_MapFull")          # torn paper, with see-through edges
 bring("map_frame.png", "T_MapFrame")        # torn edge laid round the corner map
+bring("prompt_scrap.png", "T_PromptScrap")  # torn paper scrap behind the [E] prompt
 print("map textures imported")

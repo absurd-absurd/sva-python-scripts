@@ -44,6 +44,8 @@ DIM = "(R=0.55,G=0.53,B=0.5,A=1.000000)"
 DARK = "(R=0.004,G=0.004,B=0.006,A=0.930000)"
 SHADOW = "(R=0.0,G=0.0,B=0.0,A=0.850000)"
 PROMPT_BOX = "(R=0.0,G=0.0,B=0.0,A=0.550000)"     # dark box behind "[E] Examine"
+SCRAP_TEX = "/Game/Horror/UI/T_PromptScrap.T_PromptScrap"   # torn paper scrap behind the prompt (tools/make_map.py)
+INK = "(R=0.03,G=0.025,B=0.035,A=0.95)"                  # dark pen, for text on paper
 MAP = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "layout.json")))["map"]
 MAP_SIZE = MAP["x_max"] - MAP["x_min"]   # cm the whole map picture covers (it's square)
 MAP_VIEW = 4500.0              # cm of the world shown in the corner window
@@ -577,10 +579,13 @@ def hud_graph():
     g.row(340 * 9, 2400)
     v_yes, _ = g.branch(g.pure(SYS, "IsValid", [("Object", "object", g.get("Focus", "ex"))], ty="bool"), m_no)
     o_yes, _ = g.branch(g.not_(fget("Opened", "bool")), v_yes)
-    box = g.call(HUD, "DrawRect", o_yes, [
-        ("RectColor", "color", PROMPT_BOX), ("ScreenX", "float", g.mul(W, 0.43)), ("ScreenY", "float", g.mul(H, 0.548)),
-        ("ScreenW", "float", g.mul(W, 0.15)), ("ScreenH", "float", g.mul(H, 0.06))]).then
-    draw(g.concat("[E]  ", fget("Prompt")), box, 0.45, 0.556, 0.8, TEXT, True)
+    # a torn scrap of Cas's paper behind the prompt, written on in dark ink (was a grey box)
+    box = g.call(HUD, "DrawTexture", o_yes, [
+        ("Texture", "texture", SCRAP_TEX), ("ScreenX", "float", g.mul(W, 0.425)), ("ScreenY", "float", g.mul(H, 0.54)),
+        ("ScreenW", "float", g.mul(W, 0.16)), ("ScreenH", "float", g.mul(H, 0.075)),
+        ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
+        ("TintColor", "color", "(R=0.85,G=0.83,B=0.8,A=0.95)")]).then
+    draw(g.concat("[E]  ", fget("Prompt")), box, 0.45, 0.556, 0.8, INK)
 
     def freeze(after):
         a = g.call(CTRL, "SetIgnoreMoveInput", after, [("bNewMoveInput", "bool", True)], target=pc()).then
