@@ -17,8 +17,7 @@
       "at": [-885, -2160, 3.1], "yaw": 25,
       "prompt": "Take",
       "title": "A hand-drawn map",
-      "body": "[TEST TEXT]\n\nA page torn out of a sketchbook, folded in four, lying on the asphalt next to the car. A map of the motel and the woods down to the lake, drawn in Cas's handwriting.\n\n[M] to look at the map.",
-      "journal": "Found a map Cas drew, lying in the lot next to the car.",
+      "journal": "This is Cas's handwriting. It looks like she made a map of this place.",
       "gives_key": "map",
       "objective": "Cas marked room 104 on her map. I should check her room.",
       "pickup": true

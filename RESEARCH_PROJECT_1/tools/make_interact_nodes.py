@@ -54,7 +54,8 @@ WHITE = "(R=1.0,G=1.0,B=1.0,A=1.0)"
 MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=0.5)"      # half see-through while you play
 MARKER_TINT = "(R=1.0,G=1.0,B=1.0,A=0.8)"
 MAP_FULL_TEX = "/Game/Horror/UI/T_MapFull.T_MapFull"
-MAP_FULL = 0.9                 # the M screen: torn-paper map this tall (fraction of screen height)
+MAP_FULL = 0.76                # the M screen: torn-paper map this tall (fraction of screen height), near the top,
+                               # leaving room under it for a line of text (her line when you pick it up)
 import re as _re
 _FL = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "unreal", "flashlight.py"), encoding="utf-8").read()
 FLASH_INTENSITY = float(_re.search(r"^INTENSITY = ([0-9.]+)", _FL, _re.M).group(1))   # same as flashlight.py
@@ -535,7 +536,7 @@ def hud_graph():
     m_yes, m_no = g.branch(g.get("MapOpen", "bool"), j_no)
     FS = g.mul(H, MAP_FULL)
     FX = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(FS, 0.5))])
-    FY = g.mul(H, (1 - MAP_FULL) / 2)
+    FY = g.mul(H, 0.02)
     a = dark(m_yes)
     a = g.call(HUD, "DrawTexture", a, [
         ("Texture", "texture", MAP_FULL_TEX), ("ScreenX", "float", FX), ("ScreenY", "float", FY),
@@ -556,7 +557,10 @@ def hud_graph():
         ("TintColor", "color", WHITE),
         ("Rotation", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", yaw_out), ("B", "real", 90.0)])),
         ("RotPivot", "vector2d", "(X=0.500000,Y=0.500000)")]).then
-    draw("[M]  Close", a, 0.04, 0.92, 0.75, DIM, True)
+    # a fresh message (her line when you've just picked the map up) along the bottom
+    f_yes, f_no = g.branch(fresh, a)
+    a = draw(g.get("Toast", "string"), f_yes, 0.04, 0.8, 0.9, TEXT, True)      # same spot as the normal message
+    draw("[M]  Close", [a, f_no], 0.04, 0.92, 0.75, DIM, True)
 
     # prompt
     g.row(340 * 9, 2400)
@@ -614,7 +618,13 @@ def hud_graph():
     g.row(340 * 7, 6900)
     y, _ = g.branch(g.not_(g.empty(fget("GivesKey"))), sub[1])
     a = g.set("Keys", "string", g.concat(g.concat(g.get("Keys", "string"), fget("GivesKey")), ","), y).then
-    toast(g.concat("Picked up: ", fget("Title")), a)
+    # Cas's map: open it straight away (paused, like M) with her line under it, instead of a page
+    is_map, not_map = g.branch(g.pure(STR, "Contains", [("SearchIn", "string", fget("GivesKey")),
+                                                        ("Substring", "string", "map")], ty="bool"), a)
+    toast(g.concat("Picked up: ", fget("Title")), not_map)
+    g.row(340 * 9, 6900)
+    a = toast(fget("Journal"), is_map)
+    g.call(STATICS, "SetGamePaused", g.set("MapOpen", "bool", True, a).then, [("bPaused", "bool", True)])
     g.row(340 * 7, 7600)
     y, _ = g.branch(g.not_(g.empty(fget("Objective"))), sub[2])
     g.set("Objective", "string", fget("Objective"), y)

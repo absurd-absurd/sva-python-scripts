@@ -1015,3 +1015,7 @@ The user wanted the map to look like an old, torn, hand-drawn map that Cas drew,
 Feedback: the first message should say "Find the map", and the map should lie on the ground on the right side of the car. Now the start objective is "Find the map."; the folded map (shape map_ground) lies on the asphalt just past the car's right rear wheel (-885, -2160); Room 104's door is no longer locked (that was only because the map was wedged in it). Play-tested: you can see it from the start, take it, and the corner map and M turn on.
 
 Feedback: the messages in the corner should be first person, like the character talking. Every objective and locked-door message in clues.json was rewritten in Bug's voice (e.g. "Look inside Room 104." -> "Cas marked room 104 on her map. I should check her room."; "Search the office." -> "Nobody's here. I should look around before someone comes back."). The lines are still placeholders until the story pass.
+
+![Picking up the map now](2026-11-14_map_pickup_screen.png)
+
+Feedback: picking up the map shouldn't show the grey text page, just the map, with a line like "this is Cas's handwriting, it looks like she made a map of this place". Now taking the map opens the map screen straight away (paused, like M), with "This is Cas's handwriting. It looks like she made a map of this place." under it (also the journal line); M closes it. The map screen is a little smaller and higher so the line fits under it. HUD graph swapped again (generator 436 nodes / 1150 wires, matched after paste).
