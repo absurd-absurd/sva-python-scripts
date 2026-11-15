@@ -116,7 +116,17 @@ def italic_font():
     if not lib.does_asset_exist(path):
         lib.duplicate_asset("/Engine/EngineFonts/Roboto", path)
     font = unreal.load_asset(path)
-    face = "/Script/Engine.FontFace'/Engine/EngineFonts/Faces/RobotoItalic.RobotoItalic'"
+    # Nov 14: the user wanted the on-screen text in the handwriting font used on Cas's map (Ink Free,
+    # comes with Windows). Imported as a FontFace; the asset keeps its old name so the HUD needs no change.
+    ff = "/Game/Horror/UI/FF_InkFree"
+    if not lib.does_asset_exist(ff):
+        t = unreal.AssetImportTask()
+        t.filename = r"C:/Windows/Fonts/Inkfree.ttf"
+        t.destination_path, t.destination_name = "/Game/Horror/UI", "FF_InkFree"
+        t.automated, t.save, t.replace_existing = True, True, True
+        unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([t])
+    face = "/Script/Engine.FontFace'/Game/Horror/UI/FF_InkFree.FF_InkFree'" if lib.does_asset_exist(ff) else \
+        "/Script/Engine.FontFace'/Engine/EngineFonts/Faces/RobotoItalic.RobotoItalic'"
     cf = font.get_editor_property("composite_font")
     text = cf.export_text()
     fallback = text[text.index("FallbackTypeface="):]

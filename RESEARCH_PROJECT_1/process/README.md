@@ -1027,3 +1027,9 @@ Feedback: her line should only show the first time. Opening or closing the map w
 Feedback: the map should be bigger, full screen, once the text is gone; and the corner map should have torn-paper edges too.
 - The M screen draws the sheet 96% of the screen height, centred; only while her first-time line is showing is it smaller and higher (76%) to leave room for it.
 - Corner map: tools/make_map.py frame_edge() makes export/map_frame.png (T_MapFrame): a margin of the same paper round a square hole, ragged and darkened outside; the HUD draws it round the moving map window, its hole exactly the window, feathered so they blend. The corner map is solid paper now (it was half see-through, which showed the overlap as a lighter square), the dark border rect is gone, and "[M] Map" is in dark ink.
+
+## 2026-11-14: on-screen text in Cas's handwriting font
+
+![The HUD in Ink Free](2026-11-14_handwriting_font.png)
+
+The user wanted the on-screen messages in the handwriting font used on the map. unreal/interact_setup.py now imports Windows' Ink Free as /Game/Horror/UI/FF_InkFree and makes it the face of the HUD font asset (F_HUD_Italic keeps its name, so the HUD graph didn't change). Every HUD line uses it: objectives, messages, prompts, reading pages, the journal, the map screen.
