@@ -48,7 +48,7 @@ HANDS = [("cas", "/Game/Horror/UI/F_Hand_Cas.F_Hand_Cas", 0.5, "(R=0.020,G=0.030
 INK = "(R=0.030,G=0.028,B=0.035,A=0.950000)"     # writing with no hand, on paper
 # the sheet a paper is shown on (clues.json "paper" -> BP_Examinable.Paper -> HUD.ReadPaper; tools/make_papers.py)
 PAPERS = [(k, f"/Game/Horror/UI/T_Paper_{k.capitalize()}.T_Paper_{k.capitalize()}")
-          for k in ("stationery", "notebook", "typed", "ledger", "scrap", "key_office", "key_gate", "key_boathouse", "register", "wall")]
+          for k in ("stationery", "notebook", "typed", "ledger", "scrap", "key_office", "key_gate", "key_boathouse", "register", "wall", "torn")]
 PAPER_H, PAPER_ASPECT, PAPER_TOP = 0.92, 0.75, 0.04       # sheet height / width:height / top, x screen height
 PAPER_TEXT_X, PAPER_TEXT_Y = 0.11, 0.15                   # where the writing starts: x screen height in, x sheet height down
 TEXT = "(R=0.78,G=0.75,B=0.68,A=1.000000)"                   # warm off-white

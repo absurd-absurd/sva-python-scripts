@@ -198,7 +198,46 @@ def scrap():
     save(img, "scrap")
 
 
+def torn():
+    """The last page (user, 2026-11-17): not a full page but a small scrap torn out of a notebook page, ruled
+    lines and a red margin, torn ragged on every side. It sits in the middle of the frame, see-through all
+    round, just big enough for the HUD's text (which starts 0.11 screen-heights in and 15% down the frame)."""
+    rng = random.Random(6)
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    paper = Image.new("RGBA", (W, H), (236, 233, 220, 255))
+    d = ImageDraw.Draw(paper)
+    for y in range(118, 520, 42):                         # the notebook's faint rules (same as notebook())
+        d.line((0, y), fill=None) if False else d.line((0, y, W, y), fill=(160, 180, 210, 255), width=1)
+    d.line((96, 0, 96, H), fill=(214, 120, 120, 255), width=2)          # a bit of the red margin, torn through
+    grain(paper, rng, 9)
+    x0, x1, y0, y1 = 70, 640, 92, 500                       # the scrap's rough box
+    pts = []
+    def edge(a, b, n, jag):
+        for k in range(n):
+            t = k / n
+            x = a[0] + (b[0] - a[0]) * t
+            y = a[1] + (b[1] - a[1]) * t
+            nx, ny = b[1] - a[1], -(b[0] - a[0])
+            L = (nx * nx + ny * ny) ** 0.5
+            j = rng.uniform(-jag, jag) + (jag * 0.8 if k % 3 == 0 else 0)
+            pts.append((x + nx / L * j, y + ny / L * j))
+    corners = [(x0, y0 + 18), (x1 - 30, y0), (x1, y1 - 40), (x0 + 40, y1)]   # not square: torn at angles
+    for i in range(4):
+        edge(corners[i], corners[(i + 1) % 4], 46, 7)
+    mask = Image.new("L", (W, H), 0)
+    ImageDraw.Draw(mask).polygon(pts, fill=255)
+    fibre = mask.filter(ImageFilter.GaussianBlur(1.2))     # torn paper shows a lighter fibrous edge
+    img.paste(paper, (0, 0), mask)
+    rim = Image.new("RGBA", (W, H), (250, 248, 240, 255))
+    ring = Image.eval(fibre, lambda v: 255 if 40 < v < 200 else 0)
+    img.paste(rim, (0, 0), ring)
+    age(img, rng, 30)
+    img.putalpha(Image.eval(fibre, lambda v: 255 if v > 40 else 0))
+    save(img, "torn")
+
+
 if __name__ == "__main__":
+    torn()
     stationery()
     notebook()
     typed()

@@ -27,7 +27,8 @@ SHAPES = {
     "folder": ((31, 23, 1.4), "MI_PS2_page_mat", (0, 0, 0.7)),          # a manila file folder (the 1974 log)
     "notebook": ((15, 21, 1.6), "MI_PS2_diary_mat", (0, 0, 0.8)),       # Cas's spiral notebook
     "wall_page": ((0.4, 21, 28), "MI_PS2_curtain_mat", (0, 0, 14)),     # a page nailed to a wall (faces +-x after yaw)
-    "wall_zone": ((4, 340, 130), "MI_PS2_curtain_mat", (0, 0, 65)),     # invisible: the aim area over Cas's wall
+    "wall_zone": ((4, 340, 130), "MI_PS2_curtain_mat", (0, 0, 65)),
+    "scrap_small": ((10, 7, 0.3), "MI_PS2_curtain_mat", (0, 0, 0.15)),  # a little torn scrap (the last page)     # invisible: the aim area over Cas's wall
     "key":   ((10, 4, 1.2), "MI_PS2_brass_mat", (0, 0, 0.6)),
     "book":  ((30, 22, 4), "MI_PS2_door_mat", (0, 0, 2)),
     "door":  ((108, 5, 228), "MI_PS2_door_mat", (54, 0, 114)),
