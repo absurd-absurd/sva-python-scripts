@@ -70,12 +70,13 @@ WHITE = "(R=1.0,G=1.0,B=1.0,A=1.0)"
 # the opening (2026-11-17, STORY.md): black screen, the opening text typing itself out in Bug's hand, then the
 # postcard; [E] fades into the parking lot. Text = clues.json game_text.opening minus its last line (the
 # postcard shows that, in the thing's hand); interact_setup.py puts it in the HUD's OpeningText.
-OPEN_CPS, OPEN_DELAY = 26.0, 1.2                    # typing speed (characters a second), black before it starts
+OPEN_CPS, OPEN_DELAY = 15.0, 1.5        # slower (user, 2026-11-17)                    # typing speed (characters a second), black before it starts
 _OPEN = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "clues.json"),
                        encoding="utf-8"))["game_text"]["opening"].rsplit("\n\n", 1)[0]
 OPEN_T_TEXT = OPEN_DELAY + len(_OPEN) / OPEN_CPS     # typing done
 OPEN_T_CARD = OPEN_T_TEXT + 0.7                      # the postcard appears
-OPEN_T_GO = OPEN_T_CARD + 1.6                        # "[E] Continue"
+OPEN_T_CARD_IN = 1.8                                # the postcard fades in over this long
+OPEN_T_GO = OPEN_T_CARD + OPEN_T_CARD_IN + 1.0                        # "[E] Continue"
 OPEN_FADE = 1.6                                      # seconds to fade from black into the game after E
 POSTCARD_TEX = "/Game/Horror/UI/T_Paper_Postcard.T_Paper_Postcard"   # tools/make_postcard.py
 BLACK = "(R=0.0,G=0.0,B=0.0,A=1.0)"
@@ -675,7 +676,9 @@ def hud_graph():
         ("ScreenX", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, 0.2475))])),
         ("ScreenY", "float", g.mul(H, 0.6)), ("ScreenW", "float", g.mul(H, 0.495)), ("ScreenH", "float", CH),
         ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
-        ("TintColor", "color", WHITE)]).then
+        ("TintColor", "color", g.pure(MATH, "MakeColor", [("R", "float", 1.0), ("G", "float", 1.0), ("B", "float", 1.0),
+            ("A", "float", g.pure(MATH, "FMin", [("A", "real", 1.0), ("B", "real", g.mul(g.pure(MATH, "Subtract_DoubleDouble", [
+                ("A", "real", t), ("B", "real", OPEN_T_CARD)]), 1.0 / OPEN_T_CARD_IN))], ty="real"))], ty="color"))]).then
     go, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", t), ("B", "real", OPEN_T_GO)], ty="bool"), a)
     draw("[E]  Continue", go, 0.04, 0.92, 0.75, DIM)
     # after it: black fading out over the game

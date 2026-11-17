@@ -291,3 +291,7 @@ Cas's wall close-up. All fit their sheets.
 The opening in play: black, Bug's opening text typed out in her hand, the postcard ("i miss you bug - cas"
 in the wrong hand) under it, [E] Continue; after E the screen fades from black into the parking lot with
 her first line at the top.
+
+## 2026-11-17_opening_v2.png
+The opening slowed down (user): text types at 15 characters a second, the postcard fades in over 1.8 s,
+and the line now ends "On the back, one line..." (no "signed Cas:").
