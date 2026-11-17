@@ -234,6 +234,37 @@ def torn():
     age(img, rng, 30)
     img.putalpha(Image.eval(fibre, lambda v: 255 if v > 40 else 0))
     save(img, "torn")
+    # the same scrap with her two lines on it, cropped tight: lying under the lantern in the boathouse it's
+    # this cut-out (unreal/key_cards.py), about 10 cm across
+    import json
+    w = img.copy()
+    d = ImageDraw.Draw(w)
+    f = ImageFont.truetype(os.path.join(ROOT, "fonts", "Zeyada.ttf"), 44)
+    d.text((124, 140), "you came, bug", font=f, fill=(20, 8, 8, 240))
+    d.text((124, 300), "now we can be together", font=f, fill=(20, 8, 8, 240))
+    w = w.crop(w.getbbox())
+    w.save(os.path.join(OUT, "keycard_torn.png"))
+    cards_path = os.path.join(OUT, "keycards.json")
+    cards = json.load(open(cards_path)) if os.path.exists(cards_path) else {}
+    cards["torn"] = [10.0, round(10.0 * w.height / w.width, 2)]
+    json.dump(cards, open(cards_path, "w"), indent=1)
+
+
+def world_card(paper, lines, name, width_cm, size=40, x=124, y=150, gap=1.6):
+    """A sheet with its words written on, cropped tight: the object as it lies in the world (cut-out,
+    unreal/key_cards.py; place_clues.py lays it flat), width_cm wide. Adds it to export/keycards.json."""
+    import json
+    img = Image.open(os.path.join(OUT, f"paper_{paper}.png")).convert("RGBA")
+    d = ImageDraw.Draw(img)
+    f = ImageFont.truetype(os.path.join(ROOT, "fonts", "Zeyada.ttf"), size)
+    for k, line in enumerate(lines):
+        d.text((x, y + k * size * gap), line, font=f, fill=(20, 8, 8, 240))
+    img = img.crop(img.getbbox())
+    img.save(os.path.join(OUT, f"keycard_{name}.png"))
+    cards_path = os.path.join(OUT, "keycards.json")
+    cards = json.load(open(cards_path)) if os.path.exists(cards_path) else {}
+    cards[name] = [width_cm, round(width_cm * img.height / img.width, 2)]
+    json.dump(cards, open(cards_path, "w"), indent=1)
 
 
 if __name__ == "__main__":
@@ -243,3 +274,5 @@ if __name__ == "__main__":
     typed()
     ledger()
     scrap()
+    # the note by her boots, as it lies by the water door (the reading screen shows paper_scrap + the HUD text)
+    world_card("scrap", ["the lanterns are lit for", "you, bug", "", "don't worry, it won't be", "much longer now"], "scrap", 15.0, size=52)

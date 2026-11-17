@@ -90,7 +90,7 @@ def main():
         size, mat, offset = SHAPES[c["shape"]]
         # a key is its drawing, cut out and laid flat (unreal/key_cards.py; user 2026-11-17: "the keys are still
         # blocks, they should look exactly like the key image")
-        card = KEYCARDS.get(c.get("paper", "")) if c["shape"] == "key" else None
+        card = KEYCARDS.get(c.get("paper", "")) if c["shape"] in ("key", "scrap_small", "paper") else None
         card_mi = card and unreal.load_asset(f"{MATS}MI_KeyCard_{c['paper']}")
         if card_mi:
             size, offset = (card[0], card[1], 0.6), (0, 0, 0.15)

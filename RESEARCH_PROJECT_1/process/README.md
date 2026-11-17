@@ -314,3 +314,8 @@ The three keys in the world are now their drawings, cut out and laid flat (user:
 blocks, they should look exactly like the key image"): the office key on the Room 104 dresser, the gate
 key on the office desk, the boathouse key on Cas's lake map in the shack (tools/make_keys.py card(),
 unreal/key_cards.py M_PS2_Cutout, place_clues.py).
+
+## 2026-11-17_opening_text_and_torn_page.png / 2026-11-17_boathouse_notes_in_world.png
+Opening line now "Marrow Falls Motel on the front" (user). The last page is a small scrap torn from a
+notebook page (tools/make_papers.py torn()), on the reading screen and as a ~10 cm cut-out under the lantern;
+the note by her boots is also now its torn sheet with the writing on it, not a white block.
