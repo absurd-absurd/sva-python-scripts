@@ -84,14 +84,12 @@ def stationery():
     age(img, rng, 35)
     d = ImageDraw.Draw(img)
     serif = ImageFont.truetype("C:/Windows/Fonts/georgia.ttf", 30)
-    small = ImageFont.truetype("C:/Windows/Fonts/georgia.ttf", 16)
     red = (130, 40, 36, 255)
     t = "MARROW FALLS MOTEL"
     d.text(((W - d.textlength(t, font=serif)) / 2, 40), t, font=serif, fill=red)
-    t = "Black Hollow Lake  -  Rooms by the night or week"
-    d.text(((W - d.textlength(t, font=small)) / 2, 80), t, font=small, fill=red)
-    d.line((90, 112, W - 90, 112), fill=red, width=2)
-    d.line((90, 117, W - 90, 117), fill=red, width=1)
+    # just the name (user, 2026-11-17: no sub-line under it)
+    d.line((90, 88, W - 90, 88), fill=red, width=2)
+    d.line((90, 93, W - 90, 93), fill=red, width=1)
     # folded in three to fit an envelope: two soft creases
     for y in (H // 3, 2 * H // 3):
         d.line((10, y, W - 10, y), fill=(200, 190, 165, 255), width=2)
