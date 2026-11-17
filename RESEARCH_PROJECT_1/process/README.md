@@ -325,3 +325,8 @@ The last four papers in the world are now the real things too (cut-outs, tools/m
 folder_cover, notebook_cover): Cas's letter on motel stationery on the bed, the researchers' manila folder on
 the back-room bed, Cas's red spiral notebook ("C.B.") on the cot, and the wrong-hand page nailed to the shack
 wall. The reading "The last page" title is gone (user).
+
+## 2026-11-17_title_screen.png
+The title screen (user picked 3B: thin lettering over the lake): BP_TitleShot's camera down the dock into
+the fog, MARROW, [E] Start / [C] Controls / [Q] Quit; the controls page lists every key the game uses. Start
+goes into the opening. Lettering options: process/2026-11-17_title_options.png, _title_1B_3B.png.

@@ -734,7 +734,7 @@ def hud_graph():
     a = draw("CONTROLS", a, 0.3, 0.16, 1.25)
     for k, (key, what) in enumerate(CONTROLS):
         a = draw(key, a, 0.3, 0.27 + k * 0.065, 1.0, DIM)
-        a = draw(what, a, 0.5, 0.27 + k * 0.065, 1.0, TEXT)
+        a = draw(what, a, 0.56, 0.27 + k * 0.065, 1.0, TEXT)
     draw("[C]  Back", a, 0.3, 0.88, 0.75, DIM)
 
     # ---- the ending ----
