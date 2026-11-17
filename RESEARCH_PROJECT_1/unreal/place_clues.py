@@ -90,10 +90,13 @@ def main():
         size, mat, offset = SHAPES[c["shape"]]
         # a key is its drawing, cut out and laid flat (unreal/key_cards.py; user 2026-11-17: "the keys are still
         # blocks, they should look exactly like the key image")
-        card = KEYCARDS.get(c.get("paper", "")) if c["shape"] in ("key", "scrap_small", "paper") else None
-        card_mi = card and unreal.load_asset(f"{MATS}MI_KeyCard_{c['paper']}")
+        # papers and folders likewise, by clue id first (2026-11-17): the thing as it lies there
+        card_name = c["id"] if c["id"] in KEYCARDS else c.get("paper", "")
+        card = KEYCARDS.get(card_name) if c["shape"] in ("key", "scrap_small", "paper", "folder", "notebook", "wall_page") else None
+        card_mi = card and unreal.load_asset(f"{MATS}MI_KeyCard_{card_name}")
+        on_wall = c["shape"] == "wall_page"
         if card_mi:
-            size, offset = (card[0], card[1], 0.6), (0, 0, 0.15)
+            size, offset = ((0.6, card[0], card[1]), (0, 0, card[1] / 2)) if on_wall else ((card[0], card[1], 0.6), (0, 0, 0.15))
         mesh = a.get_components_by_class(unreal.StaticMeshComponent)[0]
         door = DOOR_MESH.get(c["shape"])
         if door and unreal.EditorAssetLibrary.does_asset_exist(door):
@@ -104,7 +107,12 @@ def main():
         elif card_mi:
             mesh.set_static_mesh(PLANE)
             mesh.set_relative_location(unreal.Vector(*offset), False, True)
-            mesh.set_relative_scale3d(unreal.Vector(card[0] / 100, card[1] / 100, 1))
+            if on_wall:                                   # stood up against the wall, facing into the room (-x)
+                mesh.set_relative_rotation(unreal.Rotator(roll=0.0, pitch=90.0, yaw=0.0), False, True)
+                mesh.set_relative_scale3d(unreal.Vector(card[1] / 100, card[0] / 100, 1))
+            else:
+                mesh.set_relative_rotation(unreal.Rotator(0, 0, 0), False, True)
+                mesh.set_relative_scale3d(unreal.Vector(card[0] / 100, card[1] / 100, 1))
             mesh.set_material(0, card_mi)
         else:
             mesh.set_static_mesh(CUBE)

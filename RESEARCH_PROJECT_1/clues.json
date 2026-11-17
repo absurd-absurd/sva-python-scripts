@@ -179,7 +179,7 @@
     {
       "id": "shack_notes", "hand": "cas", "paper": "notebook",
       "shape": "notebook",
-      "at": [2249.2, 4254.3, 54.8], "yaw": 80, "room": true,
+      "at": [2249.2, 4254.3, 58.5], "yaw": 80, "room": true,
       "prompt": "Read",
       "title": "Cas's notebook",
       "body": "Night 3. I can't stay in the motel anymore. They watch me there.\n\nThe rattle comes every night now. It stops when I stop. So I don't stop.\n\nI heard her calling from the water. She said my name the way she used to, like she did when I was eight.\n\nThe log said one goes in, one comes back. I could bring her back.",

@@ -59,6 +59,7 @@ def card(name, parent):
 
 
 m = cutout_material()
-for k in ("key_office", "key_gate", "key_boathouse", "torn", "scrap"):     # + the last page's scrap
+for k in ("key_office", "key_gate", "key_boathouse", "torn", "scrap",
+          "note_bed", "shack_notes_wrong", "field_log", "shack_notes"):     # + the last page's scrap
     card(k, m)
 print("key cut-outs ready")

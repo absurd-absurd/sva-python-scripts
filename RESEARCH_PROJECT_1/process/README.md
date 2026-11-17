@@ -319,3 +319,9 @@ unreal/key_cards.py M_PS2_Cutout, place_clues.py).
 Opening line now "Marrow Falls Motel on the front" (user). The last page is a small scrap torn from a
 notebook page (tools/make_papers.py torn()), on the reading screen and as a ~10 cm cut-out under the lantern;
 the note by her boots is also now its torn sheet with the writing on it, not a white block.
+
+## 2026-11-17_papers_in_world.png
+The last four papers in the world are now the real things too (cut-outs, tools/make_papers.py world_card,
+folder_cover, notebook_cover): Cas's letter on motel stationery on the bed, the researchers' manila folder on
+the back-room bed, Cas's red spiral notebook ("C.B.") on the cot, and the wrong-hand page nailed to the shack
+wall. The reading "The last page" title is gone (user).

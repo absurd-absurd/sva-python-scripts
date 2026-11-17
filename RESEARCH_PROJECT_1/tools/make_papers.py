@@ -27,8 +27,9 @@ W, H = 768, 1024
 
 def grain(img, rng, amount=10, tint=(0, 0, 0)):
     px = img.load()
-    for _ in range(W * H // 6):
-        x, y = rng.randrange(W), rng.randrange(H)
+    iw, ih = img.size
+    for _ in range(iw * ih // 6):
+        x, y = rng.randrange(iw), rng.randrange(ih)
         r, g, b, a = px[x, y]
         if a:
             v = rng.randint(-amount, amount)
@@ -250,21 +251,75 @@ def torn():
     json.dump(cards, open(cards_path, "w"), indent=1)
 
 
-def world_card(paper, lines, name, width_cm, size=40, x=124, y=150, gap=1.6):
-    """A sheet with its words written on, cropped tight: the object as it lies in the world (cut-out,
-    unreal/key_cards.py; place_clues.py lays it flat), width_cm wide. Adds it to export/keycards.json."""
+def save_card(img, name, width_cm, turn=0):
+    """Crop tight, save export/keycard_<name>.png and its size in export/keycards.json. turn: degrees to
+    pre-rotate a card that stands on a wall (place_clues.py stands those up sideways)."""
     import json
-    img = Image.open(os.path.join(OUT, f"paper_{paper}.png")).convert("RGBA")
-    d = ImageDraw.Draw(img)
-    f = ImageFont.truetype(os.path.join(ROOT, "fonts", "Zeyada.ttf"), size)
-    for k, line in enumerate(lines):
-        d.text((x, y + k * size * gap), line, font=f, fill=(20, 8, 8, 240))
     img = img.crop(img.getbbox())
+    w_cm, h_cm = width_cm, round(width_cm * img.height / img.width, 2)
+    if turn:
+        img = img.rotate(turn, expand=True)
     img.save(os.path.join(OUT, f"keycard_{name}.png"))
     cards_path = os.path.join(OUT, "keycards.json")
     cards = json.load(open(cards_path)) if os.path.exists(cards_path) else {}
-    cards[name] = [width_cm, round(width_cm * img.height / img.width, 2)]
+    cards[name] = [w_cm, h_cm]
     json.dump(cards, open(cards_path, "w"), indent=1)
+
+
+def world_card(paper, lines, name, width_cm, size=40, x=124, y=150, gap=1.6, font="Zeyada.ttf", ink=(20, 8, 8, 240), turn=0):
+    """A sheet with its words written on, cropped tight: the object as it lies in the world (cut-out,
+    unreal/key_cards.py; place_clues.py lays it flat), width_cm wide. Adds it to export/keycards.json."""
+    img = Image.open(os.path.join(OUT, f"paper_{paper}.png")).convert("RGBA")
+    d = ImageDraw.Draw(img)
+    f = ImageFont.truetype(os.path.join(ROOT, "fonts", font), size)
+    for k, line in enumerate(lines):
+        d.text((x, y + k * size * gap), line, font=f, fill=ink)
+    save_card(img, name, width_cm, turn)
+
+
+def folder_cover():
+    """The researchers' file folder, closed, as it lies on the back-room bed: manila card with a tab, the
+    edge of the typed sheets showing, a typed label and the red FILE COPY stamp."""
+    rng = random.Random(8)
+    w, h = 900, 680
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rectangle((20, 40, w - 30, h - 20), fill=(226, 218, 196, 255))                 # the sheets inside, peeking out
+    d.polygon([(0, 70), (300, 70), (330, 20), (560, 20), (590, 70), (w - 40, 70), (w - 40, h - 30), (0, h - 30)],
+              fill=(206, 172, 110, 255))                                             # the manila folder with its tab
+    d.line((0, 70, w - 40, 70), fill=(176, 142, 88, 255), width=3)
+    grain(img, rng, 10)
+    lab = ImageFont.truetype("C:/Windows/Fonts/courbd.ttf", 30)
+    d.rectangle((340, 28, 550, 64), fill=(240, 234, 214, 255))
+    d.text((352, 30), "B.H.L. 1974", font=lab, fill=(30, 28, 30, 255))
+    typ = ImageFont.truetype("C:/Windows/Fonts/cour.ttf", 34)
+    d.text((70, 140), "THE TRIALS OF", font=typ, fill=(40, 36, 30, 255))
+    d.text((70, 186), "BLACK HOLLOW LAKE", font=typ, fill=(40, 36, 30, 255))
+    st = Image.new("RGBA", (360, 70), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(st)
+    sd.rectangle((2, 2, 357, 67), outline=(150, 40, 36, 170), width=4)
+    sd.text((18, 14), "FILE COPY - 1974", font=ImageFont.truetype("C:/Windows/Fonts/courbd.ttf", 34), fill=(150, 40, 36, 170))
+    img.alpha_composite(st.rotate(-6, expand=True, resample=Image.BICUBIC), (420, 420))
+    save_card(img, "field_log", 31.0)
+
+
+def notebook_cover():
+    """Cas's spiral notebook, closed, on the cot: a worn dark-red card cover, the wire spiral down the left,
+    her initials in marker in her hand."""
+    rng = random.Random(9)
+    w, h = 620, 860
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((40, 10, w - 10, h - 10), radius=10, fill=(120, 34, 30, 255))
+    grain(img, rng, 12)
+    for y in range(36, h - 30, 30):                                                    # the wire spiral
+        d.ellipse((18, y, 62, y + 18), outline=(170, 170, 176, 255), width=4)
+    for _ in range(18):                                                                # scuffs on the cover
+        x, y = rng.randrange(80, w - 40), rng.randrange(30, h - 40)
+        d.line((x, y, x + rng.randint(10, 40), y + rng.randint(-4, 4)), fill=(150, 70, 60, 255), width=2)
+    f = ImageFont.truetype(os.path.join(ROOT, "fonts", "RockSalt-Regular.ttf"), 64)
+    d.text((170, 340), "C.B.", font=f, fill=(236, 230, 214, 255))
+    save_card(img, "shack_notes", 15.0)
 
 
 if __name__ == "__main__":
@@ -276,3 +331,13 @@ if __name__ == "__main__":
     scrap()
     # the note by her boots, as it lies by the water door (the reading screen shows paper_scrap + the HUD text)
     world_card("scrap", ["the lanterns are lit for", "you, bug", "", "don't worry, it won't be", "much longer now"], "scrap", 15.0, size=52)
+    # the rest of the papers as they lie in the world (2026-11-17, user: notes are notes, pages are pages)
+    import json as _json, textwrap as _tw
+    _clues = {c["id"]: c for c in _json.load(open(os.path.join(ROOT, "clues.json"), encoding="utf-8"))["clues"]}
+    _lines = lambda cid, width: [l for p in _clues[cid]["body"].split("\n") for l in (_tw.wrap(p, width) or [""])]
+    world_card("stationery", _lines("note_bed", 39), "note_bed", 21.6, size=24, x=124, y=158, gap=1.45,
+               font="RockSalt-Tight.ttf", ink=(5, 8, 23, 240))
+    world_card("notebook", _lines("shack_notes_wrong", 28), "shack_notes_wrong", 20.5, size=54, x=124, y=150,
+               gap=1.25, turn=-90)
+    folder_cover()
+    notebook_cover()
