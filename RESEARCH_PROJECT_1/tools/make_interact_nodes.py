@@ -763,7 +763,7 @@ def hud_graph():
         my = g.mul(H, 0.69 + k * 0.07)
         a = draw(item, a, 0, 0, MENU_SCALE, TEXT, font=MENU_FONT, at=(mx, my))
         a = draw(key, a, 0, 0, 0.75, "(R=0.5,G=0.1,B=0.08,A=1.0)", font=MENU_FONT,
-                 at=(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", mx), ("B", "real", g.mul(H, 0.045))]),
+                 at=(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", mx), ("B", "real", g.mul(H, 0.075))]),
                      g.pure(MATH, "Add_DoubleDouble", [("A", "real", my), ("B", "real", g.mul(H, 0.008))])))
     ta = g.pure(MATH, "FMax", [("A", "real", 0.0), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", 1.0),
                ("B", "real", g.mul(g.now(), 1.0 / TITLE_FADE))]))], ty="real")

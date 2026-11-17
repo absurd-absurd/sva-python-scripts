@@ -330,3 +330,9 @@ wall. The reading "The last page" title is gone (user).
 The title screen (user picked 3B: thin lettering over the lake): BP_TitleShot's camera down the dock into
 the fog, MARROW, [E] Start / [C] Controls / [Q] Quit; the controls page lists every key the game uses. Start
 goes into the opening. Lettering options: process/2026-11-17_title_options.png, _title_1B_3B.png.
+
+## 2026-11-17_title_screen_v2.png
+Second pass at the title screen (user: it looked underdeveloped; approved mockup process/2026-11-17_title_v2_mock.png):
+a row of lit red lanterns down the dock into the fog, MARROW breathing slowly with a thin red rule under it,
+the menu centred in the title's lettering (Century Gothic) with each key in dark red, a vignette and a darker
+band behind the menu, and the camera slowly pushing in down the dock. The controls page uses the same lettering.
