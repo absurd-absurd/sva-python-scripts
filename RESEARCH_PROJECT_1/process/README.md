@@ -281,3 +281,8 @@ notes now in her Rock Salt hand, the lantern note ("why does everyone lie about 
 Eileen's MISSING poster with her silhouette (replacing the old names list, which had dates after 2002),
 and the photo-booth strip of Cas and Bug, pinned and strung on the wallpaper with her lake photos,
 the clipping and her lake map.
+
+## 2026-11-17_new_readables_in_game.png
+In-game test of the six new readables (each moved onto the Room 104 bed and opened with E): the 1974 log
+on its typed file sheet, Cas's notebook, the wrong-hand pages, the note by her boots, the last page, and
+Cas's wall close-up. All fit their sheets.
