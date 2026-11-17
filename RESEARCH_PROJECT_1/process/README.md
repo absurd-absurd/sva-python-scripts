@@ -286,3 +286,8 @@ the clipping and her lake map.
 In-game test of the six new readables (each moved onto the Room 104 bed and opened with E): the 1974 log
 on its typed file sheet, Cas's notebook, the wrong-hand pages, the note by her boots, the last page, and
 Cas's wall close-up. All fit their sheets.
+
+## 2026-11-17_opening.png
+The opening in play: black, Bug's opening text typed out in her hand, the postcard ("i miss you bug - cas"
+in the wrong hand) under it, [E] Continue; after E the screen fades from black into the parking lot with
+her first line at the top.

@@ -667,13 +667,13 @@ def hud_graph():
     shown = g.pure(MATH, "Clamp", [("Value", "int", shown), ("Min", "int", 0), ("Max", "int", 9999)], ty="int")
     typed = g.pure(STR, "Left", [("SourceString", "string", g.get("OpeningText", "string")), ("Count", "int", shown)], ty="string")
     tx = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, 0.3))])
-    a = draw(typed, a, 0, 0, 1.0, TEXT, at=(tx, g.mul(H, 0.07)))
+    a = draw(typed, a, 0, 0, 1.0, TEXT, at=(tx, g.mul(H, 0.04)))
     card, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", t), ("B", "real", OPEN_T_CARD)], ty="bool"), a)
-    CH = g.mul(H, 0.36)
+    CH = g.mul(H, 0.33)
     a = g.call(HUD, "DrawTexture", card, [
         ("Texture", "texture", POSTCARD_TEX),
-        ("ScreenX", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, 0.27))])),
-        ("ScreenY", "float", g.mul(H, 0.54)), ("ScreenW", "float", g.mul(H, 0.54)), ("ScreenH", "float", CH),
+        ("ScreenX", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, 0.2475))])),
+        ("ScreenY", "float", g.mul(H, 0.6)), ("ScreenW", "float", g.mul(H, 0.495)), ("ScreenH", "float", CH),
         ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
         ("TintColor", "color", WHITE)]).then
     go, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", t), ("B", "real", OPEN_T_GO)], ty="bool"), a)
