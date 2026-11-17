@@ -193,3 +193,6 @@ hole so it reads as threaded, not lying on top.
 Second ring fix (user: at the tag's corner the ring looked like it went through the flat plastic): the
 ring is now only behind the tag, seen outside it and through its hole; it still passes over the front
 of the key's head on one side.
+
+## 2026-11-17_keys_full_v2.png
+All three key pictures at full size after the ring fixes (office, gate, boathouse).
