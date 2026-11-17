@@ -1,5 +1,5 @@
 {
-  "_about": "Every clue, key and locked door in the game. unreal/place_clues.py puts them in the level as BP_Examinable actors. Coordinates are Unreal cm (z = height of the surface the thing sits on). TEST CLUES for now: the real story text replaces these later.",
+  "_about": "Every clue, key and locked door in the game. unreal/place_clues.py puts them in the level as BP_Examinable actors. Coordinates are Unreal cm (z = height of the surface the thing sits on). Texts are final (from the story workbook, 2026-11-16). Clues whose props aren't built yet live in new_prop_texts (place_clues.py ignores that block); move each into clues with its 'at' once its prop exists.",
   "_fields": {
     "title / body": "what the reading screen shows (no body = no reading screen)",
     "journal": "line added to the Tab journal the first time",
@@ -10,6 +10,60 @@
     "shape": "paper, map_ground, key, book, door or room_door (see SHAPES in place_clues.py)"
   },
   "start_objective": "There's something on the ground by the car. I should see what that is.",
+  "game_text": {
+    "opening": "October 2002.\n\nIt's been a year since Cas stopped answering my calls. Other than me, she has no one to even care to look for her. Not since her mom went missing.\n\nThe last place anyone saw her was a motel at the end of a closed road.",
+    "game_night": "October 17, 2002 (the anniversary)",
+    "ending_page": "you came, bug\n\nnow we can be together",
+    "ending_last_line": "this isn't Cas",
+    "tagline": "TODO",
+    "credits": "TODO"
+  },
+  "new_prop_texts": {
+    "_about": "Final texts for clues whose props aren't built yet. place_clues.py ignores this block.",
+    "cas_wall": {
+      "where": "Room 104, Cas's investigation wall (readable)",
+      "title": "Cas's wall",
+      "notes": [
+        "Cas's note: why does everyone lie about the red lanterns?",
+        "MISSING\n\nEileen Byrne\nMissing since October 17, 1997\nFemale, age 48, brown hair, brown eyes, 5'6\"\nLast seen at the Marrow Falls Motel",
+        "A photo-booth strip of Cas and me (Bug's line: I remember the day we took these. I've kept my copy on me ever since it came out of the photo booth.)"
+      ],
+      "objective": "This is where her mom went missing. I can't believe she never told me she was looking into her mother's disappearance."
+    },
+    "field_log": {
+      "where": "Office, back room (box or folder on the shelf or desk)",
+      "title": "THE TRAILS OF BLACK HOLLOW LAKE",
+      "body": "Aug 3 1974 - Trying to find the source of the sound at the deepest part of the lake failed again. The line goes down and keeps going.\n\nAug 9 1974 - There's a rattling heard from the water every night now. It stops when we stop, but it starts again as soon as we move.\n\nAug 21 1974 - Lanterns along the shore seem to keep it quiet. Red works best. We don't know why.\n\nOct 17 1974 - Freedman walked into the water. We found his boots on the dock. In the morning a boy came out of the woods who went missing in 1952. He hasn't aged.\n\nOne goes in. Something comes back out.\n\nWe can't continue the trials, we've lost too much. The motel will stay open. Someone has to keep the lights lit.",
+      "objective": "One goes in, something comes back. Cas read this. The study clearly said 'something' comes back, but she can't believe it will be her mom."
+    },
+    "shack_notes": {
+      "where": "Hunter's shack, Cas's notebook (her handwriting)",
+      "title": "Cas's notebook",
+      "body": "Night 3. I can't stay in the motel anymore. They watch me there.\n\nThe rattle comes every night now. It stops when I stop. So I don't stop.\n\nI heard her calling from the water. She said my name the way she used to, like she did when I was eight.\n\nThe log said one goes in, one comes back. I could bring her back.",
+      "objective": "She read the log wrong. It clearly said something comes back out, not someone. Something's gone very wrong."
+    },
+    "shack_notes_wrong": {
+      "where": "Hunter's shack, later pages (SECOND 'wrong' font - not picked yet)",
+      "title": "Later pages",
+      "body": "she's not sleeping anymore\n\nbug will come. bug always comes\n\ni drew bug a map\n\n- cas",
+      "objective": "That's not her handwriting. Why would she sign it like that?"
+    },
+    "boathouse_note": {
+      "where": "Boathouse, by the water door, next to her boots set side by side (laces tucked in)",
+      "title": "A note by her boots",
+      "body": "the lanterns are lit for you, bug\n\ndon't worry, this will be the last cabin",
+      "objective": "Her boots. Just like the log. The last cabin... the red one."
+    },
+    "last_page": {
+      "where": "Red cabin, on the pillow of a warm bed, lantern lit (wrong handwriting)",
+      "body": "you came, bug\n\nnow we can be together",
+      "bug_says": "this isn't Cas"
+    },
+    "missing_poster_bug": {
+      "where": "Payphone in the lot, final shot a year later (look only). Car pulling in: unseen.",
+      "body": "MISSING\n\n(Bug's photo-booth silhouette)\n\nLast seen: Marrow Falls Motel, October 2002\nBrunette, 5'4\", blue eyes, 21 years old\n\nIf you have any information please call ___"
+    }
+  },
   "clues": [
     {
       "id": "map_cas",
@@ -73,10 +127,10 @@
       "at": [-952, -1182, 80], "yaw": 70,
       "prompt": "Take",
       "title": "Office key",
-      "body": "[TEST KEY]\n\nA brass key on a cracked plastic tag.\n\nOFFICE - DO NOT REMOVE FROM PREMISES",
+      "body": "A brass key on a cracked plastic tag.\n\nPROPERTY OF MARROW FALLS MOTEL\nOFFICE - DO NOT REMOVE FROM PREMISES",
       "journal": "Found the office key on the dresser next to the TV.",
       "gives_key": "office",
-      "objective": "The office key. Now I can get into the office.",
+      "objective": "The office key. I should see what's in there.",
       "pickup": true
     },
     {
@@ -93,9 +147,9 @@
       "shape": "book",
       "at": [3450, -1340, 109], "yaw": -10,
       "title": "Guest register",
-      "body": "MARROW FALLS MOTEL - GUEST REGISTER\n\nOct 14 1997 - D. Hollis - Rm 102 - 2 nights\nOct 15 1997 - The Carvers (2) - Rm 106 - 1 night\nOct 17 1997 - Eileen Byrne - Rm 104 - 1 night\nOct 18 1997 -\nOct 19 1997 -\nOct 20 1997 -\n\nBelow her name, in pencil, in a different hand:\n\n104 - kept.",
+      "body": "MARROW FALLS MOTEL - GUEST REGISTER\n\nOct 14 1997 - D. Hollis - Room 102 - 2 nights\nOct 15 1997 - The Carvers (2) - Room 106 - 1 night\nOct 17 1997 - Eileen Byrne - Room 104 - 1 night\nOct 18 1997 -\nOct 19 1997 -\nOct 20 1997 -\n\nBelow her name, in pencil, in a different hand:\n\n104 - kept.",
       "journal": "Her mom's name is in the motel's register: Eileen Byrne, October 17, 1997, Room 104. Someone wrote 'kept' under it. Nobody checked in after her.",
-      "objective": "Her mom's name. October 1997. Room 104. Someone wrote 'kept' under it. There might be more in this office."
+      "objective": "Her mom's name. October 1997. Room 104. Someone wrote 'kept' under it. What could that mean? There might be more in this office."
     },
     {
       "id": "key_backgate",
@@ -103,10 +157,10 @@
       "at": [3460, -1150, 77.6], "yaw": 25, "room": true,
       "prompt": "Take",
       "title": "Back gate key",
-      "body": "[TEST KEY]\n\nA new key on a red tag, lying on the office desk. Someone wrote on the tag: GATE.",
+      "body": "A new key on a red tag, lying on the office desk. Someone wrote on the tag:\n\nPROPERTY OF MARROW FALLS MOTEL - GATE.",
       "journal": "Found a key marked GATE on the office desk. The trail behind the motel starts at a locked gate.",
       "gives_key": "backgate",
-      "objective": "A key marked GATE. That has to be the gate out back."
+      "objective": "A key marked GATE. That has to be the gate behind the motel."
     },
     {
       "id": "door_backgate",
@@ -129,10 +183,10 @@
       "at": [5046.6, 13043.9, 115.8], "yaw": 32, "room": true,
       "prompt": "Take",
       "title": "Boathouse key",
-      "body": "[TEST KEY]\n\nA small new key on a loop of fishing line, lying on Cas's lake map. Someone drew a circle around the boathouse.",
+      "body": "A small new key on a loop of fishing line, lying on Cas's lake map. Someone drew a circle around the boathouse.",
       "journal": "Found a new key on the map in the cabin by the lake. The boathouse is circled.",
       "gives_key": "boathouse",
-      "objective": "She circled the boathouse. That's where I'm going.",
+      "objective": "A key, and the boathouse circled. What could she have been looking for there? I have to find out.",
       "pickup": true
     },
     {
