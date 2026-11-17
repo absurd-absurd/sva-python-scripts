@@ -89,6 +89,13 @@ END_T_YEAR, END_T_YEAR_OUT = 4.4, 7.6               # "One year later." fades in
 END_T_SHOT, END_SHOT_FADE = 8.2, 2.0                 # the final shot, fading up from black
 END_T_OUT, END_T_QUIT = 17.0, 20.0                   # cut to black, then quit
 FINAL_CLASS = "/Game/Horror/Interact/BP_FinalShot.BP_FinalShot_C"
+# the title screen (2026-11-17): BP_TitleShot's camera on the foggy lake, the MARROW lettering (T_Title,
+# tools/make_title.py "thin"), [E] Start / [C] Controls / [Q] Quit; Controls shows the key list
+TITLE_CLASS = "/Game/Horror/Interact/BP_TitleShot.BP_TitleShot_C"
+TITLE_TEX = "/Game/Horror/UI/T_Title.T_Title"
+TITLE_FADE = 2.5                                     # the title fades up from black when the game starts
+CONTROLS = [("W A S D / arrows", "Walk"), ("Mouse", "Look"), ("Shift", "Run"), ("Space", "Jump"),
+            ("E", "Examine, read, pick up, open"), ("Tab", "Journal"), ("M", "Map (once you have Cas's map)")]
 MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=1.0)"      # solid paper (it was half see-through; with the torn edge the overlap showed)
 MARKER_TINT = "(R=1.0,G=1.0,B=1.0,A=0.8)"
 MAP_FULL_TEX = "/Game/Horror/UI/T_MapFull.T_MapFull"
@@ -349,7 +356,9 @@ def hud_graph():
     bp = g.event(ACTOR, "ReceiveBeginPlay", [])
     a = g.call(ACTOR, "EnableInput", bp.then, [("PlayerController", "pc",
                g.pure(HUD, "GetOwningPlayerController", ty="pc"))]).then
-    a = g.set("OpenStart", "real", g.now(), a).then
+    found = g.call(STATICS, "GetActorOfClass", a, [("ActorClass", "actorclass", TITLE_CLASS)], outs=[("ReturnValue", "actor")])
+    a = g.call(PC, "SetViewTargetWithBlend", found.then, [("NewViewTarget", "actor", found.o["ReturnValue"]), ("BlendTime", "float", 0.0)],
+               target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc")).then
     freeze0(a)
     open_t = lambda: g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get("OpenStart", "real"))])
 
@@ -388,7 +397,8 @@ def hud_graph():
     # tell the materials where you are (MPC_Horror.PlayerPos): crows fly off, the owl turns its head
     ploc = g.pure(ACTOR, "K2_GetActorLocation", ty="vector", target=(g.pure(HUD, "GetOwningPawn", ty="actor"), "actor"))
     pcol = g.pure(MATH, "Conv_VectorToLinearColor", [("InVec", "vector", ploc)], ty="color")
-    end_yes, end_no = g.branch(g.get("Ending", "bool"), ev.then)
+    title_yes, title_no = g.branch(g.get("Title", "bool"), ev.then)
+    end_yes, end_no = g.branch(g.get("Ending", "bool"), title_no)
     op_yes, op_no = g.branch(g.get("Opening", "bool"), end_no)
     hud_then, fade_then = g.sequence(op_no, 2)
     tell = g.call("/Script/Engine.KismetMaterialLibrary", "SetVectorParameterValue", hud_then,
@@ -701,6 +711,32 @@ def hud_graph():
     g.call(HUD, "DrawRect", fading, [("RectColor", "color", col), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
                                      ("ScreenW", "float", W), ("ScreenH", "float", H)])
 
+    # ---- the title screen ----
+    g.row(340 * 9, -5200)
+    ctl_yes, ctl_no = g.branch(g.get("ControlsOpen", "bool"), title_yes)
+    TW = g.mul(W, 0.62)
+    a = g.call(HUD, "DrawTexture", ctl_no, [
+        ("Texture", "texture", TITLE_TEX),
+        ("ScreenX", "float", g.mul(W, 0.19)), ("ScreenY", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(H, 0.3)), ("B", "real", g.mul(TW, 0.125))])),
+        ("ScreenW", "float", TW), ("ScreenH", "float", g.mul(TW, 0.25)),
+        ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
+        ("TintColor", "color", WHITE)]).then
+    a = draw("[E]  Start", a, 0.07, 0.7, 0.9, TEXT, True)
+    a = draw("[C]  Controls", a, 0.07, 0.76, 0.9, TEXT, True)
+    a = draw("[Q]  Quit", a, 0.07, 0.82, 0.9, TEXT, True)
+    ta = g.pure(MATH, "FMax", [("A", "real", 0.0), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", 1.0),
+               ("B", "real", g.mul(g.now(), 1.0 / TITLE_FADE))]))], ty="real")
+    g.call(HUD, "DrawRect", a, [("RectColor", "color", g.pure(MATH, "MakeColor", [("R", "float", 0.0), ("G", "float", 0.0),
+                                ("B", "float", 0.0), ("A", "float", ta)], ty="color")),
+                                ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0), ("ScreenW", "float", W), ("ScreenH", "float", H)])
+    # the controls page
+    a = dark(ctl_yes)
+    a = draw("CONTROLS", a, 0.3, 0.16, 1.25)
+    for k, (key, what) in enumerate(CONTROLS):
+        a = draw(key, a, 0.3, 0.27 + k * 0.065, 1.0, DIM)
+        a = draw(what, a, 0.5, 0.27 + k * 0.065, 1.0, TEXT)
+    draw("[C]  Back", a, 0.3, 0.88, 0.75, DIM)
+
     # ---- the ending ----
     g.row(340 * 9, -4200)
     et = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get("EndStart", "real"))])
@@ -757,7 +793,13 @@ def hud_graph():
     # ---- E ----
     g.row(0, 2800)
     e = g.input_event("IA_Interact")
-    _, e_live = g.branch(g.get("Ending", "bool"), e)
+    on_title, e_game = g.branch(g.get("Title", "bool"), e)
+    start, _ = g.branch(g.not_(g.get("ControlsOpen", "bool")), on_title)
+    a = g.set("Title", "bool", False, start).then
+    a = g.set("OpenStart", "real", g.now(), a).then
+    g.call(PC, "SetViewTargetWithBlend", a, [("NewViewTarget", "actor", g.pure(HUD, "GetOwningPawn", ty="actor")), ("BlendTime", "float", 0.0)],
+           target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc"))
+    _, e_live = g.branch(g.get("Ending", "bool"), e_game)
     in_open, e_play = g.branch(g.get("Opening", "bool"), e_live)
     ready, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", open_t()), ("B", "real", OPEN_T_GO)], ty="bool"), in_open)
     a = g.set("Opening", "bool", False, ready).then
@@ -821,6 +863,18 @@ def hud_graph():
     g.row(340 * 5, 9400)
     y, _ = g.branch(fget("PickUp", "bool"), steps[3])
     g.call(ACTOR, "K2_DestroyActor", y, target=(g.get("Focus", "ex"), "actor"))
+
+    # ---- C: the controls page (title screen) ----
+    g.row(0, 12600)
+    ckey = g.input_event("IA_Controls")
+    t_yes, _ = g.branch(g.get("Title", "bool"), ckey)
+    g.set("ControlsOpen", "bool", g.not_(g.get("ControlsOpen", "bool")), t_yes)
+    # ---- Q: quit (title screen) ----
+    g.row(0, 13200)
+    qkey = g.input_event("IA_Quit")
+    q_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", g.get("Title", "bool")),
+                                                    ("B", "bool", g.not_(g.get("ControlsOpen", "bool")))], ty="bool"), qkey)
+    g.call(SYS, "QuitGame", q_yes, [("SpecificPlayer", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc"))])
 
     # ---- Tab ----
     g.row(0, 10200)
