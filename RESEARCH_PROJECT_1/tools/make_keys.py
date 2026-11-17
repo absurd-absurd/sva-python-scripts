@@ -175,9 +175,10 @@ def gate():
     tag = tag_shape(540, 140, (176, 30, 26, 255), rng)                        # new red tag, plain
     td = ImageDraw.Draw(tag)
     ink = (20, 18, 20, 255)                                                   # someone wrote on it in marker
-    marker = ImageFont.truetype(os.path.join(FONTS, "RockSalt-Regular.ttf"), 19)
-    big = ImageFont.truetype(os.path.join(FONTS, "RockSalt-Regular.ttf"), 26)
-    for text, fnt, y in (("PROPERTY OF", marker, 10), ("MARROW FALLS MOTEL", marker, 40), ("- GATE.", big, 70)):
+    # motel staff's marker, NOT Cas's hand (user, 2026-11-17): Permanent Marker (fonts/, Apache license)
+    marker = ImageFont.truetype(os.path.join(FONTS, "PermanentMarker-Regular.ttf"), 22)
+    big = ImageFont.truetype(os.path.join(FONTS, "PermanentMarker-Regular.ttf"), 30)
+    for text, fnt, y in (("PROPERTY OF", marker, 8), ("MARROW FALLS MOTEL", marker, 38), ("- GATE.", big, 70)):
         td.text((290 - td.textlength(text, font=fnt) / 2, y), text, font=fnt, fill=ink)
     on_ring(key, tag, 300, 250, 48, -20, "key_gate")
 

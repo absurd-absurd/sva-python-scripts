@@ -196,3 +196,7 @@ of the key's head on one side.
 
 ## 2026-11-17_keys_full_v2.png
 All three key pictures at full size after the ring fixes (office, gate, boathouse).
+
+## 2026-11-17_keys_full_v3.png
+The gate tag is now in a motel worker's felt-tip marker (Permanent Marker), not Cas's handwriting
+(user: "the second key should not be the same font as Cas's handwriting").
