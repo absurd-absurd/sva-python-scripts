@@ -38,7 +38,18 @@ ACTOR, HUD, PC, CAM, CTRL, SCENE = ("/Script/Engine.Actor", "/Script/Engine.HUD"
                                     "/Script/Engine.PlayerCameraManager", "/Script/Engine.Controller",
                                     "/Script/Engine.SceneComponent")
 EX_CLASS = "/Script/Engine.BlueprintGeneratedClass'/Game/Horror/Interact/BP_Examinable.BP_Examinable_C'"
-FONT = "/Game/Horror/UI/F_HUD_Italic.F_HUD_Italic"            # Roboto Italic (made by interact_setup.py)
+FONT = "/Game/Horror/UI/F_HUD_Italic.F_HUD_Italic"            # Bug's voice: Ink Free (made by interact_setup.py)
+# the hand a paper is written in (clues.json "hand" -> BP_Examinable.Hand -> HUD.ReadHand), and how big
+# its body text is drawn on the reading screen (each font sits at a different size at the same scale)
+HANDS = [("cas", "/Game/Horror/UI/F_Hand_Cas.F_Hand_Cas", 0.5, "(R=0.020,G=0.030,B=0.090,A=0.950000)"),    # Rock Salt, blue-black pen
+         ("wrong", "/Game/Horror/UI/F_Hand_Wrong.F_Hand_Wrong", 1.35, "(R=0.035,G=0.012,B=0.010,A=0.950000)"),  # Zeyada, near-black
+         ("print", "/Game/Horror/UI/F_Hand_Print.F_Hand_Print", 0.85, "(R=0.030,G=0.028,B=0.030,A=0.900000)")]  # Courier, typewriter
+INK = "(R=0.030,G=0.028,B=0.035,A=0.950000)"     # writing with no hand, on paper
+# the sheet a paper is shown on (clues.json "paper" -> BP_Examinable.Paper -> HUD.ReadPaper; tools/make_papers.py)
+PAPERS = [(k, f"/Game/Horror/UI/T_Paper_{k.capitalize()}.T_Paper_{k.capitalize()}")
+          for k in ("stationery", "notebook", "typed", "ledger", "scrap")]
+PAPER_H, PAPER_ASPECT, PAPER_TOP = 0.92, 0.75, 0.04       # sheet height / width:height / top, x screen height
+PAPER_TEXT_X, PAPER_TEXT_Y = 0.11, 0.15                   # where the writing starts: x screen height in, x sheet height down
 TEXT = "(R=0.78,G=0.75,B=0.68,A=1.000000)"                   # warm off-white
 DIM = "(R=0.55,G=0.53,B=0.5,A=1.000000)"
 DARK = "(R=0.004,G=0.004,B=0.006,A=0.930000)"
@@ -318,15 +329,16 @@ def hud_graph():
     H = g.pure(MATH, "Conv_IntToDouble", [("InInt", "int", ev.o["SizeY"])])
     TS = g.mul(H, TEXT_SCALE)
 
-    def draw(text, after, x, y, scale=1.0, color=TEXT, shadow=False):
-        """DrawText at a fraction of the screen. shadow: a black copy just behind it first,
-        so the words stay readable on a bright wall."""
+    def draw(text, after, x, y, scale=1.0, color=TEXT, shadow=False, font=FONT, at=None):
+        """DrawText at a fraction of the screen (or at=(x pin, y pin) in pixels). shadow: a black copy
+        just behind it first, so the words stay readable on a bright wall."""
         if shadow:
-            after = draw(text, after, x + 0.0012, y + 0.0018, scale, SHADOW)
+            after = draw(text, after, x + 0.0012, y + 0.0018, scale, SHADOW, font=font)
+        sx, sy = at if at else (g.mul(W, x), g.mul(H, y))
         return g.call(HUD, "DrawText", after, [
             ("Text", "string", text), ("TextColor", "color", color),
-            ("ScreenX", "float", g.mul(W, x)), ("ScreenY", "float", g.mul(H, y)),
-            ("Font", "font", FONT), ("Scale", "float", g.mul(TS, scale) if scale != 1.0 else TS)]).then
+            ("ScreenX", "float", sx), ("ScreenY", "float", sy),
+            ("Font", "font", font), ("Scale", "float", g.mul(TS, scale) if scale != 1.0 else TS)]).then
 
     def dark(after):
         return g.call(HUD, "DrawRect", after, [
@@ -527,9 +539,45 @@ def hud_graph():
     # reading screen
     r_yes, r_no = g.branch(g.get("Reading", "bool"), [toast_done, t_no])
     a = dark(r_yes)
-    a = draw(g.get("ReadTitle", "string"), a, 0.2, 0.14, 1.25)
-    a = draw(g.get("ReadBody", "string"), a, 0.2, 0.24)
-    draw("[E]  Close", a, 0.2, 0.88, 0.75, DIM)
+    on_paper, no_paper = g.branch(g.not_(g.empty(g.get("ReadPaper", "string"))), a)
+
+    def body(after, x, y, on_sheet):
+        """The body in the paper's own hand (ink on a sheet); Bug's font when it has none."""
+        nxt = after
+        for hand, font, scale, ink in HANDS:
+            is_hand = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadHand", "string")),
+                                                        ("B", "string", hand)], ty="bool")
+            h_yes, nxt = g.branch(is_hand, nxt)
+            draw(g.get("ReadBody", "string"), h_yes, 0, 0, scale, ink if on_sheet else TEXT, font=font, at=(x, y))
+        draw(g.get("ReadBody", "string"), nxt, 0, 0, 1.0, INK if on_sheet else TEXT, at=(x, y))
+
+    # no sheet: words on the dark screen, as before
+    a = draw(g.get("ReadTitle", "string"), no_paper, 0.2, 0.14, 1.25)
+    body_then, close_then = g.sequence(a, 2)
+    body(body_then, g.mul(W, 0.2), g.mul(H, 0.24), False)
+    draw("[E]  Close", close_then, 0.2, 0.88, 0.75, DIM)
+
+    # on a sheet: the paper in the middle, the words written on it; Bug's title and [E] beside it
+    PH = g.mul(H, PAPER_H)
+    PW = g.mul(H, PAPER_H * PAPER_ASPECT)
+    PX = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(PW, 0.5))])
+    PY = g.mul(H, PAPER_TOP)
+    sheet = g.sequence(on_paper, 2)
+    nxt = sheet[0]
+    for kind, tex in PAPERS:
+        is_kind = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadPaper", "string")),
+                                                    ("B", "string", kind)], ty="bool")
+        k_yes, nxt = g.branch(is_kind, nxt)
+        g.call(HUD, "DrawTexture", k_yes, [
+            ("Texture", "texture", tex), ("ScreenX", "float", PX), ("ScreenY", "float", PY),
+            ("ScreenW", "float", PW), ("ScreenH", "float", PH),
+            ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0),
+            ("TextureVHeight", "float", 1.0), ("TintColor", "color", "(R=1.0,G=1.0,B=1.0,A=1.000000)")])
+    words = sheet[1]
+    words = draw(g.get("ReadTitle", "string"), words, 0.03, 0.08, 1.0, TEXT, True)
+    words = draw("[E]  Close", words, 0.03, 0.9, 0.75, DIM)
+    body(words, g.pure(MATH, "Add_DoubleDouble", [("A", "real", PX), ("B", "real", g.mul(H, PAPER_TEXT_X))]),
+         g.pure(MATH, "Add_DoubleDouble", [("A", "real", PY), ("B", "real", g.mul(PH, PAPER_TEXT_Y))]), True)
 
     # journal
     g.row(340 * 9, 1300)
@@ -623,6 +671,8 @@ def hud_graph():
     p_yes, _ = g.branch(g.not_(g.empty(fget("Body"))), steps[0])
     a = g.set("ReadTitle", "string", fget("Title"), p_yes).then
     a = g.set("ReadBody", "string", fget("Body"), a).then
+    a = g.set("ReadHand", "string", fget("Hand"), a).then
+    a = g.set("ReadPaper", "string", fget("Paper"), a).then
     freeze(g.set("Reading", "bool", True, a).then)
     # 1: first time only - journal, key, objective
     g.row(340 * 5, 5700)

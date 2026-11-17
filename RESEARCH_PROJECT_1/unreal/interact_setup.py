@@ -20,6 +20,8 @@ Input actions IA_Interact (E), IA_Journal (Tab) and IA_Map (M, works while pause
 The Blueprint graphs (the logic) can't be made from Python; tools/make_interact_nodes.py
 writes them as text that gets pasted into the two graphs.
 """
+import os
+
 import unreal
 
 DIR = "/Game/Horror/Interact"
@@ -109,27 +111,23 @@ def components(bp):
         box.set_collision_profile_name("UI")
 
 
-def italic_font():
-    """/Game/Horror/UI/F_HUD_Italic: a copy of the engine's Roboto whose regular style is the
-    italic face. The HUD draws all its text with it (the canvas always uses the first style)."""
-    path = "/Game/Horror/UI/F_HUD_Italic"
+def make_font(path, ff_name, ttf):
+    """A composite font at `path` (a copy of the engine's Roboto) whose regular style is the FontFace
+    `ff_name` imported from `ttf`. The HUD canvas always draws with the first style."""
     if not lib.does_asset_exist(path):
         lib.duplicate_asset("/Engine/EngineFonts/Roboto", path)
     font = unreal.load_asset(path)
-    # Nov 14: the user wanted the on-screen text in the handwriting font used on Cas's map (Ink Free,
-    # comes with Windows). Imported as a FontFace; the asset keeps its old name so the HUD needs no change.
-    ff = "/Game/Horror/UI/FF_InkFree"
+    ff = "/Game/Horror/UI/" + ff_name
     if not lib.does_asset_exist(ff):
         t = unreal.AssetImportTask()
-        t.filename = r"C:/Windows/Fonts/Inkfree.ttf"
-        t.destination_path, t.destination_name = "/Game/Horror/UI", "FF_InkFree"
+        t.filename = ttf
+        t.destination_path, t.destination_name = "/Game/Horror/UI", ff_name
         t.automated, t.save, t.replace_existing = True, True, True
         unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([t])
         ffa = unreal.load_asset(ff)
         ffa.set_editor_property("loading_policy", unreal.FontLoadingPolicy.INLINE)   # all loaded up front
         lib.save_loaded_asset(ffa, False)
-    face = "/Script/Engine.FontFace'/Game/Horror/UI/FF_InkFree.FF_InkFree'" if lib.does_asset_exist(ff) else \
-        "/Script/Engine.FontFace'/Engine/EngineFonts/Faces/RobotoItalic.RobotoItalic'"
+    face = f"/Script/Engine.FontFace'{ff}.{ff_name}'" if lib.does_asset_exist(ff) else         "/Script/Engine.FontFace'/Engine/EngineFonts/Faces/RobotoItalic.RobotoItalic'"
     cf = font.get_editor_property("composite_font")
     text = cf.export_text()
     fallback = text[text.index("FallbackTypeface="):]
@@ -139,8 +137,29 @@ def italic_font():
     lib.save_loaded_asset(font, False)   # save even if Unreal did not mark it changed
 
 
+FONTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "fonts")
+
+
+def italic_font():
+    """/Game/Horror/UI/F_HUD_Italic: Bug's voice (corner lines, journal, titles). Nov 14: the user wanted
+    the on-screen text in Ink Free; the asset keeps its old name so the HUD needs no change."""
+    make_font("/Game/Horror/UI/F_HUD_Italic", "FF_InkFree", r"C:/Windows/Fonts/Inkfree.ttf")
+
+
+def hand_fonts():
+    """The three hands a paper can be in (clues.json "hand"), for the reading screen's body text
+    (Nov 16-17): Cas = Rock Salt, the thing wearing her = Zeyada, the researchers' typed log = Courier New."""
+    # Rock Salt's own line height is ~2.4 em (lots of empty space over the capitals), so the game uses
+    # fonts/RockSalt-Tight.ttf: the same letters with ~0.6x the line spacing (made with fontTools, 2026-11-17).
+    # (Unreal's FontFace ascend/descend override made the text vanish, so it isn't used.)
+    make_font("/Game/Horror/UI/F_Hand_Cas", "FF_RockSalt", os.path.join(FONTS_DIR, "RockSalt-Tight.ttf"))
+    make_font("/Game/Horror/UI/F_Hand_Wrong", "FF_Zeyada", os.path.join(FONTS_DIR, "Zeyada.ttf"))
+    make_font("/Game/Horror/UI/F_Hand_Print", "FF_CourierNew", r"C:/Windows/Fonts/cour.ttf")
+
+
 def main():
     italic_font()
+    hand_fonts()
     input_action("IA_Interact", ["E", "Gamepad_FaceButton_Bottom"])
     input_action("IA_Journal", ["Tab", "Gamepad_Special_Right"])
     input_action("IA_Map", ["M", "Gamepad_Special_Left"], when_paused=True)    # must work while the map pauses the game
@@ -149,7 +168,7 @@ def main():
     components(ex)
     s, b, r = T("string"), T("bool"), T("real")
     add_vars(ex, [("Prompt", s), ("Title", s), ("Body", s), ("Journal", s), ("GivesKey", s),
-                  ("NeedsKey", s), ("LockedText", s), ("Objective", s), ("PickUp", b),
+                  ("NeedsKey", s), ("LockedText", s), ("Objective", s), ("Hand", s), ("Paper", s), ("PickUp", b),
                   ("IsDoor", b), ("OpenAngle", r)], editable=True)
     add_vars(ex, [("Done", b), ("Opened", b), ("Yaw", r)], editable=False)
     BPL.compile_blueprint(ex)
@@ -159,7 +178,7 @@ def main():
 
     hud, _ = blueprint("BP_HorrorHUD", unreal.HUD)
     add_vars(hud, [("Focus", BPL.get_object_reference_type(BPL.generated_class(ex))),
-                   ("Reading", b), ("JournalOpen", b), ("ReadTitle", s), ("ReadBody", s),
+                   ("Reading", b), ("JournalOpen", b), ("ReadTitle", s), ("ReadBody", s), ("ReadHand", s), ("ReadPaper", s),
                    ("Journal", s), ("Keys", s), ("Objective", s), ("Toast", s), ("ToastTime", r),
                    ("Gap", s), ("MapOpen", b),
                    # flashlight flicker timer: mode 0 on / 1 flutter / 2 off, next start, end, hit on return

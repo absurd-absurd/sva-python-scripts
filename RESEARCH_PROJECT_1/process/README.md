@@ -165,3 +165,10 @@ handwriting (Ink Free), to pick the wrong-hand font. Address lines are placehold
 Cas's map, before (left, Ink Free) and after (right) switching her handwriting to Rock Salt, so it
 contrasts with the thin "wrong" hand (Zeyada). Rock Salt draws much bigger, so make_map.py scales it
 to 0.78x and pulls its lines closer; the gate label and lookout note were moved to stop overlaps.
+
+## 2026-11-17_reading_letter_on_paper.png
+The reading screen now shows a paper as the real thing (user: "when you pick up the letter to read it,
+it should be on a piece of paper"): Cas's letter on Marrow Falls Motel letter paper, in her own
+handwriting (Rock Salt, blue-black pen), with Bug's title beside it. Sheets come from tools/make_papers.py
+(stationery, notebook, typed, ledger, scrap); each clue picks one with "paper" and its hand with "hand".
+Rock Salt's huge built-in line spacing was tightened in a copy of the font (fonts/RockSalt-Tight.ttf).

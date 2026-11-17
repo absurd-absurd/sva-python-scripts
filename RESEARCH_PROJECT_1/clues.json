@@ -6,6 +6,7 @@
     "gives_key / needs_key": "key name; needs_key locks it until you have that key",
     "objective": "new objective line after using it",
     "pickup": "disappears after you take it",
+    "paper": "the sheet the reading screen shows it on: stationery, notebook, typed, ledger, scrap (tools/make_papers.py)",
     "hand": "whose writing the reading screen uses: cas = Rock Salt, wrong = Zeyada, print = typed; none = Bug's Ink Free",
     "open_angle": "how far a door swings (default 95; negative swings the other way)",
     "shape": "paper, map_ground, key, book, door or room_door (see SHAPES in place_clues.py)"
@@ -39,6 +40,7 @@
     },
     "field_log": {
       "hand": "print",
+      "paper": "typed",
       "where": "Office, back room (box or folder on the shelf or desk)",
       "title": "THE TRIALS OF BLACK HOLLOW LAKE",
       "body": "Aug 3 1974 - Trying to find the source of the sound at the deepest part of the lake failed again. The line goes down and keeps going.\n\nAug 9 1974 - There's a rattling heard from the water every night now. It stops when we stop, but it starts again as soon as we move.\n\nAug 21 1974 - Lanterns along the shore seem to keep it quiet. Red works best. We don't know why.\n\nOct 17 1974 - Freedman walked into the water. We found his boots on the dock. In the morning a boy came out of the woods who went missing in 1952. He hasn't aged.\n\nOne goes in. Something comes back out.\n\nWe can't continue the trials, we've lost too much. The motel will stay open. Someone has to keep the lights lit.",
@@ -46,6 +48,7 @@
     },
     "shack_notes": {
       "hand": "cas",
+      "paper": "notebook",
       "where": "Hunter's shack, Cas's notebook (her handwriting)",
       "title": "Cas's notebook",
       "body": "Night 3. I can't stay in the motel anymore. They watch me there.\n\nThe rattle comes every night now. It stops when I stop. So I don't stop.\n\nI heard her calling from the water. She said my name the way she used to, like she did when I was eight.\n\nThe log said one goes in, one comes back. I could bring her back.",
@@ -53,6 +56,7 @@
     },
     "shack_notes_wrong": {
       "hand": "wrong",
+      "paper": "notebook",
       "where": "Hunter's shack, later pages (wrong-hand font: Zeyada)",
       "title": "Later pages",
       "body": "she's not sleeping anymore\n\nbug will come. bug always comes\n\ni left bug a map\n\n- cas",
@@ -60,6 +64,7 @@
     },
     "boathouse_note": {
       "hand": "wrong",
+      "paper": "scrap",
       "where": "Boathouse, by the water door, next to her boots set side by side (laces tucked in)",
       "title": "A note by her boots",
       "body": "the lanterns are lit for you, bug\n\ndon't worry, it won't be much longer now",
@@ -67,6 +72,7 @@
     },
     "last_page": {
       "hand": "wrong",
+      "paper": "scrap",
       "where": "Boathouse, the ENDING: at the edge of the water door past her boots, held down by a lit red lantern",
       "body": "you came, bug\n\nnow we can be together",
       "bug_says": "this isn't Cas"
@@ -125,7 +131,7 @@
       "prompt": "Open"
     },
     {
-      "id": "note_bed", "hand": "cas",
+      "id": "note_bed", "hand": "cas", "paper": "stationery",
       "shape": "paper",
       "at": [-708, -914, 58.9], "yaw": 15,
       "title": "A letter on the bed",
@@ -155,7 +161,7 @@
       "objective": "Nobody's here. I should look around before someone comes back."
     },
     {
-      "id": "guest_book",
+      "id": "guest_book", "paper": "ledger",
       "shape": "book",
       "at": [3450, -1340, 109], "yaw": -10,
       "title": "Guest register",

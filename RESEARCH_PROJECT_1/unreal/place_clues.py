@@ -13,6 +13,9 @@ DATA = json.load(open(ROOT + "/clues.json", encoding="utf-8"))
 TAG = "clue"
 HIT_MARGIN, HIT_UP = 10, 10   # cm the aim box sticks out around / above small clues
 WRAP = 44                     # characters per line on the reading screen
+# on a sheet (clues.json "paper") lines are shorter, and each hand is a different width (measured with
+# PIL at the HUD's sizes in tools/make_interact_nodes.py HANDS, 2026-11-17)
+SHEET_WRAP = {"cas": 39, "wrong": 33, "print": 30, "": 38}
 MATS = "/Game/Horror/Materials/PS2/Props/"
 
 # shape: size in cm (x, y, z), material, and where the mesh sits from the actor's origin.
@@ -33,7 +36,7 @@ DOOR_MESH = {"room_door": "/Game/Horror/Sets/prop_room_door", "door": "/Game/Hor
              "gate": "/Game/Horror/Sets/prop_gate"}
 FIELDS = {"prompt": "Prompt", "title": "Title", "body": "Body", "journal": "Journal",
           "gives_key": "GivesKey", "needs_key": "NeedsKey", "locked_text": "LockedText",
-          "objective": "Objective", "pickup": "PickUp",
+          "objective": "Objective", "pickup": "PickUp", "hand": "Hand", "paper": "Paper",
           "open_angle": "OpenAngle"}
 
 actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -41,9 +44,9 @@ BPL = unreal.BlueprintEditorLibrary
 CUBE = unreal.load_asset("/Engine/BasicShapes/Cube")
 
 
-def wrap(text):
+def wrap(text, width=WRAP):
     """Break long lines so they fit the reading screen; keeps the blank lines between paragraphs."""
-    return "\n".join(textwrap.fill(p, WRAP) if p else "" for p in text.split("\n"))
+    return "\n".join(textwrap.fill(p, width) if p else "" for p in text.split("\n"))
 
 
 ROOM_LIGHT = unreal.LightingChannels()
@@ -69,7 +72,11 @@ def main():
         a.tags = [TAG]
         for key, var in FIELDS.items():
             if key in c:
-                a.set_editor_property(var, wrap(c[key]) if key in ("body", "journal") else c[key])
+                if key == "body" and c.get("paper"):
+                    value = wrap(c[key], SHEET_WRAP.get(c.get("hand", ""), SHEET_WRAP[""]))
+                else:
+                    value = wrap(c[key]) if key in ("body", "journal") else c[key]
+                a.set_editor_property(var, value)
         a.set_editor_property("IsDoor", "door" in c["shape"])
         size, mat, offset = SHAPES[c["shape"]]
         mesh = a.get_components_by_class(unreal.StaticMeshComponent)[0]
