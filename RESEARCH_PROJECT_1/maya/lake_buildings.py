@@ -1193,7 +1193,7 @@ def cabin(index, open_):
     tube((sx0 + 50, sy0 + 65, F + 47), (sx0 + 62, sy0 + 65, F + 47), 1.0, "rusty_tool_mat", sides=6)
     tube((0, -HY + 50, F + 82), (0, -HY + 50, 322), 7, "stove_mat", sides=10)
     rsoft(0, -10, F + 1.0, 150, 95, 1.2, "rug_mat", jitter=0.6, smooth=1, seed=11, div=(4, 1, 3))
-    # table and two chairs; the map, a torn page and the candle on it (the key: clues.json)
+    # table and two chairs; a torn page and the candle on it (her lake map + the boathouse key are at the shack now)
     tx, ty, tz = 70, 60, F + 75
     bevel_box(tx - 60, tx + 60, ty - 40, ty + 40, tz - 4, tz, "dock_wood_mat", r=1.0)
     for x in (tx - 54, tx + 54):
@@ -1211,7 +1211,6 @@ def cabin(index, open_):
             bevel_box(px - 2, px + 2, py - 2, py + 2, F + 47, F + 98, "plank_dark_mat", r=0.5)
         for z in (F + 62, F + 76, F + 90):
             rbevel(bxp, byp, z, 34, 2.2, 7, "plank_grey_mat", r=0.5, yaw=yaw)
-    flat_picture(tx - 20, ty + 5, tz + 0.6, 38, 28, "pic_lake_map", yaw=8)
     flat_picture(tx + 30, ty - 15, tz + 0.9, 18, 24, "pic_page_2", yaw=-20)
     frustum(tx + 40, ty + 25, tz, tz + 1.2, 5, 4.5, "candle_mat", sides=12)        # wax puddle
     frustum(tx + 40, ty + 25, tz + 1.2, tz + 8, 2.2, 2.1, "candle_mat", sides=12)
