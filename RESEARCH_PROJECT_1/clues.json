@@ -6,7 +6,7 @@
     "gives_key / needs_key": "key name; needs_key locks it until you have that key",
     "objective": "new objective line after using it",
     "pickup": "disappears after you take it",
-    "paper": "the sheet the reading screen shows it on: stationery, notebook, typed, ledger, scrap (tools/make_papers.py)",
+    "paper": "the sheet the reading screen shows it on: stationery, notebook, typed, ledger, scrap (tools/make_papers.py), or a key picture key_office, key_gate, key_boathouse (tools/make_keys.py; words drawn in, use hand none)",
     "hand": "whose writing the reading screen uses: cas = Rock Salt, wrong = Zeyada, print = typed; none = Bug's Ink Free",
     "open_angle": "how far a door swings (default 95; negative swings the other way)",
     "shape": "paper, map_ground, key, book, door or room_door (see SHAPES in place_clues.py)"
@@ -140,7 +140,7 @@
       "objective": "She never told me any of this. She took the office key, so it might still be in here somewhere."
     },
     {
-      "id": "key_office",
+      "id": "key_office", "paper": "key_office", "hand": "none",
       "shape": "key",
       "at": [-952, -1182, 80], "yaw": 70,
       "prompt": "Take",
@@ -170,7 +170,7 @@
       "objective": "Her mom's name. October 1997. Room 104. Someone wrote 'kept' under it. What could that mean? There might be more in this office."
     },
     {
-      "id": "key_backgate",
+      "id": "key_backgate", "paper": "key_gate", "hand": "none",
       "shape": "key",
       "at": [3460, -1150, 77.6], "yaw": 25, "room": true,
       "prompt": "Take",
@@ -196,7 +196,7 @@
       "prompt": "Open"
     },
     {
-      "id": "key_boathouse",
+      "id": "key_boathouse", "paper": "key_boathouse", "hand": "none",
       "shape": "key",
       "at": [2380.0, 4273.9, 59.4], "yaw": 44, "room": true,
       "prompt": "Take",

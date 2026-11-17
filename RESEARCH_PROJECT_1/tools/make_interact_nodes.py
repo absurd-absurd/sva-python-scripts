@@ -43,11 +43,12 @@ FONT = "/Game/Horror/UI/F_HUD_Italic.F_HUD_Italic"            # Bug's voice: Ink
 # its body text is drawn on the reading screen (each font sits at a different size at the same scale)
 HANDS = [("cas", "/Game/Horror/UI/F_Hand_Cas.F_Hand_Cas", 0.5, "(R=0.020,G=0.030,B=0.090,A=0.950000)"),    # Rock Salt, blue-black pen
          ("wrong", "/Game/Horror/UI/F_Hand_Wrong.F_Hand_Wrong", 1.35, "(R=0.035,G=0.012,B=0.010,A=0.950000)"),  # Zeyada, near-black
-         ("print", "/Game/Horror/UI/F_Hand_Print.F_Hand_Print", 0.85, "(R=0.030,G=0.028,B=0.030,A=0.900000)")]  # Courier, typewriter
+         ("print", "/Game/Horror/UI/F_Hand_Print.F_Hand_Print", 0.85, "(R=0.030,G=0.028,B=0.030,A=0.900000)"),  # Courier, typewriter
+         ("none", FONT, 1.0, "(R=0.0,G=0.0,B=0.0,A=0.000000)")]   # a picture with its words in it (the keys): write nothing
 INK = "(R=0.030,G=0.028,B=0.035,A=0.950000)"     # writing with no hand, on paper
 # the sheet a paper is shown on (clues.json "paper" -> BP_Examinable.Paper -> HUD.ReadPaper; tools/make_papers.py)
 PAPERS = [(k, f"/Game/Horror/UI/T_Paper_{k.capitalize()}.T_Paper_{k.capitalize()}")
-          for k in ("stationery", "notebook", "typed", "ledger", "scrap")]
+          for k in ("stationery", "notebook", "typed", "ledger", "scrap", "key_office", "key_gate", "key_boathouse")]
 PAPER_H, PAPER_ASPECT, PAPER_TOP = 0.92, 0.75, 0.04       # sheet height / width:height / top, x screen height
 PAPER_TEXT_X, PAPER_TEXT_Y = 0.11, 0.15                   # where the writing starts: x screen height in, x sheet height down
 TEXT = "(R=0.78,G=0.75,B=0.68,A=1.000000)"                   # warm off-white

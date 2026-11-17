@@ -172,3 +172,14 @@ it should be on a piece of paper"): Cas's letter on Marrow Falls Motel letter pa
 handwriting (Rock Salt, blue-black pen), with Bug's title beside it. Sheets come from tools/make_papers.py
 (stationery, notebook, typed, ledger, scrap); each clue picks one with "paper" and its hand with "hand".
 Rock Salt's huge built-in line spacing was tightened in a copy of the font (fonts/RockSalt-Tight.ttf).
+
+## 2026-11-17_reading_keys.png
+The keys on the reading screen as the real objects (user: "make the keys look real too"): the office key
+on a cracked red motel tag, the new gate key on a red tag someone wrote on in marker, and the small
+boathouse key on a loop of fishing line lying on a torn piece of Cas's map with the boathouse circled.
+Drawn by tools/make_keys.py with the tag words drawn in; those clues use hand "none" so nothing is
+written over the picture.
+
+## 2026-11-17_postcard_back.png
+The postcard that brings Bug to Marrow Falls, for the opening (tools/make_postcard.py): the motel's
+printed side is now just its name (user removed the "Black Hollow Lake - Rooms by the night or week" line).

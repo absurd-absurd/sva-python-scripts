@@ -1,11 +1,12 @@
-"""Bring the reading-screen sheets into Unreal: export/paper_<kind>.png (tools/make_papers.py) ->
+"""Bring the reading-screen sheets (and the key pictures) into Unreal: export/paper_<kind>.png (tools/make_papers.py) ->
 /Game/Horror/UI/T_Paper_<Kind>, set up as sharp UI textures like the map (unreal/import_map.py)."""
 import unreal
 
 ROOT = r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/export/"
 DEST = "/Game/Horror/UI"
 
-for kind in ("stationery", "notebook", "typed", "ledger", "scrap"):
+for kind in ("stationery", "notebook", "typed", "ledger", "scrap",
+             "key_office", "key_gate", "key_boathouse"):      # the keys: tools/make_keys.py
     name = "T_Paper_" + kind.capitalize()
     t = unreal.AssetImportTask()
     t.filename = ROOT + f"paper_{kind}.png"
