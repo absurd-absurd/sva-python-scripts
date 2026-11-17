@@ -211,7 +211,7 @@
       "shape": "scrap_small",
       "at": [-3698, 15058, 15.8], "yaw": -8, "room": true,
       "prompt": "Read",
-      "title": "The last page",
+      "title": "",
       "body": "you came, bug\n\nnow we can be together",
       "objective": "this isn't Cas."
     },
