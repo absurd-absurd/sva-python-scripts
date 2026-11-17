@@ -97,7 +97,7 @@ TITLE_FADE = 2.5                                     # the title fades up from b
 MENU_FONT = "/Game/Horror/UI/F_Menu.F_Menu"          # Century Gothic, like the title (interact_setup.py)
 VIGNETTE_TEX = "/Game/Horror/UI/T_TitleVignette.T_TitleVignette"   # dark edges + a darker band low down (make_title.py)
 TITLE_RED = "(R=0.55,G=0.06,B=0.05,A=0.85)"
-PUSH_FROM, PUSH_SPEED, PUSH_MAX = (1500.0, 14150.0, 260.0), 2.2, 220.0   # the slow push down the dock (cm/s, cm)
+PUSH_FROM, PUSH_SPEED, PUSH_MAX = (1500.0, 14150.0, 260.0), 6.5, 800.0   # the slow push down the dock (cm/s, cm)
 
 
 def _menu_width(text, scale):
