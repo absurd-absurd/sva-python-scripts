@@ -16,7 +16,8 @@
     "ending_page": "you came, bug\n\nnow we can be together",
     "ending_last_line": "this isn't Cas",
     "ending_screen": "cut to black right away (after Bug's line and the rattle behind you)",
-    "tagline": "TODO",
+    "tagline": "none",
+    "wrong_hand_font": "fonts/Zeyada.ttf (postcard, later shack pages, boathouse note, last page)",
     "credits": "none (user: no credits screen)"
   },
   "new_prop_texts": {
@@ -44,7 +45,7 @@
       "objective": "She read the log wrong. It clearly said something comes back out, not someone. Something's gone very wrong."
     },
     "shack_notes_wrong": {
-      "where": "Hunter's shack, later pages (SECOND 'wrong' font - not picked yet)",
+      "where": "Hunter's shack, later pages (wrong-hand font: Zeyada)",
       "title": "Later pages",
       "body": "she's not sleeping anymore\n\nbug will come. bug always comes\n\ni drew bug a map\n\n- cas",
       "objective": "That's not her handwriting. It's the same writing as the postcard."
@@ -181,11 +182,11 @@
     {
       "id": "key_boathouse",
       "shape": "key",
-      "at": [5046.6, 13043.9, 115.8], "yaw": 32, "room": true,
+      "at": [2380.0, 4273.9, 59.4], "yaw": 44, "room": true,
       "prompt": "Take",
       "title": "Boathouse key",
       "body": "A small new key on a loop of fishing line, lying on Cas's lake map. Someone drew a circle around the boathouse.",
-      "journal": "Found a new key on the map in the cabin by the lake. The boathouse is circled.",
+      "journal": "Found a new key on Cas's map in the hunter's shack. The boathouse is circled.",
       "gives_key": "boathouse",
       "objective": "A key, and the boathouse circled. What could she have been looking for there? I have to find out.",
       "pickup": true

@@ -58,6 +58,8 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
 - No recorded voice: everything is read on paper.
 - Messages stay first person (Bug talking).
 - All people-images are silhouettes.
+- No tagline.
+- Wrong-hand font = **Zeyada** (fonts/Zeyada.ttf, SIL Open Font License). Cas's own hand = Ink Free.
 - Ending cuts straight to black. No credits screen.
 - Phone numbers are fake 555 numbers (Bug's poster: 555-0117, a nod to Oct 17).
 
@@ -77,5 +79,4 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
   the same words as its reading screen.
 
 ## Still open
-- Tagline, second handwriting font.
 - Where the boathouse key goes (shack or cabin 2).

@@ -153,3 +153,10 @@ jacket, headphones round her neck. Then Eileen and Cas to match; I liked the sty
 aged photo), shapes to refine.
 
 ![All three](2026-11-15_silhouettes_three.png)
+
+## 2026-11-16_postcard_back_fonts.png
+The back of the postcard that brings Bug to Marrow Falls ("i miss you bug - cas", postmarked
+Marrow Falls, Oct 9 2002, 37-cent flag stamp). It is written by the thing wearing Cas, so it uses
+the second "wrong" handwriting. Shown in five free erratic handwriting fonts (Google Fonts:
+Zeyada, Reenie Beanie, Nothing You Could Do, Rock Salt, Just Me Again Down Here) next to Cas's real
+handwriting (Ink Free), to pick the wrong-hand font. Address lines are placeholders.

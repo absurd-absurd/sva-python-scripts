@@ -45,7 +45,7 @@ TRAIL_MATS = {
     "galv_mat": (0.3, 0.3, 0.29), "sign_mat": (0.55, 0.53, 0.47), "sign_red_mat": (0.38, 0.03, 0.02),
     "rust_body_mat": (0.24, 0.12, 0.06), "antler_mat": (0.5, 0.45, 0.36), "pelt_mat": (0.24, 0.16, 0.09),
     "vine_mat": (0.1, 0.13, 0.06), "leaf_litter_mat": (0.2, 0.13, 0.06), "gloss_tint_mat": (0.012, 0.014, 0.016),
-    "pic_sign_no_trespassing": (1, 1, 1), "pic_sign_road_closed": (1, 1, 1), "glow_amber_mat": (1.0, 0.55, 0.08),
+    "pic_sign_no_trespassing": (1, 1, 1), "pic_sign_road_closed": (1, 1, 1), "pic_lake_map": (1, 1, 1), "glow_amber_mat": (1.0, 0.55, 0.08),
 }
 FENCE_Y = -100.0                                 # the old fence line behind the motel (blockout)
 GATE_X0, GATE_X1 = -3105.0, -2895.0             # the gate opening (the trail runs north at x -3000)
@@ -549,18 +549,20 @@ def shack():
             bevel_box(cx0 - 1.2, cx1 + 1.2, cy0 - 1.2 + k * 13.5, cy0 - 1.2 + k * 13.5 + 12.6, F + ch, F + ch + 1.6,
                       "plank_grey_mat", r=0.3)
         tz = F + ch + 1.6
-        frustum(cx0 + 20, cy0 + 20, tz, tz + 0.6, 6, 6.5, "candle_mat", sides=18)            # wax puddle
-        frustum(cx0 + 20, cy0 + 20, tz + 0.5, tz + 6, 2.3, 2.1, "candle_mat", sides=14)     # the stub
+        frustum(cx0 + 9, cy0 + 10, tz, tz + 0.6, 6, 6.5, "candle_mat", sides=18)            # wax puddle
+        frustum(cx0 + 9, cy0 + 10, tz + 0.5, tz + 6, 2.3, 2.1, "candle_mat", sides=14)     # the stub
         for k in range(4):
             a = k * 1.7
-            sphere(cx0 + 20 + 2.2 * math.cos(a), cy0 + 20 + 2.2 * math.sin(a), tz + 2 + k, 0.8, "candle_mat", sides=6,
+            sphere(cx0 + 9 + 2.2 * math.cos(a), cy0 + 10 + 2.2 * math.sin(a), tz + 2 + k, 0.8, "candle_mat", sides=6,
                    scale=(0.7, 0.7, 2.2))
-        tube((cx0 + 20, cy0 + 20, tz + 6), (cx0 + 20, cy0 + 20, tz + 7), 0.15, "char_mat", sides=4)   # wick
-        rbevel(cx0 + 42, cy0 + 32, tz + 0.8, 5.2, 3.6, 1.6, "matchbox_mat", r=0.2, yaw=20)
-        rbevel(cx0 + 42, cy0 + 32 - 1.85, tz + 0.8, 4.6, 0.1, 1.2, "char_mat", r=0.02, yaw=20)          # striker
+        tube((cx0 + 9, cy0 + 10, tz + 6), (cx0 + 9, cy0 + 10, tz + 7), 0.15, "char_mat", sides=4)   # wick
+        rbevel(cx0 + 12, cy0 + 40, tz + 0.8, 5.2, 3.6, 1.6, "matchbox_mat", r=0.2, yaw=20)
+        rbevel(cx0 + 12, cy0 + 40 - 1.85, tz + 0.8, 4.6, 0.1, 1.2, "char_mat", r=0.02, yaw=20)          # striker
         for k in range(2):
-            tube((cx0 + 34 + k * 3, cy0 + 22, tz + 0.15), (cx0 + 38 + k * 3, cy0 + 26, tz + 0.15), 0.12, "split_wood_mat", sides=4)
-            sphere(cx0 + 38 + k * 3, cy0 + 26, tz + 0.15, 0.22, "char_mat", sides=4)
+            tube((cx0 + 3 + k * 3, cy0 + 24, tz + 0.15), (cx0 + 7 + k * 3, cy0 + 28, tz + 0.15), 0.12, "split_wood_mat", sides=4)
+            sphere(cx0 + 7 + k * 3, cy0 + 28, tz + 0.15, 0.22, "char_mat", sides=4)
+        # Cas's lake map with the boathouse circled; the boathouse key lies on it (clues.json key_boathouse)
+        flat_picture(cx0 + 37, cy0 + 26, tz + 0.6, 30, 22, "pic_lake_map", yaw=8)
         tin_can(cx0 + 28, cy1 + 22, F, opened=False)
         tin_can(cx0 + 52, cy1 + 34, F, lying=True)
         # antlers over the door: a shield plaque, the bleached skull cap, two curving beams with tines
