@@ -8,7 +8,7 @@ DEST = "/Game/Horror/UI"
 for kind in ("stationery", "notebook", "typed", "ledger", "scrap",
              "key_office", "key_gate", "key_boathouse",      # the keys: tools/make_keys.py
              "register",                                     # the guest register page: tools/make_guest_book.py
-             "wall"):                                        # Cas's wall close-up: tools/make_wall.py
+             "wall", "postcard"):                            # + the postcard for the opening: tools/make_postcard.py                                        # Cas's wall close-up: tools/make_wall.py
     name = "T_Paper_" + kind.capitalize()
     t = unreal.AssetImportTask()
     t.filename = ROOT + f"paper_{kind}.png"

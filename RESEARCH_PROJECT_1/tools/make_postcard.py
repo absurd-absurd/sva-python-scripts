@@ -87,5 +87,7 @@ def card(font_file, size, seed):
 
 if __name__ == "__main__":
     out = os.path.join(ROOT, "export", "postcard_back.png")
-    card("Zeyada.ttf", 80, 3).save(out)
+    im = card("Zeyada.ttf", 80, 3)
+    im.save(out)
+    im.save(os.path.join(ROOT, "export", "paper_postcard.png"))      # the opening shows this (unreal/import_papers.py)
     print("postcard ->", out)

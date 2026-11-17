@@ -67,6 +67,18 @@ MARKER_TEX = "/Game/Horror/UI/T_MapMarker.T_MapMarker"
 MAP_FRAME_TEX = "/Game/Horror/UI/T_MapFrame.T_MapFrame"   # torn edge round the corner map
 FRAME_HOLE = 0.08                                          # = FRAME_HOLE in tools/make_map.py
 WHITE = "(R=1.0,G=1.0,B=1.0,A=1.0)"
+# the opening (2026-11-17, STORY.md): black screen, the opening text typing itself out in Bug's hand, then the
+# postcard; [E] fades into the parking lot. Text = clues.json game_text.opening minus its last line (the
+# postcard shows that, in the thing's hand); interact_setup.py puts it in the HUD's OpeningText.
+OPEN_CPS, OPEN_DELAY = 26.0, 1.2                    # typing speed (characters a second), black before it starts
+_OPEN = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "clues.json"),
+                       encoding="utf-8"))["game_text"]["opening"].rsplit("\n\n", 1)[0]
+OPEN_T_TEXT = OPEN_DELAY + len(_OPEN) / OPEN_CPS     # typing done
+OPEN_T_CARD = OPEN_T_TEXT + 0.7                      # the postcard appears
+OPEN_T_GO = OPEN_T_CARD + 1.6                        # "[E] Continue"
+OPEN_FADE = 1.6                                      # seconds to fade from black into the game after E
+POSTCARD_TEX = "/Game/Horror/UI/T_Paper_Postcard.T_Paper_Postcard"   # tools/make_postcard.py
+BLACK = "(R=0.0,G=0.0,B=0.0,A=1.0)"
 MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=1.0)"      # solid paper (it was half see-through; with the torn edge the overlap showed)
 MARKER_TINT = "(R=1.0,G=1.0,B=1.0,A=0.8)"
 MAP_FULL_TEX = "/Game/Horror/UI/T_MapFull.T_MapFull"
@@ -317,11 +329,18 @@ def hud_graph():
     fget = lambda var, ty="string": g.get(var, ty, focus())
     pc = lambda: (g.pure(HUD, "GetOwningPlayerController", out="ReturnValue", ty="pc"), "ctrl")
 
-    # ---- Begin Play: let this HUD receive E and Tab ----
+    def freeze0(after):
+        a = g.call(CTRL, "SetIgnoreMoveInput", after, [("bNewMoveInput", "bool", True)], target=pc()).then
+        return g.call(CTRL, "SetIgnoreLookInput", a, [("bNewLookInput", "bool", True)], target=pc()).then
+
+    # ---- Begin Play: let this HUD receive E and Tab; start the opening (frozen on black) ----
     g.row(0, 0)
     bp = g.event(ACTOR, "ReceiveBeginPlay", [])
-    g.call(ACTOR, "EnableInput", bp.then, [("PlayerController", "pc",
-           g.pure(HUD, "GetOwningPlayerController", ty="pc"))])
+    a = g.call(ACTOR, "EnableInput", bp.then, [("PlayerController", "pc",
+               g.pure(HUD, "GetOwningPlayerController", ty="pc"))]).then
+    a = g.set("OpenStart", "real", g.now(), a).then
+    freeze0(a)
+    open_t = lambda: g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get("OpenStart", "real"))])
 
     # ---- Draw HUD ----
     g.row(0, 600)
@@ -358,7 +377,9 @@ def hud_graph():
     # tell the materials where you are (MPC_Horror.PlayerPos): crows fly off, the owl turns its head
     ploc = g.pure(ACTOR, "K2_GetActorLocation", ty="vector", target=(g.pure(HUD, "GetOwningPawn", ty="actor"), "actor"))
     pcol = g.pure(MATH, "Conv_VectorToLinearColor", [("InVec", "vector", ploc)], ty="color")
-    tell = g.call("/Script/Engine.KismetMaterialLibrary", "SetVectorParameterValue", ev.then,
+    op_yes, op_no = g.branch(g.get("Opening", "bool"), ev.then)
+    hud_then, fade_then = g.sequence(op_no, 2)
+    tell = g.call("/Script/Engine.KismetMaterialLibrary", "SetVectorParameterValue", hud_then,
                   [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "PlayerPos"), ("ParameterValue", "color", pcol)])
     trace = g.call(SYS, "LineTraceSingle", tell.then, [("Start", "vector", start), ("End", "vector", end),
                    ("bIgnoreSelf", "bool", True)], outs=[("OutHit", "hit")])
@@ -636,6 +657,36 @@ def hud_graph():
         ("TintColor", "color", "(R=0.85,G=0.83,B=0.8,A=0.95)")]).then
     draw(g.concat("[E]  ", fget("Prompt")), box, 0.45, 0.556, 0.8, INK)
 
+    # ---- the opening: drawn instead of the HUD while Opening is on ----
+    g.row(340 * 9, -3200)
+    t = open_t()
+    a = g.call(HUD, "DrawRect", op_yes, [("RectColor", "color", BLACK), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
+                                         ("ScreenW", "float", W), ("ScreenH", "float", H)]).then
+    shown = g.pure(MATH, "FTrunc", [("A", "real", g.mul(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", t), ("B", "real", OPEN_DELAY)]),
+                                                       OPEN_CPS))], ty="int")
+    shown = g.pure(MATH, "Clamp", [("Value", "int", shown), ("Min", "int", 0), ("Max", "int", 9999)], ty="int")
+    typed = g.pure(STR, "Left", [("SourceString", "string", g.get("OpeningText", "string")), ("Count", "int", shown)], ty="string")
+    tx = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, 0.3))])
+    a = draw(typed, a, 0, 0, 1.0, TEXT, at=(tx, g.mul(H, 0.07)))
+    card, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", t), ("B", "real", OPEN_T_CARD)], ty="bool"), a)
+    CH = g.mul(H, 0.36)
+    a = g.call(HUD, "DrawTexture", card, [
+        ("Texture", "texture", POSTCARD_TEX),
+        ("ScreenX", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, 0.27))])),
+        ("ScreenY", "float", g.mul(H, 0.54)), ("ScreenW", "float", g.mul(H, 0.54)), ("ScreenH", "float", CH),
+        ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
+        ("TintColor", "color", WHITE)]).then
+    go, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", t), ("B", "real", OPEN_T_GO)], ty="bool"), a)
+    draw("[E]  Continue", go, 0.04, 0.92, 0.75, DIM)
+    # after it: black fading out over the game
+    g.row(340 * 9, -2800)
+    since = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get("OpenEnd", "real"))])
+    fading, _ = g.branch(g.pure(MATH, "Less_DoubleDouble", [("A", "real", since), ("B", "real", OPEN_FADE)], ty="bool"), fade_then)
+    alpha = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", 1.0), ("B", "real", g.mul(since, 1.0 / OPEN_FADE))])
+    col = g.pure(MATH, "MakeColor", [("R", "float", 0.0), ("G", "float", 0.0), ("B", "float", 0.0), ("A", "float", alpha)], ty="color")
+    g.call(HUD, "DrawRect", fading, [("RectColor", "color", col), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
+                                     ("ScreenW", "float", W), ("ScreenH", "float", H)])
+
     def freeze(after):
         a = g.call(CTRL, "SetIgnoreMoveInput", after, [("bNewMoveInput", "bool", True)], target=pc()).then
         return g.call(CTRL, "SetIgnoreLookInput", a, [("bNewLookInput", "bool", True)], target=pc()).then
@@ -650,7 +701,11 @@ def hud_graph():
     # ---- E ----
     g.row(0, 2800)
     e = g.input_event("IA_Interact")
-    b_read, b_not_read = g.branch(g.get("Reading", "bool"), e)
+    in_open, e_play = g.branch(g.get("Opening", "bool"), e)
+    ready, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", open_t()), ("B", "real", OPEN_T_GO)], ty="bool"), in_open)
+    a = g.set("Opening", "bool", False, ready).then
+    unfreeze(g.set("OpenEnd", "real", g.now(), a).then)
+    b_read, b_not_read = g.branch(g.get("Reading", "bool"), e_play)
     unfreeze(g.set("Reading", "bool", False, b_read).then)
     g.row(340, 3300)
     b_jour, b_not_jour = g.branch(g.get("JournalOpen", "bool"), b_not_read)
@@ -709,7 +764,8 @@ def hud_graph():
     # ---- Tab ----
     g.row(0, 10200)
     tab = g.input_event("IA_Journal")
-    _, free = g.branch(g.get("Reading", "bool"), tab)
+    _, free = g.branch(g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Reading", "bool")),
+                                                 ("B", "bool", g.get("Opening", "bool"))], ty="bool"), tab)
     shut, opn = g.branch(g.get("JournalOpen", "bool"), free)
     unfreeze(g.set("JournalOpen", "bool", False, shut).then)
     g.row(340 * 2, 10700)

@@ -127,7 +127,14 @@ def make_font(path, ff_name, ttf):
         ffa = unreal.load_asset(ff)
         ffa.set_editor_property("loading_policy", unreal.FontLoadingPolicy.INLINE)   # all loaded up front
         lib.save_loaded_asset(ffa, False)
-    face = f"/Script/Engine.FontFace'{ff}.{ff_name}'" if lib.does_asset_exist(ff) else         "/Script/Engine.FontFace'/Engine/EngineFonts/Faces/RobotoItalic.RobotoItalic'"
+    # load the face first: import_text only links an asset that is already in memory; after an editor
+    # restart it isn't, and the font silently gets an empty face (crash on the first DrawText, 2026-11-17)
+    if lib.does_asset_exist(ff):
+        unreal.load_asset(ff)
+        face = f"/Script/Engine.FontFace'{ff}.{ff_name}'"
+    else:
+        unreal.load_asset("/Engine/EngineFonts/Faces/RobotoItalic")
+        face = "/Script/Engine.FontFace'/Engine/EngineFonts/Faces/RobotoItalic.RobotoItalic'"
     cf = font.get_editor_property("composite_font")
     text = cf.export_text()
     fallback = text[text.index("FallbackTypeface="):]
@@ -157,6 +164,15 @@ def hand_fonts():
     make_font("/Game/Horror/UI/F_Hand_Print", "FF_CourierNew", r"C:/Windows/Fonts/cour.ttf")
 
 
+def opening_text():
+    """clues.json game_text.opening without its last line (the postcard shows that), wrapped like the
+    reading screen (44 characters a line)."""
+    import json, textwrap
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    txt = json.load(open(os.path.join(root, "clues.json"), encoding="utf-8"))["game_text"]["opening"].rsplit("\n\n", 1)[0]
+    return "\n".join(textwrap.fill(p, 44) if p else "" for p in txt.split("\n"))
+
+
 def main():
     italic_font()
     hand_fonts()
@@ -181,11 +197,13 @@ def main():
                    ("Reading", b), ("JournalOpen", b), ("ReadTitle", s), ("ReadBody", s), ("ReadHand", s), ("ReadPaper", s),
                    ("Journal", s), ("Keys", s), ("Objective", s), ("Toast", s), ("ToastTime", r),
                    ("Gap", s), ("MapOpen", b),
+                   ("Opening", b), ("OpenStart", r), ("OpenEnd", r), ("OpeningText", s),   # the opening (2026-11-17)
                    # flashlight flicker timer: mode 0 on / 1 flutter / 2 off, next start, end, hit on return
                    ("FlMode", T("int")), ("FlNext", r), ("FlEnd", r), ("FlHit", b),
                    ("FlDim", r)], editable=False)   # flashlight auto-dim near walls (0..1)
     BPL.compile_blueprint(hud)
-    defaults(hud, {"Gap": "\n\n", "ToastTime": -100.0, "Objective": "", "FlNext": 4.0, "FlDim": 1.0})
+    defaults(hud, {"Gap": "\n\n", "ToastTime": -100.0, "Objective": "", "FlNext": 4.0, "FlDim": 1.0,
+                   "Opening": True, "OpenEnd": -100.0, "OpeningText": opening_text()})
     BPL.compile_blueprint(hud)
     lib.save_loaded_asset(hud, False)   # save even if Unreal did not mark it changed
 
