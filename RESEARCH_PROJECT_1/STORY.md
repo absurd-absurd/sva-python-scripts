@@ -25,7 +25,7 @@ mom back. She went missing too.
 - **Oct 17, 1974:** Freedman walks into the lake. The 1952 boy comes back out.
 - **Oct 17, 1997:** Eileen Byrne checks into room 104 and is never seen again ("104 - kept").
 - **Oct 2001:** Cas comes to the motel to find her mother and disappears.
-- **Early Oct 2002:** Bug gets a postcard of the Marrow Falls Motel, signed Cas: "come find me, bug."
+- **Early Oct 2002:** Bug gets a postcard of the Marrow Falls Motel, signed Cas: "come find me, bug. i miss you bug"
   It's in the WRONG handwriting (the thing wrote it), but Bug doesn't know that yet.
 - **Oct 17, 2002 (the game, the anniversary):** a year later, you (Bug, 21) come looking for Cas.
 
