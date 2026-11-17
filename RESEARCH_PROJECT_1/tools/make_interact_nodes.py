@@ -94,6 +94,21 @@ FINAL_CLASS = "/Game/Horror/Interact/BP_FinalShot.BP_FinalShot_C"
 TITLE_CLASS = "/Game/Horror/Interact/BP_TitleShot.BP_TitleShot_C"
 TITLE_TEX = "/Game/Horror/UI/T_Title.T_Title"
 TITLE_FADE = 2.5                                     # the title fades up from black when the game starts
+MENU_FONT = "/Game/Horror/UI/F_Menu.F_Menu"          # Century Gothic, like the title (interact_setup.py)
+VIGNETTE_TEX = "/Game/Horror/UI/T_TitleVignette.T_TitleVignette"   # dark edges + a darker band low down (make_title.py)
+TITLE_RED = "(R=0.55,G=0.06,B=0.05,A=0.85)"
+PUSH_FROM, PUSH_SPEED, PUSH_MAX = (1500.0, 14150.0, 260.0), 2.2, 220.0   # the slow push down the dock (cm/s, cm)
+
+
+def _menu_width(text, scale):
+    """Screen width of text in the menu font, as a fraction of the screen height (the HUD draws the size-40
+    font at TEXT_SCALE * height * scale; Unreal's 40 pt is 40 * 96/72 px)."""
+    from PIL import ImageFont
+    return ImageFont.truetype("C:/Windows/Fonts/GOTHIC.TTF", int(40 * 96 / 72)).getlength(text) * TEXT_SCALE * scale
+
+
+MENU = [("E", "S T A R T"), ("C", "C O N T R O L S"), ("Q", "Q U I T")]
+MENU_SCALE = 1.05
 CONTROLS = [("W A S D / arrows", "Walk"), ("Mouse", "Look"), ("Shift", "Run"), ("Space", "Jump"),
             ("E", "Examine, read, pick up, open"), ("Tab", "Journal"), ("M", "Map (once you have Cas's map)")]
 MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=1.0)"      # solid paper (it was half see-through; with the torn edge the overlap showed)
@@ -711,31 +726,59 @@ def hud_graph():
     g.call(HUD, "DrawRect", fading, [("RectColor", "color", col), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
                                      ("ScreenW", "float", W), ("ScreenH", "float", H)])
 
-    # ---- the title screen ----
+    # ---- the title screen (2026-11-17, second pass: the user's approved mockup) ----
     g.row(340 * 9, -5200)
     ctl_yes, ctl_no = g.branch(g.get("ControlsOpen", "bool"), title_yes)
-    TW = g.mul(W, 0.62)
-    a = g.call(HUD, "DrawTexture", ctl_no, [
-        ("Texture", "texture", TITLE_TEX),
-        ("ScreenX", "float", g.mul(W, 0.19)), ("ScreenY", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(H, 0.3)), ("B", "real", g.mul(TW, 0.125))])),
-        ("ScreenW", "float", TW), ("ScreenH", "float", g.mul(TW, 0.25)),
+    T = g.now()
+    # the slow push-in down the dock: move the title camera a little every frame
+    found = g.call(STATICS, "GetActorOfClass", ctl_no, [("ActorClass", "actorclass", TITLE_CLASS)], outs=[("ReturnValue", "actor")])
+    push = g.pure(MATH, "FMin", [("A", "real", g.mul(T, PUSH_SPEED)), ("B", "real", PUSH_MAX)], ty="real")
+    bob = g.mul(g.pure(MATH, "Sin", [("A", "real", g.mul(T, 0.35))], ty="real"), 2.5)
+    loc = g.pure(MATH, "MakeVector", [("X", "real", PUSH_FROM[0]),
+                                      ("Y", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", PUSH_FROM[1]), ("B", "real", push)])),
+                                      ("Z", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", PUSH_FROM[2]), ("B", "real", bob)]))], ty="vector")
+    a = g.call(ACTOR, "K2_SetActorLocation", found.then, [("NewLocation", "vector", loc), ("bSweep", "bool", False),
+                                                          ("bTeleport", "bool", True)], target=(found.o["ReturnValue"], "actor")).then
+    # vignette, then the title breathing in and out of the fog, a thin red rule under it
+    a = g.call(HUD, "DrawTexture", a, [
+        ("Texture", "texture", VIGNETTE_TEX), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0), ("ScreenW", "float", W), ("ScreenH", "float", H),
         ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
         ("TintColor", "color", WHITE)]).then
-    a = draw("[E]  Start", a, 0.07, 0.7, 0.9, TEXT, True)
-    a = draw("[C]  Controls", a, 0.07, 0.76, 0.9, TEXT, True)
-    a = draw("[Q]  Quit", a, 0.07, 0.82, 0.9, TEXT, True)
+    breath = g.pure(MATH, "Add_DoubleDouble", [("A", "real", 0.8), ("B", "real", g.mul(g.pure(MATH, "Sin", [("A", "real", g.mul(T, 0.7))], ty="real"), 0.2))])
+    TW = g.mul(W, 0.56)
+    TH = g.mul(TW, 0.25)
+    TY = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(H, 0.25)), ("B", "real", g.mul(TH, 0.5))])
+    a = g.call(HUD, "DrawTexture", a, [
+        ("Texture", "texture", TITLE_TEX), ("ScreenX", "float", g.mul(W, 0.22)), ("ScreenY", "float", TY),
+        ("ScreenW", "float", TW), ("ScreenH", "float", TH),
+        ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
+        ("TintColor", "color", g.pure(MATH, "MakeColor", [("R", "float", 1.0), ("G", "float", 1.0), ("B", "float", 1.0), ("A", "float", breath)], ty="color"))]).then
+    a = g.call(HUD, "DrawRect", a, [("RectColor", "color", TITLE_RED), ("ScreenX", "float", g.mul(W, 0.4)),
+                                    ("ScreenY", "float", g.pure(MATH, "Add_DoubleDouble", [("A", "real", TY), ("B", "real", g.mul(TH, 0.78))])),
+                                    ("ScreenW", "float", g.mul(W, 0.2)), ("ScreenH", "float", g.mul(H, 0.0022))]).then
+    # the menu, centred: START / CONTROLS / QUIT in the title's lettering, each key small in dark red beside it
+    for k, (key, item) in enumerate(MENU):
+        half = _menu_width(item, MENU_SCALE) / 2
+        mx = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, half))])
+        my = g.mul(H, 0.69 + k * 0.07)
+        a = draw(item, a, 0, 0, MENU_SCALE, TEXT, font=MENU_FONT, at=(mx, my))
+        a = draw(key, a, 0, 0, 0.75, "(R=0.5,G=0.1,B=0.08,A=1.0)", font=MENU_FONT,
+                 at=(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", mx), ("B", "real", g.mul(H, 0.045))]),
+                     g.pure(MATH, "Add_DoubleDouble", [("A", "real", my), ("B", "real", g.mul(H, 0.008))])))
     ta = g.pure(MATH, "FMax", [("A", "real", 0.0), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", 1.0),
                ("B", "real", g.mul(g.now(), 1.0 / TITLE_FADE))]))], ty="real")
     g.call(HUD, "DrawRect", a, [("RectColor", "color", g.pure(MATH, "MakeColor", [("R", "float", 0.0), ("G", "float", 0.0),
                                 ("B", "float", 0.0), ("A", "float", ta)], ty="color")),
                                 ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0), ("ScreenW", "float", W), ("ScreenH", "float", H)])
-    # the controls page
+    # the controls page, in the same lettering
     a = dark(ctl_yes)
-    a = draw("CONTROLS", a, 0.3, 0.16, 1.25)
+    a = draw("C O N T R O L S", a, 0.3, 0.16, 1.1, TEXT, font=MENU_FONT)
+    a = g.call(HUD, "DrawRect", a, [("RectColor", "color", TITLE_RED), ("ScreenX", "float", g.mul(W, 0.3)), ("ScreenY", "float", g.mul(H, 0.225)),
+                                    ("ScreenW", "float", g.mul(W, 0.12)), ("ScreenH", "float", g.mul(H, 0.0022))]).then
     for k, (key, what) in enumerate(CONTROLS):
-        a = draw(key, a, 0.3, 0.27 + k * 0.065, 1.0, DIM)
-        a = draw(what, a, 0.56, 0.27 + k * 0.065, 1.0, TEXT)
-    draw("[C]  Back", a, 0.3, 0.88, 0.75, DIM)
+        a = draw(key, a, 0.3, 0.27 + k * 0.065, 0.95, DIM, font=MENU_FONT)
+        a = draw(what, a, 0.56, 0.27 + k * 0.065, 0.95, TEXT, font=MENU_FONT)
+    draw("C   B A C K", a, 0.3, 0.88, 0.8, DIM, font=MENU_FONT)
 
     # ---- the ending ----
     g.row(340 * 9, -4200)

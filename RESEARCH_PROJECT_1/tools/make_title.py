@@ -46,6 +46,25 @@ def title(style):
     return img
 
 
+def vignette():
+    """export/title_vignette.png: black, see-through in the middle, dark at the edges, and a darker band over the
+    lower part of the screen behind the menu (the user's approved mockup)."""
+    w, h = 1920, 1080
+    v = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(v).ellipse((-w * 0.15, -h * 0.25, w * 1.15, h * 1.2), fill=255)
+    v = v.filter(ImageFilter.GaussianBlur(160))
+    alpha = v.point(lambda x: int((255 - x) * 0.85))
+    band = Image.new("L", (w, h), 0)
+    bd = ImageDraw.Draw(band)
+    for y in range(int(h * 0.55), h):
+        bd.line((0, y, w, y), fill=int(150 * (y - h * 0.55) / (h * 0.45)))
+    from PIL import ImageChops
+    alpha = ImageChops.lighter(alpha, band)
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 255))
+    out.putalpha(alpha)
+    out.save(os.path.join(EXPORT, "title_vignette.png"))
+
+
 def sheet():
     D = r"C:/Users/fayth/Documents/Unreal Projects/RP1_Horror/Saved/Screenshots/WindowsEditor/"
     bgs = [("motel", Image.open(D + "tv_motel.png")), ("lake", Image.open(D + "tv_lake.png")), ("trail", Image.open(D + "tv_trail.png"))]
@@ -69,4 +88,5 @@ if __name__ == "__main__":
     else:
         style = sys.argv[1] if len(sys.argv) > 1 else "serif"
         title(style).save(os.path.join(EXPORT, "title.png"))
+        vignette()
         print("title ->", style)

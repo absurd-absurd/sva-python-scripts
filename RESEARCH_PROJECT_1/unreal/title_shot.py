@@ -32,6 +32,19 @@ def texture():
     lib.save_loaded_asset(tex, False)
 
 
+def vignette():
+    t = unreal.AssetImportTask()
+    t.filename = ROOT + "export/title_vignette.png"
+    t.destination_path, t.destination_name = "/Game/Horror/UI", "T_TitleVignette"
+    t.automated, t.save, t.replace_existing = True, True, True
+    tools.import_asset_tasks([t])
+    tex = unreal.load_asset("/Game/Horror/UI/T_TitleVignette")
+    tex.set_editor_property("compression_settings", unreal.TextureCompressionSettings.TC_EDITOR_ICON)
+    tex.set_editor_property("lod_group", unreal.TextureGroup.TEXTUREGROUP_UI)
+    tex.set_editor_property("never_stream", True)
+    lib.save_loaded_asset(tex, False)
+
+
 def camera_actor():
     path = "/Game/Horror/Interact/BP_TitleShot"
     if lib.does_asset_exist(path):
@@ -80,6 +93,7 @@ def input_action(name, keys):
 
 
 texture()
+vignette()
 camera_actor()
 input_action("IA_Controls", ["C"])
 input_action("IA_Quit", ["Q"])

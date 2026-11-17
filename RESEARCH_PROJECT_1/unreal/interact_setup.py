@@ -162,6 +162,8 @@ def hand_fonts():
     make_font("/Game/Horror/UI/F_Hand_Cas", "FF_RockSalt", os.path.join(FONTS_DIR, "RockSalt-Tight.ttf"))
     make_font("/Game/Horror/UI/F_Hand_Wrong", "FF_Zeyada", os.path.join(FONTS_DIR, "Zeyada.ttf"))
     make_font("/Game/Horror/UI/F_Hand_Print", "FF_CourierNew", r"C:/Windows/Fonts/cour.ttf")
+    # the title screen's menu, in the title's lettering (Century Gothic, 2026-11-17)
+    make_font("/Game/Horror/UI/F_Menu", "FF_CenturyGothic", r"C:/Windows/Fonts/GOTHIC.TTF")
 
 
 def opening_text():

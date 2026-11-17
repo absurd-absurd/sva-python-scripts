@@ -181,6 +181,19 @@ def dock():
     for k in range(6):
         zz = DECK_Z - 10 - k * 28
         tube((DOCK_X - 22, y1 + 5 + k * 0.6, zz), (DOCK_X + 22, y1 + 5 + k * 0.6, zz), 1.6, "lantern_metal_mat", sides=8)
+    # a row of red lanterns on posts down both sides, lit (2026-11-17: the title screen looks down the dock;
+    # "the lanterns are lit for you") - alternating sides, fading off into the fog toward the end
+    for k, yy in enumerate(range(int(y0 + 520), int(y1 - 300), 420)):
+        s_ = -1 if k % 2 else 1
+        px_ = DOCK_X + s_ * (hw - 4)
+        frustum(px_, yy, DECK_Z - 30, DECK_Z + 120, 5.5, 4.5, "dock_dark_mat", sides=10)                # post
+        tube((px_, yy, DECK_Z + 112), (px_ - s_ * 24, yy, DECK_Z + 112), 1.8, "lantern_metal_mat", sides=8)   # arm
+        qx, qz = px_ - s_ * 24, DECK_Z + 84
+        frustum(qx, yy, qz + 20, qz + 26, 7, 2, "lantern_metal_mat", sides=12)
+        frustum(qx, yy, qz - 2, qz + 20, 5.5, 5.5, "glow_lamp_red_mat", sides=12)
+        frustum(qx, yy, qz - 6, qz - 2, 7, 7, "lantern_metal_mat", sides=12)
+        tube((qx, yy, qz + 26), (qx, yy, DECK_Z + 112), 0.5, "lantern_metal_mat", sides=4)
+        light(f"light_dock_row_{k}", qx, yy, qz + 8, [1.0, 0.03, 0.0], 220, 700, flicker=(k % 3 == 1))
     # the red lantern on a post at the end (red marks where something happened)
     lx, ly = DOCK_X - hw + 10, y1 - 25
     frustum(lx, ly, DECK_Z - 30, DECK_Z + 140, 6, 5, "dock_dark_mat", sides=10)
