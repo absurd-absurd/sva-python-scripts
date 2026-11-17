@@ -1248,8 +1248,7 @@ def lake_buildings():
         if open_:
             hx, hy = P.world(-52, 250)
             DOORS.append(("door_cabin%d" % (i + 1), "plank_door", hx, hy, CAB_FL, yaw))
-            kx, ky = P.world(40, 50)
-            DOORS.append(("key_boathouse", "key", kx, ky, CAB_FL + 75.8, yaw + 40))
+            # (the boathouse key used to lie here; it's on Cas's map at the shack now, see make_trail.py)
     for d in DOORS:
         print("PLACE", d)
 
