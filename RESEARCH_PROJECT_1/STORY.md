@@ -39,7 +39,7 @@ mom back. She went missing too.
    **the wrong handwriting** (second font), signed "- cas"; the boathouse key.
 5. **The boathouse**: her boots set side by side by the water; a note in the wrong hand:
    "the lanterns are lit for you, bug / don't worry, it won't be much longer now". Bug: "Not much
-   longer... The rattling... it's getting louder." This is where the game ends (below).
+   longer? The rattling... it's getting louder." This is where the game ends (below).
 
 ## The world breaks down
 The closer you get to the lake, the more the PS2 look falls apart: textures warp, geometry
