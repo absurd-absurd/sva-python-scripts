@@ -247,3 +247,7 @@ liked more than the redraws.
 Cas without the hood bunched at her neck, so background shows behind her hair (user); Bug's original
 rough with its collar taken off (the popped collar points and the grey triangles by the neck,
 tools/make_bug_rough.py COLLAR = False -> process/2026-11-17_bug_silhouette_no_collar.png).
+
+## 2026-11-17_silhouettes_v5.png
+Cas's long hair now fills the space behind her neck (user: "I don't want to see Cas's neck, I want that to
+be hair"): one mass of hair from her head down past her shoulders.

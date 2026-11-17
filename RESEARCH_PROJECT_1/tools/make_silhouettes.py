@@ -14,7 +14,7 @@ Cas's ponytail is a real tail falling behind her shoulder (not a bun + ribbon); 
 small tilted headphone cups and a short neck.
 
     python make_silhouettes.py  -> export/sil_eileen.png, sil_cas.png, sil_bug.png (660 x 860, bordered)
-                                   + process/2026-11-17_silhouettes_v4.png (side by side)
+                                   + process/2026-11-17_silhouettes_v5.png (side by side)
 """
 import math
 import os
@@ -217,6 +217,11 @@ def cas():
     hd = turn(head_outline(cx, top, chin, hw), cx, chin, tilt)
     fill(d, hd)
     fill(d, turn(hair, cx, chin, tilt))
+    # the hair at the back fills in behind her neck, so no neck shows, just hair down to her shoulders
+    # (user, 2026-11-17: "I don't want to see Cas's neck, I want that to be hair")
+    fill(d, turn([(cx - 60, top + 130), (cx - 66, top + 210), (cx - 72, top + 300), (cx - 76, top + 380), (cx, top + 392),
+                  (cx + 76, top + 376), (cx + 72, top + 296), (cx + 66, top + 206), (cx + 60, top + 126), (cx, top + 120)],
+                 cx, chin, tilt))
     for s_ in (-1, 1):                                                     # loose strands at the ends and sides
         ends = turn([(cx + s_ * 122, top + 418), (cx + s_ * 88, top + 428)], cx, chin, tilt)
         strands(d, ends, (s_ * 0.1, 1), 12, 24, rng, width=2.2, spread=0.35)
@@ -250,5 +255,5 @@ if __name__ == "__main__":
     for i in ims:
         sheet.paste(i, (x, 10))
         x += i.width + 10
-    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v4.png"))
-    print("silhouettes v4 written")
+    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v5.png"))
+    print("silhouettes v5 written")
