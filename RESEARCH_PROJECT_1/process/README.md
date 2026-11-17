@@ -308,3 +308,9 @@ October 2002, 555-0117). The poster is hidden during the game and only appears i
 ## 2026-11-17_ending.png
 The ending in play: the last page; on closing it, "this isn't Cas."; cut to black, "One year later.";
 the final shot of the payphone with Bug's MISSING poster; cut to black; the game then quits by itself.
+
+## 2026-11-17_keys_in_world.png
+The three keys in the world are now their drawings, cut out and laid flat (user: "the keys are still
+blocks, they should look exactly like the key image"): the office key on the Room 104 dresser, the gate
+key on the office desk, the boathouse key on Cas's lake map in the shack (tools/make_keys.py card(),
+unreal/key_cards.py M_PS2_Cutout, place_clues.py).

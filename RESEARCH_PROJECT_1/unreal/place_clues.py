@@ -5,6 +5,7 @@ Safe to run again: it deletes the old clue actors (tag "clue") first. Each entry
 BP_Examinable with its variables filled in; the HUD's starting objective comes from here too.
 """
 import json
+import os
 import textwrap
 import unreal
 
@@ -46,6 +47,9 @@ FIELDS = {"prompt": "Prompt", "title": "Title", "body": "Body", "journal": "Jour
 actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 BPL = unreal.BlueprintEditorLibrary
 CUBE = unreal.load_asset("/Engine/BasicShapes/Cube")
+PLANE = unreal.load_asset("/Engine/BasicShapes/Plane")
+_kc = ROOT + "/export/keycards.json"
+KEYCARDS = json.load(open(_kc)) if os.path.exists(_kc) else {}
 
 
 def wrap(text, width=WRAP):
@@ -83,6 +87,12 @@ def main():
                 a.set_editor_property(var, value)
         a.set_editor_property("IsDoor", "door" in c["shape"])
         size, mat, offset = SHAPES[c["shape"]]
+        # a key is its drawing, cut out and laid flat (unreal/key_cards.py; user 2026-11-17: "the keys are still
+        # blocks, they should look exactly like the key image")
+        card = KEYCARDS.get(c.get("paper", "")) if c["shape"] == "key" else None
+        card_mi = card and unreal.load_asset(f"{MATS}MI_KeyCard_{c['paper']}")
+        if card_mi:
+            size, offset = (card[0], card[1], 0.6), (0, 0, 0.15)
         mesh = a.get_components_by_class(unreal.StaticMeshComponent)[0]
         door = DOOR_MESH.get(c["shape"])
         if door and unreal.EditorAssetLibrary.does_asset_exist(door):
@@ -90,6 +100,11 @@ def main():
             mesh.set_static_mesh(unreal.load_asset(door))
             mesh.set_relative_location(unreal.Vector(0, 0, 0), False, True)
             mesh.set_relative_scale3d(unreal.Vector(1, 1, 1))
+        elif card_mi:
+            mesh.set_static_mesh(PLANE)
+            mesh.set_relative_location(unreal.Vector(*offset), False, True)
+            mesh.set_relative_scale3d(unreal.Vector(card[0] / 100, card[1] / 100, 1))
+            mesh.set_material(0, card_mi)
         else:
             mesh.set_static_mesh(CUBE)
             mesh.set_relative_location(unreal.Vector(*offset), False, True)

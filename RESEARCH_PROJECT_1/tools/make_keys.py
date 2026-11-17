@@ -109,8 +109,24 @@ def tag_shape(w, h, color, rng, crack=False):
     return t
 
 
+CM_PER_PX = 0.0115            # a 520 px key drawing = a 6 cm key (the world cut-outs, export/keycards.json)
+CARDS = {}
+
+
+def card(parts, name, cm_per_px=CM_PER_PX):
+    """The same drawing, unturned and cropped tight, no shadow: export/keycard_<name>.png. place_clues.py lays
+    it flat where the key is, as a cut-out (unreal/key_cards.py), so the key in the world IS this drawing."""
+    can = Image.new("RGBA", (1100, 1100), (0, 0, 0, 0))
+    for img, pos in parts:
+        can.alpha_composite(img, pos)
+    can = can.crop(can.getbbox())
+    can.save(os.path.join(OUT, f"keycard_{name}.png"))
+    CARDS[name] = [round(can.width * cm_per_px, 2), round(can.height * cm_per_px, 2)]
+
+
 def compose(parts, name, angle):
     """Lay parts on a 1100 canvas, turn it, fit it into the 768 x 1024 frame, add a drop shadow."""
+    card(parts, name)
     can = Image.new("RGBA", (1100, 1100), (0, 0, 0, 0))
     for img, pos in parts:
         can.alpha_composite(img, pos)
@@ -219,9 +235,13 @@ def boathouse():
         ld.line(loop, fill=col, width=wdt)
     ld.line([(hx - 40 + 52, hy + 40), (hx + 30, hy + 120), (hx + 70, hy + 200)], fill=(225, 235, 232, 235), width=3)  # loose end
     compose([(piece, (180, 300)), (key, (KX, KY)), (line, (0, 0))], "key_boathouse", 6)
+    card([(key, (KX, KY)), (line, (0, 0))], "key_boathouse", 0.019)   # in the world it already lies on her map: key + line only
 
 
 if __name__ == "__main__":
+    import json
     office()
     gate()
     boathouse()
+    json.dump(CARDS, open(os.path.join(OUT, "keycards.json"), "w"), indent=1)
+    print("key cut-outs (cm):", CARDS)
