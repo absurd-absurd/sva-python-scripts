@@ -16,6 +16,7 @@
     "game_night": "October 17, 2002 (the anniversary)",
     "ending_page": "you came, bug\n\nnow we can be together",
     "ending_last_line": "this isn't Cas",
+    "ending_place": "the boathouse (by the water door)",
     "ending_screen": "cut to black right away (after Bug's line and the rattle behind you)",
     "tagline": "none",
     "wrong_hand_font": "fonts/Zeyada.ttf (postcard, later shack pages, boathouse note, last page)",
@@ -61,12 +62,12 @@
       "hand": "wrong",
       "where": "Boathouse, by the water door, next to her boots set side by side (laces tucked in)",
       "title": "A note by her boots",
-      "body": "the lanterns are lit for you, bug\n\ndon't worry, this will be the last cabin",
-      "objective": "Her boots. Just like the log. The last cabin... the red one."
+      "body": "the lanterns are lit for you, bug\n\ndon't worry, it won't be much longer now",
+      "objective": "Not much longer... The rattling... it's getting louder."
     },
     "last_page": {
       "hand": "wrong",
-      "where": "Red cabin, on the pillow of a warm bed, lantern lit (wrong handwriting)",
+      "where": "Boathouse, the ENDING: at the edge of the water door past her boots, held down by a lit red lantern",
       "body": "you came, bug\n\nnow we can be together",
       "bug_says": "this isn't Cas"
     },

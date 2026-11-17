@@ -38,15 +38,17 @@ mom back. She went missing too.
 4. **The shack**: Cas's notebook (she misquotes the log: "one comes back"), then later pages in
    **the wrong handwriting** (second font), signed "- cas"; the boathouse key.
 5. **The boathouse**: her boots set side by side by the water; a note in the wrong hand:
-   "the lanterns are lit for you, bug / don't worry, this will be the last cabin".
+   "the lanterns are lit for you, bug / don't worry, it won't be much longer now". Bug: "Not much
+   longer... The rattling... it's getting louder." This is where the game ends (below).
 
 ## The world breaks down
 The closer you get to the lake, the more the PS2 look falls apart: textures warp, geometry
 stretches, the fog turns red (driven by the Fear value in MPC_Horror).
 
 ## Ending
-The last cabin, the one glowing red: her bed still warm, a lantern lit, a page on the pillow in
-the wrong handwriting: *"you came, bug / now we can be together."* Bug: *"this isn't Cas."* The
+The boathouse, on the lake (decided 2026-11-16: the lake is the big story piece, so the game
+ends there, not in a cabin). Past her boots, at the edge of the water door, a lit red lantern
+holds down one last page in the wrong handwriting: *"you came, bug / now we can be together."* Bug: *"this isn't Cas."* The
 map was bait. The lake took her mother, took Cas, and now it has you too. The rattle is right
 behind you. Cut to black.
 
@@ -79,4 +81,5 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
   the same words as its reading screen.
 
 ## Still open
-- Where the boathouse key goes (shack or cabin 2).
+- Cabin 2 (Cas's bunk, backpack, stove; no longer the ending): optional side room? Its old lake map
+  copy and torn page to remove or repurpose.
