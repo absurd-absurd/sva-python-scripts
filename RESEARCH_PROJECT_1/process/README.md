@@ -207,3 +207,11 @@ D. Hollis, the Carvers and Eileen Byrne each in their own handwriting, the next 
 "104 - kept." in pencil in another hand under her name. The book on the office counter now shows the
 same page (the old texture still had guests from the first story draft); the facing page is empty.
 Both come from tools/make_guest_book.py.
+
+## 2026-11-17_silhouettes_v2.png
+Second pass at the three silhouettes (tools/make_silhouettes.py), smooth curves instead of the straight-
+edged roughs, same aged-print style. Fixes from the user's notes on the roughs: Eileen's hair is one
+shoulder-length mass with the ends flipped out (no "dog ears"); Cas has a real high ponytail falling clear
+of her head behind the right shoulder, ears showing, the hood bunched at her neck, open flannel and
+backpack straps; Bug has the bob with bangs, a shorter neck, the popped collar and smaller tilted
+headphone cups. Waiting for the user's OK before they go on the wall, the photo strip and the posters.

@@ -38,45 +38,6 @@
       ],
       "objective": "This is where her mom went missing. I can't believe she never told me she was looking into her mother's disappearance."
     },
-    "field_log": {
-      "hand": "print",
-      "paper": "typed",
-      "where": "Office, back room (box or folder on the shelf or desk)",
-      "title": "THE TRIALS OF BLACK HOLLOW LAKE",
-      "body": "Aug 3 1974 - Trying to find the source of the sound at the deepest part of the lake failed again. The line goes down and keeps going.\n\nAug 9 1974 - There's a rattling heard from the water every night now. It stops when we stop, but it starts again as soon as we move.\n\nAug 21 1974 - Lanterns along the shore seem to keep it quiet. Red works best. We don't know why.\n\nOct 17 1974 - Freedman walked into the water. We found his boots on the dock. In the morning a boy came out of the woods who went missing in 1952. He hasn't aged.\n\nOne goes in. Something comes back out.\n\nWe can't continue the trials, we've lost too much. The motel will stay open. Someone has to keep the lights lit.",
-      "objective": "One goes in, something comes back. Cas read this. The study clearly said 'something' comes back, but she wanted to believe it could be her mom."
-    },
-    "shack_notes": {
-      "hand": "cas",
-      "paper": "notebook",
-      "where": "Hunter's shack, Cas's notebook (her handwriting)",
-      "title": "Cas's notebook",
-      "body": "Night 3. I can't stay in the motel anymore. They watch me there.\n\nThe rattle comes every night now. It stops when I stop. So I don't stop.\n\nI heard her calling from the water. She said my name the way she used to, like she did when I was eight.\n\nThe log said one goes in, one comes back. I could bring her back.",
-      "objective": "She read the log wrong. It clearly said something comes back out, not someone. Something's gone very wrong."
-    },
-    "shack_notes_wrong": {
-      "hand": "wrong",
-      "paper": "notebook",
-      "where": "Hunter's shack, later pages (wrong-hand font: Zeyada)",
-      "title": "Later pages",
-      "body": "she's not sleeping anymore\n\nbug will come. bug always comes\n\ni left bug a map\n\n- cas",
-      "objective": "That's not her handwriting. It's the same writing as the postcard."
-    },
-    "boathouse_note": {
-      "hand": "wrong",
-      "paper": "scrap",
-      "where": "Boathouse, by the water door, next to her boots set side by side (laces tucked in)",
-      "title": "A note by her boots",
-      "body": "the lanterns are lit for you, bug\n\ndon't worry, it won't be much longer now",
-      "objective": "Not much longer? The rattling... it's getting louder."
-    },
-    "last_page": {
-      "hand": "wrong",
-      "paper": "scrap",
-      "where": "Boathouse, the ENDING: at the edge of the water door past her boots, held down by a lit red lantern",
-      "body": "you came, bug\n\nnow we can be together",
-      "bug_says": "this isn't Cas"
-    },
     "missing_poster_bug": {
       "where": "Payphone in the lot, final shot a year later (look only). Car pulling in: unseen.",
       "body": "MISSING\n\n(Bug's photo-booth silhouette)\n\nLast seen: Marrow Falls Motel, October 2002\nBrunette, 5'4\", blue eyes, 21 years old\n\nIf you have any information please call 555-0117"
@@ -215,6 +176,55 @@
       "needs_key": "boathouse",
       "locked_text": "Padlocked. The lock is new, everything else here is rotting.",
       "objective": "Someone's been in here recently. I should look around."
+    },
+    {
+      "id": "field_log", "hand": "print", "paper": "typed",
+      "shape": "folder",
+      "at": [3205, -912, 56.5], "yaw": 12, "room": true,
+      "prompt": "Read",
+      "title": "A folder on the bed",
+      "body": "THE TRIALS OF BLACK HOLLOW LAKE\n\nAug 3 1974 - Trying to find the source of the sound at the deepest part of the lake failed again. The line goes down and keeps going.\n\nAug 9 1974 - There's a rattling heard from the water every night now. It stops when we stop, but it starts again as soon as we move.\n\nAug 21 1974 - Lanterns along the shore seem to keep it quiet. Red works best. We don't know why.\n\nOct 17 1974 - Freedman walked into the water. We found his boots on the dock. In the morning a boy came out of the woods who went missing in 1952. He hasn't aged.\n\nOne goes in. Something comes back out.\n\nWe can't continue the trials, we've lost too much. The motel will stay open. Someone has to keep the lights lit.",
+      "journal": "A folder of the researchers' notes from 1974, left on the bed in the back room. One goes in. Something comes back out.",
+      "objective": "One goes in, something comes back. Cas read this. The study clearly said 'something' comes back, but she wanted to believe it could be her mom."
+    },
+    {
+      "id": "shack_notes", "hand": "cas", "paper": "notebook",
+      "shape": "notebook",
+      "at": [2249.2, 4254.3, 54.8], "yaw": 80, "room": true,
+      "prompt": "Read",
+      "title": "Cas's notebook",
+      "body": "Night 3. I can't stay in the motel anymore. They watch me there.\n\nThe rattle comes every night now. It stops when I stop. So I don't stop.\n\nI heard her calling from the water. She said my name the way she used to, like she did when I was eight.\n\nThe log said one goes in, one comes back. I could bring her back.",
+      "journal": "Cas camped out at the hunter's shack. Her notebook says she heard her mom calling from the water.",
+      "objective": "She read the log wrong. It clearly said something comes back out, not someone. Something's gone very wrong."
+    },
+    {
+      "id": "shack_notes_wrong", "hand": "wrong", "paper": "notebook",
+      "shape": "wall_page",
+      "at": [2508.7, 4454.6, 112.0], "yaw": 12, "room": true,
+      "prompt": "Read",
+      "title": "Pages nailed to the wall",
+      "body": "she's not sleeping anymore\n\nbug will come. bug always comes\n\ni left bug a map\n\n- cas",
+      "journal": "Pages nailed to the shack wall, signed cas. It's not her handwriting. It's the same writing as the postcard.",
+      "objective": "That's not her handwriting. It's the same writing as the postcard."
+    },
+    {
+      "id": "boathouse_note", "hand": "wrong", "paper": "scrap",
+      "shape": "paper",
+      "at": [-3728, 15042, 15.8], "yaw": 22, "room": true,
+      "prompt": "Read",
+      "title": "A note by her boots",
+      "body": "the lanterns are lit for you, bug\n\ndon't worry, it won't be much longer now",
+      "journal": "Her boots by the water door, set side by side. A note beside them: it won't be much longer now.",
+      "objective": "Not much longer? The rattling... it's getting louder."
+    },
+    {
+      "id": "last_page", "hand": "wrong", "paper": "scrap",
+      "shape": "paper",
+      "at": [-3698, 15058, 15.8], "yaw": -8, "room": true,
+      "prompt": "Read",
+      "title": "The last page",
+      "body": "you came, bug\n\nnow we can be together",
+      "objective": "this isn't Cas."
     }
   ]
 }

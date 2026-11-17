@@ -19,6 +19,7 @@ BLD_MATS = {
     "candle_mat": (0.7, 0.66, 0.55), "seeglass_cabin_mat": (0.12, 0.14, 0.13), "rusty_tool_mat": (0.2, 0.11, 0.07),
     "boat_old_mat": (0.16, 0.17, 0.15), "mud_print_mat": (0.06, 0.05, 0.04),
     "sleeping_bag_lining_mat": (0.34, 0.12, 0.08), "zipper_mat": (0.05, 0.05, 0.05), "wool_mat": (0.2, 0.19, 0.17),
+    "boot_mat": (0.24, 0.14, 0.07), "boot_sole_mat": (0.045, 0.04, 0.035), "seeglass_red_mat": (0.6, 0.05, 0.03),
     "dark_leather_mat": (0.09, 0.06, 0.04), "algae_mat": (0.06, 0.09, 0.05), "paint_can_mat": (0.3, 0.29, 0.26),
     "gas_can_mat": (0.34, 0.05, 0.03), "net_mat": (0.22, 0.2, 0.15), "float_mat": (0.45, 0.36, 0.2),
     "bottle_mat": (0.14, 0.08, 0.03), "can_label_mat": (0.42, 0.18, 0.1), "enamel_mat": (0.2, 0.3, 0.4),
@@ -744,6 +745,39 @@ def boat_hull(L, W, out_mat, in_mat, seats=3, keel_z=0.0, water_z=None):
     return hull
 
 
+def boot(cx, cy, z, yaw, seed):
+    """Cas's hiking boot (2026-11-17, the ending in the boathouse): the foot built like room_props'
+    sneaker (side profile _sneaker_top over a foot-shaped outline, smoothed) in brown leather, a thick
+    dark lug sole, an ankle shaft with a padded collar, and the laces tucked in (no loose ends).
+    yaw 0 = toe toward +y. z = the floor it stands on."""
+    L, W = 29.0, 11.0
+    c = cmds.polyCube(w=W, h=1, d=L, sx=4, sy=3, sz=12, ch=False)[0]
+    pts = []
+    for x, y, zz in _verts(c):
+        u, v, h = zz / (L / 2), x / (W / 2), y + 0.5
+        width = 0.8 + 0.2 * math.exp(-((u - 0.4) / 0.6) ** 2)
+        if u > 0.75:
+            width *= math.sqrt(max(0.05, 1 - ((u - 0.75) / 0.3) ** 2))
+        pts.append((v * (W / 2) * width * (1 - 0.25 * h * h), h * _sneaker_top(u) * 1.3, zz))
+    _set_verts(c, pts)
+    cmds.polySmooth(c, dv=2, ch=False)
+    _place(c, cx, cy, z + 3.4, "boot_mat", yaw=yaw)
+    a = math.radians(yaw)
+    fx, fy = -math.sin(a), math.cos(a)
+    at = lambda d: (cx + fx * d, cy + fy * d)
+    rbevel(cx, cy, z + 1.8, W + 1.4, L + 1.2, 3.6, "boot_sole_mat", r=1.2, seg=2, yaw=yaw)          # thick lug sole
+    rsoft(*at(12.6), z + 3.2, 7.8, 4.6, 3.2, "boot_sole_mat", seed=seed, yaw=yaw)                    # rubber toe bumper
+    hx, hy = at(-6.2)                                                                               # the ankle shaft
+    frustum(hx, hy, z + 9.5, z + 19.0, 5.4, 5.0, "boot_mat", sides=18)
+    frustum(hx, hy, z + 18.6, z + 21.0, 5.7, 5.6, "dark_leather_mat", sides=18)                    # padded collar
+    sphere(hx, hy, z + 20.9, 4.3, "shoe_inner_mat", sides=14, scale=(1, 1, 0.12))                   # the opening
+    for k in range(5):                                                                              # laces, tucked in
+        d = 2.5 - k * 1.9
+        lx, ly = at(d)
+        zz = z + 3.4 + _sneaker_top(d / (L / 2)) * 1.3 + 0.4 if d > -1 else z + 10 + k * 2.2
+        rbox(lx, ly, zz, 6.0, 0.8, 0.7, "dark_leather_mat", yaw=yaw, tilt_y=-14)
+
+
 def boathouse():
     X, Y, F = BH_X, BH_Y, BH_FL
     W, S, N = BH_W, BH_S, BH_N
@@ -992,6 +1026,13 @@ def boathouse():
     # cobwebs in two top corners
     cobweb((X - W + 5, Y + S + 5), 1, 1, 46, EAVE - 2)
     cobweb((X + W - 5, Y + N - 5), -1, -1, 60, EAVE - 2)
+    # ---- the ending (STORY.md, 2026-11-16): by the water door at the end of the west walkway, Cas's
+    # boots set neatly side by side, laces tucked in, toes to the water (her note beside them is a clue,
+    # clues.json boathouse_note); past them at the slip's edge a lit red lantern holds down the last page
+    BX, BYB = X - SLIP - 80, Y + N - 75
+    for k, dx in enumerate((-7.0, 7.0)):
+        boot(BX + dx, BYB, F, 0, 20 + k)
+    red_lantern(X - SLIP - 24, Y + N - 34, F + 0.5, "light_boathouse_last_lantern")
     IN_ROOM[0] = False
     DOORS.append(("door_boathouse", "boathouse_door", X + 52, Y + S, F, 180))
 
