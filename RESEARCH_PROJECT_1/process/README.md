@@ -274,3 +274,10 @@ seams, two chest pockets with flaps and snaps, folds near the arms.
 
 ## 2026-11-17_silhouettes_v11.png
 Cas without the little strands of hair sticking out (user); her hair edge is clean now.
+
+## 2026-11-17_cas_wall_closeup.png
+Cas's wall as the reading screen shows it (tools/make_wall.py), and on the Room 104 wall itself: her
+notes now in her Rock Salt hand, the lantern note ("why does everyone lie about the red lanterns?"),
+Eileen's MISSING poster with her silhouette (replacing the old names list, which had dates after 2002),
+and the photo-booth strip of Cas and Bug, pinned and strung on the wallpaper with her lake photos,
+the clipping and her lake map.

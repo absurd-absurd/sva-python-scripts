@@ -83,7 +83,13 @@ if __name__ == "__main__":
 
 # ---------- her investigation notes (the wall over the dresser in Room 104) ----------
 
-INK_FONT = r"C:/Windows/Fonts/Inkfree.ttf"
+INK_FONT = os.path.join(ROOT, "fonts", "RockSalt-Regular.ttf")   # Cas's hand (was Ink Free until 2026-11-17)
+CAS_SCALE = 0.72                                                   # Rock Salt draws ~1.4x bigger than Ink Free
+
+
+def cas_font(size, k=1):
+    from PIL import ImageFont
+    return ImageFont.truetype(INK_FONT, max(6, int(size * CAS_SCALE * k)))
 PAPER = (214, 204, 172)
 INK = (28, 26, 34)
 RED = (170, 22, 18)
@@ -105,30 +111,32 @@ def _scrawl(d, x, y, w, rng, ink=INK, height=4):
     while cx < x + w:
         pts.append((cx, y + rng.uniform(-height, height) * (0.5 if rng.random() < 0.6 else 1)))
         cx += rng.uniform(1.5, 3.2)
-    d.line(pts, fill=ink, width=1)
+    d.line(pts, fill=ink, width=max(1, int(height) // 4))
 
 
-def note(name, w, h, lines, seed, extra=None):
-    """Handwritten note: real words (lines) where she pressed hard, scrawl everywhere else."""
-    from PIL import ImageFont
+def note(name, w, h, lines, seed, extra=None, k=1):
+    """Handwritten note: real words (lines) where she pressed hard, scrawl everywhere else.
+    k > 1 draws the same note k times bigger (export/hires_<name>.png) for the wall close-up."""
     rng = random.Random(seed)
-    im = _paper(w, h, rng)
+    im = _paper(w * k, h * k, rng)
     d = ImageDraw.Draw(im)
-    y = 8
+    y = 8 * k
     for text, size, color, circle in lines:
         if text == "~":
-            _scrawl(d, 8, y + 4, w - 16 - rng.randint(0, 30), rng)
-            y += 11
+            _scrawl(d, 8 * k, y + 4 * k, (w - 16 - rng.randint(0, 30)) * k, rng, height=4 * k)
+            y += 11 * k
             continue
-        f = ImageFont.truetype(INK_FONT, size)
-        d.text((8 + rng.randint(-2, 4), y), text, font=f, fill=color)
-        tw = d.textlength(text, font=f)
-        if circle:
-            d.ellipse([4, y - 2, 12 + tw + 6, y + size + 4], outline=RED, width=2)
-        y += size + 5
+        f = cas_font(size, k)
+        x = 8 * k + rng.randint(-2, 4) * k
+        l, t, r, bt = d.textbbox((x, y), text, font=f)          # where the ink actually lands
+        d.text((x, y - (t - y) + 2 * k), text, font=f, fill=color)   # top of the ink at y + 2
+        h_ink = bt - t
+        if circle:                                              # round the word, not through it
+            d.ellipse([l - 6 * k, y - 3 * k, r + 6 * k, y + h_ink + 7 * k], outline=RED, width=2 * k)
+        y += h_ink + (9 if circle else 6) * k
     if extra:
         extra(d, im, rng)
-    im.save(os.path.join(OUT, name + ".png"))
+    im.save(os.path.join(OUT, (name if k == 1 else "hires_" + name) + ".png"))
 
 
 def clipping(name, seed):
@@ -150,7 +158,7 @@ def clipping(name, seed):
         for yy in range(y0, h - 8, 5):
             d.line([(x0, yy), (x1 - rng.randint(0, 8), yy)], fill=(110, 106, 100), width=1)
     d.ellipse([80, 120, 150, 140], outline=RED, width=2)                 # she circled something
-    d.text((96, 142), "1997!", font=ImageFont.truetype(INK_FONT, 15), fill=RED)
+    d.text((96, 142), "1997!", font=cas_font(15), fill=RED)
     im.save(os.path.join(OUT, name + ".png"))
 
 
@@ -167,17 +175,17 @@ def lake_map(name, seed):
         r = 1 + 0.12 * math.sin(a * 3 + 1) + rng.uniform(-0.04, 0.04)
         pts.append((110 + math.cos(a) * 80 * r, 78 + math.sin(a) * 50 * r))
     d.line(pts + [pts[0]], fill=INK, width=2)
-    f = ImageFont.truetype(INK_FONT, 13)
+    f = cas_font(13)
     d.text((70, 66), "BLACK HOLLOW", font=f, fill=INK)
     d.line([(110, 128), (110, 146)], fill=INK, width=3)                  # the dock
     d.text((116, 136), "dock", font=f, fill=INK)
     d.rectangle([178, 104, 192, 116], outline=INK, width=1)              # boathouse
-    d.text((150, 118), "boathouse", font=ImageFont.truetype(INK_FONT, 11), fill=INK)
+    d.text((150, 118), "boathouse", font=cas_font(11), fill=INK)
     for (x, y) in ((92, 50), (128, 46), (150, 70), (96, 96)):            # red X marks on the water
         d.line([(x - 5, y - 5), (x + 5, y + 5)], fill=RED, width=2)
         d.line([(x - 5, y + 5), (x + 5, y - 5)], fill=RED, width=2)
     d.text((8, 8), "where the lights were", font=f, fill=RED)
-    d.text((176, 20), "?", font=ImageFont.truetype(INK_FONT, 26), fill=INK)
+    d.text((176, 20), "?", font=cas_font(26), fill=INK)
     im.save(os.path.join(OUT, name + ".png"))
 
 
@@ -192,7 +200,7 @@ def diary_page(name, words, seed):
     for y in range(18, h - 6, 11):
         d.line([(0, y), (w, y)], fill=(150, 160, 185), width=1)
     d.line([(20, 0), (20, h)], fill=(190, 90, 90), width=1)
-    f = ImageFont.truetype(INK_FONT, 13)
+    f = cas_font(13)
     y = 8
     for word in words:
         if word == "~":
@@ -244,31 +252,85 @@ def painting(name, seed):
     im.save(os.path.join(OUT, name + ".png"))
 
 
+def _photo(path, w, h):
+    """A silhouette print (export/sil_*.png from tools/make_silhouettes.py), its white border cut off,
+    fitted to w x h."""
+    im = Image.open(os.path.join(OUT, path)).convert("RGB")
+    im = im.crop((30, 30, im.width - 30, im.height - 30))
+    return im.resize((w, h), Image.LANCZOS)
+
+
+def missing_eileen(k=1):
+    """Eileen's MISSING poster: a cheap printed flyer, her silhouette, the facts in type.
+    150 x 200 on the wall; k = 4 for the close-up."""
+    from PIL import ImageFont
+    rng = random.Random(21)
+    w, h = 150 * k, 200 * k
+    im = _paper(w, h, rng, tint=(226, 222, 206))
+    d = ImageDraw.Draw(im)
+    big = ImageFont.truetype(r"C:/Windows/Fonts/arialbd.ttf", 30 * k)
+    t = "MISSING"
+    d.text(((w - d.textlength(t, font=big)) / 2, 6 * k), t, font=big, fill=(20, 18, 18))
+    ph = _photo("sil_eileen.png", 84 * k, 104 * k)
+    x0, y0 = (w - ph.width) // 2, 42 * k
+    im.paste(ph, (x0, y0))
+    d.rectangle([x0 - k, y0 - k, x0 + ph.width + k, y0 + ph.height + k], outline=(30, 28, 26), width=k)
+    bold = ImageFont.truetype(r"C:/Windows/Fonts/arialbd.ttf", 11 * k)
+    reg = ImageFont.truetype(r"C:/Windows/Fonts/arial.ttf", 7 * k)
+    y = 150 * k
+    lines = [("EILEEN BYRNE", bold), ("Missing since October 17, 1997", reg),
+             ("Female, age 48, brown hair, brown eyes, 5'6" + chr(34), reg), ("Last seen at the Marrow Falls Motel", reg)]
+    for text, f in lines:
+        d.text(((w - d.textlength(text, font=f)) / 2, y), text, font=f, fill=(24, 22, 22))
+        y += (14 if f is bold else 10) * k
+    im = im.filter(ImageFilter.GaussianBlur(0.3 * k))
+    im.save(os.path.join(OUT, ("pic_missing_eileen" if k == 1 else "hires_pic_missing_eileen") + ".png"))
+
+
+def photo_strip(k=1):
+    """The photo-booth strip of Cas and Bug (STORY.md: the only picture of the two of them): four frames
+    down a white strip: Bug, Cas, then both of them twice. 60 x 220 on the wall; k = 4 for the close-up."""
+    w, h = 60 * k, 220 * k
+    im = Image.new("RGB", (w, h), (238, 236, 228))
+    fw, fh, gap = 52 * k, 50 * k, 4 * k
+    bug = _photo("sil_bug.png", fw, fh)
+    cas = _photo("sil_cas.png", fw, fh)
+    both = Image.new("RGB", (fw, fh))
+    both.paste(_photo("sil_cas.png", fw, fh).crop((fw // 4, 0, fw // 4 + fw // 2, fh)), (0, 0))
+    both.paste(_photo("sil_bug.png", fw, fh).crop((fw // 4, 0, fw // 4 + fw // 2, fh)), (fw // 2, 0))
+    for i, fr in enumerate((bug, cas, both, both)):
+        im.paste(fr, ((w - fw) // 2, gap + i * (fh + gap)))
+    im = im.filter(ImageFilter.GaussianBlur(0.25 * k))
+    im.save(os.path.join(OUT, ("pic_photo_strip" if k == 1 else "hires_pic_photo_strip") + ".png"))
+
+
 def notes():
     def arrow(d, im, rng):
         d.line([(20, im.height - 30), (im.width - 30, im.height - 50)], fill=RED, width=2)
         d.line([(im.width - 30, im.height - 50), (im.width - 42, im.height - 44)], fill=RED, width=2)
-    note("pic_note_names", 150, 200, [
-        ("every year?", 18, INK, False), ("1974  R. Dale", 14, INK, True), ("1981  M. Ostrowski", 14, INK, True),
-        ("1988  J. Peake", 14, INK, True), ("1997  T. Hale", 14, INK, True), ("~", 0, 0, 0), ("2009  L. Brandt", 14, INK, True),
-        ("2018  D. Moss", 14, INK, True), ("and now me?", 16, RED, False)], seed=1)
-    note("pic_note_night", 120, 150, [
-        ("SAME", 22, INK, False), ("NIGHT", 22, INK, False), ("every year", 15, RED, True), ("~", 0, 0, 0), ("~", 0, 0, 0),
-        ("guest book", 14, INK, False), ("ask office", 14, INK, False)], seed=2)
-    note("pic_note_lights", 120, 150, [
-        ("red lights", 17, RED, False), ("on the water", 15, INK, False), ("~", 0, 0, 0), ("who carries", 14, INK, False),
-        ("them?", 14, INK, False), ("~", 0, 0, 0)], seed=3, extra=arrow)
-    note("pic_note_rattle", 120, 150, [
-        ("the rattle", 16, INK, False), ("stops when", 14, INK, False), ("I stop", 16, RED, True), ("~", 0, 0, 0), ("~", 0, 0, 0),
-        ("~", 0, 0, 0)], seed=4)
-    note("pic_note_scrawl", 120, 150, [("~", 0, 0, 0)] * 6 + [("don't stay", 15, INK, False), ("past dark", 15, RED, False)], seed=5)
+    # (2026-11-17: the old "names" note went - it listed 2009 and 2018, after the game's 2002 - and
+    # Eileen's MISSING poster took its place; "red lights on the water" became the lantern note)
+    for k in (1, 4):                       # k = 4: the sharp copies for the wall close-up (tools/make_wall.py)
+        note("pic_note_night", 120, 150, [
+            ("SAME", 22, INK, False), ("NIGHT", 22, INK, False), ("every year", 15, RED, True), ("~", 0, 0, 0),
+            ("guest book", 14, INK, False), ("ask office", 14, INK, False)], seed=2, k=k)
+        note("pic_note_lights", 120, 150, [
+            ("why does", 16, INK, False), ("everyone lie", 16, INK, False), ("about the", 16, INK, False),
+            ("red lanterns?", 17, RED, True), ("~", 0, 0, 0)], seed=3, k=k)
+        note("pic_note_rattle", 120, 150, [
+            ("the rattle", 16, INK, False), ("stops when", 14, INK, False), ("I stop", 16, RED, True), ("~", 0, 0, 0),
+            ("~", 0, 0, 0)], seed=4, k=k)
+        note("pic_note_scrawl", 120, 150, [("~", 0, 0, 0)] * 5 + [("don't stay", 15, INK, False), ("past dark", 15, RED, False)],
+             seed=5, k=k)
+        missing_eileen(k)
+        photo_strip(k)
     for k, words in enumerate((["Oct", "~", "~", "they knew", "~", "~", "~"], ["~", "~", "the lake", "~", "~", "don't", "~", "~"],
                                ["Bug -", "~", "~", "~", "I'm sorry", "~", "~"])):
         diary_page(f"pic_page_{k + 1}", words, seed=10 + k)
     clipping("pic_clipping", seed=6)
     painting("pic_painting", seed=8)
     lake_map("pic_lake_map", seed=7)
-    print("notes: names, night, lights, rattle, scrawl, clipping, lake map")
+    print("notes: night, lantern note, rattle, scrawl, Eileen poster, photo strip, clipping, lake map")
 
 
 if __name__ == "__main__":

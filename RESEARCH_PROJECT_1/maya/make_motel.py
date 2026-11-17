@@ -70,7 +70,7 @@ MATS = {
     "tv_mat": (0.09, 0.075, 0.06), "screen_mat": (0.035, 0.045, 0.045), "sole_mat": (0.62, 0.6, 0.55),
     "lining_mat": (0.3, 0.1, 0.09), "pin_mat": (0.6, 0.03, 0.02), "red_string_mat": (0.45, 0.03, 0.03),
     "shoe_inner_mat": (0.05, 0.05, 0.05), "jacket_cuff_mat": (0.08, 0.1, 0.08),
-    "pic_note_names": (1, 1, 1), "pic_note_night": (1, 1, 1), "pic_note_lights": (1, 1, 1), "pic_note_rattle": (1, 1, 1),
+    "pic_missing_eileen": (1, 1, 1), "pic_photo_strip": (1, 1, 1), "pic_note_night": (1, 1, 1), "pic_note_lights": (1, 1, 1), "pic_note_rattle": (1, 1, 1),
     "pic_note_scrawl": (1, 1, 1), "pic_clipping": (1, 1, 1), "pic_lake_map": (1, 1, 1),
     "pic_page_1": (1, 1, 1), "pic_page_2": (1, 1, 1), "pic_page_3": (1, 1, 1), "pen_mat": (0.05, 0.07, 0.2),
     "chair_mat": (0.85, 0.85, 0.8), "metal_mat": (0.3, 0.3, 0.3), "ice_mat": (0.8, 0.82, 0.85),

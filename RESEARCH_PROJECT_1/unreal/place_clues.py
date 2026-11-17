@@ -26,6 +26,7 @@ SHAPES = {
     "folder": ((31, 23, 1.4), "MI_PS2_page_mat", (0, 0, 0.7)),          # a manila file folder (the 1974 log)
     "notebook": ((15, 21, 1.6), "MI_PS2_diary_mat", (0, 0, 0.8)),       # Cas's spiral notebook
     "wall_page": ((0.4, 21, 28), "MI_PS2_curtain_mat", (0, 0, 14)),     # a page nailed to a wall (faces +-x after yaw)
+    "wall_zone": ((4, 340, 130), "MI_PS2_curtain_mat", (0, 0, 65)),     # invisible: the aim area over Cas's wall
     "key":   ((10, 4, 1.2), "MI_PS2_brass_mat", (0, 0, 0.6)),
     "book":  ((30, 22, 4), "MI_PS2_door_mat", (0, 0, 2)),
     "door":  ((108, 5, 228), "MI_PS2_door_mat", (54, 0, 114)),
@@ -94,6 +95,8 @@ def main():
             mesh.set_relative_location(unreal.Vector(*offset), False, True)
             mesh.set_relative_scale3d(unreal.Vector(size[0] / 100, size[1] / 100, size[2] / 100))
             mesh.set_material(0, unreal.load_asset(MATS + mat))
+        if c["shape"] == "wall_zone":                  # only the aim box counts; the wall itself is the prop
+            mesh.set_visibility(False)
         if (c.get("room") or in_room(c["at"])) and "door" not in c["shape"]:
             mesh.set_editor_property("lighting_channels", ROOM_LIGHT)   # like the room around it
         # the invisible aim box: the object plus HIT_MARGIN all round (doors: just the door)

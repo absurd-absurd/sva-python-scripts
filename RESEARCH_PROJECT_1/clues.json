@@ -27,17 +27,6 @@
   },
   "new_prop_texts": {
     "_about": "Final texts for clues whose props aren't built yet. place_clues.py ignores this block.",
-    "cas_wall": {
-      "hand": "cas",
-      "where": "Room 104, Cas's investigation wall (readable)",
-      "title": "Cas's wall",
-      "notes": [
-        "Cas's note: why does everyone lie about the red lanterns?",
-        "MISSING\n\nEileen Byrne\nMissing since October 17, 1997\nFemale, age 48, brown hair, brown eyes, 5'6\"\nLast seen at the Marrow Falls Motel",
-        "A photo-booth strip of Cas and me (Bug's line: I remember the day we took these. I've kept my copy on me ever since it came out of the photo booth.)"
-      ],
-      "objective": "This is where her mom went missing. I can't believe she never told me she was looking into her mother's disappearance."
-    },
     "missing_poster_bug": {
       "where": "Payphone in the lot, final shot a year later (look only). Car pulling in: unseen.",
       "body": "MISSING\n\n(Bug's photo-booth silhouette)\n\nLast seen: Marrow Falls Motel, October 2002\nBrunette, 5'4\", blue eyes, 21 years old\n\nIf you have any information please call 555-0117"
@@ -225,6 +214,16 @@
       "title": "The last page",
       "body": "you came, bug\n\nnow we can be together",
       "objective": "this isn't Cas."
+    },
+    {
+      "id": "cas_wall", "hand": "none", "paper": "wall",
+      "shape": "wall_zone",
+      "at": [-979, -1110, 150], "yaw": 0, "room": true,
+      "prompt": "Look",
+      "title": "Cas's wall",
+      "body": "x",
+      "journal": "A photo-booth strip of Cas and me on her wall. I remember the day we took these. I've kept my copy on me ever since it came out of the photo booth.",
+      "objective": "This is where her mom went missing. I can't believe she never told me she was looking into her mother's disappearance."
     }
   ]
 }

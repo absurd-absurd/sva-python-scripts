@@ -442,7 +442,7 @@ def investigation_wall(wall_x, front):
     (tools/make_photos.py), a newspaper clipping, a hand-drawn lake map, a red pin in each,
     and red string between the ones she connected. wall_x = the wall face (+x into the room)."""
     items = {   # name: (y from FRONT, z centre, width, height, spin)
-        "pic_note_names": (168, 192, 21, 28, -3),
+        "pic_missing_eileen": (168, 194, 24, 32, -2),   # her mom's MISSING poster (2026-11-17, was a names list)
         "pic_lake_map": (272, 248, 42, 30, 2),
         "pic_clipping": (392, 196, 24, 30, 4),
         "pic_note_night": (440, 238, 17, 21, -5),
@@ -456,9 +456,12 @@ def investigation_wall(wall_x, front):
         pin = (wall_x + 2.8, front + dy, z + h / 2.0 - 2.0)
         sphere(*pin, 0.8, "pin_mat", sides=8)
         pins[name] = pin
+    # the photo-booth strip of Cas and Bug, taped up by itself (STORY.md: the only picture of the two of them)
+    picture(wall_x + 2.0, front + 126, 204, 8, 29, "pic_photo_strip", spin=3)
+    rbox(wall_x + 3.0, front + 126, 218.5, 1, 6, 2.5, "tape_mat")
     pins["pic_lanterns"] = (wall_x + 2.8, front + 336, 214.5)           # the red-lights photo (taped)
     sphere(*pins["pic_lanterns"], 0.8, "pin_mat", sides=8)
-    for a, b in (("pic_note_names", "pic_lake_map"), ("pic_lake_map", "pic_lanterns"),
+    for a, b in (("pic_missing_eileen", "pic_lake_map"), ("pic_lake_map", "pic_lanterns"),
                  ("pic_lanterns", "pic_note_lights"), ("pic_note_lights", "pic_note_night"),
                  ("pic_note_rattle", "pic_lake_map")):
         p, q = pins[a], pins[b]
