@@ -8,7 +8,7 @@ one person goes in, and *something* comes back out wearing them, for the lake's 
 gives nothing back. The thing that comes back is bait: it brings the next person in.
 
 ## The motel
-The Marrow Falls Motel was built in the 1970s by researchers who came to study it ("The Trails
+The Marrow Falls Motel was built in the 1970s by researchers who came to study it ("The Trials
 of Black Hollow Lake"). Their records are in the office. In 1974 one of them, Freedman, walked
 into the water on **October 17**; a boy missing since 1952 came out of the woods, not a day older.
 The red lanterns were their way of keeping it quiet; the town still lights them every year and
@@ -25,6 +25,8 @@ mom back. She went missing too.
 - **Oct 17, 1974:** Freedman walks into the lake. The 1952 boy comes back out.
 - **Oct 17, 1997:** Eileen Byrne checks into room 104 and is never seen again ("104 - kept").
 - **Oct 2001:** Cas comes to the motel to find her mother and disappears.
+- **Early Oct 2002:** Bug gets a postcard of the Marrow Falls Motel, signed Cas: "come find me, bug."
+  It's in the WRONG handwriting (the thing wrote it), but Bug doesn't know that yet.
 - **Oct 17, 2002 (the game, the anniversary):** a year later, you (Bug, 21) come looking for Cas.
 
 ## The clue trail
@@ -63,6 +65,7 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
 - **Dates:** everything happens on October 17 (1974, 1997, 2002). Cas came in October 2001.
   Nothing in the game is newer than 2002: no cell phones, no internet; payphones, film, tapes.
 - **Ages:** Eileen 48 in 1997. Bug 21 in 2002; Cas about the same age.
+- **The postcard** (opening text) is in the wrong handwriting: it's what brought Bug here.
 - **Handwriting:** Cas's own notes = normal font, normal capitals. Anything from the thing
   wearing her = second font, all lowercase, cold, calls you "bug", signs "- cas".
 - **Names:** Freedman (researcher, 1974), D. Hollis + the Carvers (1997 guests), Eileen Byrne,
@@ -74,5 +77,4 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
 ## Still open
 - Tagline, credits, second handwriting font, phone number on Bug's poster.
 - Ending on screen: cut to black right away, or lanterns go out one by one?
-- How did Bug know to come to the motel? (see the story review)
-- Field log title: "Trails" or "Trials"?
+- Where the boathouse key goes (shack or cabin 2).

@@ -11,7 +11,7 @@
   },
   "start_objective": "There's something on the ground by the car. I should see what that is.",
   "game_text": {
-    "opening": "October 2002.\n\nIt's been a year since Cas stopped answering my calls. Other than me, she has no one to even care to look for her. Not since her mom went missing.\n\nThe last place anyone saw her was a motel at the end of a closed road.",
+    "opening": "October 2002.\n\nIt's been a year since Cas stopped answering my calls. Other than me, she has no one to even care to look for her. Not since her mom went missing.\n\nThen last week a postcard came. The Marrow Falls Motel on the front. On the back, one line, signed Cas:\n\ncome find me, bug.",
     "game_night": "October 17, 2002 (the anniversary)",
     "ending_page": "you came, bug\n\nnow we can be together",
     "ending_last_line": "this isn't Cas",
@@ -32,9 +32,9 @@
     },
     "field_log": {
       "where": "Office, back room (box or folder on the shelf or desk)",
-      "title": "THE TRAILS OF BLACK HOLLOW LAKE",
+      "title": "THE TRIALS OF BLACK HOLLOW LAKE",
       "body": "Aug 3 1974 - Trying to find the source of the sound at the deepest part of the lake failed again. The line goes down and keeps going.\n\nAug 9 1974 - There's a rattling heard from the water every night now. It stops when we stop, but it starts again as soon as we move.\n\nAug 21 1974 - Lanterns along the shore seem to keep it quiet. Red works best. We don't know why.\n\nOct 17 1974 - Freedman walked into the water. We found his boots on the dock. In the morning a boy came out of the woods who went missing in 1952. He hasn't aged.\n\nOne goes in. Something comes back out.\n\nWe can't continue the trials, we've lost too much. The motel will stay open. Someone has to keep the lights lit.",
-      "objective": "One goes in, something comes back. Cas read this. The study clearly said 'something' comes back, but she can't believe it will be her mom."
+      "objective": "One goes in, something comes back. Cas read this. The study clearly said 'something' comes back, but she wanted to believe it could be her mom."
     },
     "shack_notes": {
       "where": "Hunter's shack, Cas's notebook (her handwriting)",
