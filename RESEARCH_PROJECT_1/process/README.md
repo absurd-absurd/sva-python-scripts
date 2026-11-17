@@ -160,3 +160,8 @@ Marrow Falls, Oct 9 2002, 37-cent flag stamp). It is written by the thing wearin
 the second "wrong" handwriting. Shown in five free erratic handwriting fonts (Google Fonts:
 Zeyada, Reenie Beanie, Nothing You Could Do, Rock Salt, Just Me Again Down Here) next to Cas's real
 handwriting (Ink Free), to pick the wrong-hand font. Address lines are placeholders.
+
+## 2026-11-17_map_rock_salt_compare.png
+Cas's map, before (left, Ink Free) and after (right) switching her handwriting to Rock Salt, so it
+contrasts with the thin "wrong" hand (Zeyada). Rock Salt draws much bigger, so make_map.py scales it
+to 0.78x and pulls its lines closer; the gate label and lookout note were moved to stop overlaps.

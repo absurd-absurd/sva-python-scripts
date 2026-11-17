@@ -1,4 +1,5 @@
-"""Draw the in-game map of Marrow Falls: the map Cas drew for Bug, by hand on a sketchbook page.
+"""Draw the in-game map of Marrow Falls: the map Cas drew for herself in 2001 (the thing left it
+by Bug's car as bait), by hand on a sketchbook page.
 
     python make_map.py            -> export/map.png (2048 x 2048) + export/map_marker.png,
                                      + export/map_full.png (torn paper, for the M screen);
@@ -15,7 +16,8 @@ in her handwriting with arrows, a title box, a north arrow and a note box; folde
 
 North (the lake, +Y) is up. Seen facing north, Unreal's +X is to the LEFT (west), so the
 map flips X: u = (x_max - x) / size. The HUD uses the same bounds to put you on it.
-Needs Pillow (python -m pip install pillow) and the Ink Free font that comes with Windows.
+Needs Pillow (python -m pip install pillow). Cas's handwriting = fonts/RockSalt-Regular.ttf (was Ink Free
+until 2026-11-16). Rock Salt draws much bigger than Ink Free, so HAND_SCALE / HAND_SPACING shrink it.
 """
 import json
 import math
@@ -40,11 +42,13 @@ SCRAP = os.path.join(ROOT, "export", "prompt_scrap.png")  # torn scrap behind th
 FRAME_HOLE = 0.08                                        # the hole (where the map shows) starts this far in, each side
 B = LAYOUT["map"]                                   # world bounds of the picture (square)
 PX = B["px"]
-FONT = r"C:/Windows/Fonts/Inkfree.ttf"
+FONT = os.path.join(ROOT, "fonts", "RockSalt-Regular.ttf")
 
 PAPER = (238, 230, 205)
 INK = (24, 22, 26)            # black felt-tip
-HAND = r"C:/Windows/Fonts/Inkfree.ttf"
+HAND = os.path.join(ROOT, "fonts", "RockSalt-Regular.ttf")
+HAND_SCALE = 0.78       # Rock Salt draws much bigger than Ink Free at the same size
+HAND_SPACING = -0.18    # its lines sit far apart; pull them together (fraction of the font size)
 
 rng = random.Random(7)
 
@@ -59,7 +63,7 @@ def cm(d):
 
 
 def font(size, f=HAND):
-    return ImageFont.truetype(f, int(size))
+    return ImageFont.truetype(f, int(size * HAND_SCALE))
 
 
 def wobble(pts, amp=2.2, step=12):
@@ -81,10 +85,10 @@ def write_px(text, px_, py_, size=44, anchor="mm", tilt=0.0, lines=None):
     """Handwriting (several lines when text has '\n'), optionally tilted."""
     fnt = font(size)
     dd = ImageDraw.Draw(IMG)
-    l, t, r, b = dd.multiline_textbbox((0, 0), text, font=fnt, spacing=size * 0.15, align="left")
+    l, t, r, b = dd.multiline_textbbox((0, 0), text, font=fnt, spacing=size * HAND_SCALE * HAND_SPACING, align="left")
     w, h = int(r - l + 24), int(b - t + 24)
     layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    ImageDraw.Draw(layer).multiline_text((12 - l, 12 - t), text, font=fnt, fill=INK + (255,), spacing=size * 0.15, align="left")
+    ImageDraw.Draw(layer).multiline_text((12 - l, 12 - t), text, font=fnt, fill=INK + (255,), spacing=size * HAND_SCALE * HAND_SPACING, align="left")
     if tilt:
         layer = layer.rotate(tilt, expand=True, resample=Image.BICUBIC)
     ox = {"m": layer.width / 2, "l": 0, "r": layer.width}[anchor[0]]
@@ -167,7 +171,7 @@ def lake(d):
         if (150 < x0 < 950 and 150 < y0 < 340) or (560 < x0 < 1420 and y0 < 210) or (PX - 470 < x0 < PX - 160 and y0 < 420):   # clear of the lake's name, the title and the north arrow
             continue
         d.line([(x0 + j * 16, y0 + 7 * math.sin(j * 1.6)) for j in range(8)], fill=INK, width=3)
-    write(d, "BLACK HOLLOW\n     LAKE", 6300, 16900, 62, tilt=-2)
+    write(d, "BLACK  HOLLOW\n      LAKE", 6300, 16900, 62, tilt=-2)   # two spaces: Rock Salt's space is narrow
 
 
 def tree(d, px_, py_, s):
@@ -223,7 +227,7 @@ def town(d):
             mx, my = (pts[k][0] + pts[k + 1][0]) / 2, (pts[k][1] + pts[k + 1][1]) / 2
             d.line([(mx - 7, my - 7), (mx + 7, my + 7)], fill=INK, width=3)
             d.line([(mx - 7, my + 7), (mx + 7, my - 7)], fill=INK, width=3)
-    write(d, "gate", -3000, 650, 36)
+    write(d, "gate", -3800, 800, 36)   # east of the trail, clear of the line and the 'trail starts' arrow
 
 
 def landmarks(d):
@@ -233,7 +237,7 @@ def landmarks(d):
     pen(d, [(px_ - 26, py_ + 36), (px_, py_ - 40), (px_ + 26, py_ + 36)], width=5)
     pen(d, [(px_ - 18, py_ + 12), (px_ + 18, py_ + 12)], width=3)
     pen(d, [(px_ - 12, py_ - 8), (px_ + 12, py_ - 8)], width=3)
-    note(d, "old lookout tower -\nnice view of the\nlake from up here", (to_px(7600, 9500)[0], to_px(7600, 9500)[1]),
+    note(d, "old lookout tower -\nnice view of the\nlake from up here", (to_px(7600, 10300)[0], to_px(7600, 10300)[1]),
          (t["x"] - 200, t["y"]), 36, tilt=2)
     for n in ("cabin1", "cabin2", "cabin3"):
         ringed(d, "cabin", clear[n]["x"], clear[n]["y"], 32)

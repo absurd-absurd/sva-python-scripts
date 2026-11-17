@@ -49,7 +49,7 @@ stretches, the fog turns red (driven by the Fear value in MPC_Horror).
 The boathouse, on the lake (decided 2026-11-16: the lake is the big story piece, so the game
 ends there, not in a cabin). Past her boots, at the edge of the water door, a lit red lantern
 holds down one last page in the wrong handwriting: *"you came, bug / now we can be together."* Bug: *"this isn't Cas."* The
-map was bait. The lake took her mother, took Cas, and now it has you too. The rattle is right
+map was bait: Cas drew it for herself in 2001; the thing left it by your car. The lake took her mother, took Cas, and now it has you too. The rattle is right
 behind you. Cut to black.
 
 **Final shot:** a year later, a car (driver unseen) pulls into the motel lot at night. On the
@@ -73,6 +73,8 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
 - **Dates:** everything happens on October 17 (1974, 1997, 2002). Cas came in October 2001.
   Nothing in the game is newer than 2002: no cell phones, no internet; payphones, film, tapes.
 - **Ages:** Eileen 48 in 1997. Bug 21 in 2002; Cas about the same age.
+- **Cas's map** is in HER hand (Rock Salt): she drew it for herself in 2001. The thing only left it
+  by Bug's car ("i left bug a map"), it didn't draw it.
 - **The postcard** (opening text) is in the wrong handwriting: it's what brought Bug here.
 - **Handwriting:** Cas's own notes = normal font, normal capitals. Anything from the thing
   wearing her = second font, all lowercase, cold, calls you "bug", signs "- cas".
