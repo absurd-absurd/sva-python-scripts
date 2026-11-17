@@ -146,7 +146,8 @@ def on_ring(key, tag, kx, ky, r, angle, name):
     front = Image.new("RGBA", (1100, 1100), (0, 0, 0, 0))
     fd = ImageDraw.Draw(front)
     box = (cx - r, cy - r, cx + r, cy + r)
-    for a0, a1 in ((272, 345), (95, 160)):         # over the key's head on the right; over the tag on the left
+    for a0, a1 in ((272, 345),):                   # over the key's head on the right only (over the tag it
+                                                   # looked like it cut through the plastic: user, 2026-11-17)
         fd.arc(box, a0, a1, fill=(60, 60, 64), width=9)
         fd.arc(box, a0, a1, fill=(170, 170, 176), width=6)
         fd.arc(box, a0 + 8, a1 - 25, fill=(235, 235, 240), width=2)
