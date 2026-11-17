@@ -39,6 +39,20 @@ for sx in ((-1, 1) if COLLAR else ()):
     d.line(P([c[1], c[2], c[3]]), fill=GAP, width=2 * S)
 # zip line down the front
 d.line(P([(300, 560), (302, 800)]), fill=GAP - 50, width=2 * S)
+# more detail on the jacket (2026-11-17, user: "add a bit more detail to Bug's clothes"), faint like the zip:
+SEAM = GAP - 66
+d.line(P([(254, 486), (276, 500), (300, 504), (324, 500), (346, 486)]), fill=SEAM, width=2 * S)       # the neckline
+d.rectangle(P([(295, 556), (306, 574)]), outline=SEAM, width=2 * S)                                  # zip pull
+for sx in (-1, 1):
+    d.line(P([(300 + sx * 128, 514), (300 + sx * 160, 540), (300 + sx * 186, 600), (300 + sx * 200, 690)]),
+           fill=SEAM, width=2 * S)                                                                    # dropped shoulder seam
+    px0, px1 = (300 + sx * 46, 300 + sx * 116) if sx > 0 else (300 + sx * 116, 300 + sx * 46)
+    d.rectangle(P([(px0, 610), (px1, 690)]), outline=SEAM, width=2 * S)                              # chest pocket
+    d.line(P([(px0 - 3, 618), (px1 + 3, 618)]), fill=SEAM, width=2 * S)                               # its flap
+    d.ellipse(E((px0 + px1) / 2, 628, 3, 3), fill=SEAM)                                               # snap
+    for k in range(3):                                                                                # folds at the arm
+        y0 = 720 + k * 24
+        d.line(P([(300 + sx * (206 - k * 4), y0), (300 + sx * (184 - k * 6), y0 + 14)]), fill=SEAM, width=2 * S)
 
 # headphones round the neck: band behind the neck, two cups resting on the collarbones
 d.arc(E(300, 470, 74, 40), 180, 360, fill=CUP, width=9 * S)

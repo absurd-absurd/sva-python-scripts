@@ -267,3 +267,7 @@ user liked best; Eileen's coat buttons line up in one column down the middle whe
 ## 2026-11-17_silhouettes_v9.png
 Bug's bob redrawn as one smooth closed curve, solid behind her neck with no background showing through
 (user: "make Bug's hair better and smoother with no background behind it like the other two").
+
+## 2026-11-17_silhouettes_v10.png
+More detail on Bug's jacket in faint seams like the zip (user): the neckline, a zip pull, dropped shoulder
+seams, two chest pockets with flaps and snaps, folds near the arms.
