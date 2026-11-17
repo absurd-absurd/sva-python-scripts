@@ -336,3 +336,7 @@ Second pass at the title screen (user: it looked underdeveloped; approved mockup
 a row of lit red lanterns down the dock into the fog, MARROW breathing slowly with a thin red rule under it,
 the menu centred in the title's lettering (Century Gothic) with each key in dark red, a vignette and a darker
 band behind the menu, and the camera slowly pushing in down the dock. The controls page uses the same lettering.
+
+## 2026-11-17_title_birds.png
+More birds over the lake behind the title (user): three flocks (30, 22 and 18 crows) circling low over the
+water ahead of the dock, and three single crows gliding over it (unreal/critters.py).

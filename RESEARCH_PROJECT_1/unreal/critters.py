@@ -466,7 +466,11 @@ def main():
         return [instance(kind, str(sl.material_slot_name), mat, data["materials"].get(str(sl.material_slot_name), (0.2, 0.2, 0.2)))
                 for sl in assets[base][0].static_materials]
     flock2, glider = mis_for("flock2", "flock"), mis_for("glider", "flock")
-    for kind, mis, (cx, cy, cz, n) in (("flock", assets["flock"][1], (1500, 15600, 1300, 14)),
+    # over the lake the title screen looks out at (2026-11-17, user: more birds in the title card): a big flock,
+    # a lower one closer in, and single crows gliding over the water
+    for kind, mis, (cx, cy, cz, n) in (("flock", assets["flock"][1], (1500, 16300, 640, 30)),
+                                       ("flock2", flock2, (1250, 17300, 470, 22)),
+                                       ("flock", assets["flock"][1], (2000, 18800, 820, 18)),
                                        ("flock", assets["flock"][1], (-4000, 9000, 1600, 12)),
                                        ("flock2", flock2, (3500, 5500, 1100, 10)),
                                        ("flock2", flock2, (-1000, -1200, 1500, 9)),
@@ -474,7 +478,8 @@ def main():
                                        ("flock", assets["flock"][1], (6000, 12500, 1900, 16))):
         for _ in range(n):
             place(kind, assets["flock"][0], mis, (cx + rng.uniform(-260, 260), cy + rng.uniform(-260, 260), cz + rng.uniform(-90, 90)))
-    for (cx, cy, cz) in ((-1500, -2600, 700), (1500, 2500, 800), (-500, 8000, 750), (2000, 13000, 650)):
+    for (cx, cy, cz) in ((-1500, -2600, 700), (1500, 2500, 800), (-500, 8000, 750), (2000, 13000, 650),
+                         (1200, 16000, 420), (1900, 17000, 480), (800, 17800, 440)):     # the last three over the lake
         for _ in range(2):                                        # single crows gliding low, wide circles
             place("glider", assets["flock"][0], glider, (cx + rng.uniform(-400, 400), cy + rng.uniform(-400, 400), cz + rng.uniform(-60, 60)))
     # bugs around the screen: they float around you wherever you go (mostly seen in the flashlight)
