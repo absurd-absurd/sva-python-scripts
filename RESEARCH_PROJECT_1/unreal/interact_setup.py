@@ -184,7 +184,7 @@ def main():
     components(ex)
     s, b, r = T("string"), T("bool"), T("real")
     add_vars(ex, [("Prompt", s), ("Title", s), ("Body", s), ("Journal", s), ("GivesKey", s),
-                  ("NeedsKey", s), ("LockedText", s), ("Objective", s), ("Hand", s), ("Paper", s), ("PickUp", b),
+                  ("NeedsKey", s), ("LockedText", s), ("Objective", s), ("Hand", s), ("Paper", s), ("EndsGame", b), ("PickUp", b),
                   ("IsDoor", b), ("OpenAngle", r)], editable=True)
     add_vars(ex, [("Done", b), ("Opened", b), ("Yaw", r)], editable=False)
     BPL.compile_blueprint(ex)
@@ -198,6 +198,7 @@ def main():
                    ("Journal", s), ("Keys", s), ("Objective", s), ("Toast", s), ("ToastTime", r),
                    ("Gap", s), ("MapOpen", b),
                    ("Opening", b), ("OpenStart", r), ("OpenEnd", r), ("OpeningText", s),   # the opening (2026-11-17)
+                   ("ReadEnds", b), ("Ending", b), ("EndStart", r), ("EndShot", b),          # the ending (2026-11-17)
                    # flashlight flicker timer: mode 0 on / 1 flutter / 2 off, next start, end, hit on return
                    ("FlMode", T("int")), ("FlNext", r), ("FlEnd", r), ("FlHit", b),
                    ("FlDim", r)], editable=False)   # flashlight auto-dim near walls (0..1)

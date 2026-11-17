@@ -40,7 +40,7 @@ DOOR_MESH = {"room_door": "/Game/Horror/Sets/prop_room_door", "door": "/Game/Hor
              "gate": "/Game/Horror/Sets/prop_gate"}
 FIELDS = {"prompt": "Prompt", "title": "Title", "body": "Body", "journal": "Journal",
           "gives_key": "GivesKey", "needs_key": "NeedsKey", "locked_text": "LockedText",
-          "objective": "Objective", "pickup": "PickUp", "hand": "Hand", "paper": "Paper",
+          "objective": "Objective", "pickup": "PickUp", "hand": "Hand", "paper": "Paper", "ends": "EndsGame",
           "open_angle": "OpenAngle"}
 
 actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)

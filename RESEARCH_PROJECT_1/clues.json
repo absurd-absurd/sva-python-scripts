@@ -207,7 +207,7 @@
       "objective": "Not much longer? The rattling... it's getting louder."
     },
     {
-      "id": "last_page", "hand": "wrong", "paper": "scrap",
+      "id": "last_page", "hand": "wrong", "paper": "scrap", "ends": true,
       "shape": "paper",
       "at": [-3698, 15058, 15.8], "yaw": -8, "room": true,
       "prompt": "Read",

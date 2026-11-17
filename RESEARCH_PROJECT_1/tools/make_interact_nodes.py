@@ -80,6 +80,15 @@ OPEN_T_GO = OPEN_T_CARD + OPEN_T_CARD_IN + 1.0                        # "[E] Con
 OPEN_FADE = 1.6                                      # seconds to fade from black into the game after E
 POSTCARD_TEX = "/Game/Horror/UI/T_Paper_Postcard.T_Paper_Postcard"   # tools/make_postcard.py
 BLACK = "(R=0.0,G=0.0,B=0.0,A=1.0)"
+# the ending (STORY.md): close the last page (a clue with "ends": true) -> Bug's line -> cut to black ->
+# "One year later." -> the final shot (BP_FinalShot's camera on the payphone, Bug's MISSING poster now on it,
+# unreal/final_shot.py) -> black -> the game quits. Times in seconds from closing the page.
+END_LINE = "this isn't Cas."
+END_T_LINE, END_T_BLACK = 0.6, 3.4                  # her line shows, then cut to black
+END_T_YEAR, END_T_YEAR_OUT = 4.4, 7.6               # "One year later." fades in / is gone
+END_T_SHOT, END_SHOT_FADE = 8.2, 2.0                 # the final shot, fading up from black
+END_T_OUT, END_T_QUIT = 17.0, 20.0                   # cut to black, then quit
+FINAL_CLASS = "/Game/Horror/Interact/BP_FinalShot.BP_FinalShot_C"
 MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=1.0)"      # solid paper (it was half see-through; with the torn edge the overlap showed)
 MARKER_TINT = "(R=1.0,G=1.0,B=1.0,A=0.8)"
 MAP_FULL_TEX = "/Game/Horror/UI/T_MapFull.T_MapFull"
@@ -137,6 +146,7 @@ TY = {
     "light": _t("object", obj=C("/Script/Engine.LightComponent")),
     "shakeclass": _t("class", obj=C("/Script/Engine.CameraShakeBase")), "scene": _t("object", obj=C(SCENE)),
     "ex": _t("object", obj=EX_CLASS),
+    "actorclass": _t("class", obj=C(ACTOR)),
 }
 
 
@@ -151,7 +161,7 @@ def fmt_default(ty, v):
         return f'DefaultValue="{int(v)}"'
     if ty == "bool":
         return f'DefaultValue="{"true" if v else "false"}"'
-    if ty in ("font", "texture", "mpc", "compclass", "shakeclass"):
+    if ty in ("font", "texture", "mpc", "compclass", "shakeclass", "actorclass"):
         return f'DefaultObject="{v}"'
     if isinstance(v, float) or isinstance(v, int):
         return f'DefaultValue="{float(v)}"'
@@ -378,7 +388,8 @@ def hud_graph():
     # tell the materials where you are (MPC_Horror.PlayerPos): crows fly off, the owl turns its head
     ploc = g.pure(ACTOR, "K2_GetActorLocation", ty="vector", target=(g.pure(HUD, "GetOwningPawn", ty="actor"), "actor"))
     pcol = g.pure(MATH, "Conv_VectorToLinearColor", [("InVec", "vector", ploc)], ty="color")
-    op_yes, op_no = g.branch(g.get("Opening", "bool"), ev.then)
+    end_yes, end_no = g.branch(g.get("Ending", "bool"), ev.then)
+    op_yes, op_no = g.branch(g.get("Opening", "bool"), end_no)
     hud_then, fade_then = g.sequence(op_no, 2)
     tell = g.call("/Script/Engine.KismetMaterialLibrary", "SetVectorParameterValue", hud_then,
                   [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "PlayerPos"), ("ParameterValue", "color", pcol)])
@@ -690,6 +701,47 @@ def hud_graph():
     g.call(HUD, "DrawRect", fading, [("RectColor", "color", col), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
                                      ("ScreenW", "float", W), ("ScreenH", "float", H)])
 
+    # ---- the ending ----
+    g.row(340 * 9, -4200)
+    et = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get("EndStart", "real"))])
+    after = lambda k: g.pure(MATH, "Greater_DoubleDouble", [("A", "real", et), ("B", "real", k)], ty="bool")
+    steps = g.sequence(end_yes, 5)
+    # 1: her line, until the cut
+    l_on = g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_LINE)), ("B", "bool", g.not_(after(END_T_BLACK)))], ty="bool")
+    l_yes, _ = g.branch(l_on, steps[0])
+    draw(END_LINE, l_yes, 0.42, 0.8, 1.3, TEXT, True)
+    # 2: black from the cut until the final shot, with "One year later." fading in
+    b_on = g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_BLACK)), ("B", "bool", g.not_(after(END_T_SHOT)))], ty="bool")
+    b_yes, _ = g.branch(b_on, steps[1])
+    a = g.call(HUD, "DrawRect", b_yes, [("RectColor", "color", BLACK), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
+                                        ("ScreenW", "float", W), ("ScreenH", "float", H)]).then
+    y_on = g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_YEAR)), ("B", "bool", g.not_(after(END_T_YEAR_OUT)))], ty="bool")
+    y_yes, _ = g.branch(y_on, a)
+    ya = g.pure(MATH, "FMin", [("A", "real", 1.0), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", et), ("B", "real", END_T_YEAR)]))], ty="real")
+    ycol = g.pure(MATH, "MakeColor", [("R", "float", 0.78), ("G", "float", 0.75), ("B", "float", 0.68), ("A", "float", ya)], ty="color")
+    draw("One year later.", y_yes, 0.43, 0.47, 1.2, ycol)
+    # 3: once, at the final shot: show BP_FinalShot (the poster) and look through its camera
+    s_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_SHOT)), ("B", "bool", g.not_(g.get("EndShot", "bool")))], ty="bool"), steps[2])
+    a = g.set("EndShot", "bool", True, s_yes).then
+    shot = g.pure(STATICS, "GetActorOfClass", [("ActorClass", "actorclass", FINAL_CLASS)], ty="actor")
+    a = g.call(ACTOR, "SetActorHiddenInGame", a, [("bNewHidden", "bool", False)], target=(shot, "actor")).then
+    g.call(PC, "SetViewTargetWithBlend", a, [("NewViewTarget", "actor", shot), ("BlendTime", "float", 0.0)],
+           target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc"))
+    # 4: the shot fades up from black, then cuts to black at the end
+    f_on = g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_SHOT)), ("B", "bool", g.not_(after(END_T_OUT)))], ty="bool")
+    f_yes, f_no = g.branch(f_on, steps[3])
+    fa = g.pure(MATH, "FMax", [("A", "real", 0.0), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", 1.0),
+               ("B", "real", g.mul(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", et), ("B", "real", END_T_SHOT)]), 1.0 / END_SHOT_FADE))]))], ty="real")
+    fcol = g.pure(MATH, "MakeColor", [("R", "float", 0.0), ("G", "float", 0.0), ("B", "float", 0.0), ("A", "float", fa)], ty="color")
+    g.call(HUD, "DrawRect", f_yes, [("RectColor", "color", fcol), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
+                                    ("ScreenW", "float", W), ("ScreenH", "float", H)])
+    o_yes, _ = g.branch(after(END_T_OUT), f_no)
+    g.call(HUD, "DrawRect", o_yes, [("RectColor", "color", BLACK), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
+                                    ("ScreenW", "float", W), ("ScreenH", "float", H)])
+    # 5: quit
+    q_yes, _ = g.branch(after(END_T_QUIT), steps[4])
+    g.call(SYS, "QuitGame", q_yes, [("SpecificPlayer", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc"))])
+
     def freeze(after):
         a = g.call(CTRL, "SetIgnoreMoveInput", after, [("bNewMoveInput", "bool", True)], target=pc()).then
         return g.call(CTRL, "SetIgnoreLookInput", a, [("bNewLookInput", "bool", True)], target=pc()).then
@@ -704,12 +756,16 @@ def hud_graph():
     # ---- E ----
     g.row(0, 2800)
     e = g.input_event("IA_Interact")
-    in_open, e_play = g.branch(g.get("Opening", "bool"), e)
+    _, e_live = g.branch(g.get("Ending", "bool"), e)
+    in_open, e_play = g.branch(g.get("Opening", "bool"), e_live)
     ready, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", open_t()), ("B", "real", OPEN_T_GO)], ty="bool"), in_open)
     a = g.set("Opening", "bool", False, ready).then
     unfreeze(g.set("OpenEnd", "real", g.now(), a).then)
     b_read, b_not_read = g.branch(g.get("Reading", "bool"), e_play)
-    unfreeze(g.set("Reading", "bool", False, b_read).then)
+    a = g.set("Reading", "bool", False, b_read).then
+    ends, plain = g.branch(g.get("ReadEnds", "bool"), a)
+    unfreeze(plain)
+    g.set("EndStart", "real", g.now(), g.set("Ending", "bool", True, ends).then)
     g.row(340, 3300)
     b_jour, b_not_jour = g.branch(g.get("JournalOpen", "bool"), b_not_read)
     unfreeze(g.set("JournalOpen", "bool", False, b_jour).then)
@@ -732,6 +788,7 @@ def hud_graph():
     a = g.set("ReadBody", "string", fget("Body"), a).then
     a = g.set("ReadHand", "string", fget("Hand"), a).then
     a = g.set("ReadPaper", "string", fget("Paper"), a).then
+    a = g.set("ReadEnds", "bool", fget("EndsGame", "bool"), a).then
     freeze(g.set("Reading", "bool", True, a).then)
     # 1: first time only - journal, key, objective
     g.row(340 * 5, 5700)
@@ -768,7 +825,8 @@ def hud_graph():
     g.row(0, 10200)
     tab = g.input_event("IA_Journal")
     _, free = g.branch(g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Reading", "bool")),
-                                                 ("B", "bool", g.get("Opening", "bool"))], ty="bool"), tab)
+                                                 ("B", "bool", g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Opening", "bool")),
+                                                 ("B", "bool", g.get("Ending", "bool"))], ty="bool"))], ty="bool"), tab)
     shut, opn = g.branch(g.get("JournalOpen", "bool"), free)
     unfreeze(g.set("JournalOpen", "bool", False, shut).then)
     g.row(340 * 2, 10700)
@@ -778,7 +836,8 @@ def hud_graph():
     g.row(0, 11400)
     mkey = g.input_event("IA_Map")
     _, free = g.branch(g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Reading", "bool")),
-                                                 ("B", "bool", g.get("JournalOpen", "bool"))], ty="bool"), mkey)
+                                                 ("B", "bool", g.pure(MATH, "BooleanOR", [("A", "bool", g.get("JournalOpen", "bool")),
+                                                 ("B", "bool", g.get("Ending", "bool"))], ty="bool"))], ty="bool"), mkey)
     got_map, _ = g.branch(g.pure(STR, "Contains", [("SearchIn", "string", g.get("Keys", "string")),
                                                    ("Substring", "string", "map")], ty="bool"), free)   # only once you have the map
     shut, opn = g.branch(g.get("MapOpen", "bool"), got_map)
