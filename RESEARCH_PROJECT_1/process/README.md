@@ -255,3 +255,7 @@ be hair"): one mass of hair from her head down past her shoulders.
 ## 2026-11-17_silhouettes_v6.png
 Cas with faint grey lines so her shapes read (user): her face's edge against her hair, the parting, strands
 falling down her hair, and her shoulders under it.
+
+## 2026-11-17_silhouettes_v7.png
+All three now share the same faint grey face outline so they match (user). Cas's backpack straps and
+Eileen's handbag strap and the wispy ends of her hair are gone.

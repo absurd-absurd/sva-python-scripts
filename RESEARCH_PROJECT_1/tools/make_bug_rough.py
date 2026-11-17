@@ -63,6 +63,9 @@ d.polygon(P([(214, 262), (386, 262), (392, 300), (208, 300)]), fill=INK)
 for sx in ((-1, 1) if COLLAR else ()):
     d.polygon(P([(300 + sx * 34, 404), (300 + sx * 62, 404), (300 + sx * 56, 420), (300 + sx * 36, 420)]), fill=GAP)
     d.polygon(P([(300 + sx * 36, 420), (300 + sx * 56, 420), (300 + sx * 40, 446)]), fill=GAP - 30)
+# the faint grey face outline, matching Cas and Eileen (2026-11-17): cheeks, jaw and chin below the bangs
+FACE_LINE = 50
+d.arc(E(300, 318, 70, 90), -12, 192, fill=FACE_LINE, width=int(2.5 * S))
 # redraw the neck over the seams
 d.polygon(P([(270, 380), (330, 380), (336, 470), (264, 470)]), fill=INK)
 

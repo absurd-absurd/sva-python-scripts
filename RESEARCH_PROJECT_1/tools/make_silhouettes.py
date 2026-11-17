@@ -14,7 +14,7 @@ Cas's ponytail is a real tail falling behind her shoulder (not a bun + ribbon); 
 small tilted headphone cups and a short neck.
 
     python make_silhouettes.py  -> export/sil_eileen.png, sil_cas.png, sil_bug.png (660 x 860, bordered)
-                                   + process/2026-11-17_silhouettes_v6.png (side by side)
+                                   + process/2026-11-17_silhouettes_v7.png (side by side)
 """
 import math
 import os
@@ -155,10 +155,23 @@ def finish(img, name, tint, seed):
     return out
 
 
+def face_line(d, cx, top, chin, hw, tilt=0.0, pivot=None):
+    """The faint grey outline of the face (temples, cheeks, jaw, chin, the hairline across the brow), the
+    same on all three silhouettes so they match (user, 2026-11-17)."""
+    pivot = pivot or (cx, chin)
+    face = head_outline(cx, top, chin, hw)
+    jaw_l = [p for p in face if p[0] < cx and p[1] > top + (chin - top) * 0.25] + [(cx, chin)]
+    jaw_r = [(cx, chin)] + [p for p in face if p[0] > cx and p[1] > top + (chin - top) * 0.25]
+    for pts in ([(cx - hw * 0.72, top + 40)] + jaw_l, jaw_r + [(cx + hw * 0.72, top + 40)],
+                [(cx - hw * 0.72, top + 40), (cx - 30, top + 6), (cx, top - 4)],
+                [(cx, top - 4), (cx + 30, top + 6), (cx + hw * 0.72, top + 40)]):
+        line(d, turn(pts, pivot[0], pivot[1], tilt), 2.5)
+
+
 def eileen():
     """1997, 48: tall and upright, head held level. Shoulder-length 90s hair with body and volume, ends
-    turned under and flicking out, one full mass from crown to shoulders. A long wool coat with padded
-    shoulders, the collar turned up round her neck, a handbag strap over her left shoulder."""
+    turned under, one full mass from crown to shoulders. A long wool coat with padded shoulders, the
+    collar turned up round her neck."""
     rng = random.Random(11)
     img = backdrop(150, curtain=False)
     d = ImageDraw.Draw(img)
@@ -178,24 +191,19 @@ def eileen():
     hair = hair_l + [(2 * cx - x, y) for x, y in reversed(hair_l)]
     hair = turn(hair, cx, top + 120, -2)
     fill(d, hair)
-    strands(d, [(cx - 130, top + 246), (cx - 104, top + 256)], (-0.4, 1), 9, 20, rng, width=2.5)
-    strands(d, [(cx + 104, top + 256), (cx + 130, top + 246)], (0.4, 1), 9, 20, rng, width=2.5)
-    strands(d, [(cx - 70, top - 14), (cx + 70, top - 14)], (0, -1), 7, 10, rng, width=1.6, spread=0.9)
-    # lapels, buttons and the handbag strap over her left shoulder (it sits ON the shoulder edge)
+    face_line(d, cx, top, chin, hw)
+    # lapels and buttons (no handbag strap, no wispy hair ends: user 2026-11-17)
     for s in (-1, 1):
         line(d, [(cx + s * 60, 500), (cx + s * 40, 560), (cx + s * 18, 660), (cx + s * 10, 800)], 2.5)
     for y in (612, 700):
         d.ellipse([(cx + 22 - 6) * S, (y - 6) * S, (cx + 22 + 6) * S, (y + 6) * S], fill=LITE)
-    fill(d, [(cx - 128, 504), (cx - 112, 498), (cx - 104, 512), (cx - 120, 518)])                  # strap over the edge
-    line(d, [(cx - 118, 512), (cx - 70, 600), (cx + 20, 720), (cx + 80, 810)], 4.5)
     return finish(img, "sil_eileen.png", (1.08, 1.0, 0.86), 1)
 
 
 def cas():
     """2001: leaning in a little, head tipped. Long hair worn down (user, 2026-11-17: the ponytail versions
     didn't work), parted in the middle, falling past her shoulders.
-    Ears showing. A hoodie whose hood bunches up round the back of her neck, an open flannel over it,
-    backpack straps over both shoulders."""
+    A hoodie under an open flannel (no backpack straps)."""
     rng = random.Random(22)
     img = backdrop(176, curtain=True)
     d = ImageDraw.Draw(img)
@@ -224,13 +232,7 @@ def cas():
                  cx, chin, tilt))
     # faint grey lines so the shapes read (user, 2026-11-17): where her face meets her hair, the parting,
     # strands falling down the hair, and her shoulders under it
-    face = head_outline(cx, top, chin, hw)
-    jaw_l = [p for p in face if p[0] < cx and p[1] > top + (chin - top) * 0.25] + [(cx, chin)]
-    jaw_r = [(cx, chin)] + [p for p in face if p[0] > cx and p[1] > top + (chin - top) * 0.25]
-    line(d, turn([(cx - hw * 0.72, top + 40)] + jaw_l, cx, chin, tilt), 2.5)
-    line(d, turn(jaw_r + [(cx + hw * 0.72, top + 40)], cx, chin, tilt), 2.5)
-    line(d, turn([(cx - hw * 0.72, top + 40), (cx - 30, top + 6), (cx, top - 4)], cx, chin, tilt), 2.5)
-    line(d, turn([(cx, top - 4), (cx + 30, top + 6), (cx + hw * 0.72, top + 40)], cx, chin, tilt), 2.5)
+    face_line(d, cx, top, chin, hw, tilt)
     line(d, turn([(cx, top - 12), (cx + 1, top + 18)], cx, chin, tilt), 2)                     # the parting
     for s_ in (-1, 1):
         for k, off in enumerate((84, 102)):                                                     # strands falling
@@ -243,12 +245,10 @@ def cas():
         side = turn([(cx + s_ * 100, top + 200), (cx + s_ * 122, top + 340)], cx, chin, tilt)
         strands(d, side, (s_ * 1, 0.4), 5, 12, rng, width=1.2, spread=0.5)
     strands(d, turn([(cx - 40, top - 8), (cx + 40, top - 8)], cx, chin, tilt), (0, -1), 6, 7, rng, width=1.2, spread=1.1)
-    # flannel collar points lying open over the hood, the flannel's open front, backpack straps
+    # flannel collar points lying open, the flannel's open front (no backpack straps: user 2026-11-17)
     for s in (-1, 1):
         fill(d, [(cx + s * 40, 506), (cx + s * 74, 494), (cx + s * 92, 520), (cx + s * 60, 540)])
         line(d, [(cx + s * 46, 528), (cx + s * 58, 640), (cx + s * 66, 800)], 2.5)
-        line(d, [(cx + s * 118, 500), (cx + s * 126, 640), (cx + s * 128, 800)], 5)
-        fill(d, [(cx + s * 108, 494), (cx + s * 130, 488), (cx + s * 134, 502), (cx + s * 112, 508)])   # strap on the shoulder
     for s in (-1, 1):
         line(d, [(cx + s * 12, 524), (cx + s * 14, 588)], 2)                                        # hood strings
     return finish(img, "sil_cas.png", (1.02, 1.0, 0.95), 2)
@@ -270,5 +270,5 @@ if __name__ == "__main__":
     for i in ims:
         sheet.paste(i, (x, 10))
         x += i.width + 10
-    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v6.png"))
-    print("silhouettes v6 written")
+    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v7.png"))
+    print("silhouettes v7 written")
