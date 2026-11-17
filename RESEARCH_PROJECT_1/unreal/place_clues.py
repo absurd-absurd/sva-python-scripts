@@ -15,7 +15,7 @@ HIT_MARGIN, HIT_UP = 10, 10   # cm the aim box sticks out around / above small c
 WRAP = 44                     # characters per line on the reading screen
 # on a sheet (clues.json "paper") lines are shorter, and each hand is a different width (measured with
 # PIL at the HUD's sizes in tools/make_interact_nodes.py HANDS, 2026-11-17)
-SHEET_WRAP = {"cas": 39, "wrong": 33, "print": 30, "": 38}
+SHEET_WRAP = {"cas": 39, "wrong": 28, "print": 44, "": 38}
 MATS = "/Game/Horror/Materials/PS2/Props/"
 
 # shape: size in cm (x, y, z), material, and where the mesh sits from the actor's origin.

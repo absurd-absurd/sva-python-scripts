@@ -215,3 +215,9 @@ shoulder-length mass with the ends flipped out (no "dog ears"); Cas has a real h
 of her head behind the right shoulder, ears showing, the hood bunched at her neck, open flannel and
 backpack straps; Bug has the bob with bangs, a shorter neck, the popped collar and smaller tilted
 headphone cups. Waiting for the user's OK before they go on the wall, the photo strip and the posters.
+
+## 2026-11-17_new_clues_reading_preview.png
+Preview (drawn outside the game with the same fonts, sizes and line breaks) of the five new clues'
+reading screens: the researchers' typed 1974 log, Cas's notebook, the wrong-hand pages nailed in the shack,
+the note by her boots and the last page. It caught the typed log and the wrong hand being far too big
+(running off the sheet), so their sizes were cut (typed 0.85 -> 0.48, wrong hand 1.35 -> 1.15).
