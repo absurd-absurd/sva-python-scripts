@@ -231,3 +231,9 @@ a fainter second ring from setting the mug down again, a drip and splash dots; m
 Third pass, still drawn by hand in code (user: "try without reference photos"): real skull/jaw shapes,
 ears for Cas, a sloping neck-to-shoulder line, gaps of background between hair/jaw and collars, loose
 strands at hair ends, slight head tilts. Shown to the user for notes.
+
+## 2026-11-17_cas_silhouette_v3.png
+Cas redrawn from the user's ponytail reference photo: from the front a high ponytail barely shows on top;
+the crown is smooth and lifted, the ears show, and the tail comes into view behind her right side below
+the ear and hangs past the jaw to the collarbone, with loose ends. The head now has a round skull dome
+(shared by all three silhouettes).

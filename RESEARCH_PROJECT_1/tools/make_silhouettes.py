@@ -88,7 +88,8 @@ def head_outline(cx, top, chin, hw, ears=True):
     """A head seen from the front: wide rounded skull, temples, cheekbones, the jaw angle, a narrower chin
     (left side down, then the right side up). hw = half the skull's width."""
     h = chin - top
-    left = [(cx - hw * 0.55, top + h * 0.03), (cx - hw * 0.9, top + h * 0.16), (cx - hw, top + h * 0.34),
+    left = [(cx - hw * 0.32, top + h * 0.012), (cx - hw * 0.6, top + h * 0.05), (cx - hw * 0.8, top + h * 0.11),
+            (cx - hw * 0.93, top + h * 0.2), (cx - hw, top + h * 0.34),                          # a round dome
             (cx - hw * 0.96, top + h * 0.5), (cx - hw * 0.93, top + h * 0.6),            # temple / cheekbone
             (cx - hw * 0.84, top + h * 0.74), (cx - hw * 0.66, top + h * 0.86),            # jaw angle
             (cx - hw * 0.36, top + h * 0.96)]
@@ -191,8 +192,9 @@ def eileen():
 
 
 def cas():
-    """2001: leaning in a little, head tipped. Hair scraped back into a HIGH ponytail: the tie sits at the
-    back of the crown, the tail arcs out to her right and falls behind the shoulder, ending in loose ends.
+    """2001: leaning in a little, head tipped. Hair pulled back smooth into a HIGH ponytail (reference photo
+    from the user): a lifted crown, ears showing, the tail only seen behind her right side below the ear,
+    hanging wavy past the jaw to the collarbone with loose ends.
     Ears showing. A hoodie whose hood bunches up round the back of her neck, an open flannel over it,
     backpack straps over both shoulders."""
     rng = random.Random(22)
@@ -201,28 +203,28 @@ def cas():
     cx, top, chin, hw = 300, 232, 426, 72
     shoulders(d, cx, 466, 32, 550, 180, tilt=-6)
     # the hood: a soft heavy roll behind and round the neck, standing up nearly to the ears
-    fill(d, [(cx - 104, 500), (cx - 96, 458), (cx - 70, 432), (cx - 34, 430), (cx, 444), (cx + 34, 430),
-             (cx + 70, 432), (cx + 96, 458), (cx + 104, 500), (cx, 520)])
+    fill(d, [(cx - 104, 510), (cx - 96, 476), (cx - 70, 456), (cx - 34, 452), (cx, 462), (cx + 34, 452),
+             (cx + 70, 456), (cx + 96, 476), (cx + 104, 510), (cx, 528)])                       # the hood, lower
     fill(d, [(cx - 30, 470), (cx - 30, 410), (cx + 30, 410), (cx + 30, 470)])                      # neck
-    tilt = 4
+    tilt = 3
+    # the tail first, so it's BEHIND the head (user's reference, 2026-11-17): from the front a high ponytail
+    # barely shows over the top; it comes into view behind the right side of the head below the ear and
+    # hangs past the jaw and neck to the collarbone, wavy, a little background showing between it and the neck
+    tail = [(cx + 56, top + 70), (cx + 88, top + 96), (cx + 108, top + 140), (cx + 118, top + 190), (cx + 124, top + 232),
+            (cx + 130, top + 268), (cx + 124, top + 300), (cx + 112, top + 322), (cx + 100, top + 312),
+            (cx + 102, top + 284), (cx + 96, top + 248), (cx + 86, top + 210), (cx + 78, top + 168), (cx + 66, top + 120)]
+    fill(d, turn(tail, cx, chin, tilt))
+    strands(d, turn([(cx + 100, top + 314), (cx + 120, top + 310)], cx, chin, tilt), (0.1, 1), 9, 22, rng, width=2.2, spread=0.5)
+    strands(d, turn([(cx + 112, top + 150), (cx + 128, top + 270)], cx, chin, tilt), (1, 0.3), 5, 14, rng, width=1.2, spread=0.6)
     hd = turn(head_outline(cx, top, chin, hw), cx, chin, tilt)
     fill(d, hd)
-    for s in (-1, 1):                                                                              # ears
-        ex, ey = turn([(cx + s * hw * 0.95, top + 92)], cx, chin, tilt)[0]
-        fill(d, [(ex, ey), (ex + s * 13, ey + 4), (ex + s * 15, ey + 20), (ex + s * 9, ey + 38), (ex, ey + 42)])
-    # scraped-back hair: barely fuller than the skull, a slight rise toward the tie
-    fill(d, turn([(cx - 70, top + 40), (cx - 62, top + 6), (cx - 20, top - 8), (cx + 30, top - 10),
-                  (cx + 62, top), (cx + 74, top + 36), (cx + 60, top + 30), (cx, top + 10)], cx, chin, tilt))
-    # the ponytail
-    tail = [(cx + 30, top - 6), (cx + 58, top - 30), (cx + 96, top - 30), (cx + 126, top - 2), (cx + 140, top + 52),
-            (cx + 142, top + 130), (cx + 134, top + 210), (cx + 124, top + 270), (cx + 112, top + 300),
-            (cx + 104, top + 270), (cx + 110, top + 200), (cx + 114, top + 130), (cx + 110, top + 64),
-            (cx + 94, top + 22), (cx + 64, top + 4)]
-    fill(d, turn(tail, cx, chin, tilt))
-    fill(d, turn([(cx + 40, top - 4), (cx + 58, top - 26), (cx + 72, top - 18), (cx + 56, top + 4)], cx, chin, tilt))  # the tie
-    tip = turn([(cx + 104, top + 286), (cx + 124, top + 284)], cx, chin, tilt)
-    strands(d, tip, (-0.2, 1), 10, 26, rng, width=2.4, spread=0.4)
-    strands(d, turn([(cx - 40, top - 4), (cx + 20, top - 10)], cx, chin, tilt), (0, -1), 5, 8, rng, width=1.4, spread=1.0)
+    for s_ in (-1, 1):                                                                             # ears, about eye level
+        ex, ey = turn([(cx + s_ * hw * 0.95, top + 92)], cx, chin, tilt)[0]
+        fill(d, [(ex, ey), (ex + s_ * 13, ey + 4), (ex + s_ * 15, ey + 20), (ex + s_ * 9, ey + 38), (ex, ey + 42)])
+    # hair pulled back smooth and tight: the skull's outline a touch bigger, lifted a little on top
+    cap = head_outline(cx, top - 10, chin - 30, hw + 4)                # the skull plus the hair's thickness
+    fill(d, turn(cap, cx, chin, tilt))
+    strands(d, turn([(cx - 40, top - 8), (cx + 40, top - 12)], cx, chin, tilt), (0, -1), 6, 7, rng, width=1.2, spread=1.1)
     # flannel collar points lying open over the hood, the flannel's open front, backpack straps
     for s in (-1, 1):
         fill(d, [(cx + s * 40, 506), (cx + s * 74, 494), (cx + s * 92, 520), (cx + s * 60, 540)])
