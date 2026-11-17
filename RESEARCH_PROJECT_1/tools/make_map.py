@@ -261,7 +261,7 @@ def frame(d):
     d.line([(ax + 2, ay - 70), (ax - 22, ay - 36)], fill=INK, width=5)
     d.line([(ax + 2, ay - 70), (ax + 26, ay - 36)], fill=INK, width=5)
     write_px("north", ax + 2, ay - 115, 58)
-    l, t, r, b = write_px("Note:\nstay on the trail.\ndon't go out on\nthe water at night.\n        - C.", PX - 330, PX - 470, 40, anchor="mm")
+    l, t, r, b = write_px("Note:\nstay on the trail.\ndon't go out on\nthe water at night.", PX - 330, PX - 470, 40, anchor="mm")
     pen(d, [(l - 6, t), (r + 4, t - 2), (r + 6, b + 4), (l - 4, b + 2), (l - 6, t)], width=4)
 
 
