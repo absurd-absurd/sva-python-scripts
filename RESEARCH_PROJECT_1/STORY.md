@@ -61,6 +61,8 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
 - Messages stay first person (Bug talking).
 - All people-images are silhouettes.
 - No tagline.
+- Cabin 2 stays as is (2026-11-16): an optional side room, Cas's camp (bunk, backpack, stove,
+  table with a torn page). Not part of the ending.
 - Wrong-hand font = **Zeyada** (fonts/Zeyada.ttf, SIL Open Font License). Cas's own hand = **Rock Salt** (fonts/RockSalt-Regular.ttf, Apache license): bold all-caps scrawl, the opposite of the thin wrong hand. (Was Ink Free until 2026-11-16; map/wall/letter textures and the HUD still use Ink Free until regenerated.)
 - Ending cuts straight to black. No credits screen.
 - Phone numbers are fake 555 numbers (Bug's poster: 555-0117, a nod to Oct 17).
@@ -81,5 +83,3 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
   the same words as its reading screen.
 
 ## Still open
-- Cabin 2 (Cas's bunk, backpack, stove; no longer the ending): optional side room? Its old lake map
-  copy and torn page to remove or repurpose.
