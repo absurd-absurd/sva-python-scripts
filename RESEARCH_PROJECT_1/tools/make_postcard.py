@@ -59,9 +59,9 @@ def card(font_file, size, seed):
     cx, cy = sx - 80, sy + 60
     pd.ellipse((cx - 58, cy - 58, cx + 58, cy + 58), outline=(30, 30, 50, 150), width=3)
     pmf = ImageFont.truetype(WF + "arialbd.ttf", 13)
-    pd.text((cx - 44, cy - 32), "MARROW FALLS", font=pmf, fill=(30, 30, 50, 150))
-    pd.text((cx - 32, cy - 8), "OCT 09", font=pmf, fill=(30, 30, 50, 150))
-    pd.text((cx - 19, cy + 14), "2002", font=pmf, fill=(30, 30, 50, 150))
+    small = ImageFont.truetype(WF + "arialbd.ttf", 10)                  # the town name fits inside the ring
+    for text, f, y in (("MARROW FALLS", small, cy - 30), ("OCT 09", pmf, cy - 8), ("2002", pmf, cy + 14)):
+        pd.text((cx - pd.textlength(text, font=f) / 2, y), text, font=f, fill=(30, 30, 50, 150))
     for k in range(5):  # cancel waves
         y = cy - 30 + k * 14
         pts = [(cx + 62 + t, y + 5 * math.sin(t / 9.0)) for t in range(0, 170, 4)]
