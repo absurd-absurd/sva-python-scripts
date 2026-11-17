@@ -58,6 +58,8 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
 - No recorded voice: everything is read on paper.
 - Messages stay first person (Bug talking).
 - All people-images are silhouettes.
+- Ending cuts straight to black. No credits screen.
+- Phone numbers are fake 555 numbers (Bug's poster: 555-0117, a nod to Oct 17).
 
 ## Continuity checklist (check EVERY new clue piece against this before it goes in)
 - **The rule:** the lake only takes. "Something" comes back, never "someone". Only Cas (misreading)
@@ -75,6 +77,5 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
   the same words as its reading screen.
 
 ## Still open
-- Tagline, credits, second handwriting font, phone number on Bug's poster.
-- Ending on screen: cut to black right away, or lanterns go out one by one?
+- Tagline, second handwriting font.
 - Where the boathouse key goes (shack or cabin 2).

@@ -15,8 +15,9 @@
     "game_night": "October 17, 2002 (the anniversary)",
     "ending_page": "you came, bug\n\nnow we can be together",
     "ending_last_line": "this isn't Cas",
+    "ending_screen": "cut to black right away (after Bug's line and the rattle behind you)",
     "tagline": "TODO",
-    "credits": "TODO"
+    "credits": "none (user: no credits screen)"
   },
   "new_prop_texts": {
     "_about": "Final texts for clues whose props aren't built yet. place_clues.py ignores this block.",
@@ -61,7 +62,7 @@
     },
     "missing_poster_bug": {
       "where": "Payphone in the lot, final shot a year later (look only). Car pulling in: unseen.",
-      "body": "MISSING\n\n(Bug's photo-booth silhouette)\n\nLast seen: Marrow Falls Motel, October 2002\nBrunette, 5'4\", blue eyes, 21 years old\n\nIf you have any information please call ___"
+      "body": "MISSING\n\n(Bug's photo-booth silhouette)\n\nLast seen: Marrow Falls Motel, October 2002\nBrunette, 5'4\", blue eyes, 21 years old\n\nIf you have any information please call 555-0117"
     }
   },
   "clues": [
