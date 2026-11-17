@@ -723,8 +723,9 @@ def hud_graph():
     # 3: once, at the final shot: show BP_FinalShot (the poster) and look through its camera
     s_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_SHOT)), ("B", "bool", g.not_(g.get("EndShot", "bool")))], ty="bool"), steps[2])
     a = g.set("EndShot", "bool", True, s_yes).then
-    shot = g.pure(STATICS, "GetActorOfClass", [("ActorClass", "actorclass", FINAL_CLASS)], ty="actor")
-    a = g.call(ACTOR, "SetActorHiddenInGame", a, [("bNewHidden", "bool", False)], target=(shot, "actor")).then
+    found = g.call(STATICS, "GetActorOfClass", a, [("ActorClass", "actorclass", FINAL_CLASS)], outs=[("ReturnValue", "actor")])
+    shot = found.o["ReturnValue"]
+    a = g.call(ACTOR, "SetActorHiddenInGame", found.then, [("bNewHidden", "bool", False)], target=(shot, "actor")).then
     g.call(PC, "SetViewTargetWithBlend", a, [("NewViewTarget", "actor", shot), ("BlendTime", "float", 0.0)],
            target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc"))
     # 4: the shot fades up from black, then cuts to black at the end

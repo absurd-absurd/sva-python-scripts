@@ -304,3 +304,7 @@ Portland, OR 97214.
 The final shot's camera (unreal/final_shot.py, BP_FinalShot): a year later, the payphone in the motel lot
 with Bug's MISSING poster taped to its side (tools/make_photos.py missing_bug: her silhouette, last seen
 October 2002, 555-0117). The poster is hidden during the game and only appears in the ending.
+
+## 2026-11-17_ending.png
+The ending in play: the last page; on closing it, "this isn't Cas."; cut to black, "One year later.";
+the final shot of the payphone with Bug's MISSING poster; cut to black; the game then quits by itself.
