@@ -14,7 +14,7 @@ Cas's ponytail is a real tail falling behind her shoulder (not a bun + ribbon); 
 small tilted headphone cups and a short neck.
 
     python make_silhouettes.py  -> export/sil_eileen.png, sil_cas.png, sil_bug.png (660 x 860, bordered)
-                                   + process/2026-11-17_silhouettes_v7.png (side by side)
+                                   + process/2026-11-17_silhouettes_v8.png (side by side)
 """
 import math
 import os
@@ -156,16 +156,14 @@ def finish(img, name, tint, seed):
 
 
 def face_line(d, cx, top, chin, hw, tilt=0.0, pivot=None):
-    """The faint grey outline of the face (temples, cheeks, jaw, chin, the hairline across the brow), the
-    same on all three silhouettes so they match (user, 2026-11-17)."""
+    """The faint grey outline of the face, done like Bug's (tools/make_bug_rough.py, the one the user liked,
+    2026-11-17): just the lower curve of an oval round the face (cheeks, jaw and chin), no line across the
+    brow. Same arc on all three so they match."""
     pivot = pivot or (cx, chin)
-    face = head_outline(cx, top, chin, hw)
-    jaw_l = [p for p in face if p[0] < cx and p[1] > top + (chin - top) * 0.25] + [(cx, chin)]
-    jaw_r = [(cx, chin)] + [p for p in face if p[0] > cx and p[1] > top + (chin - top) * 0.25]
-    for pts in ([(cx - hw * 0.72, top + 40)] + jaw_l, jaw_r + [(cx + hw * 0.72, top + 40)],
-                [(cx - hw * 0.72, top + 40), (cx - 30, top + 6), (cx, top - 4)],
-                [(cx, top - 4), (cx + 30, top + 6), (cx + hw * 0.72, top + 40)]):
-        line(d, turn(pts, pivot[0], pivot[1], tilt), 2.5)
+    h = chin - top
+    ecx, ecy, rx, ry = cx, top + h * 0.53, hw * 0.9, h * 0.46            # Bug's: E(300, 318, 70, 90) on a 78 x 98 head
+    pts = [(ecx + rx * math.cos(math.radians(a)), ecy + ry * math.sin(math.radians(a))) for a in range(-12, 193, 6)]
+    line(d, turn(pts, pivot[0], pivot[1], tilt), 2.5)
 
 
 def eileen():
@@ -195,8 +193,8 @@ def eileen():
     # lapels and buttons (no handbag strap, no wispy hair ends: user 2026-11-17)
     for s in (-1, 1):
         line(d, [(cx + s * 60, 500), (cx + s * 40, 560), (cx + s * 18, 660), (cx + s * 10, 800)], 2.5)
-    for y in (612, 700):
-        d.ellipse([(cx + 22 - 6) * S, (y - 6) * S, (cx + 22 + 6) * S, (y + 6) * S], fill=LITE)
+    for y in (600, 670, 740):                       # one straight column down the middle, where the coat closes
+        d.ellipse([(cx - 6) * S, (y - 6) * S, (cx + 6) * S, (y + 6) * S], fill=LITE)
     return finish(img, "sil_eileen.png", (1.08, 1.0, 0.86), 1)
 
 
@@ -270,5 +268,5 @@ if __name__ == "__main__":
     for i in ims:
         sheet.paste(i, (x, 10))
         x += i.width + 10
-    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v7.png"))
-    print("silhouettes v7 written")
+    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v8.png"))
+    print("silhouettes v8 written")

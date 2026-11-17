@@ -259,3 +259,7 @@ falling down her hair, and her shoulders under it.
 ## 2026-11-17_silhouettes_v7.png
 All three now share the same faint grey face outline so they match (user). Cas's backpack straps and
 Eileen's handbag strap and the wispy ends of her hair are gone.
+
+## 2026-11-17_silhouettes_v8.png
+Eileen and Cas now use Bug's face outline (just the lower curve of the oval: cheeks, jaw, chin), which the
+user liked best; Eileen's coat buttons line up in one column down the middle where the coat closes.
