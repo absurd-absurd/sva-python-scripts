@@ -49,20 +49,22 @@ for cx in (226, 374):
 
 # head
 d.ellipse(E(300, 318, 78, 98), fill=INK)
-# short bob: wide round crown, straight blunt ends at the jaw, a little flick outwards
-bob = [(300, 196)]
-for a in range(200, 341, 4):                            # crown arc
-    r = math.radians(a)
-    bob.append((300 + 112 * math.cos(r), 312 + 118 * math.sin(r)))
-bob = bob[1:] + [(414, 352), (420, 398), (428, 412), (404, 414), (376, 404), (368, 360),
-                 (232, 360), (224, 404), (196, 414), (172, 412), (180, 398), (186, 352)]
-d.polygon(P(bob), fill=INK)
-# blunt bangs: a straight fringe edge shows as a slight step at the temples
-d.polygon(P([(214, 262), (386, 262), (392, 300), (208, 300)]), fill=INK)
-# gap between the bob's ends and the neck so the haircut reads
-for sx in ((-1, 1) if COLLAR else ()):
-    d.polygon(P([(300 + sx * 34, 404), (300 + sx * 62, 404), (300 + sx * 56, 420), (300 + sx * 36, 420)]), fill=GAP)
-    d.polygon(P([(300 + sx * 36, 420), (300 + sx * 56, 420), (300 + sx * 40, 446)]), fill=GAP - 30)
+# short bob (2026-11-17, user: "make Bug's hair better and smoother with no background behind it like the
+# other two"): one smooth closed curve (Catmull-Rom), round over the crown, straight down past the cheeks to
+# blunt ends at the jaw with a slight flick out, and SOLID across behind her neck (no gaps showing through)
+def smooth(pts, steps=14):
+    out, n = [], len(pts)
+    for i in range(n):
+        p0, p1, p2, p3 = pts[i - 1], pts[i], pts[(i + 1) % n], pts[(i + 2) % n]
+        for k in range(steps):
+            t = k / steps
+            out.append(tuple(0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t * t
+                                    + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t ** 3) for j in (0, 1)))
+    return out
+bob_l = [(300, 194), (250, 200), (208, 226), (188, 268), (184, 320), (186, 368), (182, 398), (170, 414),
+         (196, 418), (240, 416), (276, 420)]
+bob = bob_l + [(600 - x, y) for x, y in reversed(bob_l)]
+d.polygon(P(smooth(bob)), fill=INK)
 # the faint grey face outline, matching Cas and Eileen (2026-11-17): cheeks, jaw and chin below the bangs
 FACE_LINE = 50
 d.arc(E(300, 318, 70, 90), -12, 192, fill=FACE_LINE, width=int(2.5 * S))

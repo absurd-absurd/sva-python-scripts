@@ -263,3 +263,7 @@ Eileen's handbag strap and the wispy ends of her hair are gone.
 ## 2026-11-17_silhouettes_v8.png
 Eileen and Cas now use Bug's face outline (just the lower curve of the oval: cheeks, jaw, chin), which the
 user liked best; Eileen's coat buttons line up in one column down the middle where the coat closes.
+
+## 2026-11-17_silhouettes_v9.png
+Bug's bob redrawn as one smooth closed curve, solid behind her neck with no background showing through
+(user: "make Bug's hair better and smoother with no background behind it like the other two").

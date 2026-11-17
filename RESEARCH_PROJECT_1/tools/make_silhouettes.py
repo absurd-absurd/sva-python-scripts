@@ -14,7 +14,7 @@ Cas's ponytail is a real tail falling behind her shoulder (not a bun + ribbon); 
 small tilted headphone cups and a short neck.
 
     python make_silhouettes.py  -> export/sil_eileen.png, sil_cas.png, sil_bug.png (660 x 860, bordered)
-                                   + process/2026-11-17_silhouettes_v8.png (side by side)
+                                   + process/2026-11-17_silhouettes_v9.png (side by side)
 """
 import math
 import os
@@ -268,5 +268,5 @@ if __name__ == "__main__":
     for i in ims:
         sheet.paste(i, (x, 10))
         x += i.width + 10
-    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v8.png"))
-    print("silhouettes v8 written")
+    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v9.png"))
+    print("silhouettes v9 written")
