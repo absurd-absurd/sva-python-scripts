@@ -75,11 +75,12 @@ def card(font_file, size, seed):
     md.text((60, 230), "i miss you bug", font=hf, fill=INK + (235,))
     md.text((230, 230 + int(size * 1.25)), "- cas", font=hf, fill=INK + (235,))
     msg = msg.rotate(-3, resample=Image.BICUBIC, center=(200, 280))
-    for k, line in enumerate(["bug", "(your street)", "(your town)"]):
+    # a made-up address in Oregon (user, 2026-11-17): Bug's place in Portland, in the same wrong hand
+    for k, line in enumerate(["bug", "1418 SE Hollins Ave.", "Portland, OR 97214"]):
         md2 = ImageDraw.Draw(msg)
         bb = md2.textbbox((0, 0), line, font=af)
         md2.text((W * 0.56 + 40, 300 + k * 58 - bb[3] - 6), line, font=af,
-                 fill=INK + (235,) if k == 0 else (120, 110, 100, 150))
+                 fill=INK + (235,))
     im.paste(msg, (0, 0), msg)
     return im.filter(ImageFilter.GaussianBlur(0.5))
 

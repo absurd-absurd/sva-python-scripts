@@ -295,3 +295,7 @@ her first line at the top.
 ## 2026-11-17_opening_v2.png
 The opening slowed down (user): text types at 15 characters a second, the postcard fades in over 1.8 s,
 and the line now ends "On the back, one line..." (no "signed Cas:").
+
+## 2026-11-17_postcard_oregon.png
+The postcard now has a made-up Oregon address in the wrong hand (user): bug / 1418 SE Hollins Ave. /
+Portland, OR 97214.
