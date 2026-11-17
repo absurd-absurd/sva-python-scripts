@@ -111,6 +111,46 @@ def notebook():
     save(img, "notebook")
 
 
+def coffee_stain(img, cx, cy, r, rng):
+    """A dried coffee ring like a real one (user, 2026-11-17: make it look more realistic): a pale
+    brown wash inside, the edge darker and uneven where the coffee dried (thick in places, thin and
+    broken in others, a slightly wobbly circle), a second fainter ring a little offset from setting the
+    mug down again, and a drip and a couple of splash dots."""
+    def ring_layer(cx, cy, r, strength, gaps):
+        lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        d = ImageDraw.Draw(lay)
+        d.ellipse((cx - r * 0.97, cy - r * 0.97, cx + r * 0.97, cy + r * 0.97), fill=(150, 100, 45, int(26 * strength)))  # the wash
+        steps = 260
+        ph1, ph2 = rng.uniform(0, 6.28), rng.uniform(0, 6.28)
+        for k in range(steps):
+            t = k / steps * 2 * math.pi
+            if any(a0 <= t <= a1 for a0, a1 in gaps):
+                continue
+            rr = r * (1 + 0.025 * math.sin(3 * t + ph1) + 0.012 * math.sin(7 * t + ph2))      # not a perfect circle
+            wdt = 2.5 + 3.5 * (0.5 + 0.5 * math.sin(2 * t + ph2)) + rng.uniform(-0.8, 0.8)    # thick and thin
+            x, y = cx + rr * math.cos(t), cy + rr * math.sin(t)
+            alpha = int(strength * (95 + 50 * (0.5 + 0.5 * math.sin(2 * t + ph2))))
+            d.ellipse((x - wdt, y - wdt, x + wdt, y + wdt), fill=(96, 58, 22, alpha))
+            if rng.random() < 0.35:                                          # a darker crust just inside the edge
+                xi, yi = cx + (rr - wdt) * math.cos(t), cy + (rr - wdt) * math.sin(t)
+                d.ellipse((xi - 1.2, yi - 1.2, xi + 1.2, yi + 1.2), fill=(80, 46, 16, int(alpha * 0.8)))
+        return lay.filter(ImageFilter.GaussianBlur(1.4))
+    img.alpha_composite(ring_layer(cx, cy, r, 1.0, [(2.2, 2.55)]))
+    img.alpha_composite(ring_layer(cx + 26, cy - 18, r * 0.98, 0.45, [(0.3, 1.4), (3.6, 4.4)]))
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))                         # a drip running off the edge, splash dots
+    d = ImageDraw.Draw(lay)
+    for k in range(18):
+        t = k / 17
+        x, y = cx - r * 0.72 - t * 26, cy + r * 0.72 + t * 34
+        d.ellipse((x - 4 + t * 2, y - 4 + t * 2, x + 4 - t * 2, y + 4 - t * 2), fill=(110, 68, 28, int(70 - 30 * t)))
+    for _ in range(4):
+        a_, dist = rng.uniform(0, 6.28), r * rng.uniform(1.15, 1.45)
+        x, y = cx + dist * math.cos(a_), cy + dist * math.sin(a_)
+        rad = rng.uniform(1.5, 3.5)
+        d.ellipse((x - rad, y - rad, x + rad, y + rad), fill=(100, 60, 24, 90))
+    img.alpha_composite(lay.filter(ImageFilter.GaussianBlur(0.8)))
+
+
 def typed():
     rng = random.Random(3)
     img = sheet((226, 218, 196), rng, corners=2)
@@ -119,12 +159,7 @@ def typed():
     d = ImageDraw.Draw(img)
     for y in (200, H // 2, H - 200):                     # three punched holes on the left
         d.ellipse((26, y - 13, 52, y + 13), fill=(0, 0, 0, 0))
-    ring = Image.new("RGBA", (W, H), (0, 0, 0, 0))       # a coffee ring, bottom right
-    rd = ImageDraw.Draw(ring)
-    cx, cy, r = W - 190, H - 210, 92
-    rd.ellipse((cx - r, cy - r, cx + r, cy + r), outline=(120, 80, 40, 70), width=7)
-    rd.arc((cx - r + 6, cy - r + 4, cx + r - 2, cy + r + 3), 20, 200, fill=(110, 70, 30, 50), width=4)
-    img.alpha_composite(ring.filter(ImageFilter.GaussianBlur(1.2)))
+    coffee_stain(img, W - 200, H - 220, 88, rng)                 # a mug set down on it, twice
     stamp = ImageFont.truetype("C:/Windows/Fonts/courbd.ttf", 34)                # file stamp, top right
     st = Image.new("RGBA", (360, 70), (0, 0, 0, 0))
     sd = ImageDraw.Draw(st)

@@ -221,3 +221,8 @@ Preview (drawn outside the game with the same fonts, sizes and line breaks) of t
 reading screens: the researchers' typed 1974 log, Cas's notebook, the wrong-hand pages nailed in the shack,
 the note by her boots and the last page. It caught the typed log and the wrong hand being far too big
 (running off the sheet), so their sizes were cut (typed 0.85 -> 0.48, wrong hand 1.35 -> 1.15).
+
+## 2026-11-17_trials_log_preview.png
+The researchers' log after the user's edits: Aug 3 now reads "... and failed again", "We don't know why."
+is gone from Aug 21, and the coffee stain is a realistic dried ring (uneven darker edge, pale wash inside,
+a fainter second ring from setting the mug down again, a drip and splash dots; make_papers.coffee_stain).
