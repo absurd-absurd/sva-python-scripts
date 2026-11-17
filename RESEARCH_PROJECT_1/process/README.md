@@ -237,3 +237,8 @@ Cas redrawn from the user's ponytail reference photo: from the front a high pony
 the crown is smooth and lifted, the ears show, and the tail comes into view behind her right side below
 the ear and hangs past the jaw to the collarbone, with loose ends. The head now has a round skull dome
 (shared by all three silhouettes).
+
+## 2026-11-17_cas_silhouette_hair_down.png
+Cas with long hair worn down, parted in the middle, falling past her shoulders (user: the ponytail
+versions still looked bad). Bug's silhouette goes back to the original 2026-11-15 rough, which the user
+liked more than the redraws.

@@ -192,9 +192,8 @@ def eileen():
 
 
 def cas():
-    """2001: leaning in a little, head tipped. Hair pulled back smooth into a HIGH ponytail (reference photo
-    from the user): a lifted crown, ears showing, the tail only seen behind her right side below the ear,
-    hanging wavy past the jaw to the collarbone with loose ends.
+    """2001: leaning in a little, head tipped. Long hair worn down (user, 2026-11-17: the ponytail versions
+    didn't work), parted in the middle, falling past her shoulders.
     Ears showing. A hoodie whose hood bunches up round the back of her neck, an open flannel over it,
     backpack straps over both shoulders."""
     rng = random.Random(22)
@@ -207,24 +206,24 @@ def cas():
              (cx + 70, 456), (cx + 96, 476), (cx + 104, 510), (cx, 528)])                       # the hood, lower
     fill(d, [(cx - 30, 470), (cx - 30, 410), (cx + 30, 410), (cx + 30, 470)])                      # neck
     tilt = 3
-    # the tail first, so it's BEHIND the head (user's reference, 2026-11-17): from the front a high ponytail
-    # barely shows over the top; it comes into view behind the right side of the head below the ear and
-    # hangs past the jaw and neck to the collarbone, wavy, a little background showing between it and the neck
-    tail = [(cx + 56, top + 70), (cx + 88, top + 96), (cx + 108, top + 140), (cx + 118, top + 190), (cx + 124, top + 232),
-            (cx + 130, top + 268), (cx + 124, top + 300), (cx + 112, top + 322), (cx + 100, top + 312),
-            (cx + 102, top + 284), (cx + 96, top + 248), (cx + 86, top + 210), (cx + 78, top + 168), (cx + 66, top + 120)]
-    fill(d, turn(tail, cx, chin, tilt))
-    strands(d, turn([(cx + 100, top + 314), (cx + 120, top + 310)], cx, chin, tilt), (0.1, 1), 9, 22, rng, width=2.2, spread=0.5)
-    strands(d, turn([(cx + 112, top + 150), (cx + 128, top + 270)], cx, chin, tilt), (1, 0.3), 5, 14, rng, width=1.2, spread=0.6)
+    # long hair worn down (user, 2026-11-17: no ponytail): parted in the middle, over the ears, falling
+    # straight past the jaw and in front of the shoulders to the chest; background shows in the two
+    # triangles between the hair and the neck under the jaw
+    hair_l = [(cx, top - 14), (cx - 46, top - 10), (cx - 80, top + 18), (cx - 92, top + 74), (cx - 96, top + 140),
+              (cx - 100, top + 200), (cx - 108, top + 252), (cx - 118, top + 300), (cx - 124, top + 360),
+              (cx - 120, top + 420), (cx - 86, top + 430),                       # the ends, over the chest
+              (cx - 78, top + 360), (cx - 70, top + 290), (cx - 64, top + 230),  # its inner edge, up past the neck
+              (cx - 58, top + 180), (cx - 52, top + 130), (cx - 30, top + 60), (cx - 6, top + 34)]   # to the parting
+    hair = hair_l + [(2 * cx - x, y - (4 if y > top + 250 else 0)) for x, y in reversed(hair_l)]
     hd = turn(head_outline(cx, top, chin, hw), cx, chin, tilt)
     fill(d, hd)
-    for s_ in (-1, 1):                                                                             # ears, about eye level
-        ex, ey = turn([(cx + s_ * hw * 0.95, top + 92)], cx, chin, tilt)[0]
-        fill(d, [(ex, ey), (ex + s_ * 13, ey + 4), (ex + s_ * 15, ey + 20), (ex + s_ * 9, ey + 38), (ex, ey + 42)])
-    # hair pulled back smooth and tight: the skull's outline a touch bigger, lifted a little on top
-    cap = head_outline(cx, top - 10, chin - 30, hw + 4)                # the skull plus the hair's thickness
-    fill(d, turn(cap, cx, chin, tilt))
-    strands(d, turn([(cx - 40, top - 8), (cx + 40, top - 12)], cx, chin, tilt), (0, -1), 6, 7, rng, width=1.2, spread=1.1)
+    fill(d, turn(hair, cx, chin, tilt))
+    for s_ in (-1, 1):                                                     # loose strands at the ends and sides
+        ends = turn([(cx + s_ * 122, top + 418), (cx + s_ * 88, top + 428)], cx, chin, tilt)
+        strands(d, ends, (s_ * 0.1, 1), 12, 24, rng, width=2.2, spread=0.35)
+        side = turn([(cx + s_ * 100, top + 200), (cx + s_ * 122, top + 340)], cx, chin, tilt)
+        strands(d, side, (s_ * 1, 0.4), 5, 12, rng, width=1.2, spread=0.5)
+    strands(d, turn([(cx - 40, top - 8), (cx + 40, top - 8)], cx, chin, tilt), (0, -1), 6, 7, rng, width=1.2, spread=1.1)
     # flannel collar points lying open over the hood, the flannel's open front, backpack straps
     for s in (-1, 1):
         fill(d, [(cx + s * 40, 506), (cx + s * 74, 494), (cx + s * 92, 520), (cx + s * 60, 540)])
@@ -237,47 +236,11 @@ def cas():
 
 
 def bug():
-    """2002: slouched, hands in pockets so the shoulders sit up a little. A short bob with blunt bangs,
-    the sides falling to the jaw. A short neck. An oversized jacket with dropped shoulders and the collar
-    popped: two stiff points standing up either side of the neck. Headphones round her neck: the band
-    behind, two small cups tipped toward each other, sticking out past the collar."""
-    rng = random.Random(33)
-    img = backdrop(170, curtain=True)
-    d = ImageDraw.Draw(img)
-    cx, top, chin, hw = 300, 240, 430, 72
-    shoulders(d, cx, 470, 32, 540, 182, tilt=3, drop=20)
-    fill(d, [(cx - 32, 470), (cx - 31, 420), (cx + 31, 420), (cx + 32, 470)])                      # short neck
-    # the popped collar: stiff points standing up and flaring out, a gap of background to the jaw
-    for s in (-1, 1):
-        fill(d, [(cx + s * 34, 486), (cx + s * 38, 452), (cx + s * 64, 424), (cx + s * 94, 446), (cx + s * 104, 486),
-                 (cx + s * 78, 506)])
-        line(d, [(cx + s * 40, 456), (cx + s * 64, 428), (cx + s * 92, 448)], 2)
-    fill(d, head_outline(cx, top, chin, hw, ears=False))
-    # the bob: rounded over the crown, blunt bangs across the brow, the sides straight down to the jaw
-    # and cut blunt there, flicking in a touch
-    bob_l = [(cx, top - 18), (cx - 54, top - 12), (cx - 88, top + 22), (cx - 98, top + 80), (cx - 100, top + 140),
-             (cx - 98, top + 178), (cx - 92, top + 192), (cx - 66, top + 194), (cx - 40, top + 200)]   # solid to the neck
-    bob = bob_l + [(2 * cx - x, y) for x, y in reversed(bob_l)]
-    fill(d, bob)
-    strands(d, [(cx - 96, top + 192), (cx - 70, top + 192)], (0, 1), 8, 9, rng, width=2.0, spread=0.2)
-    strands(d, [(cx + 70, top + 192), (cx + 96, top + 192)], (0, 1), 8, 9, rng, width=2.0, spread=0.2)
-    line(d, [(cx - 64, top + 66), (cx, top + 70), (cx + 64, top + 66)], 2)                          # the bangs' edge
-    # headphones: band behind the neck, cups tipped in, sticking out past the collar on both sides
-    for s, tl in ((-1, 22), (1, -22)):
-        ccx, ccy = cx + s * 70, 492
-        cup = Image.new("L", (90 * S, 80 * S), 0)
-        ImageDraw.Draw(cup).ellipse([10 * S, 12 * S, 80 * S, 68 * S], fill=255)
-        cup = cup.rotate(tl, resample=Image.BICUBIC)
-        img.paste(INK, (int((ccx - 45) * S), int((ccy - 40) * S)), cup)
-        rim = Image.new("L", cup.size, 0)
-        ImageDraw.Draw(rim).ellipse([18 * S, 20 * S, 72 * S, 60 * S], outline=255, width=int(2.5 * S))
-        rim = rim.rotate(tl, resample=Image.BICUBIC)
-        img.paste(LITE, (int((ccx - 45) * S), int((ccy - 40) * S)), rim)
-    line(d, [(cx - 50, 474), (cx - 24, 494), (cx, 500), (cx + 24, 494), (cx + 50, 474)], 2.5)
-    line(d, [(cx, 520), (cx + 2, 800)], 2)                                                          # the zip
-    for s in (-1, 1):
-        line(d, [(cx + s * 160, 640), (cx + s * 120, 700)], 3)                                      # pocket flaps
-    return finish(img, "sil_bug.png", (1.04, 1.0, 0.92), 3)
+    """Bug: the ORIGINAL rough from 2026-11-15 (tools/make_bug_rough.py), unchanged. The user compared it
+    with the redrawn versions on 2026-11-17 and liked the original more."""
+    out = Image.open(os.path.join(PROCESS, "2026-11-15_bug_silhouette_rough.png")).convert("RGB")
+    out.save(os.path.join(EXPORT, "sil_bug.png"))
+    return out
 
 
 if __name__ == "__main__":

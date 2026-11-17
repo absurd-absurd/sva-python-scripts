@@ -60,6 +60,9 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
 - No recorded voice: everything is read on paper.
 - Messages stay first person (Bug talking).
 - All people-images are silhouettes.
+  Their looks (tools/make_silhouettes.py): Eileen = shoulder-length 90s hair, long wool coat collar up, handbag strap;
+  Cas = long hair worn down, parted in the middle (no ponytail, user 2026-11-17), hoodie + open flannel, backpack straps;
+  Bug = short bob with bangs, oversized jacket, headphones round her neck (the original 2026-11-15 rough).
 - No tagline.
 - Cabin 2 stays as is (2026-11-16): an optional side room, Cas's camp (bunk, backpack, stove,
   table with a torn page). Not part of the ending.
