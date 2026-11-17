@@ -226,3 +226,8 @@ the note by her boots and the last page. It caught the typed log and the wrong h
 The researchers' log after the user's edits: Aug 3 now reads "... and failed again", "We don't know why."
 is gone from Aug 21, and the coffee stain is a realistic dried ring (uneven darker edge, pale wash inside,
 a fainter second ring from setting the mug down again, a drip and splash dots; make_papers.coffee_stain).
+
+## 2026-11-17_silhouettes_v3.png
+Third pass, still drawn by hand in code (user: "try without reference photos"): real skull/jaw shapes,
+ears for Cas, a sloping neck-to-shoulder line, gaps of background between hair/jaw and collars, loose
+strands at hair ends, slight head tilts. Shown to the user for notes.

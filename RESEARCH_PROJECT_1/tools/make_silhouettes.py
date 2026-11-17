@@ -1,18 +1,20 @@
-"""The three people in MARROW, as silhouettes (STORY.md: no faces, no photos). Second pass, 2026-11-17,
-replacing the straight-edged roughs (tools/make_silhouettes_rough.py, tools/make_bug_rough.py) with smooth
-curves and realistic proportions, keeping the style the user liked: flat black on an aged photo print,
-grain, a white border; Eileen on a plain warm wall, Cas and Bug in front of a photo-booth curtain.
+"""The three people in MARROW, as silhouettes (STORY.md: no faces, no photos). Drawn by hand in code
+(user, 2026-11-17: "try without reference photos"); third pass. Style the user liked: flat black on an aged
+photo print, grain, a white border; Eileen on a plain warm wall, Cas and Bug in front of a photo-booth curtain.
 
-User notes on the roughs (2026-11-15), fixed here:
-  Eileen: the hair read as dog ears / pigtails  -> one full shoulder-length 90s mass, closed to the neck
-  Cas:    head 'not working', ponytail looked like a bun + ribbon -> a real high ponytail falling behind
-          the right shoulder, hood bunched at the neck, open flannel, backpack straps
-  Bug:    grey triangles -> a real popped jacket collar; smaller, tilted headphone cups; a shorter neck
+What makes a silhouette read as a real person (and what the earlier passes lacked):
+  - a real head: a wide skull, the temples, cheekbones, the jaw angle and a narrower chin, ears where hair
+    doesn't cover them, the head slightly turned and tilted (nobody sits dead symmetric in a photo booth)
+  - a real neck and shoulders: the neck's sides, the long trapezius slope out to the shoulder, the rounded
+    deltoid, and the arm falling away from it; one shoulder a little higher
+  - background showing BETWEEN the parts (hair ends and shoulders, jaw and collar): the gaps carry the shape
+  - edges that aren't smooth where real things aren't: loose strands at hair ends, cloth that sticks out
+User notes kept from the roughs (2026-11-15): Eileen's hair is one full shoulder-length mass (no "dog ears");
+Cas's ponytail is a real tail falling behind her shoulder (not a bun + ribbon); Bug has a real popped collar,
+small tilted headphone cups and a short neck.
 
     python make_silhouettes.py  -> export/sil_eileen.png, sil_cas.png, sil_bug.png (660 x 860, bordered)
-                                   + process/2026-11-17_silhouettes_v2.png (side by side)
-Each figure is a closed Catmull-Rom spline through hand-placed points (a 600 x 800 frame), mirrored
-where the body is symmetric, drawn 4x and shrunk for clean edges.
+                                   + process/2026-11-17_silhouettes_v3.png (side by side)
 """
 import math
 import os
@@ -24,41 +26,106 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXPORT = os.path.join(ROOT, "export")
 PROCESS = os.path.join(ROOT, "process")
 S, W, H = 4, 600, 800
-INK, LITE = 16, 52                       # the figure, and the faint lines that show folds and straps
+INK, LITE = 16, 50
 
 
-def spline(pts, closed=True, steps=14):
-    """Smooth closed curve through the points (Catmull-Rom), scaled to the 4x canvas."""
+def spline(pts, closed=True, steps=12):
+    """Smooth curve through the points (Catmull-Rom), in 4x canvas pixels."""
     n = len(pts)
     out = []
-    rng = range(n) if closed else range(n - 1)
-    for i in rng:
-        p0, p1 = pts[(i - 1) % n], pts[i]
-        p2, p3 = pts[(i + 1) % n], pts[(i + 2) % n]
-        if not closed:
-            p0 = pts[max(i - 1, 0)]
-            p3 = pts[min(i + 2, n - 1)]
+    for i in (range(n) if closed else range(n - 1)):
+        p0 = pts[(i - 1) % n] if closed else pts[max(i - 1, 0)]
+        p1, p2 = pts[i], pts[(i + 1) % n]
+        p3 = pts[(i + 2) % n] if closed else pts[min(i + 2, n - 1)]
         for k in range(steps):
             t = k / steps
             t2, t3 = t * t, t * t * t
-            x = 0.5 * (2 * p1[0] + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3)
-            y = 0.5 * (2 * p1[1] + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3)
-            out.append((x * S, y * S))
+            out.append(tuple(S * 0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2
+                                        + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3) for j in (0, 1)))
     if not closed:
         out.append((pts[-1][0] * S, pts[-1][1] * S))
     return out
 
 
-def mirror(half, cx=300):
-    """Points down one side (left, top to bottom) -> the whole closed outline, both sides."""
-    right = [(2 * cx - x, y) for x, y in reversed(half)]
-    return half + right
+def fill(d, pts, val=INK):
+    d.polygon(spline(pts), fill=val)
+
+
+def line(d, pts, width=3, val=LITE):
+    d.line(spline(pts, closed=False), fill=val, width=int(width * S), joint="curve")
+
+
+def turn(pts, cx, cy, deg):
+    """Rotate points round (cx, cy): the head's tilt."""
+    a = math.radians(deg)
+    c, s = math.cos(a), math.sin(a)
+    return [(cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c) for x, y in pts]
+
+
+def strands(d, base, direction, count, length, rng, width=3.0, spread=0.35):
+    """Loose hair strands: thin tapering curves growing from points along `base` (a list of points),
+    roughly along `direction` (dx, dy), each a little different."""
+    for k in range(count):
+        t = rng.random()
+        i = min(int(t * (len(base) - 1)), len(base) - 2)
+        f = t * (len(base) - 1) - i
+        x = base[i][0] + (base[i + 1][0] - base[i][0]) * f
+        y = base[i][1] + (base[i + 1][1] - base[i][1]) * f
+        ang = math.atan2(direction[1], direction[0]) + rng.uniform(-spread, spread)
+        L = length * rng.uniform(0.4, 1.0)
+        bend = rng.uniform(-0.5, 0.5)
+        pts = []
+        for j in range(7):
+            u = j / 6
+            a2 = ang + bend * u
+            pts.append((x + math.cos(a2) * L * u, y + math.sin(a2) * L * u))
+        for j in range(6):                                   # taper: thick at the root, a hair at the tip
+            wd = width * (1 - j / 6) + 0.6
+            d.line([(pts[j][0] * S, pts[j][1] * S), (pts[j + 1][0] * S, pts[j + 1][1] * S)], fill=INK, width=max(1, int(wd * S)))
+
+
+def head_outline(cx, top, chin, hw, ears=True):
+    """A head seen from the front: wide rounded skull, temples, cheekbones, the jaw angle, a narrower chin
+    (left side down, then the right side up). hw = half the skull's width."""
+    h = chin - top
+    left = [(cx - hw * 0.55, top + h * 0.03), (cx - hw * 0.9, top + h * 0.16), (cx - hw, top + h * 0.34),
+            (cx - hw * 0.96, top + h * 0.5), (cx - hw * 0.93, top + h * 0.6),            # temple / cheekbone
+            (cx - hw * 0.84, top + h * 0.74), (cx - hw * 0.66, top + h * 0.86),            # jaw angle
+            (cx - hw * 0.36, top + h * 0.96)]
+    right = [(2 * cx - x, y) for x, y in reversed(left)]
+    return [(cx, top)] + left + [(cx, chin)] + right
+
+
+def ear(d, cx, y, side, hw, h):
+    x = cx + side * (hw * 0.95)
+    fill(d, [(x, y), (x + side * h * 0.08, y + h * 0.02), (x + side * h * 0.1, y + h * 0.1),
+             (x + side * h * 0.06, y + h * 0.2), (x, y + h * 0.22)])
+
+
+def shoulders(d, cx, neck_y, neck_hw, sh_y, sh_hw, tilt=0.0, boxy=0.0, drop=0.0):
+    """Neck base, the trapezius slope, the deltoid and the arm falling to the bottom of the frame.
+    tilt: px the right shoulder sits higher; boxy: 0 natural .. 1 padded coat; drop: a dropped,
+    oversized jacket shoulder (px lower and wider)."""
+    pts = []
+    for side in (-1, 1):
+        dy = -tilt if side > 0 else 0
+        sy, sw = sh_y + dy + drop, sh_hw + drop * 0.6
+        half = [(cx + side * neck_hw, neck_y),                                  # the neck's side
+                (cx + side * (neck_hw + 26), neck_y + 16 + dy * 0.3),           # into the trapezius
+                (cx + side * (sw * 0.58), sy - 6 - boxy * 8 + dy * 0.6),        # the long slope out
+                (cx + side * (sw * 0.86), sy + 8 - boxy * 10),                  # top of the shoulder
+                (cx + side * (sw * 0.98), sy + 36 - boxy * 14),                 # round over the deltoid
+                (cx + side * (sw + 4), sy + 110),                               # the arm falls away
+                (cx + side * (sw + 8), H + 20)]
+        pts.append(half)
+    outline = pts[0] + [(cx, H + 40)] + list(reversed(pts[1]))
+    fill(d, outline)
 
 
 def backdrop(base, curtain):
     img = Image.new("L", (W * S, H * S), base)
     d = ImageDraw.Draw(img)
-    if curtain:                                                   # the booth curtain's folds
+    if curtain:
         for x in range(0, W * S, S):
             v = base + 24 * math.sin(x / (S * 36.0)) + 9 * math.sin(x / (S * 10.5))
             d.line([(x, 0), (x, H * S)], fill=int(v), width=S)
@@ -68,8 +135,7 @@ def backdrop(base, curtain):
 
 
 def finish(img, name, tint, seed):
-    """Shrink, soften a touch, grain, vignette, white photo border, tint; save to export/."""
-    img = img.resize((W, H), Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.9))
+    img = img.resize((W, H), Image.LANCZOS).filter(ImageFilter.GaussianBlur(0.8))
     rng = random.Random(seed)
     px = img.load()
     for y in range(H):
@@ -88,111 +154,127 @@ def finish(img, name, tint, seed):
     return out
 
 
-def line(d, pts, width=3, closed=False):
-    d.line(spline(pts, closed=closed), fill=LITE, width=width * S, joint="curve")
-
-
-# a realistic head (front view, slightly narrower jaw) centred on cx; crown at top, chin at chin
-def head(cx, top, chin, half_w):
-    h = chin - top
-    half = [(cx, top), (cx - half_w * 0.62, top + h * 0.06), (cx - half_w * 0.95, top + h * 0.3),
-            (cx - half_w, top + h * 0.52), (cx - half_w * 0.9, top + h * 0.72), (cx - half_w * 0.62, top + h * 0.9),
-            (cx - half_w * 0.25, top + h * 0.99)]
-    right = [(2 * cx - x, y) for x, y in reversed(half[1:])]     # back up the other side (no slit down the middle)
-    return half + [(cx, chin)] + right
-
-
 def eileen():
-    """1997, 48: shoulder-length voluminous 90s hair (one mass, closed to the neck), a long wool coat
-    with the collar turned up, a handbag strap over the left shoulder. Tall and upright."""
+    """1997, 48: tall and upright, head held level. Shoulder-length 90s hair with body and volume, ends
+    turned under and flicking out, one full mass from crown to shoulders. A long wool coat with padded
+    shoulders, the collar turned up round her neck, a handbag strap over her left shoulder."""
+    rng = random.Random(11)
     img = backdrop(150, curtain=False)
     d = ImageDraw.Draw(img)
-    # coat: square shoulders, collar up round the neck, arms down the sides
-    coat = mirror([(266, 452), (240, 470), (190, 492), (130, 512), (100, 548), (88, 640), (82, 800)])
-    d.polygon(spline(coat), fill=INK)
-    d.polygon(spline([(300, 440), (262, 446), (258, 480), (300, 500), (342, 480), (338, 446)]), fill=INK)   # neck
-    d.polygon(spline(head(300, 252, 440, 72)), fill=INK)
-    # the hair: full and round over the crown, out past the cheeks, down to the shoulders with the
-    # ends turned under; its inner edge runs down to the collar, so there's no gap at the neck
-    hair = mirror([(300, 222), (232, 230), (192, 266), (178, 330), (180, 392), (188, 432), (180, 452),
-                   (170, 466), (190, 474), (220, 462), (246, 448), (262, 436)])     # ends flip out above the shoulders
-    d.polygon(spline(hair), fill=INK)
-    # collar points standing up, lapels, buttons and the handbag strap in faint lines
+    cx, top, chin, hw = 300, 214, 418, 74
+    shoulders(d, cx, 470, 34, 548, 188, tilt=4, boxy=0.6)
+    fill(d, [(cx - 34, 470), (cx - 32, 410), (cx + 32, 410), (cx + 34, 470)])                      # neck
+    # the coat collar turned up: stiff wool standing on both sides of the neck, its points out past the jaw
     for s in (-1, 1):
-        d.polygon(spline([(300 + s * 40, 448), (300 + s * 70, 420), (300 + s * 96, 470), (300 + s * 70, 520)]), fill=INK)
-        line(d, [(300 + s * 70, 422), (300 + s * 92, 470), (300 + s * 60, 530), (300 + s * 22, 640)])
-    for y in (600, 690):
-        d.ellipse([(300 - 7) * S, (y - 7) * S, (300 + 7) * S, (y + 7) * S], fill=LITE)
-    line(d, [(190, 500), (240, 600), (320, 720), (380, 800)], width=4)
+        fill(d, [(cx + s * 30, 478), (cx + s * 34, 440), (cx + s * 58, 418), (cx + s * 84, 448), (cx + s * 92, 482),
+                 (cx + s * 70, 500)])
+    fill(d, head_outline(cx, top, chin, hw, ears=False))
+    # the hair: rises in a full crown, out past the cheeks, falls to just above the shoulders where the
+    # ends turn under and flick out; seen from the front it frames the face and closes against the collar
+    hair_l = [(cx, top - 26), (cx - 50, top - 22), (cx - 92, top + 10), (cx - 112, top + 64), (cx - 116, top + 130),
+              (cx - 112, top + 190), (cx - 114, top + 226), (cx - 132, top + 244), (cx - 116, top + 256),
+              (cx - 86, top + 252), (cx - 52, top + 262)]                        # in to the back of the neck
+    hair = hair_l + [(2 * cx - x, y) for x, y in reversed(hair_l)]
+    hair = turn(hair, cx, top + 120, -2)
+    fill(d, hair)
+    strands(d, [(cx - 130, top + 246), (cx - 104, top + 256)], (-0.4, 1), 9, 20, rng, width=2.5)
+    strands(d, [(cx + 104, top + 256), (cx + 130, top + 246)], (0.4, 1), 9, 20, rng, width=2.5)
+    strands(d, [(cx - 70, top - 14), (cx + 70, top - 14)], (0, -1), 7, 10, rng, width=1.6, spread=0.9)
+    # lapels, buttons and the handbag strap over her left shoulder (it sits ON the shoulder edge)
+    for s in (-1, 1):
+        line(d, [(cx + s * 60, 500), (cx + s * 40, 560), (cx + s * 18, 660), (cx + s * 10, 800)], 2.5)
+    for y in (612, 700):
+        d.ellipse([(cx + 22 - 6) * S, (y - 6) * S, (cx + 22 + 6) * S, (y + 6) * S], fill=LITE)
+    fill(d, [(cx - 128, 504), (cx - 112, 498), (cx - 104, 512), (cx - 120, 518)])                  # strap over the edge
+    line(d, [(cx - 118, 512), (cx - 70, 600), (cx + 20, 720), (cx + 80, 810)], 4.5)
     return finish(img, "sil_eileen.png", (1.08, 1.0, 0.86), 1)
 
 
 def cas():
-    """2001: a high ponytail falling behind her right shoulder (no beanie), a hoodie with the hood
-    bunched round her neck under an open flannel, backpack straps, the head tipped a little forward."""
+    """2001: leaning in a little, head tipped. Hair scraped back into a HIGH ponytail: the tie sits at the
+    back of the crown, the tail arcs out to her right and falls behind the shoulder, ending in loose ends.
+    Ears showing. A hoodie whose hood bunches up round the back of her neck, an open flannel over it,
+    backpack straps over both shoulders."""
+    rng = random.Random(22)
     img = backdrop(176, curtain=True)
     d = ImageDraw.Draw(img)
-    body = mirror([(262, 470), (236, 488), (186, 506), (128, 526), (102, 566), (92, 660), (88, 800)])
-    d.polygon(spline(body), fill=INK)
-    hood = mirror([(300, 446), (250, 448), (214, 470), (208, 500), (232, 520), (300, 528)])
-    d.polygon(spline(hood), fill=INK)
-    d.polygon(spline([(300, 430), (266, 438), (264, 480), (300, 490), (336, 480), (334, 438)]), fill=INK)   # neck
-    hd = [(x + (y - 250) * 0.05, y) for x, y in head(300, 256, 436, 70)]               # tipped forward a touch
-    d.polygon(spline(hd), fill=INK)
-    # hair pulled back tight: just a little fuller than the skull at the crown
-    d.polygon(spline(mirror([(300, 248), (246, 256), (230, 290), (228, 330), (238, 330), (250, 290), (300, 270)])), fill=INK)
-    # the ponytail: tied high at the back of the crown, arcing out to her right, falling behind the
-    # shoulder and narrowing to the tips
-    tail = [(318, 250), (350, 236), (392, 246), (418, 284), (426, 350), (422, 420), (412, 480), (402, 530),
-            (394, 558), (388, 522), (394, 450), (398, 380), (396, 322), (384, 292), (356, 274), (330, 268)]
-    d.polygon(spline(tail), fill=INK)
-    d.polygon(spline([(316, 248), (338, 238), (350, 252), (330, 264)]), fill=INK)     # the hair tie bump
-    for sx in (-1, 1):                                                               # ears: her hair's pulled back
-        ex = 300 + sx * 71 + (346 - 250) * 0.05
-        d.ellipse([(ex - 9) * S, 328 * S, (ex + 9) * S, 366 * S], fill=INK)
-    # open flannel edges, hood strings, backpack straps over the shoulders, in faint lines
+    cx, top, chin, hw = 300, 232, 426, 72
+    shoulders(d, cx, 466, 32, 550, 180, tilt=-6)
+    # the hood: a soft heavy roll behind and round the neck, standing up nearly to the ears
+    fill(d, [(cx - 104, 500), (cx - 96, 458), (cx - 70, 432), (cx - 34, 430), (cx, 444), (cx + 34, 430),
+             (cx + 70, 432), (cx + 96, 458), (cx + 104, 500), (cx, 520)])
+    fill(d, [(cx - 30, 470), (cx - 30, 410), (cx + 30, 410), (cx + 30, 470)])                      # neck
+    tilt = 4
+    hd = turn(head_outline(cx, top, chin, hw), cx, chin, tilt)
+    fill(d, hd)
+    for s in (-1, 1):                                                                              # ears
+        ex, ey = turn([(cx + s * hw * 0.95, top + 92)], cx, chin, tilt)[0]
+        fill(d, [(ex, ey), (ex + s * 13, ey + 4), (ex + s * 15, ey + 20), (ex + s * 9, ey + 38), (ex, ey + 42)])
+    # scraped-back hair: barely fuller than the skull, a slight rise toward the tie
+    fill(d, turn([(cx - 70, top + 40), (cx - 62, top + 6), (cx - 20, top - 8), (cx + 30, top - 10),
+                  (cx + 62, top), (cx + 74, top + 36), (cx + 60, top + 30), (cx, top + 10)], cx, chin, tilt))
+    # the ponytail
+    tail = [(cx + 30, top - 6), (cx + 58, top - 30), (cx + 96, top - 30), (cx + 126, top - 2), (cx + 140, top + 52),
+            (cx + 142, top + 130), (cx + 134, top + 210), (cx + 124, top + 270), (cx + 112, top + 300),
+            (cx + 104, top + 270), (cx + 110, top + 200), (cx + 114, top + 130), (cx + 110, top + 64),
+            (cx + 94, top + 22), (cx + 64, top + 4)]
+    fill(d, turn(tail, cx, chin, tilt))
+    fill(d, turn([(cx + 40, top - 4), (cx + 58, top - 26), (cx + 72, top - 18), (cx + 56, top + 4)], cx, chin, tilt))  # the tie
+    tip = turn([(cx + 104, top + 286), (cx + 124, top + 284)], cx, chin, tilt)
+    strands(d, tip, (-0.2, 1), 10, 26, rng, width=2.4, spread=0.4)
+    strands(d, turn([(cx - 40, top - 4), (cx + 20, top - 10)], cx, chin, tilt), (0, -1), 5, 8, rng, width=1.4, spread=1.0)
+    # flannel collar points lying open over the hood, the flannel's open front, backpack straps
     for s in (-1, 1):
-        line(d, [(300 + s * 40, 528), (300 + s * 56, 620), (300 + s * 64, 800)])
-        line(d, [(300 + s * 14, 520), (300 + s * 16, 580)], width=2)
-        line(d, [(300 + s * 112, 524), (300 + s * 122, 640), (300 + s * 124, 800)], width=4)
-        line(d, [(300 + s * 146, 528), (300 + s * 154, 640), (300 + s * 156, 800)], width=4)
+        fill(d, [(cx + s * 40, 506), (cx + s * 74, 494), (cx + s * 92, 520), (cx + s * 60, 540)])
+        line(d, [(cx + s * 46, 528), (cx + s * 58, 640), (cx + s * 66, 800)], 2.5)
+        line(d, [(cx + s * 118, 500), (cx + s * 126, 640), (cx + s * 128, 800)], 5)
+        fill(d, [(cx + s * 108, 494), (cx + s * 130, 488), (cx + s * 134, 502), (cx + s * 112, 508)])   # strap on the shoulder
+    for s in (-1, 1):
+        line(d, [(cx + s * 12, 524), (cx + s * 14, 588)], 2)                                        # hood strings
     return finish(img, "sil_cas.png", (1.02, 1.0, 0.95), 2)
 
 
 def bug():
-    """2002: a short bob with bangs, an oversized jacket with a real popped collar, headphones round
-    her neck (small cups, tilted), a short neck."""
+    """2002: slouched, hands in pockets so the shoulders sit up a little. A short bob with blunt bangs,
+    the sides falling to the jaw. A short neck. An oversized jacket with dropped shoulders and the collar
+    popped: two stiff points standing up either side of the neck. Headphones round her neck: the band
+    behind, two small cups tipped toward each other, sticking out past the collar."""
+    rng = random.Random(33)
     img = backdrop(170, curtain=True)
     d = ImageDraw.Draw(img)
-    jacket = mirror([(262, 456), (230, 472), (172, 496), (112, 520), (82, 566), (70, 660), (62, 800)])
-    d.polygon(spline(jacket), fill=INK)
-    d.polygon(spline([(300, 424), (268, 430), (266, 462), (300, 474), (334, 462), (332, 430)]), fill=INK)  # short neck
-    d.polygon(spline(head(300, 262, 432, 70)), fill=INK)
-    # the bob: full over the crown, straight bangs across the brow, the sides falling to the jaw
-    # and turning in under it
-    bob = mirror([(300, 236), (236, 244), (206, 284), (196, 340), (198, 392), (210, 420), (236, 428),
-                  (254, 412)])
-    d.polygon(spline(bob), fill=INK)
-    line(d, [(244, 318), (300, 322), (356, 318)], width=2)                             # where the bangs end
-    # the popped collar: two stiff points standing up and out on each side of the neck
+    cx, top, chin, hw = 300, 240, 430, 72
+    shoulders(d, cx, 470, 32, 540, 182, tilt=3, drop=20)
+    fill(d, [(cx - 32, 470), (cx - 31, 420), (cx + 31, 420), (cx + 32, 470)])                      # short neck
+    # the popped collar: stiff points standing up and flaring out, a gap of background to the jaw
     for s in (-1, 1):
-        d.polygon(spline([(300 + s * 34, 470), (300 + s * 42, 430), (300 + s * 74, 412), (300 + s * 96, 452),
-                          (300 + s * 84, 486)]), fill=INK)
-        line(d, [(300 + s * 44, 432), (300 + s * 74, 414), (300 + s * 94, 452)], width=2)
-    # headphones round her neck: the band behind, two small cups tipped toward each other
-    for s, tilt in ((-1, 18), (1, -18)):
-        cx, cy = 300 + s * 60, 478
-        cup = Image.new("L", (90 * S, 70 * S), 0)
-        cd = ImageDraw.Draw(cup)
-        cd.ellipse([8 * S, 6 * S, 82 * S, 64 * S], fill=255)
-        cup = cup.rotate(tilt, resample=Image.BICUBIC, expand=False)
-        img.paste(INK, (int((cx - 45) * S), int((cy - 35) * S)), cup)
-        ring = Image.new("L", cup.size, 0)
-        ImageDraw.Draw(ring).ellipse([14 * S, 12 * S, 76 * S, 58 * S], outline=255, width=3 * S)
-        ring = ring.rotate(tilt, resample=Image.BICUBIC, expand=False)
-        img.paste(LITE, (int((cx - 45) * S), int((cy - 35) * S)), ring)
-    line(d, [(244, 470), (270, 494), (300, 500), (330, 494), (356, 470)], width=3)     # the band
-    line(d, [(300, 520), (300, 800)], width=2)                                          # the zip
+        fill(d, [(cx + s * 34, 486), (cx + s * 38, 452), (cx + s * 64, 424), (cx + s * 94, 446), (cx + s * 104, 486),
+                 (cx + s * 78, 506)])
+        line(d, [(cx + s * 40, 456), (cx + s * 64, 428), (cx + s * 92, 448)], 2)
+    fill(d, head_outline(cx, top, chin, hw, ears=False))
+    # the bob: rounded over the crown, blunt bangs across the brow, the sides straight down to the jaw
+    # and cut blunt there, flicking in a touch
+    bob_l = [(cx, top - 18), (cx - 54, top - 12), (cx - 88, top + 22), (cx - 98, top + 80), (cx - 100, top + 140),
+             (cx - 98, top + 178), (cx - 92, top + 192), (cx - 66, top + 194), (cx - 40, top + 200)]   # solid to the neck
+    bob = bob_l + [(2 * cx - x, y) for x, y in reversed(bob_l)]
+    fill(d, bob)
+    strands(d, [(cx - 96, top + 192), (cx - 70, top + 192)], (0, 1), 8, 9, rng, width=2.0, spread=0.2)
+    strands(d, [(cx + 70, top + 192), (cx + 96, top + 192)], (0, 1), 8, 9, rng, width=2.0, spread=0.2)
+    line(d, [(cx - 64, top + 66), (cx, top + 70), (cx + 64, top + 66)], 2)                          # the bangs' edge
+    # headphones: band behind the neck, cups tipped in, sticking out past the collar on both sides
+    for s, tl in ((-1, 22), (1, -22)):
+        ccx, ccy = cx + s * 70, 492
+        cup = Image.new("L", (90 * S, 80 * S), 0)
+        ImageDraw.Draw(cup).ellipse([10 * S, 12 * S, 80 * S, 68 * S], fill=255)
+        cup = cup.rotate(tl, resample=Image.BICUBIC)
+        img.paste(INK, (int((ccx - 45) * S), int((ccy - 40) * S)), cup)
+        rim = Image.new("L", cup.size, 0)
+        ImageDraw.Draw(rim).ellipse([18 * S, 20 * S, 72 * S, 60 * S], outline=255, width=int(2.5 * S))
+        rim = rim.rotate(tl, resample=Image.BICUBIC)
+        img.paste(LITE, (int((ccx - 45) * S), int((ccy - 40) * S)), rim)
+    line(d, [(cx - 50, 474), (cx - 24, 494), (cx, 500), (cx + 24, 494), (cx + 50, 474)], 2.5)
+    line(d, [(cx, 520), (cx + 2, 800)], 2)                                                          # the zip
+    for s in (-1, 1):
+        line(d, [(cx + s * 160, 640), (cx + s * 120, 700)], 3)                                      # pocket flaps
     return finish(img, "sil_bug.png", (1.04, 1.0, 0.92), 3)
 
 
@@ -203,5 +285,5 @@ if __name__ == "__main__":
     for i in ims:
         sheet.paste(i, (x, 10))
         x += i.width + 10
-    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v2.png"))
-    print("silhouettes v2 written")
+    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v3.png"))
+    print("silhouettes v3 written")
