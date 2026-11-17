@@ -200,3 +200,10 @@ All three key pictures at full size after the ring fixes (office, gate, boathous
 ## 2026-11-17_keys_full_v3.png
 The gate tag is now in a motel worker's felt-tip marker (Permanent Marker), not Cas's handwriting
 (user: "the second key should not be the same font as Cas's handwriting").
+
+## 2026-11-17_reading_register.png / 2026-11-17_register_on_counter.png
+The guest register as a real page (user: "pages are pages", no text describing it): October 1997,
+D. Hollis, the Carvers and Eileen Byrne each in their own handwriting, the next days blank, and
+"104 - kept." in pencil in another hand under her name. The book on the office counter now shows the
+same page (the old texture still had guests from the first story draft); the facing page is empty.
+Both come from tools/make_guest_book.py.

@@ -6,7 +6,8 @@ ROOT = r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/export/"
 DEST = "/Game/Horror/UI"
 
 for kind in ("stationery", "notebook", "typed", "ledger", "scrap",
-             "key_office", "key_gate", "key_boathouse"):      # the keys: tools/make_keys.py
+             "key_office", "key_gate", "key_boathouse",      # the keys: tools/make_keys.py
+             "register"):                                    # the guest register page: tools/make_guest_book.py
     name = "T_Paper_" + kind.capitalize()
     t = unreal.AssetImportTask()
     t.filename = ROOT + f"paper_{kind}.png"

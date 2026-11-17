@@ -6,7 +6,7 @@
     "gives_key / needs_key": "key name; needs_key locks it until you have that key",
     "objective": "new objective line after using it",
     "pickup": "disappears after you take it",
-    "paper": "the sheet the reading screen shows it on: stationery, notebook, typed, ledger, scrap (tools/make_papers.py), or a key picture key_office, key_gate, key_boathouse (tools/make_keys.py; words drawn in, use hand none)",
+    "paper": "the sheet the reading screen shows it on: stationery, notebook, typed, ledger, scrap (tools/make_papers.py), or a picture with its words drawn in (use hand none): key_office, key_gate, key_boathouse (tools/make_keys.py), register (tools/make_guest_book.py)",
     "hand": "whose writing the reading screen uses: cas = Rock Salt, wrong = Zeyada, print = typed; none = Bug's Ink Free",
     "open_angle": "how far a door swings (default 95; negative swings the other way)",
     "shape": "paper, map_ground, key, book, door or room_door (see SHAPES in place_clues.py)"
@@ -161,7 +161,7 @@
       "objective": "Nobody's here. I should look around before someone comes back."
     },
     {
-      "id": "guest_book", "paper": "ledger",
+      "id": "guest_book", "paper": "register", "hand": "none",
       "shape": "book",
       "at": [3450, -1340, 109], "yaw": -10,
       "title": "Guest register",

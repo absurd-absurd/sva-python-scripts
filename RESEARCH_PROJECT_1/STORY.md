@@ -64,7 +64,7 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
 - Cabin 2 stays as is (2026-11-16): an optional side room, Cas's camp (bunk, backpack, stove,
   table with a torn page). Not part of the ending.
 - Wrong-hand font = **Zeyada** (fonts/Zeyada.ttf, SIL Open Font License). Cas's own hand = **Rock Salt** (fonts/RockSalt-Regular.ttf, Apache license): bold all-caps scrawl, the opposite of the thin wrong hand. (Was Ink Free until 2026-11-16; map/wall/letter textures and the HUD still use Ink Free until regenerated.)
-- Other people's writing is never Cas's or the thing's font: the motel's marker on the gate key tag = Permanent Marker (fonts/, Apache license).
+- Other people's writing is never Cas's or the thing's font: the motel's marker on the gate key tag = Permanent Marker (fonts/, Apache license). The register: D. Hollis = Lucida Handwriting, the Carvers = Bradley Hand, Eileen = Segoe Script, the desk clerk's dates = Segoe Print, "104 - kept." in pencil = Reenie Beanie (fonts/, OFL).
 - Ending cuts straight to black. No credits screen.
 - Phone numbers are fake 555 numbers (Bug's poster: 555-0117, a nod to Oct 17).
 
