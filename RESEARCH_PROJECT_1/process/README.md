@@ -242,3 +242,8 @@ the ear and hangs past the jaw to the collarbone, with loose ends. The head now 
 Cas with long hair worn down, parted in the middle, falling past her shoulders (user: the ponytail
 versions still looked bad). Bug's silhouette goes back to the original 2026-11-15 rough, which the user
 liked more than the redraws.
+
+## 2026-11-17_silhouettes_v4.png
+Cas without the hood bunched at her neck, so background shows behind her hair (user); Bug's original
+rough with its collar taken off (the popped collar points and the grey triangles by the neck,
+tools/make_bug_rough.py COLLAR = False -> process/2026-11-17_bug_silhouette_no_collar.png).

@@ -14,7 +14,7 @@ Cas's ponytail is a real tail falling behind her shoulder (not a bun + ribbon); 
 small tilted headphone cups and a short neck.
 
     python make_silhouettes.py  -> export/sil_eileen.png, sil_cas.png, sil_bug.png (660 x 860, bordered)
-                                   + process/2026-11-17_silhouettes_v3.png (side by side)
+                                   + process/2026-11-17_silhouettes_v4.png (side by side)
 """
 import math
 import os
@@ -202,8 +202,7 @@ def cas():
     cx, top, chin, hw = 300, 232, 426, 72
     shoulders(d, cx, 466, 32, 550, 180, tilt=-6)
     # the hood: a soft heavy roll behind and round the neck, standing up nearly to the ears
-    fill(d, [(cx - 104, 510), (cx - 96, 476), (cx - 70, 456), (cx - 34, 452), (cx, 462), (cx + 34, 452),
-             (cx + 70, 456), (cx + 96, 476), (cx + 104, 510), (cx, 528)])                       # the hood, lower
+    # (no hood bunched round the neck: background shows behind her hair, user 2026-11-17)
     fill(d, [(cx - 30, 470), (cx - 30, 410), (cx + 30, 410), (cx + 30, 470)])                      # neck
     tilt = 3
     # long hair worn down (user, 2026-11-17: no ponytail): parted in the middle, over the ears, falling
@@ -238,7 +237,8 @@ def cas():
 def bug():
     """Bug: the ORIGINAL rough from 2026-11-15 (tools/make_bug_rough.py), unchanged. The user compared it
     with the redrawn versions on 2026-11-17 and liked the original more."""
-    out = Image.open(os.path.join(PROCESS, "2026-11-15_bug_silhouette_rough.png")).convert("RGB")
+    # ... minus the collar (2026-11-17): tools/make_bug_rough.py with COLLAR = False
+    out = Image.open(os.path.join(PROCESS, "2026-11-17_bug_silhouette_no_collar.png")).convert("RGB")
     out.save(os.path.join(EXPORT, "sil_bug.png"))
     return out
 
@@ -250,5 +250,5 @@ if __name__ == "__main__":
     for i in ims:
         sheet.paste(i, (x, 10))
         x += i.width + 10
-    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v3.png"))
-    print("silhouettes v3 written")
+    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v4.png"))
+    print("silhouettes v4 written")

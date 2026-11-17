@@ -31,8 +31,9 @@ jacket = [(258, 470), (205, 492), (150, 520), (108, 560), (82, 630), (64, 720), 
 d.polygon(P(jacket), fill=INK)
 # neck
 d.polygon(P([(270, 390), (330, 390), (338, 482), (262, 482)]), fill=INK)
+COLLAR = False   # 2026-11-17, user: "remove the collar from Bug" (the popped collar and the grey triangles by the neck)
 # popped collar points either side of the neck, split from the jacket by light seams
-for sx in (-1, 1):
+for sx in ((-1, 1) if COLLAR else ()):
     c = [(300 + sx * 30, 452), (300 + sx * 62, 432), (300 + sx * 96, 520), (300 + sx * 52, 548)]
     d.polygon(P(c), fill=INK)
     d.line(P([c[1], c[2], c[3]]), fill=GAP, width=2 * S)
@@ -59,7 +60,7 @@ d.polygon(P(bob), fill=INK)
 # blunt bangs: a straight fringe edge shows as a slight step at the temples
 d.polygon(P([(214, 262), (386, 262), (392, 300), (208, 300)]), fill=INK)
 # gap between the bob's ends and the neck so the haircut reads
-for sx in (-1, 1):
+for sx in ((-1, 1) if COLLAR else ()):
     d.polygon(P([(300 + sx * 34, 404), (300 + sx * 62, 404), (300 + sx * 56, 420), (300 + sx * 36, 420)]), fill=GAP)
     d.polygon(P([(300 + sx * 36, 420), (300 + sx * 56, 420), (300 + sx * 40, 446)]), fill=GAP - 30)
 # redraw the neck over the seams
@@ -80,5 +81,6 @@ img = Image.composite(img, Image.new("L", (W, H), 40), vig.filter(ImageFilter.Ga
 frame = Image.new("L", (W + 60, H + 60), 236)
 frame.paste(img, (30, 30))
 out = Image.merge("RGB", [frame.point(lambda v: min(255, int(v * 1.02 + 6))), frame, frame.point(lambda v: int(v * 0.93))])
-out.save(r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/process/2026-11-15_bug_silhouette_rough.png")
+out.save(r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/process/2026-11-15_bug_silhouette_rough.png" if COLLAR else
+         r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/process/2026-11-17_bug_silhouette_no_collar.png")
 print("saved")
