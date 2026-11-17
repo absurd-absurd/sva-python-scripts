@@ -183,3 +183,8 @@ written over the picture.
 ## 2026-11-17_postcard_back.png
 The postcard that brings Bug to Marrow Falls, for the opening (tools/make_postcard.py): the motel's
 printed side is now just its name (user removed the "Black Hollow Lake - Rooms by the night or week" line).
+
+## 2026-11-17_key_rings_threaded.png
+Key rings fixed (user: the keychain didn't look attached): the split ring now goes behind the key's head
+and shows through its hole, then through the tag's hole, with a short stretch drawn in front at each
+hole so it reads as threaded, not lying on top.
