@@ -14,7 +14,7 @@ Cas's ponytail is a real tail falling behind her shoulder (not a bun + ribbon); 
 small tilted headphone cups and a short neck.
 
     python make_silhouettes.py  -> export/sil_eileen.png, sil_cas.png, sil_bug.png (660 x 860, bordered)
-                                   + process/2026-11-17_silhouettes_v10.png (side by side)
+                                   + process/2026-11-17_silhouettes_v11.png (side by side)
 """
 import math
 import os
@@ -237,12 +237,7 @@ def cas():
             line(d, turn([(cx + s_ * (off - 6), top + 120), (cx + s_ * (off - 2), top + 220),
                           (cx + s_ * (off + 6), top + 320), (cx + s_ * (off + 4), top + 400)], cx, chin, tilt), 1.8)
         line(d, [(cx + s_ * 60, top + 312), (cx + s_ * 130, top + 336), (cx + s_ * 172, top + 360)], 2.5)  # shoulder under the hair
-    for s_ in (-1, 1):                                                     # loose strands at the ends and sides
-        ends = turn([(cx + s_ * 122, top + 418), (cx + s_ * 88, top + 428)], cx, chin, tilt)
-        strands(d, ends, (s_ * 0.1, 1), 12, 24, rng, width=2.2, spread=0.35)
-        side = turn([(cx + s_ * 100, top + 200), (cx + s_ * 122, top + 340)], cx, chin, tilt)
-        strands(d, side, (s_ * 1, 0.4), 5, 12, rng, width=1.2, spread=0.5)
-    strands(d, turn([(cx - 40, top - 8), (cx + 40, top - 8)], cx, chin, tilt), (0, -1), 6, 7, rng, width=1.2, spread=1.1)
+    # (no loose strands sticking out of her hair: user, 2026-11-17)
     # flannel collar points lying open, the flannel's open front (no backpack straps: user 2026-11-17)
     for s in (-1, 1):
         fill(d, [(cx + s * 40, 506), (cx + s * 74, 494), (cx + s * 92, 520), (cx + s * 60, 540)])
@@ -268,5 +263,5 @@ if __name__ == "__main__":
     for i in ims:
         sheet.paste(i, (x, 10))
         x += i.width + 10
-    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v10.png"))
-    print("silhouettes v10 written")
+    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v11.png"))
+    print("silhouettes v11 written")

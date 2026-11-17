@@ -271,3 +271,6 @@ Bug's bob redrawn as one smooth closed curve, solid behind her neck with no back
 ## 2026-11-17_silhouettes_v10.png
 More detail on Bug's jacket in faint seams like the zip (user): the neckline, a zip pull, dropped shoulder
 seams, two chest pockets with flaps and snaps, folds near the arms.
+
+## 2026-11-17_silhouettes_v11.png
+Cas without the little strands of hair sticking out (user); her hair edge is clean now.
