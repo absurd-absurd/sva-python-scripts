@@ -6,6 +6,7 @@
     "gives_key / needs_key": "key name; needs_key locks it until you have that key",
     "objective": "new objective line after using it",
     "pickup": "disappears after you take it",
+    "hand": "whose writing the reading screen uses: cas = Rock Salt, wrong = Zeyada, print = typed; none = Bug's Ink Free",
     "open_angle": "how far a door swings (default 95; negative swings the other way)",
     "shape": "paper, map_ground, key, book, door or room_door (see SHAPES in place_clues.py)"
   },
@@ -18,11 +19,14 @@
     "ending_screen": "cut to black right away (after Bug's line and the rattle behind you)",
     "tagline": "none",
     "wrong_hand_font": "fonts/Zeyada.ttf (postcard, later shack pages, boathouse note, last page)",
+    "cas_hand_font": "fonts/RockSalt-Regular.ttf (map, letter, wall notes, shack notebook)",
+    "bug_font": "Ink Free (corner messages, journal)",
     "credits": "none (user: no credits screen)"
   },
   "new_prop_texts": {
     "_about": "Final texts for clues whose props aren't built yet. place_clues.py ignores this block.",
     "cas_wall": {
+      "hand": "cas",
       "where": "Room 104, Cas's investigation wall (readable)",
       "title": "Cas's wall",
       "notes": [
@@ -33,30 +37,35 @@
       "objective": "This is where her mom went missing. I can't believe she never told me she was looking into her mother's disappearance."
     },
     "field_log": {
+      "hand": "print",
       "where": "Office, back room (box or folder on the shelf or desk)",
       "title": "THE TRIALS OF BLACK HOLLOW LAKE",
       "body": "Aug 3 1974 - Trying to find the source of the sound at the deepest part of the lake failed again. The line goes down and keeps going.\n\nAug 9 1974 - There's a rattling heard from the water every night now. It stops when we stop, but it starts again as soon as we move.\n\nAug 21 1974 - Lanterns along the shore seem to keep it quiet. Red works best. We don't know why.\n\nOct 17 1974 - Freedman walked into the water. We found his boots on the dock. In the morning a boy came out of the woods who went missing in 1952. He hasn't aged.\n\nOne goes in. Something comes back out.\n\nWe can't continue the trials, we've lost too much. The motel will stay open. Someone has to keep the lights lit.",
       "objective": "One goes in, something comes back. Cas read this. The study clearly said 'something' comes back, but she wanted to believe it could be her mom."
     },
     "shack_notes": {
+      "hand": "cas",
       "where": "Hunter's shack, Cas's notebook (her handwriting)",
       "title": "Cas's notebook",
       "body": "Night 3. I can't stay in the motel anymore. They watch me there.\n\nThe rattle comes every night now. It stops when I stop. So I don't stop.\n\nI heard her calling from the water. She said my name the way she used to, like she did when I was eight.\n\nThe log said one goes in, one comes back. I could bring her back.",
       "objective": "She read the log wrong. It clearly said something comes back out, not someone. Something's gone very wrong."
     },
     "shack_notes_wrong": {
+      "hand": "wrong",
       "where": "Hunter's shack, later pages (wrong-hand font: Zeyada)",
       "title": "Later pages",
       "body": "she's not sleeping anymore\n\nbug will come. bug always comes\n\ni drew bug a map\n\n- cas",
       "objective": "That's not her handwriting. It's the same writing as the postcard."
     },
     "boathouse_note": {
+      "hand": "wrong",
       "where": "Boathouse, by the water door, next to her boots set side by side (laces tucked in)",
       "title": "A note by her boots",
       "body": "the lanterns are lit for you, bug\n\ndon't worry, this will be the last cabin",
       "objective": "Her boots. Just like the log. The last cabin... the red one."
     },
     "last_page": {
+      "hand": "wrong",
       "where": "Red cabin, on the pillow of a warm bed, lantern lit (wrong handwriting)",
       "body": "you came, bug\n\nnow we can be together",
       "bug_says": "this isn't Cas"
@@ -68,7 +77,7 @@
   },
   "clues": [
     {
-      "id": "map_cas",
+      "id": "map_cas", "hand": "cas",
       "shape": "map_ground",
       "at": [-885, -2160, 3.1], "yaw": 25,
       "prompt": "Take",
@@ -115,7 +124,7 @@
       "prompt": "Open"
     },
     {
-      "id": "note_bed",
+      "id": "note_bed", "hand": "cas",
       "shape": "paper",
       "at": [-708, -914, 58.9], "yaw": 15,
       "title": "A letter on the bed",
