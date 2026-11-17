@@ -14,7 +14,7 @@ Cas's ponytail is a real tail falling behind her shoulder (not a bun + ribbon); 
 small tilted headphone cups and a short neck.
 
     python make_silhouettes.py  -> export/sil_eileen.png, sil_cas.png, sil_bug.png (660 x 860, bordered)
-                                   + process/2026-11-17_silhouettes_v5.png (side by side)
+                                   + process/2026-11-17_silhouettes_v6.png (side by side)
 """
 import math
 import os
@@ -222,6 +222,21 @@ def cas():
     fill(d, turn([(cx - 60, top + 130), (cx - 66, top + 210), (cx - 72, top + 300), (cx - 76, top + 380), (cx, top + 392),
                   (cx + 76, top + 376), (cx + 72, top + 296), (cx + 66, top + 206), (cx + 60, top + 126), (cx, top + 120)],
                  cx, chin, tilt))
+    # faint grey lines so the shapes read (user, 2026-11-17): where her face meets her hair, the parting,
+    # strands falling down the hair, and her shoulders under it
+    face = head_outline(cx, top, chin, hw)
+    jaw_l = [p for p in face if p[0] < cx and p[1] > top + (chin - top) * 0.25] + [(cx, chin)]
+    jaw_r = [(cx, chin)] + [p for p in face if p[0] > cx and p[1] > top + (chin - top) * 0.25]
+    line(d, turn([(cx - hw * 0.72, top + 40)] + jaw_l, cx, chin, tilt), 2.5)
+    line(d, turn(jaw_r + [(cx + hw * 0.72, top + 40)], cx, chin, tilt), 2.5)
+    line(d, turn([(cx - hw * 0.72, top + 40), (cx - 30, top + 6), (cx, top - 4)], cx, chin, tilt), 2.5)
+    line(d, turn([(cx, top - 4), (cx + 30, top + 6), (cx + hw * 0.72, top + 40)], cx, chin, tilt), 2.5)
+    line(d, turn([(cx, top - 12), (cx + 1, top + 18)], cx, chin, tilt), 2)                     # the parting
+    for s_ in (-1, 1):
+        for k, off in enumerate((84, 102)):                                                     # strands falling
+            line(d, turn([(cx + s_ * (off - 6), top + 120), (cx + s_ * (off - 2), top + 220),
+                          (cx + s_ * (off + 6), top + 320), (cx + s_ * (off + 4), top + 400)], cx, chin, tilt), 1.8)
+        line(d, [(cx + s_ * 60, top + 312), (cx + s_ * 130, top + 336), (cx + s_ * 172, top + 360)], 2.5)  # shoulder under the hair
     for s_ in (-1, 1):                                                     # loose strands at the ends and sides
         ends = turn([(cx + s_ * 122, top + 418), (cx + s_ * 88, top + 428)], cx, chin, tilt)
         strands(d, ends, (s_ * 0.1, 1), 12, 24, rng, width=2.2, spread=0.35)
@@ -255,5 +270,5 @@ if __name__ == "__main__":
     for i in ims:
         sheet.paste(i, (x, 10))
         x += i.width + 10
-    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v5.png"))
-    print("silhouettes v5 written")
+    sheet.save(os.path.join(PROCESS, "2026-11-17_silhouettes_v6.png"))
+    print("silhouettes v6 written")

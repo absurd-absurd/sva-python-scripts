@@ -251,3 +251,7 @@ tools/make_bug_rough.py COLLAR = False -> process/2026-11-17_bug_silhouette_no_c
 ## 2026-11-17_silhouettes_v5.png
 Cas's long hair now fills the space behind her neck (user: "I don't want to see Cas's neck, I want that to
 be hair"): one mass of hair from her head down past her shoulders.
+
+## 2026-11-17_silhouettes_v6.png
+Cas with faint grey lines so her shapes read (user): her face's edge against her hair, the parting, strands
+falling down her hair, and her shoulders under it.
