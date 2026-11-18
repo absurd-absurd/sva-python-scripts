@@ -201,7 +201,7 @@ def main():
                    ("Gap", s), ("MapOpen", b),
                    ("Opening", b), ("OpenStart", r), ("OpenEnd", r), ("OpeningText", s),   # the opening (2026-11-17)
                    ("ReadEnds", b), ("Ending", b), ("EndStart", r), ("EndShot", b),          # the ending (2026-11-17)
-                   ("Title", b), ("ControlsOpen", b),                                       # the title screen (2026-11-17)
+                   ("Title", b), ("ControlsOpen", b), ("MenuHover", s),                                       # the title screen (2026-11-17)
                    # flashlight flicker timer: mode 0 on / 1 flutter / 2 off, next start, end, hit on return
                    ("FlMode", T("int")), ("FlNext", r), ("FlEnd", r), ("FlHit", b),
                    ("FlDim", r)], editable=False)   # flashlight auto-dim near walls (0..1)

@@ -109,8 +109,12 @@ def _menu_width(text, scale):
 
 MENU = [("E", "S T A R T"), ("C", "C O N T R O L S"), ("Q", "Q U I T")]
 MENU_SCALE = 1.05
-CONTROLS = [("W A S D / arrows", "Walk"), ("Mouse", "Look"), ("Shift", "Run"), ("Space", "Jump"),
-            ("E", "Examine, read, pick up, open"), ("Tab", "Journal"), ("M", "Map (once you have Cas's map)")]
+# the controls page (2026-11-17 second pass): two groups, each key drawn as a keycap
+CONTROLS_MOVE = [(["W", "A", "S", "D"], "Walk"), (["Mouse"], "Look"), (["Shift"], "Run"), (["Space"], "Jump")]
+CONTROLS_USE = [(["E"], "Examine, read, pick up, open"), (["Tab"], "Journal"), (["M"], "Map")]
+CONTROLS = [(" ".join(k), w) for k, w in CONTROLS_MOVE + CONTROLS_USE]
+MENU_HOVER = "(R=0.85,G=0.22,B=0.18,A=1.0)"         # a menu item under the mouse
+CAP_FILL, CAP_EDGE = "(R=0.06,G=0.06,B=0.07,A=0.85)", "(R=0.55,G=0.5,B=0.45,A=0.9)"
 MAP_TINT = "(R=0.8,G=0.78,B=0.75,A=1.0)"      # solid paper (it was half see-through; with the torn edge the overlap showed)
 MARKER_TINT = "(R=1.0,G=1.0,B=1.0,A=0.8)"
 MAP_FULL_TEX = "/Game/Horror/UI/T_MapFull.T_MapFull"
@@ -374,7 +378,13 @@ def hud_graph():
     found = g.call(STATICS, "GetActorOfClass", a, [("ActorClass", "actorclass", TITLE_CLASS)], outs=[("ReturnValue", "actor")])
     a = g.call(PC, "SetViewTargetWithBlend", found.then, [("NewViewTarget", "actor", found.o["ReturnValue"]), ("BlendTime", "float", 0.0)],
                target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc")).then
-    freeze0(a)
+    a = freeze0(a)
+    pcpin = lambda: (g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc", C(PC))
+    a = g.set("bShowMouseCursor", "bool", True, a, target=pcpin()).then
+    a = g.set("bEnableClickEvents", "bool", True, a, target=pcpin()).then
+    a = g.set("bEnableMouseOverEvents", "bool", True, a, target=pcpin()).then
+    g.call("/Script/UMG.WidgetBlueprintLibrary", "SetInputMode_GameAndUIEx", a,
+           [("PlayerController", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc")), ("bHideCursorDuringCapture", "bool", False)])
     open_t = lambda: g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get("OpenStart", "real"))])
 
     # ---- Draw HUD ----
@@ -761,7 +771,14 @@ def hud_graph():
         half = _menu_width(item, MENU_SCALE) / 2
         mx = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, half))])
         my = g.mul(H, 0.69 + k * 0.07)
-        a = draw(item, a, 0, 0, MENU_SCALE, TEXT, font=MENU_FONT, at=(mx, my))
+        hov = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("MenuHover", "string")), ("B", "string", key)], ty="bool")
+        col = g.pure(MATH, "SelectColor", [("A", "color", MENU_HOVER), ("B", "color", TEXT), ("bPickA", "bool", hov)], ty="color")
+        a = draw(item, a, 0, 0, MENU_SCALE, col, font=MENU_FONT, at=(mx, my))
+        a = g.call(HUD, "AddHitBox", a, [
+            ("Position", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", mx), ("B", "real", g.mul(H, 0.06))])),
+                                                                  ("Y", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", my), ("B", "real", g.mul(H, 0.01))]))], ty="vector2d")),
+            ("Size", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", g.mul(H, 2 * half + 0.09)), ("Y", "real", g.mul(H, 0.06))], ty="vector2d")),
+            ("InName", "name", key), ("bConsumesInput", "bool", True), ("Priority", "int", 0)]).then
         a = draw(key, a, 0, 0, 0.75, "(R=0.5,G=0.1,B=0.08,A=1.0)", font=MENU_FONT,
                  at=(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", mx), ("B", "real", g.mul(H, 0.075))]),
                      g.pure(MATH, "Add_DoubleDouble", [("A", "real", my), ("B", "real", g.mul(H, 0.008))])))
@@ -770,15 +787,54 @@ def hud_graph():
     g.call(HUD, "DrawRect", a, [("RectColor", "color", g.pure(MATH, "MakeColor", [("R", "float", 0.0), ("G", "float", 0.0),
                                 ("B", "float", 0.0), ("A", "float", ta)], ty="color")),
                                 ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0), ("ScreenW", "float", W), ("ScreenH", "float", H)])
-    # the controls page, in the same lettering
-    a = dark(ctl_yes)
-    a = draw("C O N T R O L S", a, 0.3, 0.16, 1.1, TEXT, font=MENU_FONT)
-    a = g.call(HUD, "DrawRect", a, [("RectColor", "color", TITLE_RED), ("ScreenX", "float", g.mul(W, 0.3)), ("ScreenY", "float", g.mul(H, 0.225)),
-                                    ("ScreenW", "float", g.mul(W, 0.12)), ("ScreenH", "float", g.mul(H, 0.0022))]).then
-    for k, (key, what) in enumerate(CONTROLS):
-        a = draw(key, a, 0.3, 0.27 + k * 0.065, 0.95, DIM, font=MENU_FONT)
-        a = draw(what, a, 0.56, 0.27 + k * 0.065, 0.95, TEXT, font=MENU_FONT)
-    draw("C   B A C K", a, 0.3, 0.88, 0.8, DIM, font=MENU_FONT)
+    # the controls page (second pass): over the dock scene, a dark panel, CONTROLS with a red rule, two groups
+    # (MOVE / INTERACT) with each key as a keycap, BACK clickable
+    cx = lambda fx: g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, fx))])
+    a = g.call(HUD, "DrawTexture", ctl_yes, [
+        ("Texture", "texture", VIGNETTE_TEX), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0), ("ScreenW", "float", W), ("ScreenH", "float", H),
+        ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
+        ("TintColor", "color", WHITE)]).then
+    a = g.call(HUD, "DrawRect", a, [("RectColor", "color", "(R=0.01,G=0.01,B=0.015,A=0.82)"), ("ScreenX", "float", cx(-0.66)),
+                                    ("ScreenY", "float", g.mul(H, 0.1)), ("ScreenW", "float", g.mul(H, 1.32)), ("ScreenH", "float", g.mul(H, 0.8))]).then
+    tw = _menu_width("C O N T R O L S", 1.15) / 2
+    a = draw("C O N T R O L S", a, 0, 0, 1.15, TEXT, font=MENU_FONT, at=(cx(-tw), g.mul(H, 0.15)))
+    a = g.call(HUD, "DrawRect", a, [("RectColor", "color", TITLE_RED), ("ScreenX", "float", cx(-0.09)), ("ScreenY", "float", g.mul(H, 0.225)),
+                                    ("ScreenW", "float", g.mul(H, 0.18)), ("ScreenH", "float", g.mul(H, 0.0022))]).then
+
+    def keycap(after, label, fx, fy):
+        """A key drawn as a keycap at (fx screen-heights from the centre, fy down); returns (after, its width)."""
+        w = _menu_width(label, 0.75) + 0.03
+        x0, y0, h = cx(fx), g.mul(H, fy), 0.052
+        after = g.call(HUD, "DrawRect", after, [("RectColor", "color", CAP_FILL), ("ScreenX", "float", x0), ("ScreenY", "float", y0),
+                                                ("ScreenW", "float", g.mul(H, w)), ("ScreenH", "float", g.mul(H, h))]).then
+        corners = [(fx, fy), (fx + w, fy), (fx + w, fy + h), (fx, fy + h)]
+        for (ax, ay), (bx, by) in zip(corners, corners[1:] + corners[:1]):
+            after = g.call(HUD, "DrawLine", after, [("StartScreenX", "float", cx(ax)), ("StartScreenY", "float", g.mul(H, ay)),
+                                                    ("EndScreenX", "float", cx(bx)), ("EndScreenY", "float", g.mul(H, by)),
+                                                    ("LineColor", "color", CAP_EDGE), ("LineThickness", "float", 1.5)]).then
+        after = draw(label, after, 0, 0, 0.75, TEXT, font=MENU_FONT, at=(cx(fx + 0.015), g.mul(H, fy + 0.008)))
+        return after, w
+
+    for col, (heading, rows, label_at) in enumerate((("M O V E", CONTROLS_MOVE, 0.27), ("I N T E R A C T", CONTROLS_USE, 0.16))):
+        x0 = -0.56 if col == 0 else 0.06
+        a = draw(heading, a, 0, 0, 0.8, "(R=0.6,G=0.12,B=0.1,A=1.0)", font=MENU_FONT, at=(cx(x0), g.mul(H, 0.3)))
+        for k, (keys, what) in enumerate(rows):
+            fy = 0.38 + k * 0.085
+            fx = x0
+            for key in keys:
+                a, w = keycap(a, key, fx, fy)
+                fx += w + 0.012
+            a = draw(what, a, 0, 0, 0.82, TEXT, font=MENU_FONT, at=(cx(x0 + label_at), g.mul(H, fy + 0.008)))
+    # BACK, clickable like the menu
+    bw = _menu_width("B A C K", 0.9) / 2
+    hov = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("MenuHover", "string")), ("B", "string", "C")], ty="bool")
+    a = draw("B A C K", a, 0, 0, 0.9, g.pure(MATH, "SelectColor", [("A", "color", MENU_HOVER), ("B", "color", TEXT), ("bPickA", "bool", hov)], ty="color"),
+             font=MENU_FONT, at=(cx(-bw), g.mul(H, 0.8)))
+    a = draw("C", a, 0, 0, 0.7, "(R=0.5,G=0.1,B=0.08,A=1.0)", font=MENU_FONT, at=(cx(-bw - 0.045), g.mul(H, 0.808)))
+    g.call(HUD, "AddHitBox", a, [
+        ("Position", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", cx(-bw - 0.06)), ("Y", "real", g.mul(H, 0.79))], ty="vector2d")),
+        ("Size", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", g.mul(H, 2 * bw + 0.09)), ("Y", "real", g.mul(H, 0.06))], ty="vector2d")),
+        ("InName", "name", "C"), ("bConsumesInput", "bool", True), ("Priority", "int", 0)])
 
     # ---- the ending ----
     g.row(340 * 9, -4200)
@@ -836,12 +892,19 @@ def hud_graph():
     # ---- E ----
     g.row(0, 2800)
     e = g.input_event("IA_Interact")
+    def start_game(after):
+        a = g.set("Title", "bool", False, after).then
+        a = g.set("OpenStart", "real", g.now(), a).then
+        a = g.set("MenuHover", "string", "", a).then
+        a = g.set("bShowMouseCursor", "bool", False, a, target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc", C(PC))).then
+        a = g.call("/Script/UMG.WidgetBlueprintLibrary", "SetInputMode_GameOnly", a,
+                   [("PlayerController", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc"))]).then
+        g.call(PC, "SetViewTargetWithBlend", a, [("NewViewTarget", "actor", g.pure(HUD, "GetOwningPawn", ty="actor")), ("BlendTime", "float", 0.0)],
+               target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc"))
+
     on_title, e_game = g.branch(g.get("Title", "bool"), e)
     start, _ = g.branch(g.not_(g.get("ControlsOpen", "bool")), on_title)
-    a = g.set("Title", "bool", False, start).then
-    a = g.set("OpenStart", "real", g.now(), a).then
-    g.call(PC, "SetViewTargetWithBlend", a, [("NewViewTarget", "actor", g.pure(HUD, "GetOwningPawn", ty="actor")), ("BlendTime", "float", 0.0)],
-           target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc"))
+    start_game(start)
     _, e_live = g.branch(g.get("Ending", "bool"), e_game)
     in_open, e_play = g.branch(g.get("Opening", "bool"), e_live)
     ready, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", open_t()), ("B", "real", OPEN_T_GO)], ty="bool"), in_open)
@@ -906,6 +969,26 @@ def hud_graph():
     g.row(340 * 5, 9400)
     y, _ = g.branch(fget("PickUp", "bool"), steps[3])
     g.call(ACTOR, "K2_DestroyActor", y, target=(g.get("Focus", "ex"), "actor"))
+
+    # ---- mouse on the title menu: hover lights an item red, a click does what its key does ----
+    g.row(0, 13800)
+    over = g.event(HUD, "ReceiveHitBoxBeginCursorOver", [("BoxName", "name")])
+    g.set("MenuHover", "string", g.pure(STR, "Conv_NameToString", [("InName", "name", over.o["BoxName"])], ty="string"), over.then)
+    g.row(0, 14200)
+    out = g.event(HUD, "ReceiveHitBoxEndCursorOver", [("BoxName", "name")])
+    g.set("MenuHover", "string", "", out.then)
+    g.row(0, 14600)
+    click = g.event(HUD, "ReceiveHitBoxClick", [("BoxName", "name")])
+    c_title, _ = g.branch(g.get("Title", "bool"), click.then)
+    which = lambda key: g.pure(MATH, "EqualEqual_NameName", [("A", "name", click.o["BoxName"]), ("B", "name", key)], ty="bool")
+    is_e, not_e = g.branch(which("E"), c_title)
+    start_game(is_e)
+    g.row(340 * 2, 15000)
+    is_c, not_c = g.branch(which("C"), not_e)
+    a = g.set("MenuHover", "string", "", is_c).then
+    g.set("ControlsOpen", "bool", g.not_(g.get("ControlsOpen", "bool")), a)
+    is_q, _ = g.branch(which("Q"), not_c)
+    g.call(SYS, "QuitGame", is_q, [("SpecificPlayer", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc"))])
 
     # ---- C: the controls page (title screen) ----
     g.row(0, 12600)
