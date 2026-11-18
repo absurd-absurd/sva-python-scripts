@@ -2,9 +2,9 @@
 
 Run in the Unreal editor. Safe to run again. Makes /Game/Horror/Materials/PS2/M_Breakdown, a post-process
 effect added to PostProcess_Look before the PS2 screen effect (so the result still gets chunky pixels):
-  - how strong (user, 2026-11-17): only brief glimpses on the way (rarer near the motel, more often near the
-    lake), then at the lake (the dock, the boathouse) it takes over for good. From MPC_Horror.PlayerPos (y),
-    which the HUD sets every frame.
+  - when (user, 2026-11-17, "way too much"): only flashes - for a few seconds after you read a page in the
+    wrong hand (MPC_Horror.WarpFlash, from the HUD), now and then at the lake (dock, boathouse: PlayerPos y past
+    Full), and the final shot fully warped (MPC_Horror.WarpWhole).
   - a slow wavy warp of the whole picture, like looking through water
   - shapes stretching: the picture pulled a little toward the centre line, more at the edges
   - red and blue fringes pulling apart (a chromatic split)
@@ -20,16 +20,18 @@ assets = unreal.AssetToolsHelpers.get_asset_tools()
 lib = unreal.EditorAssetLibrary
 
 HLSL = """
-// how far along you are (0 at the motel .. 1 at the shore); the dock and boathouse are past Full
-float P = saturate((Pos.y - Start) / (Full - Start));
+// user 2026-11-17 ("way too much at the end"): no more steady breakdown. Only FLASHES: for a few seconds
+// after you put down a page in the wrong hand (Flash = MPC_Horror.WarpFlash, set by the HUD) and now and then
+// at the lake (the dock and the boathouse, y past Full). The very last shot is fully warped (Whole = WarpWhole).
 float t = Time;
-// before the lake: only glimpses. Time is cut into short slots; a few slots (more the further you are) flare
-// up for a moment and fade. At the lake (P = 1, the dock "bridge" and the boathouse) it takes over for good.
+float zone = Pos.y >= Full ? 1.0 : 0.0;
+float act = max(Flash, zone * 0.55);
+// time is cut into short slots; some of them flare up for a moment and fade
 float slot = floor(t / 0.7);
 float roll = frac(sin(slot * 91.7 + 3.1) * 43758.5453);
 float within = frac(t / 0.7);
-float glimpse = (roll > 1.0 - 0.22 * P * P) ? sin(within * 3.14159) : 0.0;
-float F = (P >= 1.0 ? 1.0 : glimpse * (0.35 + 0.65 * P)) * Strength;
+float glimpse = (roll > 1.0 - 0.5 * act) ? sin(within * 3.14159) : 0.0;
+float F = max(Whole, glimpse * (0.45 + 0.55 * act)) * Strength;
 float2 uv = GetViewportUV(Parameters);
 if (F < 0.002) { return SceneTextureLookup(ViewportUVToBufferUV(uv), 14, false).rgb + Unused * 0; }
 // slow wavy warp (water / heat), and a pull toward the centre (stretch)
@@ -77,7 +79,7 @@ def material():
     c.set_editor_property("code", HLSL)
     c.set_editor_property("output_type", unreal.CustomMaterialOutputType.CMOT_FLOAT3)
     pins = []
-    for n in ("Pos", "Start", "Full", "Strength", "Time", "Unused"):
+    for n in ("Pos", "Start", "Full", "Strength", "Time", "Unused", "Flash", "Whole"):
         pin = unreal.CustomInput()
         pin.set_editor_property("input_name", n)
         pins.append(pin)
@@ -86,6 +88,11 @@ def material():
     pos.set_editor_property("collection", unreal.load_asset("/Game/Horror/Materials/MPC_Horror"))
     pos.set_editor_property("parameter_name", "PlayerPos")
     MEL.connect_material_expressions(pos, "", c, "Pos")
+    for k, name in enumerate(("WarpFlash", "WarpWhole")):
+        q = MEL.create_material_expression(m, unreal.MaterialExpressionCollectionParameter, -700, -400 - k * 90)
+        q.set_editor_property("collection", unreal.load_asset("/Game/Horror/Materials/MPC_Horror"))
+        q.set_editor_property("parameter_name", name)
+        MEL.connect_material_expressions(q, "", c, ("Flash", "Whole")[k])
     for k, (name, v) in enumerate((("Start", 3000.0), ("Full", 13900.0), ("Strength", 1.0))):
         p = MEL.create_material_expression(m, unreal.MaterialExpressionScalarParameter, -700, -120 + k * 90)
         p.set_editor_property("parameter_name", name)
@@ -118,4 +125,21 @@ def attach(mi):
             print("breakdown added to", a.get_actor_label(), [b.object.get_name() for b in blends if b.object])
 
 
+def mpc_params():
+    """WarpFlash / WarpWhole in MPC_Horror (kept if there: rebuilding params gives them new ids and breaks
+    materials that use them, see flashlight.py)."""
+    mpc = unreal.load_asset("/Game/Horror/Materials/MPC_Horror")
+    params = list(mpc.get_editor_property("scalar_parameters"))
+    have = [str(p.get_editor_property("parameter_name")) for p in params]
+    for name in ("WarpFlash", "WarpWhole"):
+        if name not in have:
+            p = unreal.CollectionScalarParameter()
+            p.set_editor_property("parameter_name", name)
+            p.set_editor_property("default_value", 0.0)
+            params.append(p)
+    mpc.set_editor_property("scalar_parameters", params)
+    lib.save_loaded_asset(mpc, False)
+
+
+mpc_params()
 attach(material())

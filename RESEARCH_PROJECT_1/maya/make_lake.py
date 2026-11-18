@@ -378,6 +378,9 @@ def build():
     shore()
     fx = water_and_mist()
     y0, y1 = dock()
+    # the ending (user 2026-11-17: "it should end at the end of the dock"): a lit red lantern on the last
+    # planks holds down the last page (clues.json last_page, just beside it)
+    red_lantern(DOCK_X + 8, y1 - 70, DECK_Z - 0.4, "light_dock_last_lantern")
     canoe(DOCK_X + 190, y1 - 420, 8)
     rowboat(-900, 20200, 35)
     tube((DOCK_X + 120, y1 - 120, DECK_Z + 3), (DOCK_X + 175, y1 - 190, WATER_Z + 20), 0.9, "rope_mat", sides=6)   # mooring line

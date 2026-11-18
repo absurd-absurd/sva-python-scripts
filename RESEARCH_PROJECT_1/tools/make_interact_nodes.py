@@ -135,6 +135,7 @@ CUTOUT = (0.3, 0.8)                     # how long a cut-out lasts (s); under a 
 HIT_CHANCE = 0.75                       # share of cut-outs that end with a hit (camera jolt)
 TEXT_SCALE = 0.0008            # text size = screen height * this; the font is rendered at size 40 (interact_setup.py),
                                # so this is 0.8 at 1000 px tall - same size as before (size 10 x 3.2) but sharp
+WARP_AFTER = 4.5               # seconds of warp flashes after you put down a page in the wrong hand
 REACH, NEAR = 330.0, 40.0      # aim line from 40 cm in front of the eyes (outside the capsule) to 2.6 m
 STICKY = 300.0                 # a spotted clue keeps its prompt until used, within 3 m
 
@@ -425,7 +426,13 @@ def hud_graph():
     # tell the materials where you are (MPC_Horror.PlayerPos): crows fly off, the owl turns its head
     ploc = g.pure(ACTOR, "K2_GetActorLocation", ty="vector", target=(g.pure(HUD, "GetOwningPawn", ty="actor"), "actor"))
     pcol = g.pure(MATH, "Conv_VectorToLinearColor", [("InVec", "vector", ploc)], ty="color")
-    title_yes, title_no = g.branch(g.get("Title", "bool"), ev.then)
+    # the warp (unreal/breakdown.py, user 2026-11-17): flashes for a few seconds after you put down a page in the
+    # wrong hand (WarpUntil); MPC_Horror.WarpFlash tells M_Breakdown, every frame, in every mode (the ending too)
+    warp_on = g.pure(MATH, "Less_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get("WarpUntil", "real"))], ty="bool")
+    warp = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", ev.then,
+                  [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpFlash"),
+                   ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", warp_on)]))])
+    title_yes, title_no = g.branch(g.get("Title", "bool"), warp.then)
     end_yes, end_no = g.branch(g.get("Ending", "bool"), title_no)
     op_yes, op_no = g.branch(g.get("Opening", "bool"), end_no)
     hud_then, fade_then, pause_then = g.sequence(op_no, 3)
@@ -914,6 +921,9 @@ def hud_graph():
     # 3: once, at the final shot: show BP_FinalShot (the poster) and look through its camera
     s_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_SHOT)), ("B", "bool", g.not_(g.get("EndShot", "bool")))], ty="bool"), steps[2])
     a = g.set("EndShot", "bool", True, s_yes).then
+    # the last shot is fully warped (user 2026-11-17)
+    a = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", a,
+               [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"), ("ParameterValue", "float", 1.0)]).then
     found = g.call(STATICS, "GetActorOfClass", a, [("ActorClass", "actorclass", FINAL_CLASS)], outs=[("ReturnValue", "actor")])
     shot = found.o["ReturnValue"]
     a = g.call(ACTOR, "SetActorHiddenInGame", found.then, [("bNewHidden", "bool", False)], target=(shot, "actor")).then
@@ -984,7 +994,10 @@ def hud_graph():
     unfreeze(g.set("OpenEnd", "real", g.now(), a).then)
     b_read, b_not_read = g.branch(g.get("Reading", "bool"), e_play)
     a = g.set("Reading", "bool", False, b_read).then
-    ends, plain = g.branch(g.get("ReadEnds", "bool"), a)
+    is_wrong = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadHand", "string")), ("B", "string", "wrong")], ty="bool")
+    w_yes, w_no = g.branch(is_wrong, a)
+    a = g.set("WarpUntil", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.now()), ("B", "real", WARP_AFTER)]), w_yes).then
+    ends, plain = g.branch(g.get("ReadEnds", "bool"), [a, w_no])
     unfreeze(plain)
     g.set("EndStart", "real", g.now(), g.set("Ending", "bool", True, ends).then)
     g.row(340, 3300)
@@ -1026,9 +1039,9 @@ def hud_graph():
     y, _ = g.branch(g.not_(g.empty(fget("GivesKey"))), sub[1])
     a = g.set("Keys", "string", g.concat(g.concat(g.get("Keys", "string"), fget("GivesKey")), ","), y).then
     # Cas's map: open it straight away (paused, like M) with her line under it, instead of a page
-    is_map, not_map = g.branch(g.pure(STR, "Contains", [("SearchIn", "string", fget("GivesKey")),
+    is_map, _ = g.branch(g.pure(STR, "Contains", [("SearchIn", "string", fget("GivesKey")),
                                                         ("Substring", "string", "map")], ty="bool"), a)
-    toast(g.concat("Picked up: ", fget("Title")), not_map)
+    # (no "Picked up: <title>" message any more: user 2026-11-17)
     g.row(340 * 9, 6900)
     a = toast(fget("Journal"), is_map)
     g.call(STATICS, "SetGamePaused", g.set("MapOpen", "bool", True, a).then, [("bPaused", "bool", True)])

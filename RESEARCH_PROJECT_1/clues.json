@@ -209,12 +209,12 @@
       "title": "A note by her boots",
       "body": "the lanterns are lit for you, bug\n\ndon't worry, it won't be much longer now",
       "journal": "Her boots by the water door, set side by side. A note beside them: it won't be much longer now.",
-      "objective": "Not much longer? The rattling... it's getting louder. There's something by the water door."
+      "objective": "Not much longer? The rattling... it's getting louder. The lanterns on the dock are all lit. Something's at the end of it."
     },
     {
       "id": "last_page", "hand": "wrong", "paper": "torn", "ends": true,
       "shape": "scrap_small",
-      "at": [-3698, 15058, 15.8], "yaw": -8, "room": true,
+      "at": [1496, 16735, 15.8], "needs_key": "#boathouse_note,", "locked_text": "A page under the lantern. Not yet. I need to know what happened to her first.", "yaw": -8, "room": false,
       "prompt": "Read",
       "title": "",
       "body": "you came, bug\n\nnow we can be together",

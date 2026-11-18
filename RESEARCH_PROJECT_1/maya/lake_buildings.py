@@ -1078,11 +1078,11 @@ def boathouse():
     cobweb((X + W - 5, Y + N - 5), -1, -1, 60, EAVE - 2)
     # ---- the ending (STORY.md, 2026-11-16): by the water door at the end of the west walkway, Cas's
     # boots set neatly side by side, laces tucked in, toes to the water (her note beside them is a clue,
-    # clues.json boathouse_note); past them at the slip's edge a lit red lantern holds down the last page
+    # clues.json boathouse_note)
     BX, BYB = X - SLIP - 80, Y + N - 75
     for k, dx in enumerate((-7.0, 7.0)):
         boot(BX + dx, BYB, F, 0, 20 + k)
-    red_lantern(X - SLIP - 24, Y + N - 34, F + 0.5, "light_boathouse_last_lantern")
+    # (the last page and its red lantern moved to the end of the dock, 2026-11-17)
     IN_ROOM[0] = False
     DOORS.append(("door_boathouse", "boathouse_door", X + 52, Y + S, F, 180))
 
