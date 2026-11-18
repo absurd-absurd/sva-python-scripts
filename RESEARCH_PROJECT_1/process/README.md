@@ -357,3 +357,9 @@ The world breaking down near the lake, in play (unreal/breakdown.py, M_Breakdown
 left); on the trail near the lake the picture warps and colours split (top right: the bushes); at the shore
 the dock bends and wobbles, the fog goes red and the edges close in dark red (bottom left and right, two
 frames apart); in the boathouse the same. Strength follows how close you are to the lake.
+
+## 2026-11-17_breakdown_v2.png
+Breakdown v2 (user: the whole game had gone dark; wanted only glimpses until "the bridge"): the effect now
+runs after tonemapping like the PS2 look and passes the picture through untouched when off. Top row: the title
+and the motel with the effect off vs on (identical). Middle: four trail frames a moment apart, one catching a
+glimpse (red, colour split). Bottom: the dock and the boathouse, where it takes over completely.
