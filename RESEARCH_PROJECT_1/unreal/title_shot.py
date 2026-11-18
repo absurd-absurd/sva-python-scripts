@@ -97,4 +97,5 @@ vignette()
 camera_actor()
 input_action("IA_Controls", ["C"])
 input_action("IA_Quit", ["Q"])
+input_action("IA_Pause", ["Escape", "P"])          # P too: in the editor Esc stops play before the game sees it
 print("title screen pieces ready")

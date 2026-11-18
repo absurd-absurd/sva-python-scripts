@@ -111,7 +111,9 @@ MENU = [("E", "S T A R T"), ("C", "C O N T R O L S"), ("Q", "Q U I T")]
 MENU_SCALE = 1.05
 # the controls page (2026-11-17 second pass): two groups, each key drawn as a keycap
 CONTROLS_MOVE = [(["W", "A", "S", "D"], "Walk"), (["Mouse"], "Look"), (["Shift"], "Run"), (["Space"], "Jump")]
-CONTROLS_USE = [(["E"], "Examine, read, use"), (["Tab"], "Journal"), (["M"], "Map")]
+CONTROLS_USE = [(["E"], "Examine, read, use"), (["Tab"], "Journal"), (["M"], "Map"), (["Esc"], "Pause")]
+# the pause menu (Esc; P too, since Esc stops play in the editor): key label, item, hit-box name
+PAUSE_MENU = [("ESC", "R E S U M E", "P_RESUME"), ("C", "C O N T R O L S", "C"), ("Q", "Q U I T", "Q")]
 CONTROLS = [(" ".join(k), w) for k, w in CONTROLS_MOVE + CONTROLS_USE]
 MENU_HOVER = "(R=0.85,G=0.22,B=0.18,A=1.0)"         # a menu item under the mouse
 CAP_FILL, CAP_EDGE = "(R=0.06,G=0.06,B=0.07,A=0.85)", "(R=0.55,G=0.5,B=0.45,A=0.9)"
@@ -425,7 +427,7 @@ def hud_graph():
     title_yes, title_no = g.branch(g.get("Title", "bool"), ev.then)
     end_yes, end_no = g.branch(g.get("Ending", "bool"), title_no)
     op_yes, op_no = g.branch(g.get("Opening", "bool"), end_no)
-    hud_then, fade_then = g.sequence(op_no, 2)
+    hud_then, fade_then, pause_then = g.sequence(op_no, 3)
     tell = g.call("/Script/Engine.KismetMaterialLibrary", "SetVectorParameterValue", hud_then,
                   [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "PlayerPos"), ("ParameterValue", "color", pcol)])
     trace = g.call(SYS, "LineTraceSingle", tell.then, [("Start", "vector", start), ("End", "vector", end),
@@ -787,54 +789,91 @@ def hud_graph():
     g.call(HUD, "DrawRect", a, [("RectColor", "color", g.pure(MATH, "MakeColor", [("R", "float", 0.0), ("G", "float", 0.0),
                                 ("B", "float", 0.0), ("A", "float", ta)], ty="color")),
                                 ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0), ("ScreenW", "float", W), ("ScreenH", "float", H)])
-    # the controls page (second pass): over the dock scene, a dark panel, CONTROLS with a red rule, two groups
-    # (MOVE / INTERACT) with each key as a keycap, BACK clickable
-    cx = lambda fx: g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, fx))])
-    a = g.call(HUD, "DrawTexture", ctl_yes, [
+    def controls_page(after):
+        # the controls page (second pass): over the dock scene, a dark panel, CONTROLS with a red rule, two groups
+        # (MOVE / INTERACT) with each key as a keycap, BACK clickable
+        cx = lambda fx: g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, fx))])
+        a = g.call(HUD, "DrawTexture", after, [
+            ("Texture", "texture", VIGNETTE_TEX), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0), ("ScreenW", "float", W), ("ScreenH", "float", H),
+            ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
+            ("TintColor", "color", WHITE)]).then
+        a = g.call(HUD, "DrawRect", a, [("RectColor", "color", "(R=0.01,G=0.01,B=0.015,A=0.82)"), ("ScreenX", "float", cx(-0.66)),
+                                        ("ScreenY", "float", g.mul(H, 0.1)), ("ScreenW", "float", g.mul(H, 1.32)), ("ScreenH", "float", g.mul(H, 0.8))]).then
+        tw = _menu_width("C O N T R O L S", 1.15) / 2
+        a = draw("C O N T R O L S", a, 0, 0, 1.15, TEXT, font=MENU_FONT, at=(cx(-tw), g.mul(H, 0.15)))
+        a = g.call(HUD, "DrawRect", a, [("RectColor", "color", TITLE_RED), ("ScreenX", "float", cx(-0.09)), ("ScreenY", "float", g.mul(H, 0.225)),
+                                        ("ScreenW", "float", g.mul(H, 0.18)), ("ScreenH", "float", g.mul(H, 0.0022))]).then
+
+        def keycap(after, label, fx, fy):
+            """A key drawn as a keycap at (fx screen-heights from the centre, fy down); returns (after, its width)."""
+            w = _menu_width(label, 0.75) + 0.03
+            x0, y0, h = cx(fx), g.mul(H, fy), 0.052
+            after = g.call(HUD, "DrawRect", after, [("RectColor", "color", CAP_FILL), ("ScreenX", "float", x0), ("ScreenY", "float", y0),
+                                                    ("ScreenW", "float", g.mul(H, w)), ("ScreenH", "float", g.mul(H, h))]).then
+            corners = [(fx, fy), (fx + w, fy), (fx + w, fy + h), (fx, fy + h)]
+            for (ax, ay), (bx, by) in zip(corners, corners[1:] + corners[:1]):
+                after = g.call(HUD, "DrawLine", after, [("StartScreenX", "float", cx(ax)), ("StartScreenY", "float", g.mul(H, ay)),
+                                                        ("EndScreenX", "float", cx(bx)), ("EndScreenY", "float", g.mul(H, by)),
+                                                        ("LineColor", "color", CAP_EDGE), ("LineThickness", "float", 1.5)]).then
+            after = draw(label, after, 0, 0, 0.75, TEXT, font=MENU_FONT, at=(cx(fx + 0.015), g.mul(H, fy + 0.008)))
+            return after, w
+
+        for col, (heading, rows, label_at) in enumerate((("M O V E", CONTROLS_MOVE, 0.27), ("I N T E R A C T", CONTROLS_USE, 0.16))):
+            x0 = -0.56 if col == 0 else 0.06
+            a = draw(heading, a, 0, 0, 0.8, "(R=0.6,G=0.12,B=0.1,A=1.0)", font=MENU_FONT, at=(cx(x0), g.mul(H, 0.3)))
+            for k, (keys, what) in enumerate(rows):
+                fy = 0.38 + k * 0.085
+                fx = x0
+                for key in keys:
+                    a, w = keycap(a, key, fx, fy)
+                    fx += w + 0.012
+                a = draw(what, a, 0, 0, 0.82, TEXT, font=MENU_FONT, at=(cx(x0 + label_at), g.mul(H, fy + 0.008)))
+        # BACK, clickable like the menu
+        bw = _menu_width("B A C K", 0.9) / 2
+        hov = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("MenuHover", "string")), ("B", "string", "C")], ty="bool")
+        a = draw("B A C K", a, 0, 0, 0.9, g.pure(MATH, "SelectColor", [("A", "color", MENU_HOVER), ("B", "color", TEXT), ("bPickA", "bool", hov)], ty="color"),
+                 font=MENU_FONT, at=(cx(-bw), g.mul(H, 0.8)))
+        a = draw("C", a, 0, 0, 0.7, "(R=0.5,G=0.1,B=0.08,A=1.0)", font=MENU_FONT, at=(cx(-bw - 0.045), g.mul(H, 0.808)))
+        g.call(HUD, "AddHitBox", a, [
+            ("Position", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", cx(-bw - 0.06)), ("Y", "real", g.mul(H, 0.79))], ty="vector2d")),
+            ("Size", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", g.mul(H, 2 * bw + 0.09)), ("Y", "real", g.mul(H, 0.06))], ty="vector2d")),
+            ("InName", "name", "C"), ("bConsumesInput", "bool", True), ("Priority", "int", 0)])
+
+    controls_page(ctl_yes)
+
+    # ---- the pause menu (2026-11-17): same style as the title menu ----
+    g.row(340 * 9, -6200)
+    p_on, _ = g.branch(g.get("Paused", "bool"), pause_then)
+    p_ctl, p_menu = g.branch(g.get("ControlsOpen", "bool"), p_on)
+    controls_page(p_ctl)
+    a = g.call(HUD, "DrawRect", p_menu, [("RectColor", "color", "(R=0.0,G=0.0,B=0.0,A=0.6)"), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
+                                         ("ScreenW", "float", W), ("ScreenH", "float", H)]).then
+    a = g.call(HUD, "DrawTexture", a, [
         ("Texture", "texture", VIGNETTE_TEX), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0), ("ScreenW", "float", W), ("ScreenH", "float", H),
         ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0), ("TextureVHeight", "float", 1.0),
         ("TintColor", "color", WHITE)]).then
-    a = g.call(HUD, "DrawRect", a, [("RectColor", "color", "(R=0.01,G=0.01,B=0.015,A=0.82)"), ("ScreenX", "float", cx(-0.66)),
-                                    ("ScreenY", "float", g.mul(H, 0.1)), ("ScreenW", "float", g.mul(H, 1.32)), ("ScreenH", "float", g.mul(H, 0.8))]).then
-    tw = _menu_width("C O N T R O L S", 1.15) / 2
-    a = draw("C O N T R O L S", a, 0, 0, 1.15, TEXT, font=MENU_FONT, at=(cx(-tw), g.mul(H, 0.15)))
-    a = g.call(HUD, "DrawRect", a, [("RectColor", "color", TITLE_RED), ("ScreenX", "float", cx(-0.09)), ("ScreenY", "float", g.mul(H, 0.225)),
-                                    ("ScreenW", "float", g.mul(H, 0.18)), ("ScreenH", "float", g.mul(H, 0.0022))]).then
-
-    def keycap(after, label, fx, fy):
-        """A key drawn as a keycap at (fx screen-heights from the centre, fy down); returns (after, its width)."""
-        w = _menu_width(label, 0.75) + 0.03
-        x0, y0, h = cx(fx), g.mul(H, fy), 0.052
-        after = g.call(HUD, "DrawRect", after, [("RectColor", "color", CAP_FILL), ("ScreenX", "float", x0), ("ScreenY", "float", y0),
-                                                ("ScreenW", "float", g.mul(H, w)), ("ScreenH", "float", g.mul(H, h))]).then
-        corners = [(fx, fy), (fx + w, fy), (fx + w, fy + h), (fx, fy + h)]
-        for (ax, ay), (bx, by) in zip(corners, corners[1:] + corners[:1]):
-            after = g.call(HUD, "DrawLine", after, [("StartScreenX", "float", cx(ax)), ("StartScreenY", "float", g.mul(H, ay)),
-                                                    ("EndScreenX", "float", cx(bx)), ("EndScreenY", "float", g.mul(H, by)),
-                                                    ("LineColor", "color", CAP_EDGE), ("LineThickness", "float", 1.5)]).then
-        after = draw(label, after, 0, 0, 0.75, TEXT, font=MENU_FONT, at=(cx(fx + 0.015), g.mul(H, fy + 0.008)))
-        return after, w
-
-    for col, (heading, rows, label_at) in enumerate((("M O V E", CONTROLS_MOVE, 0.27), ("I N T E R A C T", CONTROLS_USE, 0.16))):
-        x0 = -0.56 if col == 0 else 0.06
-        a = draw(heading, a, 0, 0, 0.8, "(R=0.6,G=0.12,B=0.1,A=1.0)", font=MENU_FONT, at=(cx(x0), g.mul(H, 0.3)))
-        for k, (keys, what) in enumerate(rows):
-            fy = 0.38 + k * 0.085
-            fx = x0
-            for key in keys:
-                a, w = keycap(a, key, fx, fy)
-                fx += w + 0.012
-            a = draw(what, a, 0, 0, 0.82, TEXT, font=MENU_FONT, at=(cx(x0 + label_at), g.mul(H, fy + 0.008)))
-    # BACK, clickable like the menu
-    bw = _menu_width("B A C K", 0.9) / 2
-    hov = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("MenuHover", "string")), ("B", "string", "C")], ty="bool")
-    a = draw("B A C K", a, 0, 0, 0.9, g.pure(MATH, "SelectColor", [("A", "color", MENU_HOVER), ("B", "color", TEXT), ("bPickA", "bool", hov)], ty="color"),
-             font=MENU_FONT, at=(cx(-bw), g.mul(H, 0.8)))
-    a = draw("C", a, 0, 0, 0.7, "(R=0.5,G=0.1,B=0.08,A=1.0)", font=MENU_FONT, at=(cx(-bw - 0.045), g.mul(H, 0.808)))
-    g.call(HUD, "AddHitBox", a, [
-        ("Position", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", cx(-bw - 0.06)), ("Y", "real", g.mul(H, 0.79))], ty="vector2d")),
-        ("Size", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", g.mul(H, 2 * bw + 0.09)), ("Y", "real", g.mul(H, 0.06))], ty="vector2d")),
-        ("InName", "name", "C"), ("bConsumesInput", "bool", True), ("Priority", "int", 0)])
+    ph = _menu_width("P A U S E D", 1.4) / 2
+    a = draw("P A U S E D", a, 0, 0, 1.4, TEXT, font=MENU_FONT,
+             at=(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, ph))]), g.mul(H, 0.28)))
+    a = g.call(HUD, "DrawRect", a, [("RectColor", "color", TITLE_RED),
+                                    ("ScreenX", "float", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, 0.1))])),
+                                    ("ScreenY", "float", g.mul(H, 0.37)), ("ScreenW", "float", g.mul(H, 0.2)), ("ScreenH", "float", g.mul(H, 0.0022))]).then
+    for k, (keylab, item, hit) in enumerate(PAUSE_MENU):
+        half = _menu_width(item, MENU_SCALE) / 2
+        mx = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, half))])
+        my = g.mul(H, 0.47 + k * 0.08)
+        hov = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("MenuHover", "string")), ("B", "string", hit)], ty="bool")
+        col = g.pure(MATH, "SelectColor", [("A", "color", MENU_HOVER), ("B", "color", TEXT), ("bPickA", "bool", hov)], ty="color")
+        a = draw(item, a, 0, 0, MENU_SCALE, col, font=MENU_FONT, at=(mx, my))
+        kw = _menu_width(keylab, 0.75) + 0.035
+        a = draw(keylab, a, 0, 0, 0.75, "(R=0.5,G=0.1,B=0.08,A=1.0)", font=MENU_FONT,
+                 at=(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", mx), ("B", "real", g.mul(H, kw))]),
+                     g.pure(MATH, "Add_DoubleDouble", [("A", "real", my), ("B", "real", g.mul(H, 0.008))])))
+        a = g.call(HUD, "AddHitBox", a, [
+            ("Position", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", mx), ("B", "real", g.mul(H, kw + 0.02))])),
+                                                                  ("Y", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", my), ("B", "real", g.mul(H, 0.01))]))], ty="vector2d")),
+            ("Size", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", g.mul(H, 2 * half + kw + 0.05)), ("Y", "real", g.mul(H, 0.065))], ty="vector2d")),
+            ("InName", "name", hit), ("bConsumesInput", "bool", True), ("Priority", "int", 0)]).then
 
     # ---- the ending ----
     g.row(340 * 9, -4200)
@@ -892,6 +931,22 @@ def hud_graph():
     # ---- E ----
     g.row(0, 2800)
     e = g.input_event("IA_Interact")
+    def resume(after):
+        a = g.set("Paused", "bool", False, after).then
+        a = g.set("ControlsOpen", "bool", False, a).then
+        a = g.set("MenuHover", "string", "", a).then
+        a = g.set("bShowMouseCursor", "bool", False, a, target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc", C(PC))).then
+        a = g.call("/Script/UMG.WidgetBlueprintLibrary", "SetInputMode_GameOnly", a,
+                   [("PlayerController", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc"))]).then
+        g.call(STATICS, "SetGamePaused", a, [("bPaused", "bool", False)])
+
+    def pause(after):
+        a = g.set("Paused", "bool", True, after).then
+        a = g.set("bShowMouseCursor", "bool", True, a, target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc", C(PC))).then
+        a = g.call("/Script/UMG.WidgetBlueprintLibrary", "SetInputMode_GameAndUIEx", a,
+                   [("PlayerController", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc")), ("bHideCursorDuringCapture", "bool", False)]).then
+        g.call(STATICS, "SetGamePaused", a, [("bPaused", "bool", True)])
+
     def start_game(after):
         a = g.set("Title", "bool", False, after).then
         a = g.set("OpenStart", "real", g.now(), a).then
@@ -979,7 +1034,7 @@ def hud_graph():
     g.set("MenuHover", "string", "", out.then)
     g.row(0, 14600)
     click = g.event(HUD, "ReceiveHitBoxClick", [("BoxName", "name")])
-    c_title, _ = g.branch(g.get("Title", "bool"), click.then)
+    c_title, _ = g.branch(g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Title", "bool")), ("B", "bool", g.get("Paused", "bool"))], ty="bool"), click.then)
     which = lambda key: g.pure(MATH, "EqualEqual_NameName", [("A", "name", click.o["BoxName"]), ("B", "name", key)], ty="bool")
     is_e, not_e = g.branch(which("E"), c_title)
     start_game(is_e)
@@ -987,20 +1042,37 @@ def hud_graph():
     is_c, not_c = g.branch(which("C"), not_e)
     a = g.set("MenuHover", "string", "", is_c).then
     g.set("ControlsOpen", "bool", g.not_(g.get("ControlsOpen", "bool")), a)
-    is_q, _ = g.branch(which("Q"), not_c)
+    is_q, not_q = g.branch(which("Q"), not_c)
+    is_r, _ = g.branch(which("P_RESUME"), not_q)
+    resume(is_r)
     g.call(SYS, "QuitGame", is_q, [("SpecificPlayer", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc"))])
 
     # ---- C: the controls page (title screen) ----
     g.row(0, 12600)
     ckey = g.input_event("IA_Controls")
-    t_yes, _ = g.branch(g.get("Title", "bool"), ckey)
+    t_yes, _ = g.branch(g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Title", "bool")), ("B", "bool", g.get("Paused", "bool"))], ty="bool"), ckey)
     g.set("ControlsOpen", "bool", g.not_(g.get("ControlsOpen", "bool")), t_yes)
     # ---- Q: quit (title screen) ----
     g.row(0, 13200)
     qkey = g.input_event("IA_Quit")
-    q_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", g.get("Title", "bool")),
+    q_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Title", "bool")),
+                                                                                              ("B", "bool", g.get("Paused", "bool"))], ty="bool")),
                                                     ("B", "bool", g.not_(g.get("ControlsOpen", "bool")))], ty="bool"), qkey)
     g.call(SYS, "QuitGame", q_yes, [("SpecificPlayer", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc"))])
+
+    # ---- Esc / P: pause ----
+    g.row(0, 15600)
+    pkey = g.input_event("IA_Pause")
+    is_p, not_p = g.branch(g.get("Paused", "bool"), pkey)
+    in_ctl, not_ctl = g.branch(g.get("ControlsOpen", "bool"), is_p)
+    g.set("ControlsOpen", "bool", False, in_ctl)                    # Esc on the controls page: back to the pause menu
+    resume(not_ctl)
+    blocked = g.pure(MATH, "BooleanOR", [("A", "bool", g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Title", "bool")),
+                                                                                   ("B", "bool", g.get("Opening", "bool"))], ty="bool")),
+                                          ("B", "bool", g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Ending", "bool")),
+                                                                                   ("B", "bool", g.get("MapOpen", "bool"))], ty="bool"))], ty="bool")
+    ok, _ = g.branch(g.not_(blocked), not_p)
+    pause(ok)
 
     # ---- Tab ----
     g.row(0, 10200)
