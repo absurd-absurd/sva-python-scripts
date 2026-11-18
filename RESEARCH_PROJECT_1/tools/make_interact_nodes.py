@@ -849,7 +849,18 @@ def hud_graph():
                                                                                ("B", "bool", g.get("JournalOpen", "bool"))], ty="bool")),
                                       ("B", "bool", g.get("MapOpen", "bool"))], ty="bool")
     hint, _ = g.branch(g.not_(busy), p_off)
-    draw("[P]  Pause", hint, 0.9, 0.035, 0.75, DIM, True)
+    # a button in the bottom-right corner (the corner map is top right): a keycap with P, PAUSE beside it
+    rx = lambda fx: g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", W), ("B", "real", g.mul(H, fx))])   # fx heights in from the right
+    bx, by, bw, bh = 0.27, 0.905, 0.052, 0.05
+    a = g.call(HUD, "DrawRect", hint, [("RectColor", "color", CAP_FILL), ("ScreenX", "float", rx(bx)), ("ScreenY", "float", g.mul(H, by)),
+                                       ("ScreenW", "float", g.mul(H, bw)), ("ScreenH", "float", g.mul(H, bh))]).then
+    corners = [(bx, by), (bx - bw, by), (bx - bw, by + bh), (bx, by + bh)]
+    for (ax, ay), (cx2, cy2) in zip(corners, corners[1:] + corners[:1]):
+        a = g.call(HUD, "DrawLine", a, [("StartScreenX", "float", rx(ax)), ("StartScreenY", "float", g.mul(H, ay)),
+                                        ("EndScreenX", "float", rx(cx2)), ("EndScreenY", "float", g.mul(H, cy2)),
+                                        ("LineColor", "color", CAP_EDGE), ("LineThickness", "float", 1.5)]).then
+    a = draw("P", a, 0, 0, 0.75, TEXT, font=MENU_FONT, at=(rx(bx - 0.016), g.mul(H, by + 0.007)))
+    draw("P A U S E", a, 0, 0, 0.8, TEXT, font=MENU_FONT, at=(rx(bx - bw - 0.025), g.mul(H, by + 0.006)))
     p_ctl, p_menu = g.branch(g.get("ControlsOpen", "bool"), p_on)
     controls_page(p_ctl)
     a = g.call(HUD, "DrawRect", p_menu, [("RectColor", "color", "(R=0.0,G=0.0,B=0.0,A=0.6)"), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
