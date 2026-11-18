@@ -111,7 +111,7 @@ MENU = [("E", "S T A R T"), ("C", "C O N T R O L S"), ("Q", "Q U I T")]
 MENU_SCALE = 1.05
 # the controls page (2026-11-17 second pass): two groups, each key drawn as a keycap
 CONTROLS_MOVE = [(["W", "A", "S", "D"], "Walk"), (["Mouse"], "Look"), (["Shift"], "Run"), (["Space"], "Jump")]
-CONTROLS_USE = [(["E"], "Examine, read, use"), (["Tab"], "Journal"), (["M"], "Map"), (["Esc"], "Pause")]
+CONTROLS_USE = [(["E"], "Examine, read, use"), (["Tab"], "Journal"), (["M"], "Map"), (["Esc", "P"], "Pause")]
 # the pause menu (Esc; P too, since Esc stops play in the editor): key label, item, hit-box name
 PAUSE_MENU = [("ESC", "R E S U M E", "P_RESUME"), ("C", "C O N T R O L S", "C"), ("Q", "Q U I T", "Q")]
 CONTROLS = [(" ".join(k), w) for k, w in CONTROLS_MOVE + CONTROLS_USE]
@@ -843,7 +843,13 @@ def hud_graph():
 
     # ---- the pause menu (2026-11-17): same style as the title menu ----
     g.row(340 * 9, -6200)
-    p_on, _ = g.branch(g.get("Paused", "bool"), pause_then)
+    p_on, p_off = g.branch(g.get("Paused", "bool"), pause_then)
+    # how to pause, in the top-right corner during play (user, 2026-11-17); P works in the editor and the game
+    busy = g.pure(MATH, "BooleanOR", [("A", "bool", g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Reading", "bool")),
+                                                                               ("B", "bool", g.get("JournalOpen", "bool"))], ty="bool")),
+                                      ("B", "bool", g.get("MapOpen", "bool"))], ty="bool")
+    hint, _ = g.branch(g.not_(busy), p_off)
+    draw("[P]  Pause", hint, 0.9, 0.035, 0.75, DIM, True)
     p_ctl, p_menu = g.branch(g.get("ControlsOpen", "bool"), p_on)
     controls_page(p_ctl)
     a = g.call(HUD, "DrawRect", p_menu, [("RectColor", "color", "(R=0.0,G=0.0,B=0.0,A=0.6)"), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
