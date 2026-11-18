@@ -346,3 +346,8 @@ The title menu works with the mouse as well as the keys (user: the buttons weren
 on the title, an item lights up red under it, a click does what its key does. The controls page was redesigned
 over the dock: a dark panel, CONTROLS with a red rule, MOVE and INTERACT groups with every key drawn as a keycap,
 and a clickable BACK. The map line now just says "Map".
+
+## 2026-11-17_pause_menu.png
+The pause menu in play (Esc, or P in the editor): the game dims, PAUSED with a red rule, RESUME / CONTROLS /
+QUIT in the title's lettering (mouse hover + click or the keys); CONTROLS opens the same keycap page, Esc or
+BACK returns to the pause menu, Esc again resumes. Blocked on the title, in the opening, the ending and the map.
