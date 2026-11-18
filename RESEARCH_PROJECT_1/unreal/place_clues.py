@@ -13,6 +13,7 @@ ROOT = r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1"
 DATA = json.load(open(ROOT + "/clues.json", encoding="utf-8"))
 TAG = "clue"
 HIT_MARGIN, HIT_UP = 18, 28   # cm the aim box sticks out around / above small clues (bigger 2026-11-17: easier to hit)
+OBJ_WRAP = 60                 # characters per line of the corner objective (user 2026-11-17: long ones ran off the screen)
 WRAP = 44                     # characters per line on the reading screen
 # on a sheet (clues.json "paper") lines are shorter, and each hand is a different width (measured with
 # PIL at the HUD's sizes in tools/make_interact_nodes.py HANDS, 2026-11-17)
@@ -89,8 +90,10 @@ def main():
                     value = wrap(c[key], SHEET_WRAP.get(c.get("hand", ""), SHEET_WRAP[""]))
                 else:
                     value = wrap(c[key]) if key in ("body", "journal") else c[key]
+                if key == "objective":
+                    value = wrap(value, OBJ_WRAP)   # the corner line wraps instead of running off the screen
                 a.set_editor_property(var, value)
-        a.set_editor_property("IsDoor", "door" in c["shape"] or c["shape"] == "gate")
+        a.set_editor_property("IsDoor", "door" in c["shape"] or c["shape"] == "gate")   # the gate too (it never opened)
         # areas (clues.json "areas"): whichever clue of an area you read last points on to the next place
         # (user 2026-11-17: the prompts weren't leading the story in the right order)
         a.set_editor_property("ClueId", c["id"])
@@ -99,7 +102,7 @@ def main():
                 others = ["#" + o + "," for o in area["clues"] if o != c["id"]] + ["#" + c["id"] + ","] * 2
                 a.set_editor_property("AreaNeed1", others[0])
                 a.set_editor_property("AreaNeed2", others[1])
-                a.set_editor_property("AreaNext", area["next"])   # the gate too (it never opened)
+                a.set_editor_property("AreaNext", wrap(area["next"], OBJ_WRAP))
         size, mat, offset = SHAPES[c["shape"]]
         # a key is its drawing, cut out and laid flat (unreal/key_cards.py; user 2026-11-17: "the keys are still
         # blocks, they should look exactly like the key image")
@@ -152,7 +155,7 @@ def main():
             g.set_relative_location(unreal.Vector(offset[0], offset[1], (size[2] if not on_wall_or_zone(c) else size[2] * 0.75) + 3.0), False, True)
 
     hud = unreal.load_asset("/Game/Horror/Interact/BP_HorrorHUD")
-    unreal.get_default_object(BPL.generated_class(hud)).set_editor_property("Objective", DATA["start_objective"])
+    unreal.get_default_object(BPL.generated_class(hud)).set_editor_property("Objective", wrap(DATA["start_objective"], OBJ_WRAP))
     unreal.EditorAssetLibrary.save_loaded_asset(hud, False)
     print(f"placed {len(DATA['clues'])} clues")
 

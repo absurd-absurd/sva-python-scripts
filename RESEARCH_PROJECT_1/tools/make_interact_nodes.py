@@ -624,8 +624,8 @@ def hud_graph():
         draw(g.get("ReadBody", "string"), nxt, 0, 0, 1.0, INK if on_sheet else TEXT, at=(x, y))
 
     # no sheet: words on the dark screen, as before
-    a = draw(g.get("ReadTitle", "string"), no_paper, 0.2, 0.14, 1.25)
-    body_then, close_then = g.sequence(a, 2)
+    # no title over the page (user 2026-11-17: no labels like "A letter on the bed" / "Cas's wall")
+    body_then, close_then = g.sequence(no_paper, 2)
     body(body_then, g.mul(W, 0.2), g.mul(H, 0.24), False)
     draw("[E]  Close", close_then, 0.2, 0.88, 0.75, DIM)
 
@@ -646,7 +646,6 @@ def hud_graph():
             ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0),
             ("TextureVHeight", "float", 1.0), ("TintColor", "color", "(R=1.0,G=1.0,B=1.0,A=1.000000)")])
     words = sheet[1]
-    words = draw(g.get("ReadTitle", "string"), words, 0.03, 0.08, 1.0, TEXT, True)
     words = draw("[E]  Close", words, 0.03, 0.9, 0.75, DIM)
     body(words, g.pure(MATH, "Add_DoubleDouble", [("A", "real", PX), ("B", "real", g.mul(H, PAPER_TEXT_X))]),
          g.pure(MATH, "Add_DoubleDouble", [("A", "real", PY), ("B", "real", g.mul(PH, PAPER_TEXT_Y))]), True)
