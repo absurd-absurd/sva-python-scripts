@@ -351,3 +351,9 @@ and a clickable BACK. The map line now just says "Map".
 The pause menu in play (Esc, or P in the editor): the game dims, PAUSED with a red rule, RESUME / CONTROLS /
 QUIT in the title's lettering (mouse hover + click or the keys); CONTROLS opens the same keycap page, Esc or
 BACK returns to the pause menu, Esc again resumes. Blocked on the title, in the opening, the ending and the map.
+
+## 2026-11-17_breakdown_in_game.png
+The world breaking down near the lake, in play (unreal/breakdown.py, M_Breakdown): clean at the motel (top
+left); on the trail near the lake the picture warps and colours split (top right: the bushes); at the shore
+the dock bends and wobbles, the fog goes red and the edges close in dark red (bottom left and right, two
+frames apart); in the boathouse the same. Strength follows how close you are to the lake.
