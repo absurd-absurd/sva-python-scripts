@@ -122,7 +122,7 @@
     {
       "id": "key_backgate", "paper": "key_gate", "hand": "none",
       "shape": "key",
-      "at": [3460, -1150, 77.6], "yaw": 25, "room": true,
+      "at": [3460, -1200, 77.6], "yaw": 25, "room": true,
       "prompt": "Take",
       "title": "Back gate key",
       "body": "A new key on a red tag, lying on the office desk. Someone wrote on the tag:\n\nPROPERTY OF MARROW FALLS MOTEL - GATE.",

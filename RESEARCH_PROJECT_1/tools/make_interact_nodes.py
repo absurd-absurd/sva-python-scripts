@@ -135,7 +135,7 @@ CUTOUT = (0.3, 0.8)                     # how long a cut-out lasts (s); under a 
 HIT_CHANCE = 0.75                       # share of cut-outs that end with a hit (camera jolt)
 TEXT_SCALE = 0.0008            # text size = screen height * this; the font is rendered at size 40 (interact_setup.py),
                                # so this is 0.8 at 1000 px tall - same size as before (size 10 x 3.2) but sharp
-REACH, NEAR = 260.0, 40.0      # aim line from 40 cm in front of the eyes (outside the capsule) to 2.6 m
+REACH, NEAR = 330.0, 40.0      # aim line from 40 cm in front of the eyes (outside the capsule) to 2.6 m
 STICKY = 300.0                 # a spotted clue keeps its prompt until used, within 3 m
 
 

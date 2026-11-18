@@ -20,6 +20,7 @@ BLD_MATS = {
     "boat_old_mat": (0.16, 0.17, 0.15), "mud_print_mat": (0.06, 0.05, 0.04),
     "sleeping_bag_lining_mat": (0.34, 0.12, 0.08), "zipper_mat": (0.05, 0.05, 0.05), "wool_mat": (0.2, 0.19, 0.17),
     "boot_mat": (0.24, 0.14, 0.07), "boot_sole_mat": (0.045, 0.04, 0.035), "seeglass_red_mat": (0.6, 0.05, 0.03),
+    "padlock_mat": (0.62, 0.63, 0.66), "padlock_band_mat": (0.14, 0.14, 0.16), "chain_mat": (0.38, 0.37, 0.36),
     "dark_leather_mat": (0.09, 0.06, 0.04), "algae_mat": (0.06, 0.09, 0.05), "paint_can_mat": (0.3, 0.29, 0.26),
     "gas_can_mat": (0.34, 0.05, 0.03), "net_mat": (0.22, 0.2, 0.15), "float_mat": (0.45, 0.36, 0.2),
     "bottle_mat": (0.14, 0.08, 0.03), "can_label_mat": (0.42, 0.18, 0.1), "enamel_mat": (0.2, 0.3, 0.4),
@@ -149,6 +150,52 @@ def plank_boards_over(axis, fixed, a, b, zlo, zhi, out, seed, gaps=False):
         for e in (-1, 1):
             nail(inner - sgn * 1.3, c + e * (L / 2 - 4), z)
 
+def oval_link(cx, cy, cz, u, v, L=4.6, W=2.6, r=0.42, mat="chain_mat"):
+    """One oval chain link centred at (cx, cy, cz): its long axis along unit vector u, its short axis along v
+    (u, v are 3-tuples). Built from a closed polyline, so it reads as a real welded link."""
+    pts = []
+    for k in range(17):
+        t = 2 * math.pi * k / 16
+        a_, b_ = (L / 2 - W / 2) * (1 if math.cos(t) >= 0 else -1) + (W / 2) * math.cos(t), (W / 2) * math.sin(t)
+        pts.append((cx + u[0] * a_ + v[0] * b_, cy + u[1] * a_ + v[1] * b_, cz + u[2] * a_ + v[2] * b_))
+    polyline(pts, r, r, mat, sides=6)
+
+
+def chain_loop(cx, cy, cz, rx, ry, n, mat="chain_mat"):
+    """A chain wrapped once round something: n links on an ellipse (rx, ry) at height cz, each link turned
+    along the loop and alternating flat / on edge, so neighbours interlock."""
+    for k in range(n):
+        t = 2 * math.pi * k / n
+        x, y = cx + rx * math.cos(t), cy + ry * math.sin(t)
+        tx, ty = -rx * math.sin(t), ry * math.cos(t)
+        L = math.hypot(tx, ty)
+        u = (tx / L, ty / L, 0.0)
+        v = (0.0, 0.0, 1.0) if k % 2 else (math.cos(t), math.sin(t), 0.0)
+        oval_link(x, y, cz + 0.6 * math.sin(3 * t), u, v, mat=mat)
+
+
+def padlock(px, py, pz, facing=1, scale=1.0):
+    """A new laminated-steel padlock, hanging: the body is a stack of pressed plates (the ridged sides real
+    padlocks have), a brass keyway on the bottom, a polished U shackle out of the top. px, py: centre; pz: the
+    bottom of the body; facing: +1 / -1, the side (y) its front plate faces."""
+    s_ = scale
+    w, d, h = 4.6 * s_, 2.5 * s_, 4.9 * s_
+    for k in range(7):                                                     # the laminations
+        z0 = pz + k * h / 7
+        inset = 0.12 * s_ if k in (0, 6) else 0.0
+        bevel_box(px - w / 2 + inset, px + w / 2 - inset, py - d / 2 + inset, py + d / 2 - inset, z0 + 0.04 * s_, z0 + h / 7 - 0.05 * s_,
+                  "padlock_mat", r=0.12 * s_)
+    bevel_box(px - w / 2 - 0.05, px + w / 2 + 0.05, py - d / 2 - 0.05, py + d / 2 + 0.05, pz + h * 0.42, pz + h * 0.58,
+              "padlock_band_mat", r=0.1 * s_)                                # the maker's band round the middle
+    frustum(px, py, pz - 0.18 * s_, pz + 0.02, 0.75 * s_, 0.8 * s_, "brass_mat", sides=14)      # keyway
+    bevel_box(px - 0.12 * s_, px + 0.12 * s_, py - 0.45 * s_, py + 0.45 * s_, pz - 0.22 * s_, pz - 0.16 * s_, "char_mat", r=0.03)
+    sx, top = 1.35 * s_, pz + h + 2.3 * s_                                  # the shackle
+    leg = [(px - sx, py, pz + h - 0.2), (px - sx, py, top)]
+    arc = [(px + sx * math.cos(math.pi - a), py, top + sx * math.sin(math.pi - a)) for a in [k * math.pi / 8 for k in range(9)]]
+    polyline(leg + arc + [(px + sx, py, pz + h - 0.2)], 0.42 * s_, 0.42 * s_, "chrome_mat", sides=10)
+    return top + sx                                                         # top of the shackle
+
+
 def plank_door(width, height, name, lock=False):
     """A plank door built at its hinge (x 0 .. width, outside facing +y): vertical boards, a Z
     brace on the inside, strap hinges, a latch; lock=True adds a hasp and a new padlock."""
@@ -172,11 +219,14 @@ def plank_door(width, height, name, lock=False):
     tube((kx, 4.0, 98), (kx, 6.5, 100), 0.8, "rusty_tool_mat", sides=6)
     tube((kx, 6.5, 100), (kx, 6.5, 113), 0.8, "rusty_tool_mat", sides=6)
     tube((kx, 6.5, 113), (kx, 4.0, 115), 0.8, "rusty_tool_mat", sides=6)
-    if lock:                                                             # hasp + padlock (new, bright)
-        bevel_box(width - 22, width + 6, 2.0, 3.0, 128, 136, "metal_mat", r=0.3)
-        ring(width - 6, 4.8, 124, 2.6, 0.5, "metal_mat", axis="y", sides=12)
-        bevel_box(width - 10, width - 2, 3.5, 6.5, 111, 121, "brass_mat", r=1.0)
-        ring(width - 6, 5.0, 122.5, 2.3, 0.55, "chrome_mat", axis="y", sides=12)
+    if lock:                                                             # hasp, staple, and a new padlock through it
+        bevel_box(width - 24, width - 4, 2.0, 2.8, 127, 135, "rusty_tool_mat", r=0.3)      # hasp plate (the door's)
+        for bx in (width - 20, width - 13):
+            sphere(bx, 3.0, 131, 0.6, "rusty_tool_mat", sides=6)
+        bevel_box(width - 6, width + 8, 2.0, 2.8, 124, 138, "rusty_tool_mat", r=0.3)       # staple plate (on the frame)
+        polyline([(width - 4, 2.8, 128), (width - 4, 6.0, 128), (width - 4, 6.0, 134), (width - 4, 2.8, 134)], 0.5, 0.5,
+                 "rusty_tool_mat", sides=6)                                               # the staple loop
+        padlock(width - 4, 6.0, 119.5)
     mesh = cmds.polyUnite(PARTS, name=name, ch=False)[0]
     cmds.delete(mesh, constructionHistory=True)
     cmds.xform(mesh, pivots=(0, 0, 0), worldSpace=True)

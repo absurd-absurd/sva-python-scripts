@@ -258,12 +258,12 @@ def gate_leaf(name):
     chain_link(4, W - 4, 1.0, 10, Hh - 4)
     for z in (30, Hh - 30):                                               # hinge collars
         ring(0, 0, z, 4, 1.4, "rusty_tool_mat", sides=10)
-    # the chain: links wrapped round the free end, the padlock hanging off it
-    for k in range(9):
-        a = k * 0.8
-        ring(W + 6 * math.cos(a), 6 * math.sin(a), 96 - k * 2.2, 2.0, 0.55, "rusty_tool_mat", axis="z" if k % 2 else "x", sides=8)
-    bevel_box(W + 3, W + 11, 4, 9, 70, 82, "brass_mat", r=1.2)
-    ring(W + 7, 6.5, 84, 2.6, 0.6, "chrome_mat", axis="y", sides=12)
+    # the chain: real interlocking links wrapped round the gate's end post and the fence post beside it, the two
+    # ends meeting on the outside where a new laminated padlock holds them (2026-11-17: realistic padlock)
+    chain_loop(W + 7, 0, 92, 10.5, 4.6, 14, mat="chain_mat")
+    oval_link(W + 7, 6.2, 87.5, (0, 0, 1), (1, 0, 0), mat="chain_mat")      # the two end links hanging down
+    oval_link(W + 9, 6.2, 87.5, (0, 0, 1), (0, 1, 0), mat="chain_mat")
+    padlock(W + 8, 6.4, 77.5)
     mesh = cmds.polyUnite(PARTS, name=name, ch=False)[0]
     cmds.delete(mesh, constructionHistory=True)
     cmds.xform(mesh, pivots=(0, 0, 0), worldSpace=True)

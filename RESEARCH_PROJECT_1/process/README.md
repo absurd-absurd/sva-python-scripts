@@ -363,3 +363,11 @@ Breakdown v2 (user: the whole game had gone dark; wanted only glimpses until "th
 runs after tonemapping like the PS2 look and passes the picture through untouched when off. Top row: the title
 and the motel with the effect off vs on (identical). Middle: four trail frames a moment apart, one catching a
 glimpse (red, colour split). Bottom: the dock and the boathouse, where it takes over completely.
+
+## 2026-11-17_padlock.png
+Realistic padlocks (user: the padlock was done badly): a laminated steel body (stacked plates with a band),
+a brass keyway, a polished U shackle, through real interlocking oval chain links wrapped round the gate post
+(maya/lake_buildings.py padlock, oval_link, chain_loop; also on the boathouse door's hasp and staple).
+Also fixed from the user's playtest: the back gate never opened (it wasn't treated as a door), the gate key
+moved to the front of the office desk, and every item's aim box is bigger/taller (the register could only
+be examined from behind the counter).

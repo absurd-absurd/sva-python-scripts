@@ -12,7 +12,7 @@ import unreal
 ROOT = r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1"
 DATA = json.load(open(ROOT + "/clues.json", encoding="utf-8"))
 TAG = "clue"
-HIT_MARGIN, HIT_UP = 10, 10   # cm the aim box sticks out around / above small clues
+HIT_MARGIN, HIT_UP = 18, 28   # cm the aim box sticks out around / above small clues (bigger 2026-11-17: easier to hit)
 WRAP = 44                     # characters per line on the reading screen
 # on a sheet (clues.json "paper") lines are shorter, and each hand is a different width (measured with
 # PIL at the HUD's sizes in tools/make_interact_nodes.py HANDS, 2026-11-17)
@@ -86,7 +86,7 @@ def main():
                 else:
                     value = wrap(c[key]) if key in ("body", "journal") else c[key]
                 a.set_editor_property(var, value)
-        a.set_editor_property("IsDoor", "door" in c["shape"])
+        a.set_editor_property("IsDoor", "door" in c["shape"] or c["shape"] == "gate")   # the gate too (it never opened)
         size, mat, offset = SHAPES[c["shape"]]
         # a key is its drawing, cut out and laid flat (unreal/key_cards.py; user 2026-11-17: "the keys are still
         # blocks, they should look exactly like the key image")
@@ -126,7 +126,7 @@ def main():
         # the invisible aim box: the object plus HIT_MARGIN all round (doors: just the door)
         # it sits on the same surface and rises HIT_UP cm above the object, so the aim line
         # meets it before the bed or table around it
-        margin, up = (0, 0) if "door" in c["shape"] else (HIT_MARGIN, HIT_UP)
+        margin, up = (0, 0) if ("door" in c["shape"] or c["shape"] == "gate") else (HIT_MARGIN, HIT_UP)
         hit = a.get_components_by_class(unreal.BoxComponent)[0]
         hit.set_relative_location(unreal.Vector(offset[0], offset[1], (size[2] + up) / 2), False, True)
         hit.set_box_extent(unreal.Vector(size[0] / 2 + margin, size[1] / 2 + margin, (size[2] + up) / 2), False)
