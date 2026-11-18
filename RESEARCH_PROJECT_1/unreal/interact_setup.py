@@ -109,6 +109,50 @@ def components(bp):
     if "HitBox" not in names:
         box = lib_s.get_object(lib_s.get_data(add(names["Hinge"], unreal.BoxComponent, "HitBox")))
         box.set_collision_profile_name("UI")
+    if "Glint" not in names:
+        # a soft pulsing spark over a clue you haven't examined yet (user, 2026-11-17: examinables easier to spot);
+        # place_clues.py puts it above the object (hidden on doors), the HUD hides it once you examine the thing
+        g = lib_s.get_object(lib_s.get_data(add(names["Hinge"], unreal.StaticMeshComponent, "Glint")))
+        g.set_editor_property("static_mesh", unreal.load_asset("/Engine/BasicShapes/Sphere"))
+        g.set_editor_property("relative_scale3d", unreal.Vector(0.035, 0.035, 0.035))
+        g.set_material(0, glint_material())
+        g.set_collision_profile_name("NoCollision")
+        g.set_editor_property("cast_shadow", False)
+
+
+def glint_material():
+    """M_Glint: unlit, additive, a soft warm spark that slowly pulses and twinkles (each one at its own phase,
+    from its world position), faint so it reads as a glint, not a light."""
+    path = "/Game/Horror/Materials/M_Glint"
+    MEL = unreal.MaterialEditingLibrary
+    if lib.does_asset_exist(path):
+        return unreal.load_asset(path)
+    m = tools.create_asset("M_Glint", "/Game/Horror/Materials", unreal.Material, unreal.MaterialFactoryNew())
+    m.set_editor_property("blend_mode", unreal.BlendMode.BLEND_ADDITIVE)
+    m.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
+    c = MEL.create_material_expression(m, unreal.MaterialExpressionCustom, -300, 0)
+    c.set_editor_property("code", """
+float ph = frac(sin(dot(Pos.xy, float2(12.9898, 78.233))) * 43758.5453) * 6.283;
+float pulse = 0.55 + 0.45 * sin(Time * 2.2 + ph);
+float twinkle = pow(saturate(sin(Time * 0.9 + ph * 1.7)), 24.0);
+float edge = pow(saturate(dot(N, V)), 2.5);
+return float3(1.0, 0.86, 0.62) * edge * (1.4 * pulse + 4.0 * twinkle);
+""")
+    c.set_editor_property("output_type", unreal.CustomMaterialOutputType.CMOT_FLOAT3)
+    pins = []
+    for n in ("Pos", "Time", "N", "V"):
+        pin = unreal.CustomInput()
+        pin.set_editor_property("input_name", n)
+        pins.append(pin)
+    c.set_editor_property("inputs", pins)
+    MEL.connect_material_expressions(MEL.create_material_expression(m, unreal.MaterialExpressionObjectPositionWS, -600, -100), "", c, "Pos")
+    MEL.connect_material_expressions(MEL.create_material_expression(m, unreal.MaterialExpressionTime, -600, 0), "", c, "Time")
+    MEL.connect_material_expressions(MEL.create_material_expression(m, unreal.MaterialExpressionVertexNormalWS, -600, 100), "", c, "N")
+    MEL.connect_material_expressions(MEL.create_material_expression(m, unreal.MaterialExpressionCameraVectorWS, -600, 200), "", c, "V")
+    MEL.connect_material_property(c, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
 
 
 def make_font(path, ff_name, ttf):

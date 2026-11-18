@@ -175,6 +175,7 @@ TY = {
     "shakeclass": _t("class", obj=C("/Script/Engine.CameraShakeBase")), "scene": _t("object", obj=C(SCENE)),
     "ex": _t("object", obj=EX_CLASS),
     "actorclass": _t("class", obj=C(ACTOR)),
+    "smc": _t("object", obj=C("/Script/Engine.StaticMeshComponent")),
 }
 
 
@@ -1014,6 +1015,8 @@ def hud_graph():
     # 1: first time only - journal, key, objective
     g.row(340 * 5, 5700)
     _, first = g.branch(fget("Done", "bool"), steps[1])
+    glint = g.get("Glint", "smc", focus())
+    first = g.call(SCENE, "SetVisibility", first, [("bNewVisibility", "bool", False)], target=(glint, "scene")).then
     sub = g.sequence(first, 4)
     g.row(340 * 7, 6200)
     y, _ = g.branch(g.not_(g.empty(fget("Journal"))), sub[0])

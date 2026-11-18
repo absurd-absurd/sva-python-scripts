@@ -68,6 +68,10 @@ def in_room(at):
     return -2500 < at[0] < 500 and -1400 < at[1] < -700
 
 
+def on_wall_or_zone(c):
+    return c["shape"] in ("wall_page", "wall_zone")
+
+
 def main():
     for a in actors.get_all_level_actors():
         if a.actor_has_tag(TAG):
@@ -131,6 +135,12 @@ def main():
         hit.set_relative_location(unreal.Vector(offset[0], offset[1], (size[2] + up) / 2), False, True)
         hit.set_box_extent(unreal.Vector(size[0] / 2 + margin, size[1] / 2 + margin, (size[2] + up) / 2), False)
         hit.set_collision_profile_name("UI")
+        glints = [g for g in a.get_components_by_class(unreal.StaticMeshComponent) if g.get_name().startswith("Glint")]
+        if glints:
+            is_door = "door" in c["shape"] or c["shape"] == "gate"
+            g = glints[0]
+            g.set_visibility(not is_door, False)
+            g.set_relative_location(unreal.Vector(offset[0], offset[1], (size[2] if not on_wall_or_zone(c) else size[2] * 0.75) + 3.0), False, True)
 
     hud = unreal.load_asset("/Game/Horror/Interact/BP_HorrorHUD")
     unreal.get_default_object(BPL.generated_class(hud)).set_editor_property("Objective", DATA["start_objective"])
