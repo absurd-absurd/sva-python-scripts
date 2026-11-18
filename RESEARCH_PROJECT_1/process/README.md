@@ -340,3 +340,9 @@ band behind the menu, and the camera slowly pushing in down the dock. The contro
 ## 2026-11-17_title_birds.png
 More birds over the lake behind the title (user): three flocks (30, 22 and 18 crows) circling low over the
 water ahead of the dock, and three single crows gliding over it (unreal/critters.py).
+
+## 2026-11-17_menu_and_controls.png
+The title menu works with the mouse as well as the keys (user: the buttons weren't working): the cursor shows
+on the title, an item lights up red under it, a click does what its key does. The controls page was redesigned
+over the dock: a dark panel, CONTROLS with a red rule, MOVE and INTERACT groups with every key drawn as a keycap,
+and a clickable BACK. The map line now just says "Map".

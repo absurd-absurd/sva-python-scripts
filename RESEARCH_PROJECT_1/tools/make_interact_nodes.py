@@ -111,7 +111,7 @@ MENU = [("E", "S T A R T"), ("C", "C O N T R O L S"), ("Q", "Q U I T")]
 MENU_SCALE = 1.05
 # the controls page (2026-11-17 second pass): two groups, each key drawn as a keycap
 CONTROLS_MOVE = [(["W", "A", "S", "D"], "Walk"), (["Mouse"], "Look"), (["Shift"], "Run"), (["Space"], "Jump")]
-CONTROLS_USE = [(["E"], "Examine, read, pick up, open"), (["Tab"], "Journal"), (["M"], "Map")]
+CONTROLS_USE = [(["E"], "Examine, read, use"), (["Tab"], "Journal"), (["M"], "Map")]
 CONTROLS = [(" ".join(k), w) for k, w in CONTROLS_MOVE + CONTROLS_USE]
 MENU_HOVER = "(R=0.85,G=0.22,B=0.18,A=1.0)"         # a menu item under the mouse
 CAP_FILL, CAP_EDGE = "(R=0.06,G=0.06,B=0.07,A=0.85)", "(R=0.55,G=0.5,B=0.45,A=0.9)"
