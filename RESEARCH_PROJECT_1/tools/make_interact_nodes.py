@@ -1017,6 +1017,8 @@ def hud_graph():
     _, first = g.branch(fget("Done", "bool"), steps[1])
     glint = g.get("Glint", "smc", focus())
     first = g.call(SCENE, "SetVisibility", first, [("bNewVisibility", "bool", False)], target=(glint, "scene")).then
+    # remember that this clue has been read: "#<id>," in Keys (the area check below looks for these)
+    first = g.set("Keys", "string", g.concat(g.concat(g.concat(g.get("Keys", "string"), "#"), fget("ClueId")), ","), first).then
     sub = g.sequence(first, 4)
     g.row(340 * 7, 6200)
     y, _ = g.branch(g.not_(g.empty(fget("Journal"))), sub[0])
@@ -1033,7 +1035,14 @@ def hud_graph():
     g.call(STATICS, "SetGamePaused", g.set("MapOpen", "bool", True, a).then, [("bPaused", "bool", True)])
     g.row(340 * 7, 7600)
     y, _ = g.branch(g.not_(g.empty(fget("Objective"))), sub[2])
-    g.set("Objective", "string", fget("Objective"), y)
+    # the last clue read in an area (AreaNeed1 + AreaNeed2 = the other two already read) points on: AreaNext
+    has = lambda k: g.pure(STR, "Contains", [("SearchIn", "string", g.get("Keys", "string")), ("Substring", "string", fget(k))], ty="bool")
+    area_done = g.pure(MATH, "BooleanAND", [("A", "bool", g.not_(g.empty(fget("AreaNext")))),
+                                            ("B", "bool", g.pure(MATH, "BooleanAND", [("A", "bool", has("AreaNeed1")), ("B", "bool", has("AreaNeed2"))], ty="bool"))], ty="bool")
+    g.row(340 * 9, 7600)
+    nxt, own = g.branch(area_done, y)
+    g.set("Objective", "string", fget("AreaNext"), nxt)
+    g.set("Objective", "string", fget("Objective"), own)
     g.row(340 * 7, 8200)
     g.set("Done", "bool", True, sub[3], target=focus())
     # 2: doors swing open

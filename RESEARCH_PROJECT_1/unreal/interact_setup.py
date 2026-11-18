@@ -231,7 +231,8 @@ def main():
     s, b, r = T("string"), T("bool"), T("real")
     add_vars(ex, [("Prompt", s), ("Title", s), ("Body", s), ("Journal", s), ("GivesKey", s),
                   ("NeedsKey", s), ("LockedText", s), ("Objective", s), ("Hand", s), ("Paper", s), ("EndsGame", b), ("PickUp", b),
-                  ("IsDoor", b), ("OpenAngle", r)], editable=True)
+                  ("IsDoor", b), ("OpenAngle", r),
+                  ("ClueId", s), ("AreaNeed1", s), ("AreaNeed2", s), ("AreaNext", s)], editable=True)
     add_vars(ex, [("Done", b), ("Opened", b), ("Yaw", r)], editable=False)
     BPL.compile_blueprint(ex)
     defaults(ex, {"Prompt": "Examine", "LockedText": "It's locked.", "OpenAngle": 95.0})

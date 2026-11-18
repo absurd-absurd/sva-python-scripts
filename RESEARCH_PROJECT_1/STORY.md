@@ -34,7 +34,10 @@ mom back. She went missing too.
 2. **Room 104**: her unsent letter to her mom on the bed; her wall (readable): a note about the
    red lanterns, Eileen's MISSING poster, the photo-booth strip of Cas and Bug; the office key.
 3. **The office**: the guest register (Eileen Byrne, Room 104, "104 - kept"); the researchers'
-   field log ("One goes in. Something comes back out."); the gate key.
+   field log ("One goes in. Something comes back out.") on the bed in the back room, with the gate
+   key beside it (moved off the desk 2026-11-17 so you read the log first).
+   The corner prompts: whichever clue you read last in Room 104, the office or the shack points
+   you on to the next place (clues.json "areas"); until then they say there's more to find there.
 4. **The shack**: Cas's notebook (she misquotes the log: "one comes back"), then later pages in
    **the wrong handwriting** (second font), signed "- cas"; the boathouse key.
 5. **The boathouse**: her boots set side by side by the water; a note in the wrong hand:

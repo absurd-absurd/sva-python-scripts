@@ -90,7 +90,16 @@ def main():
                 else:
                     value = wrap(c[key]) if key in ("body", "journal") else c[key]
                 a.set_editor_property(var, value)
-        a.set_editor_property("IsDoor", "door" in c["shape"] or c["shape"] == "gate")   # the gate too (it never opened)
+        a.set_editor_property("IsDoor", "door" in c["shape"] or c["shape"] == "gate")
+        # areas (clues.json "areas"): whichever clue of an area you read last points on to the next place
+        # (user 2026-11-17: the prompts weren't leading the story in the right order)
+        a.set_editor_property("ClueId", c["id"])
+        for area in DATA.get("areas", {}).values():
+            if c["id"] in area["clues"]:
+                others = ["#" + o + "," for o in area["clues"] if o != c["id"]] + ["#" + c["id"] + ","] * 2
+                a.set_editor_property("AreaNeed1", others[0])
+                a.set_editor_property("AreaNeed2", others[1])
+                a.set_editor_property("AreaNext", area["next"])   # the gate too (it never opened)
         size, mat, offset = SHAPES[c["shape"]]
         # a key is its drawing, cut out and laid flat (unreal/key_cards.py; user 2026-11-17: "the keys are still
         # blocks, they should look exactly like the key image")
