@@ -371,3 +371,12 @@ a brass keyway, a polished U shackle, through real interlocking oval chain links
 Also fixed from the user's playtest: the back gate never opened (it wasn't treated as a door), the gate key
 moved to the front of the office desk, and every item's aim box is bigger/taller (the register could only
 be examined from behind the counter).
+
+## 2026-11-20_synth_sounds_spectrograms.png
+
+First sound pass. These are spectrograms of the sounds made in Python
+by tools/make_sounds.py (no samples). Time runs left to right and pitch goes up, from low at the bottom to high at the top.
+From the top: wind_loop (low roar with gusts swelling in the upper bands), lake_loop (each small wave is a
+bright spike that fades), rattle_loop (inhale = soft round blob, exhale = the striped rattle), warp_sting
+(a reversed rattle swelling up over a falling sub tone). Each loop runs back into its own start without a click,
+because every noise is made in the frequency domain and every envelope is built from whole-cycle sines.
