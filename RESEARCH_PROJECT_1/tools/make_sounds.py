@@ -117,8 +117,72 @@ def wind_loop(seconds=48):
     save("wind_loop", np.stack([left, right], axis=1))
 
 
-def lake_loop(seconds=36):
-    """Small waves lapping on the shore / dock posts."""
+def swept_noise(n, cutoff, hiss=None, frame=2048, hop=512):
+    """Noise whose low-pass cutoff (Hz, one value per sample) moves over
+    time: the 'wash' of a wave. Done with overlapping FFT frames."""
+    win = np.hanning(frame)
+    f = np.fft.rfftfreq(frame, 1.0 / SR)
+    out = np.zeros(n + frame)
+    norm = np.zeros(n + frame)
+    noise = rng.normal(size=n + frame)
+    for s in range(0, n, hop):
+        c = cutoff[min(s + frame // 2, n - 1)]
+        g = 1.0 / (1.0 + (f / max(c, 20.0)) ** 4)   # soft low-pass
+        g *= 1.0 / (1.0 + (60.0 / np.maximum(f, 1.0)) ** 2)  # no sub mud
+        if hiss is not None:  # extra bright foam layer
+            h = hiss[min(s + frame // 2, n - 1)]
+            g = g + h * (f > 2500) * (np.maximum(f, 1.0) / 2500.0) ** -0.5
+        seg = np.fft.irfft(np.fft.rfft(noise[s:s + frame] * win) * g, frame)
+        out[s:s + frame] += seg * win
+        norm[s:s + frame] += win ** 2
+    return (out / np.maximum(norm, 1e-3))[:n]
+
+
+def one_wave(dur):
+    """One wave on the shore: builds, breaks, washes up, drags back."""
+    n = int(SR * dur)
+    t = np.arange(n) / SR
+    rise = dur * rng.uniform(0.28, 0.38)          # when it breaks
+    # loudness: slow swell, peak at the break, long fizzing decay
+    amp = np.where(t < rise, (t / rise) ** 2.2,
+                   np.exp(-(t - rise) / (dur * 0.33)))
+    amp *= 1 - np.clip((t - dur + 0.3) / 0.3, 0, 1)
+    # brightness: dark while it builds, opens wide at the break, closes as it drags back
+    cut = 250 + 3800 * np.where(t < rise, (t / rise) ** 3,
+                                np.exp(-(t - rise) / (dur * 0.22)))
+    # foam/pebble hiss on the way back
+    back = np.clip((t - rise) / (dur * 0.15), 0, 1) * np.exp(-(t - rise) / (dur * 0.45))
+    x = swept_noise(n, cut, hiss=0.25 * back) * amp
+    # pebbles rolling in the backwash: tiny scattered clicks
+    k = int(rng.integers(30, 70))
+    for _ in range(k):
+        p = rng.uniform(rise + 0.2 * dur, dur * 0.9)
+        m = int(SR * 0.004)
+        i = int(p * SR)
+        if i + m < n:
+            x[i:i + m] += rng.normal(size=m) * np.exp(-np.arange(m) / 40) * 0.08 * amp[i] ** 0.5
+    return x
+
+
+def lake_loop(seconds=48):
+    """Waves rolling onto the lake shore, overlapping, never quite regular."""
+    n = SR * seconds
+    left = np.zeros(n)
+    right = np.zeros(n)
+    t = 0.0
+    while t < seconds:
+        dur = rng.uniform(4.5, 7.5)
+        w = one_wave(dur) * rng.uniform(0.55, 1.0)
+        pan = rng.uniform(0.25, 0.75)  # each wave lands somewhere along the shore
+        add_wrapped(left, w * np.sqrt(1 - pan), int(t * SR))
+        add_wrapped(right, np.roll(w, int(SR * 0.004)) * np.sqrt(pan), int(t * SR))
+        t += rng.uniform(3.0, 5.0)
+    bed = shaped_noise(n, 60, 500, tilt=-2.0) * 0.05  # the rest of the lake, far off
+    save("lake_loop", np.stack([left + bed, right + np.roll(bed, 700)], axis=1))
+
+
+def lake_lap_loop(seconds=36):
+    """(old) Small laps against the dock posts - kept for under the dock."""
     n = SR * seconds
     out = np.zeros(n)
     bed = shaped_noise(n, 80, 600, tilt=-2.0) * 0.08  # constant low water
@@ -143,7 +207,7 @@ def lake_loop(seconds=36):
             add_wrapped(out, drop, int((t + rng.uniform(0.1, 0.8)) * SR))
         t += rng.uniform(1.3, 3.2)
     x = out + bed
-    save("lake_loop", stereo_wide(x, 17))
+    save("lake_lap_loop", stereo_wide(x, 17))
 
 
 def drone_loop(seconds=40):
