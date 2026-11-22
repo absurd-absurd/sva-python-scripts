@@ -14,7 +14,7 @@ import unreal
 ROOT = "C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/"
 DIR = "/Game/Horror/Audio"
 TAG = "sound"
-WIND_VOLUME = 0.35
+WIND_VOLUME = 0.2          # 0.35 was "a little loud" (user 2026-11-22)
 LAKE_VOLUME = 0.9
 LAKE_AT = [(-4500, 14700), (-1500, 14650), (1500, 14700), (4500, 14700)]   # along the shore (dock starts at y 14601)
 LAKE_INNER, LAKE_FALLOFF = 1200.0, 3500.0                                   # full volume within 12 m, gone by 47 m
