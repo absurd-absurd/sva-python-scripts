@@ -199,7 +199,7 @@
     {
       "id": "boathouse_note", "hand": "wrong", "paper": "scrap",
       "shape": "paper",
-      "at": [-3728, 15042, 15.8], "yaw": 22, "room": true,
+      "at": [-3703, 15036, 15.8], "yaw": 22, "room": true,
       "prompt": "Read",
       "title": "A note by her boots",
       "body": "the lanterns are lit for you, bug\n\ndon't worry, it won't be much longer now",
