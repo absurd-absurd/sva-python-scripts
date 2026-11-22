@@ -1036,7 +1036,10 @@ def hud_graph():
     unfreeze(g.set("OpenEnd", "real", g.now(), a).then)
     b_read, b_not_read = g.branch(g.get("Reading", "bool"), e_play)
     a = g.set("Reading", "bool", False, b_read).then
-    is_wrong = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadHand", "string")), ("B", "string", "wrong")], ty="bool")
+    # either sheet in the wrong hand (the shack's second page is, user 2026-11-22: "didn't see a small warp")
+    is_wrong = g.pure(MATH, "BooleanOR", [
+        ("A", "bool", g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadHand", "string")), ("B", "string", "wrong")], ty="bool")),
+        ("B", "bool", g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadHand2", "string")), ("B", "string", "wrong")], ty="bool"))], ty="bool")
     w_yes, w_no = g.branch(is_wrong, a)
     a = g.set("WarpUntil", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.now()), ("B", "real", WARP_AFTER)]), w_yes).then
     ends, plain = g.branch(g.get("ReadEnds", "bool"), [a, w_no])

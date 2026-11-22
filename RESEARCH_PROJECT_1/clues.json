@@ -17,7 +17,7 @@
   "areas": {
     "room104": {"clues": ["note_bed", "cas_wall", "key_office"], "next": "I have her office key. Whatever she found, it started in the office."},
     "office": {"clues": ["guest_book", "field_log", "key_backgate"], "next": "A key marked GATE. The trail behind the motel starts at that gate."},
-    "shack": {"clues": ["shack_notes", "key_boathouse"], "next": "The boathouse is circled on her map. Whatever this is, it ends at the lake."}
+    "shack": {"clues": ["shack_notes", "key_boathouse"], "next": "Something is very wrong, and my eyes keep playing tricks on me. The boathouse is circled on her map. Whatever this is, it ends at the lake."}
   },
   "game_text": {
     "opening": "October 2002.\n\nIt's been a year since Cas stopped answering my calls. Other than me, she has no one to even care to look for her. Not since her mom went missing.\n\nThen last week a postcard came. Marrow Falls Motel on the front. On the back, one line...\n\ni miss you bug",
@@ -194,7 +194,7 @@
       "body2": "she's not sleeping anymore\n\nbug will come. bug always comes\n\ni left bug a map\n\n- cas",
       "also": {"card": "shack_notes_wrong", "dx": 42, "dy": 2, "yaw": -6},
       "journal": "Cas camped out at the hunter's shack. Her notebook says she heard her mom calling from the water. The page beside it is signed cas, but it's not her handwriting. It's the same writing as the postcard.",
-      "objective": "She read the log wrong. It said something comes back out, not someone. And that page isn't her handwriting. It's the same writing as the postcard."
+      "objective": "She read the log wrong. It said something comes back out, not someone. And that page isn't her handwriting. It's the same writing as the postcard. Something is very wrong."
     },
     {
       "id": "boathouse_note", "hand": "wrong", "paper": "scrap",
@@ -204,11 +204,11 @@
       "title": "A note by her boots",
       "body": "the lanterns are lit for you, bug\n\ndon't worry, it won't be much longer now",
       "journal": "Her boots by the water door, set side by side. A note beside them: it won't be much longer now.",
-      "objective": "Not much longer? The rattling... it's getting louder. The lanterns on the dock are all lit. Something's at the end of it."
+      "objective": "Those are Cas's boots. Not much longer? The rattling is getting louder, and everything keeps bending around me. The lanterns on the dock are all lit. Something's at the end of it."
     },
     {
       "id": "last_page", "hand": "wrong", "paper": "torn", "ends": true,
-      "shape": "scrap_small",
+      "shape": "scrap_small", "card_scale": 2.2,
       "at": [1496, 16735, 15.8], "needs_key": "#boathouse_note,", "locked_text": "A page under the lantern. Not yet. I need to know what happened to her first.", "yaw": -8, "room": false,
       "prompt": "Read",
       "title": "",

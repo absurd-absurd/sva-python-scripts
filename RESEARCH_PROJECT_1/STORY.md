@@ -43,9 +43,9 @@ mom back. She went missing too.
    (Cas's on the left, the wrong hand on the right; 2026-11-22). The boathouse key.
 5. **The boathouse**: her boots by the water (a scanned pair from Fab, 2026-11-22: one standing, one tipped
    over on its side); a note in the wrong hand:
-   "the lanterns are lit for you, bug / don't worry, it won't be much longer now". Bug: "Not much
-   longer? The rattling... it's getting louder. The lanterns on the dock are all lit. Something's at the
-   end of it." That line sends you out of the boathouse to the dock, where the game ends (below).
+   "the lanterns are lit for you, bug / don't worry, it won't be much longer now". Bug: "Those are
+   Cas's boots. Not much longer? The rattling is getting louder, and everything keeps bending around me.
+   The lanterns on the dock are all lit. Something's at the end of it." That line sends you out of the boathouse to the dock, where the game ends (below).
 
 ## The world breaks down
 The warp builds up over the second half (2026-11-22, user): a few seconds of flashes after every page in

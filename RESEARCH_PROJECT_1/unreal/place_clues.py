@@ -112,6 +112,8 @@ def main():
         # papers and folders likewise, by clue id first (2026-11-17): the thing as it lies there
         card_name = c["id"] if c["id"] in KEYCARDS else c.get("paper", "")
         card = KEYCARDS.get(card_name) if c["shape"] in ("key", "scrap_small", "paper", "folder", "notebook", "wall_page") else None
+        if card and c.get("card_scale"):            # bigger than the drawing's own size (the last page, 2026-11-22: too small to spot)
+            card = [v * c["card_scale"] for v in card]
         card_mi = card and unreal.load_asset(f"{MATS}MI_KeyCard_{card_name}")
         on_wall = c["shape"] == "wall_page"
         if card_mi:
