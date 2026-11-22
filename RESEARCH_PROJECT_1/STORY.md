@@ -38,20 +38,21 @@ mom back. She went missing too.
    key beside it (moved off the desk 2026-11-17 so you read the log first).
    The corner prompts: whichever clue you read last in Room 104, the office or the shack points
    you on to the next place (clues.json "areas"); until then they say there's more to find there.
-4. **The shack**: Cas's notebook (she misquotes the log: "one comes back"), then later pages in
-   **the wrong handwriting** (second font), signed "- cas"; the boathouse key.
+4. **The shack**: on the cot, side by side, Cas's notebook (she misquotes the log: "one comes back") and a
+   later page in **the wrong handwriting** (second font), signed "- cas". One look opens both together
+   (Cas's on the left, the wrong hand on the right; 2026-11-22). The boathouse key.
 5. **The boathouse**: her boots set side by side by the water; a note in the wrong hand:
    "the lanterns are lit for you, bug / don't worry, it won't be much longer now". Bug: "Not much
-   longer? The rattling... it's getting louder." This is where the game ends (below).
+   longer? The rattling... it's getting louder. The lanterns on the dock are all lit. Something's at the
+   end of it." That line sends you out of the boathouse to the dock, where the game ends (below).
 
 ## The world breaks down
-The closer you get to the lake, the more the PS2 look falls apart: textures warp, geometry
-stretches, the fog turns red (driven by the Fear value in MPC_Horror).
+The warp (2026-11-22, user): only ONE second, at the very end of the "one year later" shot, right
+before it cuts to black. No warp anywhere else (no flashes after wrong-hand pages, none at the lake).
 
 ## Ending
-The boathouse, on the lake (decided 2026-11-16: the lake is the big story piece, so the game
-ends there, not in a cabin). Past her boots, at the edge of the water door, a lit red lantern
-holds down one last page in the wrong handwriting: *"you came, bug / now we can be together."* Bug: *"this isn't Cas."* The
+The end of the dock (2026-11-22; before that the boathouse). After the note by her boots you walk out
+along the dock between the lit lanterns; on the last planks a lit red lantern holds down one last page in the wrong handwriting: *"you came, bug / now we can be together."* Bug: *"this isn't Cas."* The
 map was bait: Cas drew it for herself in 2001; the thing left it by your car. The lake took her mother, took Cas, and now it has you too. The rattle is right
 behind you. Cut to black.
 

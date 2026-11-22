@@ -44,7 +44,8 @@ DOOR_MESH = {"room_door": "/Game/Horror/Sets/prop_room_door", "door": "/Game/Hor
 FIELDS = {"prompt": "Prompt", "title": "Title", "body": "Body", "journal": "Journal",
           "gives_key": "GivesKey", "needs_key": "NeedsKey", "locked_text": "LockedText",
           "objective": "Objective", "pickup": "PickUp", "hand": "Hand", "paper": "Paper", "ends": "EndsGame",
-          "open_angle": "OpenAngle"}
+          "open_angle": "OpenAngle",
+          "body2": "Body2", "hand2": "Hand2", "paper2": "Paper2"}   # a second sheet beside the first (2026-11-22)
 
 actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 BPL = unreal.BlueprintEditorLibrary
@@ -88,6 +89,8 @@ def main():
             if key in c:
                 if key == "body" and c.get("paper"):
                     value = wrap(c[key], SHEET_WRAP.get(c.get("hand", ""), SHEET_WRAP[""]))
+                elif key == "body2":
+                    value = wrap(c[key], SHEET_WRAP.get(c.get("hand2", ""), SHEET_WRAP[""]))
                 else:
                     value = wrap(c[key]) if key in ("body", "journal") else c[key]
                 if key == "objective":
@@ -147,6 +150,32 @@ def main():
         hit.set_relative_location(unreal.Vector(offset[0], offset[1], (size[2] + up) / 2), False, True)
         hit.set_box_extent(unreal.Vector(size[0] / 2 + margin, size[1] / 2 + margin, (size[2] + up) / 2), False)
         hit.set_collision_profile_name("UI")
+        also = c.get("also")
+        if also:
+            # a second page lying beside it (user 2026-11-22: the shack's two notes side by side on the cot)
+            sec = KEYCARDS[also["card"]]
+            dx, dy = also.get("dx", 0), also.get("dy", 0)
+            yaw = c.get("yaw", 0) + also.get("yaw", 0)
+            r = unreal.MathLibrary.rotate_angle_axis(unreal.Vector(dx, dy, 0), c.get("yaw", 0), unreal.Vector(0, 0, 1))
+            p = actors.spawn_actor_from_class(unreal.StaticMeshActor, unreal.Vector(c["at"][0] + r.x, c["at"][1] + r.y, c["at"][2] + 0.15),
+                                              unreal.Rotator(0, 0, yaw))
+            p.set_actor_label(c["id"] + "_also")
+            p.set_folder_path("Clues")
+            p.tags = [TAG]
+            pm = p.static_mesh_component
+            pm.set_static_mesh(PLANE)
+            pm.set_world_scale3d(unreal.Vector(sec[0] / 100, sec[1] / 100, 1))
+            pm.set_material(0, unreal.load_asset(f"{MATS}MI_KeyCard_{also['card']}"))
+            pm.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+            if c.get("room") or in_room(c["at"]):
+                pm.set_editor_property("lighting_channels", ROOM_LIGHT)
+            # one aim box over both pages
+            x0 = min(offset[0] - size[0] / 2, dx - sec[0] / 2) - margin
+            x1 = max(offset[0] + size[0] / 2, dx + sec[0] / 2) + margin
+            y0 = min(offset[1] - size[1] / 2, dy - sec[1] / 2) - margin
+            y1 = max(offset[1] + size[1] / 2, dy + sec[1] / 2) + margin
+            hit.set_relative_location(unreal.Vector((x0 + x1) / 2, (y0 + y1) / 2, (size[2] + up) / 2), False, True)
+            hit.set_box_extent(unreal.Vector((x1 - x0) / 2, (y1 - y0) / 2, (size[2] + up) / 2), False)
         glints = [g for g in a.get_components_by_class(unreal.StaticMeshComponent) if g.get_name().startswith("Glint")]
         if glints:
             is_door = "door" in c["shape"] or c["shape"] == "gate"

@@ -2,9 +2,9 @@
 
 Run in the Unreal editor. Safe to run again. Makes /Game/Horror/Materials/PS2/M_Breakdown, a post-process
 effect added to PostProcess_Look before the PS2 screen effect (so the result still gets chunky pixels):
-  - when (user, 2026-11-17, "way too much"): only flashes - for a few seconds after you read a page in the
-    wrong hand (MPC_Horror.WarpFlash, from the HUD), now and then at the lake (dock, boathouse: PlayerPos y past
-    Full), and the final shot fully warped (MPC_Horror.WarpWhole).
+  - when (user 2026-11-22): ONLY for one second at the very end of the "one year later" shot (MPC_Horror.WarpWhole,
+    set by the HUD just before the cut to black). Before that (2026-11-17) it flashed after wrong-hand pages and
+    at the lake; the user wants none of that now.
   - a slow wavy warp of the whole picture, like looking through water
   - shapes stretching: the picture pulled a little toward the centre line, more at the edges
   - red and blue fringes pulling apart (a chromatic split)
@@ -20,18 +20,11 @@ assets = unreal.AssetToolsHelpers.get_asset_tools()
 lib = unreal.EditorAssetLibrary
 
 HLSL = """
-// user 2026-11-17 ("way too much at the end"): no more steady breakdown. Only FLASHES: for a few seconds
-// after you put down a page in the wrong hand (Flash = MPC_Horror.WarpFlash, set by the HUD) and now and then
-// at the lake (the dock and the boathouse, y past Full). The very last shot is fully warped (Whole = WarpWhole).
+// user 2026-11-22: the ONLY warp in the game is one second at the very end of the final shot (Whole =
+// MPC_Horror.WarpWhole, set by the HUD). No flashes after wrong-hand pages, none at the lake.
+// (Pos, Full, Flash are still wired in but unused, so the old tuning stays in MI_Breakdown.)
 float t = Time;
-float zone = Pos.y >= Full ? 1.0 : 0.0;
-float act = max(Flash, zone * 0.55);
-// time is cut into short slots; some of them flare up for a moment and fade
-float slot = floor(t / 0.7);
-float roll = frac(sin(slot * 91.7 + 3.1) * 43758.5453);
-float within = frac(t / 0.7);
-float glimpse = (roll > 1.0 - 0.5 * act) ? sin(within * 3.14159) : 0.0;
-float F = max(Whole, glimpse * (0.45 + 0.55 * act)) * Strength;
+float F = Whole * Strength + 0 * (Pos.y + Full + Flash);
 float2 uv = GetViewportUV(Parameters);
 if (F < 0.002) { return SceneTextureLookup(ViewportUVToBufferUV(uv), 14, false).rgb + Unused * 0; }
 // slow wavy warp (water / heat), and a pull toward the centre (stretch)

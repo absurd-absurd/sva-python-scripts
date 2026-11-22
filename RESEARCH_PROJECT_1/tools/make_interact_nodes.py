@@ -50,6 +50,7 @@ INK = "(R=0.030,G=0.028,B=0.035,A=0.950000)"     # writing with no hand, on pape
 PAPERS = [(k, f"/Game/Horror/UI/T_Paper_{k.capitalize()}.T_Paper_{k.capitalize()}")
           for k in ("stationery", "notebook", "typed", "ledger", "scrap", "key_office", "key_gate", "key_boathouse", "register", "wall", "torn")]
 PAPER_H, PAPER_ASPECT, PAPER_TOP = 0.92, 0.75, 0.04       # sheet height / width:height / top, x screen height
+PAIR_GAP = 0.03                                           # gap between two sheets side by side, x screen height
 PAPER_TEXT_X, PAPER_TEXT_Y = 0.11, 0.15                   # where the writing starts: x screen height in, x sheet height down
 TEXT = "(R=0.78,G=0.75,B=0.68,A=1.000000)"                   # warm off-white
 DIM = "(R=0.55,G=0.53,B=0.5,A=1.000000)"
@@ -88,6 +89,7 @@ END_T_LINE, END_T_BLACK = 0.6, 3.4                  # her line shows, then cut t
 END_T_YEAR, END_T_YEAR_OUT = 4.4, 7.6               # "One year later." fades in / is gone
 END_T_SHOT, END_SHOT_FADE = 8.2, 2.0                 # the final shot, fading up from black
 END_T_OUT, END_T_QUIT = 17.0, 20.0                   # cut to black, then quit
+END_WARP = 1.0                                       # the warp: this long, right before the cut (user 2026-11-22)
 FINAL_CLASS = "/Game/Horror/Interact/BP_FinalShot.BP_FinalShot_C"
 # the title screen (2026-11-17): BP_TitleShot's camera on the foggy lake, the MARROW lettering (T_Title,
 # tools/make_title.py "thin"), [E] Start / [C] Controls / [Q] Quit; Controls shows the key list
@@ -620,15 +622,16 @@ def hud_graph():
     a = dark(r_yes)
     on_paper, no_paper = g.branch(g.not_(g.empty(g.get("ReadPaper", "string"))), a)
 
-    def body(after, x, y, on_sheet):
-        """The body in the paper's own hand (ink on a sheet); Bug's font when it has none."""
+    def body(after, x, y, on_sheet, sfx=""):
+        """The body in the paper's own hand (ink on a sheet); Bug's font when it has none.
+        sfx "2": the second sheet (ReadBody2 in ReadHand2)."""
         nxt = after
         for hand, font, scale, ink in HANDS:
-            is_hand = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadHand", "string")),
+            is_hand = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadHand" + sfx, "string")),
                                                         ("B", "string", hand)], ty="bool")
             h_yes, nxt = g.branch(is_hand, nxt)
-            draw(g.get("ReadBody", "string"), h_yes, 0, 0, scale, ink if on_sheet else TEXT, font=font, at=(x, y))
-        draw(g.get("ReadBody", "string"), nxt, 0, 0, 1.0, INK if on_sheet else TEXT, at=(x, y))
+            draw(g.get("ReadBody" + sfx, "string"), h_yes, 0, 0, scale, ink if on_sheet else TEXT, font=font, at=(x, y))
+        draw(g.get("ReadBody" + sfx, "string"), nxt, 0, 0, 1.0, INK if on_sheet else TEXT, at=(x, y))
 
     # no sheet: words on the dark screen, as before
     # no title over the page (user 2026-11-17: no labels like "A letter on the bed" / "Cas's wall")
@@ -639,23 +642,40 @@ def hud_graph():
     # on a sheet: the paper in the middle, the words written on it; Bug's title and [E] beside it
     PH = g.mul(H, PAPER_H)
     PW = g.mul(H, PAPER_H * PAPER_ASPECT)
-    PX = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(PW, 0.5))])
+    # two sheets (ReadPaper2 set, user 2026-11-22: the shack's notes side by side): first on the left, second
+    # on the right, a small gap between; one sheet: centred as before
+    two = g.not_(g.empty(g.get("ReadPaper2", "string")))
+    left = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.pure(MATH, "Add_DoubleDouble", [
+        ("A", "real", PW), ("B", "real", g.mul(H, PAIR_GAP / 2))]))])
+    PX = g.pure(MATH, "SelectFloat", [("A", "real", left),
+                                      ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(PW, 0.5))])),
+                                      ("bPickA", "bool", two)], ty="real")
+    PX2 = g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, PAIR_GAP / 2))])
     PY = g.mul(H, PAPER_TOP)
-    sheet = g.sequence(on_paper, 2)
-    nxt = sheet[0]
-    for kind, tex in PAPERS:
-        is_kind = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadPaper", "string")),
-                                                    ("B", "string", kind)], ty="bool")
-        k_yes, nxt = g.branch(is_kind, nxt)
-        g.call(HUD, "DrawTexture", k_yes, [
-            ("Texture", "texture", tex), ("ScreenX", "float", PX), ("ScreenY", "float", PY),
-            ("ScreenW", "float", PW), ("ScreenH", "float", PH),
-            ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0),
-            ("TextureVHeight", "float", 1.0), ("TintColor", "color", "(R=1.0,G=1.0,B=1.0,A=1.000000)")])
+
+    def sheet_tex(after, var, x):
+        nxt = after
+        for kind, tex in PAPERS:
+            is_kind = g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get(var, "string")),
+                                                        ("B", "string", kind)], ty="bool")
+            k_yes, nxt = g.branch(is_kind, nxt)
+            g.call(HUD, "DrawTexture", k_yes, [
+                ("Texture", "texture", tex), ("ScreenX", "float", x), ("ScreenY", "float", PY),
+                ("ScreenW", "float", PW), ("ScreenH", "float", PH),
+                ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0),
+                ("TextureVHeight", "float", 1.0), ("TintColor", "color", "(R=1.0,G=1.0,B=1.0,A=1.000000)")])
+
+    sheet = g.sequence(on_paper, 4)
+    sheet_tex(sheet[0], "ReadPaper", PX)
     words = sheet[1]
     words = draw("[E]  Close", words, 0.03, 0.9, 0.75, DIM)
     body(words, g.pure(MATH, "Add_DoubleDouble", [("A", "real", PX), ("B", "real", g.mul(H, PAPER_TEXT_X))]),
          g.pure(MATH, "Add_DoubleDouble", [("A", "real", PY), ("B", "real", g.mul(PH, PAPER_TEXT_Y))]), True)
+    two_a, _ = g.branch(two, sheet[2])
+    sheet_tex(two_a, "ReadPaper2", PX2)
+    two_b, _ = g.branch(two, sheet[3])
+    body(two_b, g.pure(MATH, "Add_DoubleDouble", [("A", "real", PX2), ("B", "real", g.mul(H, PAPER_TEXT_X))]),
+         g.pure(MATH, "Add_DoubleDouble", [("A", "real", PY), ("B", "real", g.mul(PH, PAPER_TEXT_Y))]), True, "2")
 
     # journal
     g.row(340 * 9, 1300)
@@ -921,9 +941,6 @@ def hud_graph():
     # 3: once, at the final shot: show BP_FinalShot (the poster) and look through its camera
     s_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_SHOT)), ("B", "bool", g.not_(g.get("EndShot", "bool")))], ty="bool"), steps[2])
     a = g.set("EndShot", "bool", True, s_yes).then
-    # the last shot is fully warped (user 2026-11-17)
-    a = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", a,
-               [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"), ("ParameterValue", "float", 1.0)]).then
     found = g.call(STATICS, "GetActorOfClass", a, [("ActorClass", "actorclass", FINAL_CLASS)], outs=[("ReturnValue", "actor")])
     shot = found.o["ReturnValue"]
     a = g.call(ACTOR, "SetActorHiddenInGame", found.then, [("bNewHidden", "bool", False)], target=(shot, "actor")).then
@@ -931,7 +948,12 @@ def hud_graph():
            target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc"))
     # 4: the shot fades up from black, then cuts to black at the end
     f_on = g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_SHOT)), ("B", "bool", g.not_(after(END_T_OUT)))], ty="bool")
-    f_yes, f_no = g.branch(f_on, steps[3])
+    # the only warp in the game (user 2026-11-22): one second, just before the final shot cuts to black
+    w_on = g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_OUT - END_WARP)), ("B", "bool", g.not_(after(END_T_OUT)))], ty="bool")
+    a = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", steps[3],
+               [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"),
+                ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", w_on)]))]).then
+    f_yes, f_no = g.branch(f_on, a)
     fa = g.pure(MATH, "FMax", [("A", "real", 0.0), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", 1.0),
                ("B", "real", g.mul(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", et), ("B", "real", END_T_SHOT)]), 1.0 / END_SHOT_FADE))]))], ty="real")
     fcol = g.pure(MATH, "MakeColor", [("R", "float", 0.0), ("G", "float", 0.0), ("B", "float", 0.0), ("A", "float", fa)], ty="color")
@@ -1022,6 +1044,9 @@ def hud_graph():
     a = g.set("ReadBody", "string", fget("Body"), a).then
     a = g.set("ReadHand", "string", fget("Hand"), a).then
     a = g.set("ReadPaper", "string", fget("Paper"), a).then
+    a = g.set("ReadBody2", "string", fget("Body2"), a).then      # a second sheet beside it (2026-11-22)
+    a = g.set("ReadHand2", "string", fget("Hand2"), a).then
+    a = g.set("ReadPaper2", "string", fget("Paper2"), a).then
     a = g.set("ReadEnds", "bool", fget("EndsGame", "bool"), a).then
     freeze(g.set("Reading", "bool", True, a).then)
     # 1: first time only - journal, key, objective

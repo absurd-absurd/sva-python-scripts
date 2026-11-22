@@ -232,7 +232,8 @@ def main():
     add_vars(ex, [("Prompt", s), ("Title", s), ("Body", s), ("Journal", s), ("GivesKey", s),
                   ("NeedsKey", s), ("LockedText", s), ("Objective", s), ("Hand", s), ("Paper", s), ("EndsGame", b), ("PickUp", b),
                   ("IsDoor", b), ("OpenAngle", r),
-                  ("ClueId", s), ("AreaNeed1", s), ("AreaNeed2", s), ("AreaNext", s)], editable=True)
+                  ("ClueId", s), ("AreaNeed1", s), ("AreaNeed2", s), ("AreaNext", s),
+                  ("Body2", s), ("Hand2", s), ("Paper2", s)], editable=True)   # a second sheet beside the first (2026-11-22)
     add_vars(ex, [("Done", b), ("Opened", b), ("Yaw", r)], editable=False)
     BPL.compile_blueprint(ex)
     defaults(ex, {"Prompt": "Examine", "LockedText": "It's locked.", "OpenAngle": 95.0})
@@ -241,7 +242,7 @@ def main():
 
     hud, _ = blueprint("BP_HorrorHUD", unreal.HUD)
     add_vars(hud, [("Focus", BPL.get_object_reference_type(BPL.generated_class(ex))),
-                   ("Reading", b), ("JournalOpen", b), ("ReadTitle", s), ("ReadBody", s), ("ReadHand", s), ("ReadPaper", s),
+                   ("Reading", b), ("JournalOpen", b), ("ReadTitle", s), ("ReadBody", s), ("ReadHand", s), ("ReadPaper", s), ("ReadBody2", s), ("ReadHand2", s), ("ReadPaper2", s),
                    ("Journal", s), ("Keys", s), ("Objective", s), ("Toast", s), ("ToastTime", r),
                    ("Gap", s), ("MapOpen", b),
                    ("Opening", b), ("OpenStart", r), ("OpenEnd", r), ("OpeningText", s),   # the opening (2026-11-17)

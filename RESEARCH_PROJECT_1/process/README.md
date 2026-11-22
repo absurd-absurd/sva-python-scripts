@@ -380,3 +380,18 @@ From the top: wind_loop (low roar with gusts swelling in the upper bands), lake_
 bright spike that fades), rattle_loop (inhale = soft round blob, exhale = the striped rattle), warp_sting
 (a reversed rattle swelling up over a falling sub tone). Each loop runs back into its own start without a click,
 because every noise is made in the frequency domain and every envelope is built from whole-cycle sines.
+
+## 2026-11-22_shack_cot_pages.png / 2026-11-22_shack_two_pages.png
+
+From the user's play-through: the shack's two notes now lie side by side on the cot (Cas's red notebook and
+the loose page in the wrong hand; the page used to be nailed to the wall). One E opens both at once: Cas's
+notebook on the left in her Rock Salt hand, the wrong-hand page (Zeyada) on the right. The reading screen
+draws a second sheet whenever a clue has body2/hand2/paper2 in clues.json.
+
+## 2026-11-22_dock_ending.png
+
+The ending, now at the end of the dock (it was still by the boathouse note in the saved level). Top row:
+"[E] Read" at the red lantern on the last planks, the last page ("you came, bug / now we can be together"),
+then Bug's line "this isn't Cas." Bottom row: the one year later shot of the MISSING poster in its last
+second, the only warp in the whole game now (the user wanted no flashes after wrong-hand pages or at the
+lake); then black, and the game quits back to the editor.

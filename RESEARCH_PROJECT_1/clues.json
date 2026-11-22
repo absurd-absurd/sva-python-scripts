@@ -9,20 +9,22 @@
     "paper": "the sheet the reading screen shows it on: stationery, notebook, typed, ledger, scrap (tools/make_papers.py), or a picture with its words drawn in (use hand none): key_office, key_gate, key_boathouse (tools/make_keys.py), register (tools/make_guest_book.py)",
     "hand": "whose writing the reading screen uses: cas = Rock Salt, wrong = Zeyada, print = typed; none = Bug's Ink Free",
     "open_angle": "how far a door swings (default 95; negative swings the other way)",
-    "shape": "paper, map_ground, key, book, door or room_door (see SHAPES in place_clues.py)"
+    "shape": "paper, map_ground, key, book, door or room_door (see SHAPES in place_clues.py)",
+    "body2 / hand2 / paper2": "a second sheet: the reading screen shows both side by side (body on the left, body2 on the right)",
+    "also": "a second flat prop beside the clue (card = export/keycard_<card>.png; dx, dy = cm along the clue's own axes; yaw = extra turn); the aim box covers both"
   },
   "start_objective": "There's something on the ground by the car. I should see what that is.",
   "areas": {
     "room104": {"clues": ["note_bed", "cas_wall", "key_office"], "next": "I have her office key. Whatever she found, it started in the office."},
     "office": {"clues": ["guest_book", "field_log", "key_backgate"], "next": "A key marked GATE. The trail behind the motel starts at that gate."},
-    "shack": {"clues": ["shack_notes", "shack_notes_wrong", "key_boathouse"], "next": "The boathouse is circled on her map. Whatever this is, it ends at the lake."}
+    "shack": {"clues": ["shack_notes", "key_boathouse"], "next": "The boathouse is circled on her map. Whatever this is, it ends at the lake."}
   },
   "game_text": {
     "opening": "October 2002.\n\nIt's been a year since Cas stopped answering my calls. Other than me, she has no one to even care to look for her. Not since her mom went missing.\n\nThen last week a postcard came. Marrow Falls Motel on the front. On the back, one line...\n\ni miss you bug",
     "game_night": "October 17, 2002 (the anniversary)",
     "ending_page": "you came, bug\n\nnow we can be together",
     "ending_last_line": "this isn't Cas",
-    "ending_place": "the boathouse (by the water door)",
+    "ending_place": "the end of the dock (a red lantern on the last planks)",
     "ending_screen": "cut to black right away (after Bug's line and the rattle behind you)",
     "tagline": "none",
     "wrong_hand_font": "fonts/Zeyada.ttf (postcard, later shack pages, boathouse note, last page)",
@@ -177,29 +179,22 @@
       "at": [3205, -912, 56.5], "yaw": 12, "room": true,
       "prompt": "Read",
       "title": "A folder on the bed",
-      "body": "THE TRIALS OF BLACK HOLLOW LAKE\n\nAug 3 1974 - Trying to find the source of the sound at the deepest part of the lake and failed again. The line goes down and keeps going.\n\nAug 9 1974 - There's a rattling heard from the water every night now. It stops when we stop, but it starts again as soon as we move.\n\nAug 21 1974 - Lanterns along the shore seem to keep it quiet. Red works best.\n\nOct 17 1974 - Freedman walked into the water. We found his boots on the dock. In the morning a boy came out of the woods who went missing in 1952. He hasn't aged.\n\nOne goes in. Something comes back out.\n\nWe can't continue the trials, we've lost too much. The motel will stay open. Someone has to keep the lights lit.",
+      "body": "THE TRIALS OF BLACK HOLLOW LAKE\n\nAug 3 1974 - Trying to find the source of the sound at the deepest part of the lake and failed again. The line goes down and keeps going.\n\nAug 9 1974 - There's a rattling heard from the water every night now. It stops when we stop, but it starts again as soon as we move.\n\nAug 21 1974 - Lanterns along the shore seem to keep it quiet. Red works best.\n\nOct 17 1974 - Freedman walked into the water. We found his boots on the dock. In the morning a boy came out of the woods who went missing in 1952. He hasn't aged.\n\nOne goes in. Something comes back out.\n\nWe can't continue the trials, we've lost too much. The motel will stay open. Someone has to keep the lanterns lit.",
       "journal": "A folder of the researchers' notes from 1974, left on the bed in the back room. One goes in. Something comes back out.",
       "objective": "One goes in, something comes back. Cas read this. The study clearly said 'something' comes back, but she wanted to believe it could be her mom."
     },
     {
       "id": "shack_notes", "hand": "cas", "paper": "notebook",
       "shape": "notebook",
-      "at": [2249.2, 4254.3, 58.5], "yaw": 80, "room": true,
+      "at": [2235, 4241, 56.0], "yaw": 0, "room": true,
       "prompt": "Read",
-      "title": "Cas's notebook",
+      "title": "Notes on the cot",
       "body": "Night 3. I can't stay in the motel anymore. They watch me there.\n\nThe rattle comes every night now. It stops when I stop. So I don't stop.\n\nI heard her calling from the water. She said my name the way she used to, like she did when I was eight.\n\nThe log said one goes in, one comes back. I could bring her back.",
-      "journal": "Cas camped out at the hunter's shack. Her notebook says she heard her mom calling from the water.",
-      "objective": "She read the log wrong. It clearly said something comes back out, not someone. Something's gone very wrong."
-    },
-    {
-      "id": "shack_notes_wrong", "hand": "wrong", "paper": "notebook",
-      "shape": "wall_page",
-      "at": [2508.7, 4454.6, 112.0], "yaw": 12, "room": true,
-      "prompt": "Read",
-      "title": "Pages nailed to the wall",
-      "body": "she's not sleeping anymore\n\nbug will come. bug always comes\n\ni left bug a map\n\n- cas",
-      "journal": "Pages nailed to the shack wall, signed cas. It's not her handwriting. It's the same writing as the postcard.",
-      "objective": "That's not her handwriting. It's the same writing as the postcard."
+      "hand2": "wrong", "paper2": "notebook",
+      "body2": "she's not sleeping anymore\n\nbug will come. bug always comes\n\ni left bug a map\n\n- cas",
+      "also": {"card": "shack_notes_wrong", "dx": 42, "dy": 2, "yaw": -6},
+      "journal": "Cas camped out at the hunter's shack. Her notebook says she heard her mom calling from the water. The page beside it is signed cas, but it's not her handwriting. It's the same writing as the postcard.",
+      "objective": "She read the log wrong. It said something comes back out, not someone. And that page isn't her handwriting. It's the same writing as the postcard."
     },
     {
       "id": "boathouse_note", "hand": "wrong", "paper": "scrap",
