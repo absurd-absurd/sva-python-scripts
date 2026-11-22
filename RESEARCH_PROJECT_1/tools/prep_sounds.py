@@ -65,7 +65,13 @@ def rattle():
     """One rattle: a reversed swell rising into the growl, the growl with RATTLE_FX, echoes; loud."""
     x = trim_start(load("growl", af=RATTLE_FX))
     swell = x[::-1][-int(1.2 * SR):] * np.linspace(0, 0.6, int(1.2 * SR))[:, None] ** 2
-    return fades(level(drive(level(np.concatenate([swell, x]), -14, -1)), -10, -1), 0.05, 0.8)
+    return fades(level(drive(level(np.concatenate([swell, x]), -14, -1), 5.0), -8, -0.5), 0.05, 0.8)
+
+
+def rattle_hit():
+    """The same rattle with no swell: it hits at once (the one-second last warp, user 2026-11-22)."""
+    x = trim_start(load("growl", af=RATTLE_FX))
+    return fades(level(drive(level(x, -14, -1), 5.0), -8, -0.5), 0.005, 0.3)
 
 
 def rattle_loop(seconds=16.0):
@@ -79,7 +85,7 @@ def rattle_loop(seconds=16.0):
         i = int(start * SR)
         idx = (np.arange(len(y)) + i) % n
         np.add.at(out, idx, y)
-    return level(drive(level(out, -15, -1)), -11, -1)
+    return level(drive(level(out, -15, -1), 5.0), -8, -0.5)
 
 
 def load(key, start=None, dur=None, af=None):
@@ -178,6 +184,7 @@ if __name__ == "__main__":
     save("warp_bass", fades(level(load("bass", af=WARPED), -24, -4), 0.4, 1.5))
     save("growl", fades(trim_start(level(load("growl"), -14, -1))))
     save("rattle", rattle())
+    save("rattle_hit", rattle_hit())
     save("rattle_dock_loop", rattle_loop())
     save("gate", fades(trim_start(level(load("gate"), -16, -1))))
     save("typing_loop", loop(level(load("typing", 20, 33), -24, -3), 3.0))
