@@ -393,8 +393,10 @@ def hud_graph():
     a = g.set("bShowMouseCursor", "bool", True, a, target=pcpin()).then
     a = g.set("bEnableClickEvents", "bool", True, a, target=pcpin()).then
     a = g.set("bEnableMouseOverEvents", "bool", True, a, target=pcpin()).then
-    g.call("/Script/UMG.WidgetBlueprintLibrary", "SetInputMode_GameAndUIEx", a,
-           [("PlayerController", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc")), ("bHideCursorDuringCapture", "bool", False)])
+    a = g.call("/Script/UMG.WidgetBlueprintLibrary", "SetInputMode_GameAndUIEx", a,
+               [("PlayerController", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc")), ("bHideCursorDuringCapture", "bool", False)]).then
+    # keyboard focus on the game view, or E / C / Q on the title do nothing until you click into it (user 2026-11-22)
+    g.call("/Script/UMG.WidgetBlueprintLibrary", "SetFocusToGameViewport", a, [])
     open_t = lambda: g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get("OpenStart", "real"))])
 
     # ---- Draw HUD ----
@@ -1025,6 +1027,7 @@ def hud_graph():
         a = g.set("bShowMouseCursor", "bool", True, a, target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc", C(PC))).then
         a = g.call("/Script/UMG.WidgetBlueprintLibrary", "SetInputMode_GameAndUIEx", a,
                    [("PlayerController", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc")), ("bHideCursorDuringCapture", "bool", False)]).then
+        a = g.call("/Script/UMG.WidgetBlueprintLibrary", "SetFocusToGameViewport", a, []).then
         g.call(STATICS, "SetGamePaused", a, [("bPaused", "bool", True)])
 
     def start_game(after):
