@@ -31,6 +31,21 @@ Drop the files in this folder and tell me. I'll trim and level them and bring th
 
 ## Credits
 
-| File | Freesound link | Author | License |
-|---|---|---|---|
-| | | | |
+| Sound | Freesound link | Author | Used for | License |
+|---|---|---|---|---|
+| hualdk | https://freesound.org/s/879900/ | timkahn | ambient music, whole game | (check on the page) |
+| yemxid | https://freesound.org/s/874213/ | timkahn | title screen music | (check on the page) |
+| bass synth 98 | https://freesound.org/s/797286/ | cvltiv8r | with the warp | (check on the page) |
+| creature deep growl | https://freesound.org/s/435150/ | vykroft | the ending | (check on the page) |
+| 2023-10-03 lake shore ambience | https://freesound.org/s/705034/ | mick | the lake shore | (check on the page) |
+| strong wind through door crack | https://freesound.org/s/687450/ | zumbidos | wind | (check on the page) |
+| chicharras and bugs on the road to Minca | https://freesound.org/s/397824/ | adrienpola | night insects | (check on the page) |
+| car turning on and off (interior) | https://freesound.org/s/370897/ | sjturia | the opening | (check on the page) |
+| footsteps on grass | https://freesound.org/s/807862/ | designerschoice | footsteps outside | (check on the page) |
+| footsteps on wooden floor and carpet | https://freesound.org/s/119913/ | ftpalad | footsteps inside / dock | (check on the page) |
+| picking up one paper | https://freesound.org/s/463689/ | usamah | reading a note | (check on the page) |
+| door creak | https://freesound.org/s/460542/ | coosemek | doors | (check on the page) |
+| jingling keys | https://freesound.org/s/444267/ | karinalarasart | keys | (check on the page) |
+
+The originals are in `sounds/downloads/` (not in git: too big). `python tools/prep_sounds.py` cuts, loops and levels
+them into `export/sounds/rec_*.wav`; `unreal/place_sounds.py` imports them into Unreal.

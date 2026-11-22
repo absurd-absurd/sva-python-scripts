@@ -16,6 +16,9 @@ DIR = "/Game/Horror/Audio"
 TAG = "sound"
 WIND_VOLUME = 0.2          # 0.35 was "a little loud" (user 2026-11-22)
 LAKE_VOLUME = 0.9
+BUGS_VOLUME = 0.25         # night insects, 2D, under everything
+# the music, the car, the growl, the warp bass, paper, keys, door and footsteps are played by BP_HorrorHUD
+# (tools/make_interact_nodes.py SND / VOL); its TitleMusic / GameMusic vars are AudioComponent references
 LAKE_AT = [(-4500, 14700), (-1500, 14650), (1500, 14700), (4500, 14700)]   # along the shore (dock starts at y 14601)
 LAKE_INNER, LAKE_FALLOFF = 1200.0, 3500.0                                   # full volume within 12 m, gone by 47 m
 
@@ -80,8 +83,10 @@ for a in actors.get_all_level_actors():
     if a.actor_has_tag(TAG):
         actors.destroy_actor(a)
 snd = import_sounds()
-ambient("snd_wind", snd["wind_loop"], (0, 0, 300), WIND_VOLUME)
+# the user's recordings (tools/prep_sounds.py, 2026-11-22) instead of the synthesised wind and lake; bugs are new
+ambient("snd_wind", snd["rec_wind_rec_loop"], (0, 0, 300), WIND_VOLUME)
+ambient("snd_bugs", snd["rec_bugs_loop"], (0, 0, 300), BUGS_VOLUME)
 att = attenuation()
 for k, (x, y) in enumerate(LAKE_AT):
-    ambient(f"snd_lake_{k}", snd["lake_loop"], (x, y, 40), LAKE_VOLUME, att)
-print("placed: wind + lake x", len(LAKE_AT))
+    ambient(f"snd_lake_{k}", snd["rec_lake_rec_loop"], (x, y, 40), LAKE_VOLUME, att)
+print("placed: wind + bugs + lake x", len(LAKE_AT))

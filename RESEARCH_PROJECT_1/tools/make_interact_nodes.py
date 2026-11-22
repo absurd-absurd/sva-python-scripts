@@ -132,6 +132,11 @@ FLASH_INTENSITY = float(_re.search(r"^INTENSITY = ([0-9.]+)", _FL, _re.M).group(
 MPC_PATH = "/Game/Horror/Materials/MPC_Horror.MPC_Horror"
 CLICK_SOUND = "/Game/Horror/Audio/S_flashlight_click.S_flashlight_click"   # unreal/place_sounds.py
 CLICK_VOLUME = 0.8
+# the user's freesound recordings (2026-11-22; tools/prep_sounds.py -> unreal/place_sounds.py): S_rec_<name>
+SND = lambda n: f"/Game/Horror/Audio/S_rec_{n}.S_rec_{n}"
+AUDIO = "/Script/Engine.AudioComponent"
+VOL = {"title": 0.8, "music": 0.4, "car": 0.8, "growl": 1.0, "bass": 0.7, "paper": 0.8, "keys": 0.7, "door": 0.7, "step": 0.45}
+STRIDE = 260.0        # cm walked between footsteps (about two a second walking)
 HIT_SHAKE = "/Game/Horror/Player/CS_FlashHit.CS_FlashHit_C"
 # flashlight flicker, calm -> afraid (Fear 0 -> 1 in MPC_Horror)
 FLICK_GAP = ((2.5, 6.0), (0.2, 0.8))    # seconds between flickers (random in range)
@@ -186,6 +191,7 @@ TY = {
     "actorclass": _t("class", obj=C(ACTOR)),
     "smc": _t("object", obj=C("/Script/Engine.StaticMeshComponent")),
     "sound": _t("object", obj=C("/Script/Engine.SoundBase")),
+    "audio": _t("object", obj=C("/Script/Engine.AudioComponent")),
 }
 
 
@@ -399,7 +405,11 @@ def hud_graph():
     a = g.call("/Script/UMG.WidgetBlueprintLibrary", "SetInputMode_GameAndUIEx", a,
                [("PlayerController", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc")), ("bHideCursorDuringCapture", "bool", False)]).then
     # keyboard focus on the game view, or E / C / Q on the title do nothing until you click into it (user 2026-11-22)
-    g.call("/Script/UMG.WidgetBlueprintLibrary", "SetFocusToGameViewport", a, [])
+    a = g.call("/Script/UMG.WidgetBlueprintLibrary", "SetFocusToGameViewport", a, []).then
+    # the title music (yemxid) until the game starts
+    tm = g.call(STATICS, "SpawnSound2D", a, [("Sound", "sound", SND("title_loop")), ("VolumeMultiplier", "float", VOL["title"])],
+                outs=[("ReturnValue", "audio")])
+    g.set("TitleMusic", "audio", tm.o["ReturnValue"], tm.then)
     open_t = lambda: g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get("OpenStart", "real"))])
 
     # ---- Draw HUD ----
@@ -460,7 +470,11 @@ def hud_graph():
     warp = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", warp.then,
                   [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"),
                    ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", whole)]))])
-    title_yes, title_no = g.branch(g.get("Title", "bool"), warp.then)
+    seq = g.sequence(warp.then, 2)
+    d_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", whole), ("B", "bool", g.not_(g.get("DockWarp", "bool")))], ty="bool"), seq[0])
+    d_yes = g.call(STATICS, "PlaySound2D", d_yes, [("Sound", "sound", SND("warp_bass")), ("VolumeMultiplier", "float", VOL["bass"])]).then
+    g.set("DockWarp", "bool", True, d_yes)
+    title_yes, title_no = g.branch(g.get("Title", "bool"), seq[1])
     end_yes, end_no = g.branch(g.get("Ending", "bool"), title_no)
     op_yes, op_no = g.branch(g.get("Opening", "bool"), end_no)
     hud_then, fade_then, pause_then = g.sequence(op_no, 3)
@@ -576,9 +590,21 @@ def hud_graph():
     # the click (user 2026-11-22, sound): F toggles the light's visibility in BP_FirstPersonCharacter; whenever it
     # differs from last frame (FlOn), play the switch click once
     vis = g.pure(SCENE, "IsVisible", [], ty="bool", target=(spot, "scene"))
-    changed, _ = g.branch(g.pure(MATH, "NotEqual_BoolBool", [("A", "bool", vis), ("B", "bool", g.get("FlOn", "bool"))], ty="bool"), lit.then)
+    changed, changed_no = g.branch(g.pure(MATH, "NotEqual_BoolBool", [("A", "bool", vis), ("B", "bool", g.get("FlOn", "bool"))], ty="bool"), lit.then)
     a = g.call(STATICS, "PlaySound2D", changed, [("Sound", "sound", CLICK_SOUND), ("VolumeMultiplier", "float", CLICK_VOLUME)]).then
-    g.set("FlOn", "bool", vis, a)
+    fl = g.set("FlOn", "bool", vis, a)
+    # footsteps (user's recordings): every STRIDE cm walked; wood indoors (a ceiling above) and on the dock, else grass
+    speed = g.pure(MATH, "VSize", [("A", "vector", g.pure(ACTOR, "GetVelocity", ty="vector", target=(g.pure(HUD, "GetOwningPawn", ty="actor"), "actor")))])
+    walked = g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.get("StepDist", "real")), ("B", "real", g.pure(MATH, "Multiply_DoubleDouble", [
+        ("A", "real", speed), ("B", "real", g.pure(STATICS, "GetWorldDeltaSeconds"))]))])
+    st = g.set("StepDist", "real", walked, [fl.then, changed_no])
+    due, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", g.get("StepDist", "real")), ("B", "real", STRIDE)], ty="bool"), st.then)
+    due = g.set("StepDist", "real", 0.0, due).then
+    wood = g.pure(MATH, "BooleanOR", [("A", "bool", on_dock), ("B", "bool", up.o["ReturnValue"])], ty="bool")
+    w_, g_ = g.branch(wood, due)
+    pitch = lambda: g.pure(MATH, "RandomFloatInRange", [("Min", "real", 0.9), ("Max", "real", 1.1)])
+    g.call(STATICS, "PlaySound2D", w_, [("Sound", "sound", SND("step_wood_3")), ("VolumeMultiplier", "float", VOL["step"]), ("PitchMultiplier", "float", pitch())])
+    g.call(STATICS, "PlaySound2D", g_, [("Sound", "sound", SND("step_grass_3")), ("VolumeMultiplier", "float", VOL["step"]), ("PitchMultiplier", "float", pitch())])
 
     # objective + message
     g.row(340 * 9, 0)
@@ -979,6 +1005,9 @@ def hud_graph():
     # 3: once, at the final shot: show BP_FinalShot (the poster) and look through its camera
     s_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_SHOT)), ("B", "bool", g.not_(g.get("EndShot", "bool")))], ty="bool"), steps[2])
     a = g.set("EndShot", "bool", True, s_yes).then
+    # no music in the one-year-later shot (user 2026-11-22)
+    a = g.call(AUDIO, "FadeOut", a, [("FadeOutDuration", "float", 1.0), ("FadeVolumeLevel", "float", 0.0)],
+               target=(g.get("GameMusic", "audio"), "audio")).then
     found = g.call(STATICS, "GetActorOfClass", a, [("ActorClass", "actorclass", FINAL_CLASS)], outs=[("ReturnValue", "actor")])
     shot = found.o["ReturnValue"]
     a = g.call(ACTOR, "SetActorHiddenInGame", found.then, [("bNewHidden", "bool", False)], target=(shot, "actor")).then
@@ -995,6 +1024,9 @@ def hud_graph():
     a = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", a,
                [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"),
                 ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", w_on)]))]).then
+    eb, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_OUT - END_WARP)), ("B", "bool", g.not_(g.get("EndBass", "bool")))], ty="bool"), a)
+    eb = g.call(STATICS, "PlaySound2D", eb, [("Sound", "sound", SND("warp_bass")), ("VolumeMultiplier", "float", VOL["bass"])]).then
+    g.set("EndBass", "bool", True, eb)
     f_yes, f_no = g.branch(f_on, a)
     fa = g.pure(MATH, "FMax", [("A", "real", 0.0), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", 1.0),
                ("B", "real", g.mul(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", et), ("B", "real", END_T_SHOT)]), 1.0 / END_SHOT_FADE))]))], ty="real")
@@ -1046,8 +1078,16 @@ def hud_graph():
         a = g.set("bShowMouseCursor", "bool", False, a, target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc", C(PC))).then
         a = g.call("/Script/UMG.WidgetBlueprintLibrary", "SetInputMode_GameOnly", a,
                    [("PlayerController", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc"))]).then
-        g.call(PC, "SetViewTargetWithBlend", a, [("NewViewTarget", "actor", g.pure(HUD, "GetOwningPawn", ty="actor")), ("BlendTime", "float", 0.0)],
-               target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc"))
+        a = g.call(PC, "SetViewTargetWithBlend", a, [("NewViewTarget", "actor", g.pure(HUD, "GetOwningPawn", ty="actor")), ("BlendTime", "float", 0.0)],
+                   target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc")).then
+        # sound: the title music fades out, the car pulls in (the opening), the ambient music (hualdk) fades in
+        a = g.call(AUDIO, "FadeOut", a, [("FadeOutDuration", "float", 2.5), ("FadeVolumeLevel", "float", 0.0)],
+                   target=(g.get("TitleMusic", "audio"), "audio")).then
+        a = g.call(STATICS, "PlaySound2D", a, [("Sound", "sound", SND("car")), ("VolumeMultiplier", "float", VOL["car"])]).then
+        gm = g.call(STATICS, "SpawnSound2D", a, [("Sound", "sound", SND("music_loop")), ("VolumeMultiplier", "float", VOL["music"])],
+                    outs=[("ReturnValue", "audio")])
+        a = g.set("GameMusic", "audio", gm.o["ReturnValue"], gm.then).then
+        g.call(AUDIO, "FadeIn", a, [("FadeInDuration", "float", 6.0), ("FadeVolumeLevel", "float", 1.0)], target=(g.get("GameMusic", "audio"), "audio"))
 
     on_title, e_game = g.branch(g.get("Title", "bool"), e)
     start, _ = g.branch(g.not_(g.get("ControlsOpen", "bool")), on_title)
@@ -1065,9 +1105,11 @@ def hud_graph():
         ("B", "bool", g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadHand2", "string")), ("B", "string", "wrong")], ty="bool"))], ty="bool")
     w_yes, w_no = g.branch(is_wrong, a)
     a = g.set("WarpUntil", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.now()), ("B", "real", WARP_AFTER)]), w_yes).then
+    a = g.call(STATICS, "PlaySound2D", a, [("Sound", "sound", SND("warp_bass")), ("VolumeMultiplier", "float", VOL["bass"])]).then
     ends, plain = g.branch(g.get("ReadEnds", "bool"), [a, w_no])
     unfreeze(plain)
-    g.set("EndStart", "real", g.now(), g.set("Ending", "bool", True, ends).then)
+    a = g.set("EndStart", "real", g.now(), g.set("Ending", "bool", True, ends).then).then
+    g.call(STATICS, "PlaySound2D", a, [("Sound", "sound", SND("growl")), ("VolumeMultiplier", "float", VOL["growl"])])
     g.row(340, 3300)
     b_jour, b_not_jour = g.branch(g.get("JournalOpen", "bool"), b_not_read)
     unfreeze(g.set("JournalOpen", "bool", False, b_jour).then)
@@ -1086,7 +1128,10 @@ def hud_graph():
     # 0: open its page
     g.row(340 * 5, 5000)
     p_yes, _ = g.branch(g.not_(g.empty(fget("Body"))), steps[0])
-    a = g.set("ReadTitle", "string", fget("Title"), p_yes).then
+    k_yes, k_no = g.branch(g.pure(STR, "Contains", [("SearchIn", "string", fget("Paper")), ("Substring", "string", "key_")], ty="bool"), p_yes)
+    s_key = g.call(STATICS, "PlaySound2D", k_yes, [("Sound", "sound", SND("keys")), ("VolumeMultiplier", "float", VOL["keys"])])
+    s_pap = g.call(STATICS, "PlaySound2D", k_no, [("Sound", "sound", SND("paper")), ("VolumeMultiplier", "float", VOL["paper"])])
+    a = g.set("ReadTitle", "string", fget("Title"), [s_key.then, s_pap.then]).then
     a = g.set("ReadBody", "string", fget("Body"), a).then
     a = g.set("ReadHand", "string", fget("Hand"), a).then
     a = g.set("ReadPaper", "string", fget("Paper"), a).then
@@ -1131,6 +1176,7 @@ def hud_graph():
     # 2: doors swing open
     g.row(340 * 5, 8800)
     y, _ = g.branch(fget("IsDoor", "bool"), steps[2])
+    y = g.call(STATICS, "PlaySound2D", y, [("Sound", "sound", SND("door_creak")), ("VolumeMultiplier", "float", VOL["door"])]).then
     g.set("Opened", "bool", True, y, target=focus())
     # 3: pickups disappear
     g.row(340 * 5, 9400)

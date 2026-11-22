@@ -11,3 +11,6 @@ maya/lake_scene.ma
 maya/trail_scene.ma
 # big Maya scene (58 MB): rebuilt by maya/make_motel.py
 maya/motel_scene.ma
+
+# the user's freesound downloads (big originals; tools/prep_sounds.py makes the game copies in export/sounds)
+sounds/downloads/
