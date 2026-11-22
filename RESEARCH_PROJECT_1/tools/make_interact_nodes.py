@@ -130,6 +130,8 @@ import re as _re
 _FL = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "unreal", "flashlight.py"), encoding="utf-8").read()
 FLASH_INTENSITY = float(_re.search(r"^INTENSITY = ([0-9.]+)", _FL, _re.M).group(1))   # same as flashlight.py
 MPC_PATH = "/Game/Horror/Materials/MPC_Horror.MPC_Horror"
+CLICK_SOUND = "/Game/Horror/Audio/S_flashlight_click.S_flashlight_click"   # unreal/place_sounds.py
+CLICK_VOLUME = 0.8
 HIT_SHAKE = "/Game/Horror/Player/CS_FlashHit.CS_FlashHit_C"
 # flashlight flicker, calm -> afraid (Fear 0 -> 1 in MPC_Horror)
 FLICK_GAP = ((2.5, 6.0), (0.2, 0.8))    # seconds between flickers (random in range)
@@ -183,6 +185,7 @@ TY = {
     "ex": _t("object", obj=EX_CLASS),
     "actorclass": _t("class", obj=C(ACTOR)),
     "smc": _t("object", obj=C("/Script/Engine.StaticMeshComponent")),
+    "sound": _t("object", obj=C("/Script/Engine.SoundBase")),
 }
 
 
@@ -197,7 +200,7 @@ def fmt_default(ty, v):
         return f'DefaultValue="{int(v)}"'
     if ty == "bool":
         return f'DefaultValue="{"true" if v else "false"}"'
-    if ty in ("font", "texture", "mpc", "compclass", "shakeclass", "actorclass"):
+    if ty in ("font", "texture", "mpc", "compclass", "shakeclass", "actorclass", "sound"):
         return f'DefaultObject="{v}"'
     if isinstance(v, float) or isinstance(v, int):
         return f'DefaultValue="{float(v)}"'
@@ -570,6 +573,12 @@ def hud_graph():
     power = g.pure(MATH, "Multiply_DoubleDouble", [("A", "real", g.mul(level, FLASH_INTENSITY)), ("B", "real", g.get("FlDim", "real"))])
     lit = g.call("/Script/Engine.LightComponent", "SetIntensity", s_dim.then, [("NewIntensity", "float", power)],
                  target=(spot, "light"))
+    # the click (user 2026-11-22, sound): F toggles the light's visibility in BP_FirstPersonCharacter; whenever it
+    # differs from last frame (FlOn), play the switch click once
+    vis = g.pure(SCENE, "IsVisible", [], ty="bool", target=(spot, "scene"))
+    changed, _ = g.branch(g.pure(MATH, "NotEqual_BoolBool", [("A", "bool", vis), ("B", "bool", g.get("FlOn", "bool"))], ty="bool"), lit.then)
+    a = g.call(STATICS, "PlaySound2D", changed, [("Sound", "sound", CLICK_SOUND), ("VolumeMultiplier", "float", CLICK_VOLUME)]).then
+    g.set("FlOn", "bool", vis, a)
 
     # objective + message
     g.row(340 * 9, 0)

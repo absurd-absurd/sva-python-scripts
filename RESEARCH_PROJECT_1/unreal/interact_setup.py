@@ -242,7 +242,7 @@ def main():
 
     hud, _ = blueprint("BP_HorrorHUD", unreal.HUD)
     add_vars(hud, [("Focus", BPL.get_object_reference_type(BPL.generated_class(ex))),
-                   ("Reading", b), ("JournalOpen", b), ("ReadTitle", s), ("ReadBody", s), ("ReadHand", s), ("ReadPaper", s), ("ReadBody2", s), ("ReadHand2", s), ("ReadPaper2", s),
+                   ("Reading", b), ("JournalOpen", b), ("ReadTitle", s), ("ReadBody", s), ("ReadHand", s), ("ReadPaper", s), ("ReadBody2", s), ("ReadHand2", s), ("ReadPaper2", s), ("FlOn", b),
                    ("Journal", s), ("Keys", s), ("Objective", s), ("Toast", s), ("ToastTime", r),
                    ("Gap", s), ("MapOpen", b),
                    ("Opening", b), ("OpenStart", r), ("OpenEnd", r), ("OpeningText", s),   # the opening (2026-11-17)
@@ -253,7 +253,7 @@ def main():
                    ("FlDim", r)], editable=False)   # flashlight auto-dim near walls (0..1)
     BPL.compile_blueprint(hud)
     defaults(hud, {"Gap": "\n\n", "ToastTime": -100.0, "Objective": "", "FlNext": 4.0, "FlDim": 1.0,
-                   "Opening": True, "OpenEnd": -100.0, "Title": True, "OpeningText": opening_text()})
+                   "Opening": True, "OpenEnd": -100.0, "Title": True, "FlOn": True, "OpeningText": opening_text()})
     BPL.compile_blueprint(hud)
     lib.save_loaded_asset(hud, False)   # save even if Unreal did not mark it changed
 
