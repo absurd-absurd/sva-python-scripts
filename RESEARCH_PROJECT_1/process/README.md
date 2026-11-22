@@ -415,3 +415,14 @@ on the cot that is Cas's). Third row: the user's second choice of boots (Fab "Le
 given a material from the pack's own textures) by the water door, the note moved beside them; then Bug's new
 line "Those are Cas's boots... everything keeps bending around me...". Bottom row: walking up the warped
 dock, the last page (now 22 x 16 cm, it was too small to spot) under the last lantern, and reading it.
+
+## 2026-11-22_round4_chairs_boots_ending.png / 2026-11-22_round4_shack_pages_black_boots.png
+
+Fourth round. The motel's plastic chairs rebuilt in one connected piece (no slats poking out the back) and
+pushed back against the wall; the shack notebook lifted clear of the lumpy sleeping bag; the footprints in the
+boathouse now go from the door round the anchor to Cas's boots; the last page lies on the planks beside the
+dock lantern instead of inside its base; the one-year-later shot has no stray flash any more, and after the cut
+to black the game goes back to the title screen. Second sheet: the two shack pages with "[E] Close" bright and
+centred under them (it was faint on top of the left page; my first try at this left the left page blank), and
+the boots black and matte, one standing and one fallen on its side (the pack's pair cut in two in Maya,
+tools/split_boots.py).

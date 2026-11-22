@@ -688,12 +688,12 @@ def hud_graph():
                 ("TextureU", "float", 0.0), ("TextureV", "float", 0.0), ("TextureUWidth", "float", 1.0),
                 ("TextureVHeight", "float", 1.0), ("TintColor", "color", "(R=1.0,G=1.0,B=1.0,A=1.000000)")])
 
-    sheet = g.sequence(on_paper, 4)
+    sheet = g.sequence(on_paper, 5)
     sheet_tex(sheet[0], "ReadPaper", PX)
-    words = sheet[1]
-    c_two, c_one = g.branch(two, words)
+    c_two, c_one = g.branch(two, sheet[4])
     draw("[E]  Close", c_two, 0.465, PAIR_TOP + PAIR_H + 0.012, 0.8, TEXT, True)
-    words = draw("[E]  Close", c_one, 0.03, 0.9, 0.75, DIM)
+    draw("[E]  Close", c_one, 0.03, 0.9, 0.75, DIM)
+    words = sheet[1]
     body(words, g.pure(MATH, "Add_DoubleDouble", [("A", "real", PX), ("B", "real", g.mul(H, PAPER_TEXT_X))]),
          g.pure(MATH, "Add_DoubleDouble", [("A", "real", PY), ("B", "real", g.mul(PH, PAPER_TEXT_Y))]), True)
     two_a, _ = g.branch(two, sheet[2])

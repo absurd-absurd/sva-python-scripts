@@ -88,9 +88,10 @@ def main():
         for key, var in FIELDS.items():
             if key in c:
                 if key == "body" and c.get("paper"):
-                    value = wrap(c[key], SHEET_WRAP.get(c.get("hand", ""), SHEET_WRAP[""]))
+                    # two sheets side by side are drawn smaller (HUD PAIR_H): a few characters less a line
+                    value = wrap(c[key], SHEET_WRAP.get(c.get("hand", ""), SHEET_WRAP[""]) - (4 if c.get("body2") else 0))
                 elif key == "body2":
-                    value = wrap(c[key], SHEET_WRAP.get(c.get("hand2", ""), SHEET_WRAP[""]))
+                    value = wrap(c[key], SHEET_WRAP.get(c.get("hand2", ""), SHEET_WRAP[""]) - 3)
                 else:
                     value = wrap(c[key]) if key in ("body", "journal") else c[key]
                 if key == "objective":

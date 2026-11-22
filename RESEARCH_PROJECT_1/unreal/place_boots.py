@@ -19,7 +19,7 @@ STAND = (-3747.0, 15022.0)         # the standing boot (centre); the note lies j
 LIE = (-3782.0, 15030.0)           # the fallen one, its shaft pointing west, away from the note
 LIE_YAW = 8.0                      # a little askew
 SCALE = 0.36                       # the model is ~119 cm tall; tall leather boots ~43 cm (foot ~23 cm)
-BLACK = unreal.LinearColor(0.11, 0.105, 0.1, 1.0)   # multiplies the leather texture: near-black, the grain still shows
+BLACK = unreal.LinearColor(0.05, 0.048, 0.046, 1.0)   # multiplies the leather texture: near-black, the grain still shows
 LABELS = ("prop_cas_boots", "prop_cas_boot_standing", "prop_cas_boot_fallen")
 
 lib = unreal.EditorAssetLibrary
@@ -43,6 +43,9 @@ def material():
                        ("MetallicRoughnessTexture", "OcclusionRoughnessMetallic"), ("OcclusionTexture", "OcclusionRoughnessMetallic")):
         MEL.set_material_instance_texture_parameter_value(mi, param, unreal.load_asset(TEX + tex))
     MEL.set_material_instance_vector_parameter_value(mi, "BaseColorFactor", BLACK)
+    # no shine: matte leather (the fallen boot caught the flashlight like metal)
+    MEL.set_material_instance_scalar_parameter_value(mi, "MetallicFactor", 0.0)
+    MEL.set_material_instance_scalar_parameter_value(mi, "RoughnessFactor", 1.0)
     lib.save_loaded_asset(mi, False)
     return mi
 
