@@ -135,8 +135,10 @@ CLICK_VOLUME = 0.8
 # the user's freesound recordings (2026-11-22; tools/prep_sounds.py -> unreal/place_sounds.py): S_rec_<name>
 SND = lambda n: f"/Game/Horror/Audio/S_rec_{n}.S_rec_{n}"
 AUDIO = "/Script/Engine.AudioComponent"
-VOL = {"wind": 0.2, "bugs": 0.25, "title": 0.8, "music": 0.4, "car": 0.8, "growl": 1.0, "bass": 0.7, "paper": 0.8, "keys": 0.7, "door": 0.7, "step": 0.45}
+VOL = {"wind": 0.2, "bugs": 0.25, "title": 0.8, "music": 0.4, "car": 0.8, "growl": 1.0, "bass": 0.6, "forest": 0.45, "paper": 0.8, "keys": 0.7, "door": 0.7, "step": 0.45}
 INDOOR_LEVEL = 0.08   # wind + insects under a roof (a ceiling above you), of their outdoor volume
+GATE_Y, LAKE_Y = -100.0, 13900.0   # the back gate's fence line / where the lake area starts (y, cm)
+FOREST_RATTLE = (25.0, 55.0)        # seconds between the low warped bass in the forest (random in range)
 STRIDE = 260.0        # cm walked between footsteps (about two a second walking)
 HIT_SHAKE = "/Game/Horror/Player/CS_FlashHit.CS_FlashHit_C"
 # flashlight flicker, calm -> afraid (Fear 0 -> 1 in MPC_Horror)
@@ -607,7 +609,16 @@ def hud_graph():
     walked = g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.get("StepDist", "real")), ("B", "real", g.pure(MATH, "Multiply_DoubleDouble", [
         ("A", "real", speed), ("B", "real", g.pure(STATICS, "GetWorldDeltaSeconds"))]))])
     st = g.set("StepDist", "real", walked, [fl.then, changed_no])
-    st_step, st_room = g.sequence(st.then, 2)
+    st_step, st_room, st_forest = g.sequence(st.then, 3)
+    # in the forest (past the gate, before the lake) the low warped bass comes and goes on its own (user 2026-11-22:
+    # "make it happen throughout the forest not just with the notes"); the first one as you pass the gate
+    in_forest = g.pure(MATH, "BooleanAND", [("A", "bool", g.not_(motel_side)), ("B", "bool", g.not_(lake_side))], ty="bool")
+    due_r = g.pure(MATH, "BooleanAND", [("A", "bool", in_forest), ("B", "bool", g.pure(MATH, "Greater_DoubleDouble", [
+        ("A", "real", g.now()), ("B", "real", g.get("NextRattle", "real"))], ty="bool"))], ty="bool")
+    r_yes, _ = g.branch(due_r, st_forest)
+    r_yes = g.call(STATICS, "PlaySound2D", r_yes, [("Sound", "sound", SND("warp_bass")), ("VolumeMultiplier", "float", VOL["forest"])]).then
+    g.set("NextRattle", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.pure(MATH, "RandomFloatInRange", [
+        ("Min", "real", FOREST_RATTLE[0]), ("Max", "real", FOREST_RATTLE[1])]))]), r_yes)
     # under a roof (the ceiling trace) the wind and insects drop to INDOOR_LEVEL; back up outside
     inside = up.o["ReturnValue"]
     swap, _ = g.branch(g.pure(MATH, "NotEqual_BoolBool", [("A", "bool", inside), ("B", "bool", g.get("WasIndoor", "bool"))], ty="bool"), st_room)
@@ -619,7 +630,13 @@ def hud_graph():
     g.set("WasIndoor", "bool", inside, swap)
     due, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", g.get("StepDist", "real")), ("B", "real", STRIDE)], ty="bool"), st_step)
     due = g.set("StepDist", "real", 0.0, due).then
-    wood = g.pure(MATH, "BooleanOR", [("A", "bool", on_dock), ("B", "bool", up.o["ReturnValue"])], ty="bool")
+    # user 2026-11-22: hard steps on the motel side (lot, walkway, rooms, office), on the dock, and inside the boathouse
+    # and cabins (a roof, at the lake); forest steps everywhere past the gate
+    motel_side = g.pure(MATH, "Less_DoubleDouble", [("A", "real", wy), ("B", "real", GATE_Y)], ty="bool")
+    lake_side = g.pure(MATH, "Greater_DoubleDouble", [("A", "real", wy), ("B", "real", LAKE_Y)], ty="bool")
+    roofed_lake = g.pure(MATH, "BooleanAND", [("A", "bool", lake_side), ("B", "bool", up.o["ReturnValue"])], ty="bool")
+    wood = g.pure(MATH, "BooleanOR", [("A", "bool", motel_side), ("B", "bool", g.pure(MATH, "BooleanOR", [
+        ("A", "bool", on_dock), ("B", "bool", roofed_lake)], ty="bool"))], ty="bool")
     w_, g_ = g.branch(wood, due)
     pitch = lambda: g.pure(MATH, "RandomFloatInRange", [("Min", "real", 0.9), ("Max", "real", 1.1)])
     g.call(STATICS, "PlaySound2D", w_, [("Sound", "sound", SND("step_wood_3")), ("VolumeMultiplier", "float", VOL["step"]), ("PitchMultiplier", "float", pitch())])
@@ -1043,11 +1060,8 @@ def hud_graph():
     a = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", a,
                [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"),
                 ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", w_on)]))]).then
-    bass_then, fade_then = g.sequence(a, 2)          # one exec output can only feed one node
-    eb, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_OUT - END_WARP)), ("B", "bool", g.not_(g.get("EndBass", "bool")))], ty="bool"), bass_then)
-    eb = g.call(STATICS, "PlaySound2D", eb, [("Sound", "sound", SND("warp_bass")), ("VolumeMultiplier", "float", VOL["bass"])]).then
-    g.set("EndBass", "bool", True, eb)
-    f_yes, f_no = g.branch(f_on, fade_then)
+    # (no bass in the one-year-later shot: user 2026-11-22 - the warp there stays silent)
+    f_yes, f_no = g.branch(f_on, a)
     fa = g.pure(MATH, "FMax", [("A", "real", 0.0), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", 1.0),
                ("B", "real", g.mul(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", et), ("B", "real", END_T_SHOT)]), 1.0 / END_SHOT_FADE))]))], ty="real")
     fcol = g.pure(MATH, "MakeColor", [("R", "float", 0.0), ("G", "float", 0.0), ("B", "float", 0.0), ("A", "float", fa)], ty="color")

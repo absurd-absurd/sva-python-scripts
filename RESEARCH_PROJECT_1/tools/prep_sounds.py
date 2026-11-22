@@ -49,14 +49,17 @@ FILES = {
 }
 
 
-def load(key, start=None, dur=None):
+def load(key, start=None, dur=None, af=None):
     """Decode to float32 stereo at 44.1 kHz (ffmpeg downmixes 4 channels, converts float/24-bit)."""
     cmd = ["ffmpeg", "-v", "error"]
     if start is not None:
         cmd += ["-ss", str(start)]
     if dur is not None:
         cmd += ["-t", str(dur)]
-    cmd += ["-i", os.path.join(SRC, FILES[key]), "-ac", "2", "-ar", str(SR), "-f", "f32le", "-"]
+    cmd += ["-i", os.path.join(SRC, FILES[key])]
+    if af:
+        cmd += ["-af", af]
+    cmd += ["-ac", "2", "-ar", str(SR), "-f", "f32le", "-"]
     raw = subprocess.run(cmd, capture_output=True, check=True).stdout
     return np.frombuffer(raw, np.float32).reshape(-1, 2).copy()
 
@@ -136,7 +139,10 @@ def steps(x, name, n=4, gate_db=-32.0, min_gap=0.25):
 if __name__ == "__main__":
     save("music_loop", loop(level(load("hualdk"), -24), 6.0))
     save("title_loop", loop(level(load("yemxid"), -22), 6.0))
-    save("warp_bass", fades(level(load("bass"), -16, -1)))
+    # user 2026-11-22: "really bad... lower it and stretch it out and warp it a little": a fifth lower and
+    # about twice as long (asetrate + atempo), a slow pitch wobble (vibrato), quieter, long fade in/out
+    WARPED = "asetrate=44100*0.66,aresample=44100,atempo=0.8,vibrato=f=2.5:d=0.35,aecho=0.6:0.5:180:0.25"
+    save("warp_bass", fades(level(load("bass", af=WARPED), -24, -4), 0.4, 1.5))
     save("growl", fades(trim_start(level(load("growl"), -14, -1))))
     save("lake_rec_loop", loop(level(load("lake", 20, 66), -24), 4.0))
     save("wind_rec_loop", loop(level(load("wind", 120, 64), -26), 4.0))
