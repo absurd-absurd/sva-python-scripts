@@ -1,5 +1,7 @@
 # Research Project 1: A low-poly horror game in Unreal
 
+The production plan (schedule, what got done, open bugs) is in [PRODUCTION_PLAN.md](PRODUCTION_PLAN.md).
+
 ## The project in one sentence
 
 A short horror game in Unreal Engine 5.5 that looks and feels like a PS2 game, where you play as someone whose best friend went missing a year ago, and you go to the last place she was seen: a run-down roadside motel at the edge of dark woods along a still, black lake.
