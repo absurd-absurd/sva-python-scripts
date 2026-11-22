@@ -19,7 +19,8 @@ tools = unreal.AssetToolsHelpers.get_asset_tools()
 PHONE = (2930.0, -1830.0)                    # maya/make_motel.py payphone(2930, -1830): body x +-30, y +-20, z 100..186
 POSTER_AT = (PHONE[0] + 31.2, PHONE[1], 146.0)   # on the +x side panel, facing +x
 POSTER_SIZE = (46.0, 34.5)                   # height, width (cm): the 150 x 200 picture
-CAM_AT = (3125.0, -1905.0, 156.0)            # in the lot, facing the payphone's side panel (the poster) a little from the front
+CAM_AT = (POSTER_AT[0] + 78.0, PHONE[1] - 24.0, 150.0)   # close in front of the poster, a little to the side
+# (2026-11-22, user: the poster was "blurry and hard to read" from 2 m away at a slant; was (3125, -1905, 156))
 
 
 def texture():

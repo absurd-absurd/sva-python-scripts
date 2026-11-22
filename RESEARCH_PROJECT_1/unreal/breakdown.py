@@ -2,9 +2,10 @@
 
 Run in the Unreal editor. Safe to run again. Makes /Game/Horror/Materials/PS2/M_Breakdown, a post-process
 effect added to PostProcess_Look before the PS2 screen effect (so the result still gets chunky pixels):
-  - when (user 2026-11-22): ONLY for one second at the very end of the "one year later" shot (MPC_Horror.WarpWhole,
-    set by the HUD just before the cut to black). Before that (2026-11-17) it flashed after wrong-hand pages and
-    at the lake; the user wants none of that now.
+  - when (user 2026-11-22): flashes for a few seconds after each page in the wrong hand (MPC_Horror.WarpFlash = 1),
+    keeps flashing every few seconds once the boathouse note is read (WarpFlash = LATE_FLASH), fully warped on the
+    dock after that note and through Bug's last line (WarpWhole = 1), and one second at the very end of the
+    "one year later" shot. All set by the HUD (tools/make_interact_nodes.py).
   - a slow wavy warp of the whole picture, like looking through water
   - shapes stretching: the picture pulled a little toward the centre line, more at the edges
   - red and blue fringes pulling apart (a chromatic split)
@@ -20,11 +21,18 @@ assets = unreal.AssetToolsHelpers.get_asset_tools()
 lib = unreal.EditorAssetLibrary
 
 HLSL = """
-// user 2026-11-22: the ONLY warp in the game is one second at the very end of the final shot (Whole =
-// MPC_Horror.WarpWhole, set by the HUD). No flashes after wrong-hand pages, none at the lake.
-// (Pos, Full, Flash are still wired in but unused, so the old tuning stays in MI_Breakdown.)
+// user 2026-11-22: the HUD drives it all. Flash (MPC_Horror.WarpFlash) = how often it flashes: 1 for a few
+// seconds after a wrong-hand page, LATE_FLASH for the rest of the game once the boathouse note is read.
+// Whole (WarpWhole) = fully warped: on the dock after the boathouse note, and the last second of the final shot.
+// (Pos and Full are still wired in but unused.)
 float t = Time;
-float F = Whole * Strength + 0 * (Pos.y + Full + Flash);
+float act = Flash + 0 * (Pos.y + Full);
+// time is cut into short slots; some of them flare up for a moment and fade
+float slot = floor(t / 0.7);
+float roll = frac(sin(slot * 91.7 + 3.1) * 43758.5453);
+float within = frac(t / 0.7);
+float glimpse = (roll > 1.0 - 0.5 * act) ? sin(within * 3.14159) : 0.0;
+float F = max(Whole, glimpse * (0.45 + 0.55 * act)) * Strength;
 float2 uv = GetViewportUV(Parameters);
 if (F < 0.002) { return SceneTextureLookup(ViewportUVToBufferUV(uv), 14, false).rgb + Unused * 0; }
 // slow wavy warp (water / heat), and a pull toward the centre (stretch)

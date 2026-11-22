@@ -395,3 +395,14 @@ The ending, now at the end of the dock (it was still by the boathouse note in th
 then Bug's line "this isn't Cas." Bottom row: the one year later shot of the MISSING poster in its last
 second, the only warp in the whole game now (the user wanted no flashes after wrong-hand pages or at the
 lake); then black, and the game quits back to the editor.
+
+## 2026-11-22_warp_buildup_boots_poster.png / 2026-11-22_late_flashes.png
+
+Second round from the same play-through. The user wanted the warp back in the second half, building up:
+flashes for a few seconds after every page in the wrong hand, flashes every few seconds for the rest of the
+game once the boathouse note is read, fully warped from the moment she steps onto the dock (and through her
+last line), and only one second in the "one year later" shot. Big sheet, left to right: the user's Fab hiking
+boots by the boathouse note (my modelled boots taken out of the lake build); six frames after the note; just
+before the dock (clear); on the dock (fully warped); "this isn't Cas."; the final shot with the MISSING
+poster, now bigger text and a closer camera (it was "blurry and hard to read"). The second sheet is a burst
+of 14 frames after the boathouse note: three of them caught a flash.

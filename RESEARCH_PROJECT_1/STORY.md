@@ -41,14 +41,17 @@ mom back. She went missing too.
 4. **The shack**: on the cot, side by side, Cas's notebook (she misquotes the log: "one comes back") and a
    later page in **the wrong handwriting** (second font), signed "- cas". One look opens both together
    (Cas's on the left, the wrong hand on the right; 2026-11-22). The boathouse key.
-5. **The boathouse**: her boots set side by side by the water; a note in the wrong hand:
+5. **The boathouse**: her boots by the water (a scanned pair from Fab, 2026-11-22: one standing, one tipped
+   over on its side); a note in the wrong hand:
    "the lanterns are lit for you, bug / don't worry, it won't be much longer now". Bug: "Not much
    longer? The rattling... it's getting louder. The lanterns on the dock are all lit. Something's at the
    end of it." That line sends you out of the boathouse to the dock, where the game ends (below).
 
 ## The world breaks down
-The warp (2026-11-22, user): only ONE second, at the very end of the "one year later" shot, right
-before it cuts to black. No warp anywhere else (no flashes after wrong-hand pages, none at the lake).
+The warp builds up over the second half (2026-11-22, user): a few seconds of flashes after every page in
+the wrong hand; once the boathouse note is read, flashes every few seconds for the rest of the game; from
+the moment she steps onto the dock after that note, the whole picture is warped (through her last line);
+and in the "one year later" shot, just one second right before it cuts to black.
 
 ## Ending
 The end of the dock (2026-11-22; before that the boathouse). After the note by her boots you walk out

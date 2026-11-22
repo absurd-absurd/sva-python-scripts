@@ -137,6 +137,8 @@ CUTOUT = (0.3, 0.8)                     # how long a cut-out lasts (s); under a 
 HIT_CHANCE = 0.75                       # share of cut-outs that end with a hit (camera jolt)
 TEXT_SCALE = 0.0008            # text size = screen height * this; the font is rendered at size 40 (interact_setup.py),
                                # so this is 0.8 at 1000 px tall - same size as before (size 10 x 3.2) but sharp
+LATE_AFTER, LATE_FLASH = "boathouse_note", 0.5   # after reading this clue, warp flashes keep coming (MPC WarpFlash level)
+DOCK_X, DOCK_HW, DOCK_Y0 = 1500.0, 140.0, 14560.0   # the dock (maya/make_lake.py dock(); traced 2026-11-22): on it after LATE_AFTER = all warped
 WARP_AFTER = 4.5               # seconds of warp flashes after you put down a page in the wrong hand
 REACH, NEAR = 330.0, 40.0      # aim line from 40 cm in front of the eyes (outside the capsule) to 2.6 m
 STICKY = 300.0                 # a spotted clue keeps its prompt until used, within 3 m
@@ -431,9 +433,26 @@ def hud_graph():
     # the warp (unreal/breakdown.py, user 2026-11-17): flashes for a few seconds after you put down a page in the
     # wrong hand (WarpUntil); MPC_Horror.WarpFlash tells M_Breakdown, every frame, in every mode (the ending too)
     warp_on = g.pure(MATH, "Less_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get("WarpUntil", "real"))], ty="bool")
+    # user 2026-11-22: the second half builds up - after the boathouse note flashes keep coming (LATE_FLASH), and
+    # once she steps onto the dock after it, the whole picture is warped (WarpWhole; the ending keeps it on her line)
+    late = g.pure(STR, "Contains", [("SearchIn", "string", g.get("Keys", "string")),
+                                    ("Substring", "string", "#" + LATE_AFTER + ",")], ty="bool")
+    flash = g.pure(MATH, "SelectFloat", [("A", "real", 1.0),
+                                         ("B", "real", g.pure(MATH, "SelectFloat", [("A", "real", LATE_FLASH), ("B", "real", 0.0), ("bPickA", "bool", late)])),
+                                         ("bPickA", "bool", warp_on)])
     warp = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", ev.then,
-                  [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpFlash"),
-                   ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", warp_on)]))])
+                  [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpFlash"), ("ParameterValue", "float", flash)])
+    bv = g._node(K2 + "K2Node_CallFunction", f'FunctionReference=(MemberParent="{C(MATH)}",MemberName="BreakVector")')
+    bv.inp("InVec", "vector", ploc)
+    wx, wy = bv.out("X", "real"), bv.out("Y", "real")
+    on_dock = g.pure(MATH, "BooleanAND", [
+        ("A", "bool", g.pure(MATH, "Greater_DoubleDouble", [("A", "real", wy), ("B", "real", DOCK_Y0)], ty="bool")),
+        ("B", "bool", g.pure(MATH, "Less_DoubleDouble", [("A", "real", g.pure(MATH, "Abs", [("A", "real", g.pure(MATH, "Subtract_DoubleDouble", [
+            ("A", "real", wx), ("B", "real", DOCK_X)]))])), ("B", "real", DOCK_HW)], ty="bool"))], ty="bool")
+    whole = g.pure(MATH, "BooleanAND", [("A", "bool", on_dock), ("B", "bool", late)], ty="bool")
+    warp = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", warp.then,
+                  [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"),
+                   ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", whole)]))])
     title_yes, title_no = g.branch(g.get("Title", "bool"), warp.then)
     end_yes, end_no = g.branch(g.get("Ending", "bool"), title_no)
     op_yes, op_no = g.branch(g.get("Opening", "bool"), end_no)
@@ -948,8 +967,9 @@ def hud_graph():
            target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc"))
     # 4: the shot fades up from black, then cuts to black at the end
     f_on = g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_SHOT)), ("B", "bool", g.not_(after(END_T_OUT)))], ty="bool")
-    # the only warp in the game (user 2026-11-22): one second, just before the final shot cuts to black
-    w_on = g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_OUT - END_WARP)), ("B", "bool", g.not_(after(END_T_OUT)))], ty="bool")
+    # warped on the dock until the cut to black, then one second just before the final shot cuts to black (user 2026-11-22)
+    w_on = g.pure(MATH, "BooleanOR", [("A", "bool", g.not_(after(END_T_BLACK))), ("B", "bool", g.pure(MATH, "BooleanAND", [
+        ("A", "bool", after(END_T_OUT - END_WARP)), ("B", "bool", g.not_(after(END_T_OUT)))], ty="bool"))], ty="bool")
     a = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", steps[3],
                [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"),
                 ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", w_on)]))]).then

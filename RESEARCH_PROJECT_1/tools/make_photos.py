@@ -287,9 +287,12 @@ def missing_eileen(k=1):
     im.save(os.path.join(OUT, ("pic_missing_eileen" if k == 1 else "hires_pic_missing_eileen") + ".png"))
 
 
-def missing_bug(k=1):
+def missing_bug(k=1, payphone=False):
     """Bug's MISSING poster for the final shot (a year later, on the payphone; clues.json missing_poster_bug):
-    her photo-booth frame, the facts, the fake number. 150 x 200; k = 4 for a sharp copy."""
+    her photo-booth frame, the facts, the fake number. 150 x 200; k = 4 for a sharp copy.
+    2026-11-22 (user: "blurry and hard to read" at the end): the small print was 7 px on a 150 px sheet, so it
+    is now bigger and wrapped onto more lines (same words), the photo a little smaller; payphone=True writes
+    the copy for the final shot (k = 8, turned for the plane in unreal/final_shot.py)."""
     from PIL import ImageFont
     rng = random.Random(31)
     w, h = 150 * k, 200 * k
@@ -297,23 +300,25 @@ def missing_bug(k=1):
     d = ImageDraw.Draw(im)
     big = ImageFont.truetype(r"C:/Windows/Fonts/arialbd.ttf", 30 * k)
     t = "MISSING"
-    d.text(((w - d.textlength(t, font=big)) / 2, 6 * k), t, font=big, fill=(20, 18, 18))
-    ph = _photo("sil_bug.png", 84 * k, 104 * k)
-    x0, y0 = (w - ph.width) // 2, 42 * k
+    d.text(((w - d.textlength(t, font=big)) / 2, 5 * k), t, font=big, fill=(20, 18, 18))
+    ph = _photo("sil_bug.png", 66 * k, 80 * k)
+    x0, y0 = (w - ph.width) // 2, 40 * k
     im.paste(ph, (x0, y0))
     d.rectangle([x0 - k, y0 - k, x0 + ph.width + k, y0 + ph.height + k], outline=(30, 28, 26), width=k)
-    bold = ImageFont.truetype(r"C:/Windows/Fonts/arialbd.ttf", 9 * k)
-    reg = ImageFont.truetype(r"C:/Windows/Fonts/arial.ttf", 7 * k)
-    y = 150 * k
-    lines = [("Last seen: Marrow Falls Motel, October 2002", reg), ("Brunette, 5'4" + chr(34) + ", blue eyes, 21 years old", reg),
-             ("If you have any information please call", reg), ("555-0117", bold)]
+    bold = ImageFont.truetype(r"C:/Windows/Fonts/arialbd.ttf", int(11 * k))
+    reg = ImageFont.truetype(r"C:/Windows/Fonts/arial.ttf", int(9 * k))
+    y = 126 * k
+    lines = [("Last seen: Marrow Falls Motel,", reg), ("October 2002", reg),
+             ("Brunette, 5'4" + chr(34) + ", blue eyes,", reg), ("21 years old", reg),
+             ("If you have any information", reg), ("please call 555-0117", bold)]
     for text, f in lines:
         d.text(((w - d.textlength(text, font=f)) / 2, y), text, font=f, fill=(24, 22, 22))
-        y += 11 * k
-    im = im.filter(ImageFilter.GaussianBlur(0.3 * k))
-    im.save(os.path.join(OUT, ("pic_missing_bug" if k == 1 else "hires_pic_missing_bug") + ".png"))
-    if k == 4:                       # turned for the payphone plane (unreal/final_shot.py maps it sideways)
+        y += (13 if f is bold else 11) * k
+    im = im.filter(ImageFilter.GaussianBlur(0.25 * k))
+    if payphone:
         im.rotate(90, expand=True).save(os.path.join(OUT, "pic_missing_bug_payphone.png"))
+        return
+    im.save(os.path.join(OUT, ("pic_missing_bug" if k == 1 else "hires_pic_missing_bug") + ".png"))
 
 
 def photo_strip(k=1):
@@ -354,6 +359,7 @@ def notes():
         missing_eileen(k)
         photo_strip(k)
         missing_bug(k)
+    missing_bug(8, payphone=True)
     for k, words in enumerate((["Oct", "~", "~", "they knew", "~", "~", "~"], ["~", "~", "the lake", "~", "~", "don't", "~", "~"],
                                ["Bug -", "~", "~", "~", "I'm sorry", "~", "~"])):
         diary_page(f"pic_page_{k + 1}", words, seed=10 + k)
