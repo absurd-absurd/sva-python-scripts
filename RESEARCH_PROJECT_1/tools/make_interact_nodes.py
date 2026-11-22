@@ -135,7 +135,8 @@ CLICK_VOLUME = 0.8
 # the user's freesound recordings (2026-11-22; tools/prep_sounds.py -> unreal/place_sounds.py): S_rec_<name>
 SND = lambda n: f"/Game/Horror/Audio/S_rec_{n}.S_rec_{n}"
 AUDIO = "/Script/Engine.AudioComponent"
-VOL = {"title": 0.8, "music": 0.4, "car": 0.8, "growl": 1.0, "bass": 0.7, "paper": 0.8, "keys": 0.7, "door": 0.7, "step": 0.45}
+VOL = {"wind": 0.2, "bugs": 0.25, "title": 0.8, "music": 0.4, "car": 0.8, "growl": 1.0, "bass": 0.7, "paper": 0.8, "keys": 0.7, "door": 0.7, "step": 0.45}
+INDOOR_LEVEL = 0.08   # wind + insects under a roof (a ceiling above you), of their outdoor volume
 STRIDE = 260.0        # cm walked between footsteps (about two a second walking)
 HIT_SHAKE = "/Game/Horror/Player/CS_FlashHit.CS_FlashHit_C"
 # flashlight flicker, calm -> afraid (Fear 0 -> 1 in MPC_Horror)
@@ -409,7 +410,14 @@ def hud_graph():
     # the title music (yemxid) until the game starts
     tm = g.call(STATICS, "SpawnSound2D", a, [("Sound", "sound", SND("title_loop")), ("VolumeMultiplier", "float", VOL["title"])],
                 outs=[("ReturnValue", "audio")])
-    g.set("TitleMusic", "audio", tm.o["ReturnValue"], tm.then)
+    a = g.set("TitleMusic", "audio", tm.o["ReturnValue"], tm.then).then
+    # the outdoor ambience, from here so it can be turned down indoors (wind = the synth loop; the recording whistled)
+    wa = g.call(STATICS, "SpawnSound2D", a, [("Sound", "sound", "/Game/Horror/Audio/S_wind_loop.S_wind_loop"), ("VolumeMultiplier", "float", VOL["wind"])],
+                outs=[("ReturnValue", "audio")])
+    a = g.set("WindAudio", "audio", wa.o["ReturnValue"], wa.then).then
+    ba = g.call(STATICS, "SpawnSound2D", a, [("Sound", "sound", SND("bugs_loop")), ("VolumeMultiplier", "float", VOL["bugs"])],
+                outs=[("ReturnValue", "audio")])
+    g.set("BugsAudio", "audio", ba.o["ReturnValue"], ba.then)
     open_t = lambda: g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.get("OpenStart", "real"))])
 
     # ---- Draw HUD ----
@@ -599,7 +607,17 @@ def hud_graph():
     walked = g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.get("StepDist", "real")), ("B", "real", g.pure(MATH, "Multiply_DoubleDouble", [
         ("A", "real", speed), ("B", "real", g.pure(STATICS, "GetWorldDeltaSeconds"))]))])
     st = g.set("StepDist", "real", walked, [fl.then, changed_no])
-    due, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", g.get("StepDist", "real")), ("B", "real", STRIDE)], ty="bool"), st.then)
+    st_step, st_room = g.sequence(st.then, 2)
+    # under a roof (the ceiling trace) the wind and insects drop to INDOOR_LEVEL; back up outside
+    inside = up.o["ReturnValue"]
+    swap, _ = g.branch(g.pure(MATH, "NotEqual_BoolBool", [("A", "bool", inside), ("B", "bool", g.get("WasIndoor", "bool"))], ty="bool"), st_room)
+    lvl = g.pure(MATH, "SelectFloat", [("A", "real", INDOOR_LEVEL), ("B", "real", 1.0), ("bPickA", "bool", inside)])
+    swap = g.call(AUDIO, "AdjustVolume", swap, [("AdjustVolumeDuration", "float", 0.6), ("AdjustVolumeLevel", "float", lvl)],
+                  target=(g.get("WindAudio", "audio"), "audio")).then
+    swap = g.call(AUDIO, "AdjustVolume", swap, [("AdjustVolumeDuration", "float", 0.6), ("AdjustVolumeLevel", "float", lvl)],
+                  target=(g.get("BugsAudio", "audio"), "audio")).then
+    g.set("WasIndoor", "bool", inside, swap)
+    due, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", g.get("StepDist", "real")), ("B", "real", STRIDE)], ty="bool"), st_step)
     due = g.set("StepDist", "real", 0.0, due).then
     wood = g.pure(MATH, "BooleanOR", [("A", "bool", on_dock), ("B", "bool", up.o["ReturnValue"])], ty="bool")
     w_, g_ = g.branch(wood, due)

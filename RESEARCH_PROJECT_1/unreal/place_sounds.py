@@ -19,8 +19,10 @@ LAKE_VOLUME = 0.9
 BUGS_VOLUME = 0.25         # night insects, 2D, under everything
 # the music, the car, the growl, the warp bass, paper, keys, door and footsteps are played by BP_HorrorHUD
 # (tools/make_interact_nodes.py SND / VOL); its TitleMusic / GameMusic vars are AudioComponent references
-LAKE_AT = [(-4500, 14700), (-1500, 14650), (1500, 14700), (4500, 14700)]   # along the shore (dock starts at y 14601)
-LAKE_INNER, LAKE_FALLOFF = 1200.0, 3500.0                                   # full volume within 12 m, gone by 47 m
+LAKE_AT = [(-4500, 14700), (-3000, 14700), (-1500, 14650), (0, 14700), (1500, 14700), (3000, 14700), (4500, 14700),
+           (1500, 16000)]          # along the shore every 15 m (dock starts at y 14601), and out on the dock
+LAKE_INNER, LAKE_FALLOFF = 500.0, 1500.0     # full within 5 m of a shore point, gone by 20 m (user 2026-11-22: "only
+                                              # hear the lake from the lake"; was 12 m / 47 m)
 
 tools = unreal.AssetToolsHelpers.get_asset_tools()
 lib = unreal.EditorAssetLibrary
@@ -41,6 +43,8 @@ def import_sounds():
     for t in tasks:
         s = unreal.load_asset(f"{DIR}/{t.destination_name}")
         s.set_editor_property("looping", t.destination_name.endswith("_loop"))
+        if not t.destination_name.endswith("_loop"):     # short sounds fully in memory: no streaming delay on first play
+            s.set_editor_property("loading_behavior", unreal.SoundWaveLoadingBehavior.FORCE_INLINE)
         lib.save_loaded_asset(s, False)
         out[t.destination_name[2:]] = s
     print("imported", sorted(out))
@@ -84,9 +88,9 @@ for a in actors.get_all_level_actors():
         actors.destroy_actor(a)
 snd = import_sounds()
 # the user's recordings (tools/prep_sounds.py, 2026-11-22) instead of the synthesised wind and lake; bugs are new
-ambient("snd_wind", snd["wind_loop"], (0, 0, 300), WIND_VOLUME)   # the synth wind: the recording whistled (user 2026-11-22)
-ambient("snd_bugs", snd["rec_bugs_loop"], (0, 0, 300), BUGS_VOLUME)
+# the wind (synth: the recording whistled) and the insects are played by BP_HorrorHUD now, so it can turn them down
+# indoors (user 2026-11-22: "shouldn't be able to hear the outside noise when I'm indoors")
 att = attenuation()
 for k, (x, y) in enumerate(LAKE_AT):
     ambient(f"snd_lake_{k}", snd["rec_lake_rec_loop"], (x, y, 40), LAKE_VOLUME, att)
-print("placed: wind + bugs + lake x", len(LAKE_AT))
+print("placed: lake x", len(LAKE_AT))

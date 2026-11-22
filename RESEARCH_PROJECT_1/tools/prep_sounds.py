@@ -82,6 +82,14 @@ def loop(x, fade=3.0):
     return out
 
 
+def trim_start(x, pre=0.01, rel=0.1):
+    """Cut the silence before the sound (user 2026-11-22: sounds lagged behind the action - the keys started
+    1 s late, the paper 0.6 s): start `pre` s before the first sample above `rel` of the peak."""
+    a = np.abs(x).max(axis=1)
+    i = int(np.argmax(a > a.max() * rel))
+    return x[max(0, i - int(pre * SR)):]
+
+
 def fades(x, a=0.01, b=0.05):
     na, nb = int(a * SR), int(b * SR)
     x = x.copy()
@@ -121,7 +129,7 @@ def steps(x, name, n=4, gate_db=-32.0, min_gap=0.25):
             cut.append(seg)
     cut = sorted(cut, key=lambda s: -np.abs(s).max())[:n]    # the clearest ones
     for k, seg in enumerate(cut):
-        save(f"{name}_{k + 1}", fades(level(seg, -18, -3), 0.005, 0.12))
+        save(f"{name}_{k + 1}", fades(trim_start(level(seg, -18, -3), 0.005), 0.003, 0.12))
     return len(starts)
 
 
@@ -129,13 +137,13 @@ if __name__ == "__main__":
     save("music_loop", loop(level(load("hualdk"), -24), 6.0))
     save("title_loop", loop(level(load("yemxid"), -22), 6.0))
     save("warp_bass", fades(level(load("bass"), -16, -1)))
-    save("growl", fades(level(load("growl"), -14, -1)))
+    save("growl", fades(trim_start(level(load("growl"), -14, -1))))
     save("lake_rec_loop", loop(level(load("lake", 20, 66), -24), 4.0))
     save("wind_rec_loop", loop(level(load("wind", 120, 64), -26), 4.0))
     save("bugs_loop", loop(level(load("bugs", 10, 64), -28), 4.0))
-    save("car", fades(level(load("car"), -18, -1)))
-    save("paper", fades(level(load("paper", 0, 3.0), -20, -3)))
-    save("door_creak", fades(level(load("door"), -18, -2)))
-    save("keys", fades(level(load("keys", 0, 2.5), -20, -3)))
+    save("car", fades(trim_start(level(load("car"), -18, -1))))
+    save("paper", fades(trim_start(level(load("paper", 0, 3.0), -20, -3))[:int(1.6 * SR)]))
+    save("door_creak", fades(trim_start(level(load("door"), -18, -2))))
+    save("keys", fades(trim_start(level(load("keys", 0, 3.5), -20, -3))[:int(1.6 * SR)]))
     print("grass steps found:", steps(load("grass"), "step_grass"))
     print("wood steps found:", steps(load("wood"), "step_wood"))
