@@ -589,8 +589,9 @@ def hud_graph():
                  target=(spot, "light"))
     # the click (user 2026-11-22, sound): F toggles the light's visibility in BP_FirstPersonCharacter; whenever it
     # differs from last frame (FlOn), play the switch click once
+    lit_sound, lit_draw = g.sequence(lit.then, 2)      # sounds first, then the corner text (one exec output = one link)
     vis = g.pure(SCENE, "IsVisible", [], ty="bool", target=(spot, "scene"))
-    changed, changed_no = g.branch(g.pure(MATH, "NotEqual_BoolBool", [("A", "bool", vis), ("B", "bool", g.get("FlOn", "bool"))], ty="bool"), lit.then)
+    changed, changed_no = g.branch(g.pure(MATH, "NotEqual_BoolBool", [("A", "bool", vis), ("B", "bool", g.get("FlOn", "bool"))], ty="bool"), lit_sound)
     a = g.call(STATICS, "PlaySound2D", changed, [("Sound", "sound", CLICK_SOUND), ("VolumeMultiplier", "float", CLICK_VOLUME)]).then
     fl = g.set("FlOn", "bool", vis, a)
     # footsteps (user's recordings): every STRIDE cm walked; wood indoors (a ceiling above) and on the dock, else grass
@@ -608,7 +609,7 @@ def hud_graph():
 
     # objective + message
     g.row(340 * 9, 0)
-    after = draw(g.get("Objective", "string"), [lit.then, spot_fail], 0.04, 0.05, 0.8, DIM, True)
+    after = draw(g.get("Objective", "string"), [lit_draw, spot_fail], 0.04, 0.05, 0.8, DIM, True)
 
     # corner map: a MAP_VIEW-wide window of the paper map centred on you, top right,
     # with the red arrow in the middle turned the way you face (north is always up)
@@ -1024,10 +1025,11 @@ def hud_graph():
     a = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", a,
                [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"),
                 ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", w_on)]))]).then
-    eb, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_OUT - END_WARP)), ("B", "bool", g.not_(g.get("EndBass", "bool")))], ty="bool"), a)
+    bass_then, fade_then = g.sequence(a, 2)          # one exec output can only feed one node
+    eb, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_OUT - END_WARP)), ("B", "bool", g.not_(g.get("EndBass", "bool")))], ty="bool"), bass_then)
     eb = g.call(STATICS, "PlaySound2D", eb, [("Sound", "sound", SND("warp_bass")), ("VolumeMultiplier", "float", VOL["bass"])]).then
     g.set("EndBass", "bool", True, eb)
-    f_yes, f_no = g.branch(f_on, a)
+    f_yes, f_no = g.branch(f_on, fade_then)
     fa = g.pure(MATH, "FMax", [("A", "real", 0.0), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", 1.0),
                ("B", "real", g.mul(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", et), ("B", "real", END_T_SHOT)]), 1.0 / END_SHOT_FADE))]))], ty="real")
     fcol = g.pure(MATH, "MakeColor", [("R", "float", 0.0), ("G", "float", 0.0), ("B", "float", 0.0), ("A", "float", fa)], ty="color")
@@ -1272,4 +1274,13 @@ def door_graph():
 
 if __name__ == "__main__":
     which = sys.argv[1] if len(sys.argv) > 1 else "hud"
-    print({"hud": hud_graph, "door": door_graph}[which]().text())
+    out = {"hud": hud_graph, "door": door_graph}[which]().text()
+    # an exec output may feed only ONE node, or the Blueprint won't compile and Play silently runs the last good
+    # version (2026-11-22: that hid the whole sound pass) - stop here instead
+    import re as _r
+    multi = [m.group(1) for m in _r.finditer(r'Direction="EGPD_Output",PinType\.PinCategory="exec"[^
+]*?LinkedTo=\(([^)]*)\)', out)
+             if len([x for x in m.group(1).split(",") if x.strip()]) > 1]
+    if multi:
+        sys.exit(f"exec output wired to more than one node: {multi[:3]}")
+    print(out)

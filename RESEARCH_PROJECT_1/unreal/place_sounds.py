@@ -84,7 +84,7 @@ for a in actors.get_all_level_actors():
         actors.destroy_actor(a)
 snd = import_sounds()
 # the user's recordings (tools/prep_sounds.py, 2026-11-22) instead of the synthesised wind and lake; bugs are new
-ambient("snd_wind", snd["rec_wind_rec_loop"], (0, 0, 300), WIND_VOLUME)
+ambient("snd_wind", snd["wind_loop"], (0, 0, 300), WIND_VOLUME)   # the synth wind: the recording whistled (user 2026-11-22)
 ambient("snd_bugs", snd["rec_bugs_loop"], (0, 0, 300), BUGS_VOLUME)
 att = attenuation()
 for k, (x, y) in enumerate(LAKE_AT):
