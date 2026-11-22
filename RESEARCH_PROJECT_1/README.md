@@ -1,6 +1,29 @@
-# Research Project 1: A low-poly horror game in Unreal
+# Research Project 1: MARROW, a low-poly horror game in Unreal
+
+## Download and play (Windows only)
+
+MARROW runs on **64-bit Windows 10 or 11** only. There is no Mac or Linux version.
+
+1. Go to the [Releases page](https://github.com/absurd-absurd/sva-python-scripts/releases) and download
+   **`MARROW_Final_2026-11-22.zip`** (about 540 MB).
+2. Right-click the zip and choose **Extract All...** (the game won't run from inside the zip).
+3. Open the extracted **`MARROW`** folder and double-click **`RP1_Horror.exe`**.
+4. If Windows says "Windows protected your PC", click **More info**, then **Run anyway** (the game isn't signed).
+5. On the title screen press **E** to start. **Headphones recommended.**
+
+**Controls:** W A S D walk, mouse look, Shift run, Space jump, **E** examine / read / open, **F** flashlight,
+**M** map, **Esc** or **P** pause. The game opens in a normal window you can resize, maximize or close.
+
+Stuck, or something not working? See the **[player support page](SUPPORT.md)**: hints for every area and
+fixes for common problems.
+
+You need a DirectX 12 graphics card, about 1 GB of free space, and 8 GB of memory or more.
+
+## The project
 
 The production plan (schedule, what got done, open bugs) is in [PRODUCTION_PLAN.md](PRODUCTION_PLAN.md).
+The game was built in Unreal Engine 5.5 from Python scripts (Maya and Unreal) in this folder.
+The rest of this page is the original proposal.
 
 ## The project in one sentence
 
