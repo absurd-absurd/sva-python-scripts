@@ -289,7 +289,8 @@ def twiggy_shrub(g, rng, size, leaves):
 
 
 def collision(name, height, radius):
-    c = cmds.polyCylinder(r=radius * 1.1, h=260, sx=8, sy=1, sz=0, ch=False)[0]
+    # 0.75 of the trunk (was 1.1): you can walk between trees that look far enough apart (user 2026-11-22)
+    c = cmds.polyCylinder(r=radius * 0.75, h=260, sx=8, sy=1, sz=0, ch=False)[0]
     cmds.move(0, 130, 0, c)
     cmds.makeIdentity(c, apply=True, t=True)
     return cmds.rename(c, "UCX_" + name + "_00")

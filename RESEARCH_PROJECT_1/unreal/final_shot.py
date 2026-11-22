@@ -19,7 +19,8 @@ tools = unreal.AssetToolsHelpers.get_asset_tools()
 PHONE = (2930.0, -1830.0)                    # maya/make_motel.py payphone(2930, -1830): body x +-30, y +-20, z 100..186
 POSTER_AT = (PHONE[0] + 31.2, PHONE[1], 146.0)   # on the +x side panel, facing +x
 POSTER_SIZE = (46.0, 34.5)                   # height, width (cm): the 150 x 200 picture
-CAM_AT = (POSTER_AT[0] + 78.0, PHONE[1] - 24.0, 150.0)   # close in front of the poster, a little to the side
+CAM_AT = (POSTER_AT[0] + 130.0, PHONE[1] - 45.0, 152.0)  # in front of the poster, a little to the side
+# (2026-11-22, user: "zoom out a bit so you can see more of the phone booth"; was 78 cm out, 24 to the side)
 # (2026-11-22, user: the poster was "blurry and hard to read" from 2 m away at a slant; was (3125, -1905, 156))
 
 

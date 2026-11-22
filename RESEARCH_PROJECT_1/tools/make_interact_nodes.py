@@ -91,7 +91,7 @@ END_T_YEAR, END_T_YEAR_OUT = 4.4, 7.6               # "One year later." fades in
 END_T_SHOT, END_SHOT_FADE = 8.2, 2.0                 # the final shot, fading up from black
 END_T_OUT, END_T_QUIT = 17.0, 20.0                   # cut to black, then quit
 LEVEL_NAME = "MotelLake"                             # the ending reloads it -> the title screen
-END_WARP = 1.0                                       # the warp: this long, right before the cut (user 2026-11-22)
+END_WARP = 2.0                                       # the warp (and the rattle with it): this long, right before the cut (user 2026-11-22: 1 s -> 2 s)
 FINAL_CLASS = "/Game/Horror/Interact/BP_FinalShot.BP_FinalShot_C"
 # the title screen (2026-11-17): BP_TitleShot's camera on the foggy lake, the MARROW lettering (T_Title,
 # tools/make_title.py "thin"), [E] Start / [C] Controls / [Q] Quit; Controls shows the key list

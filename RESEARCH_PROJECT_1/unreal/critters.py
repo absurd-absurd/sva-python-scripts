@@ -398,6 +398,9 @@ def place(kind, mesh, mis, at, yaw=0.0, scale=None):
     c = a.static_mesh_component
     for i, mi in enumerate(mis):
         c.set_material(i, mi)
+    # the profile is what gets saved with the level; set_collision_enabled alone didn't stick, and 493 fireflies,
+    # gnats and birds blocked the player like invisible walls (user 2026-11-22: "can't walk between certain items")
+    c.set_collision_profile_name("NoCollision")
     c.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
     c.set_editor_property("cast_shadow", False)
     c.set_editor_property("bounds_scale", float(KIND[kind]["Bounds"]))   # it wanders far from where it stands

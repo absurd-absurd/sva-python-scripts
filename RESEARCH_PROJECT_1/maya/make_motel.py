@@ -395,16 +395,7 @@ def room_104(x0, x1):
     bevel_box(inner_r - 3.5, inner_r, py - pw / 2 - 5, py + pw / 2 + 5, pz - ph / 2 - 5, pz + ph / 2 + 5, "frame_mat", r=1.2)
     picture(inner_r - 4.3, py, pz, pw, ph, "pic_painting", facing=-1)
 
-    # --- twig figure on a string over the bed, turning slowly in the draft (still, here)
-    fx, fy = x1 - 120, BACK - 160
-    tube((fx, fy, H - 10), (fx, fy, 215), 0.3, "string_mat", sides=3)
-    tube((fx, fy, 217), (fx + 1, fy, 168), 1.0, "twig_mat", sides=4)                      # body
-    tube((fx - 17, fy, 202), (fx + 16, fy + 2, 199), 0.8, "twig_mat", sides=4)            # arms
-    tube((fx, fy, 172), (fx - 11, fy, 142), 0.8, "twig_mat", sides=4)                     # legs
-    tube((fx, fy, 172), (fx + 12, fy - 1, 143), 0.8, "twig_mat", sides=4)
-    rbox(fx, fy, 200, 3.5, 3.5, 4, "string_mat")                                          # twine knots
-    rbox(fx + 0.5, fy, 172, 3, 3, 4, "string_mat")
-
+    # (the twig figure hanging over the bed was removed: user 2026-11-22)
     # --- a year of damp: cobwebs
     # cobwebs: one big web in the back corner above the bed (you see it walking in), a small
     # one over the door
