@@ -44,7 +44,7 @@ mom back. She went missing too.
 5. **The boathouse**: her boots by the water (tall black leather boots, 2026-11-22: one standing, one fallen
    on its side, muddy footprints leading from the door right up to them); a note in the wrong hand:
    "the lanterns are lit for you, bug / don't worry, it won't be much longer now". Bug: "Those are
-   Cas's boots. Not much longer... the rattling is getting louder... everything is bending around me...
+   Cas's boots. Not much longer?... the rattling is getting louder... everything is bending around me...
    The lanterns on the dock are all lit. Something's at the end of it." That line sends you out of the boathouse to the dock, where the game ends (below).
 
 ## The world breaks down
