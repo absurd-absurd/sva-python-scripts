@@ -10,6 +10,7 @@ the old low-poly trees in /Game/Horror/Props under the same names, so every tree
 - trees past 120 m aren't drawn (the fog has long swallowed them), ferns and shrubs past 50 m
 
 Run after import_scatter.py and fill_forest.py (build_level.py). Safe to run again.
+AFTER THIS run unreal/tree_collision.py: re-importing a tree brings back its whole-crown collision (2026-11-22).
 """
 import unreal
 
