@@ -31,7 +31,7 @@ actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 def material():
     mi = unreal.load_asset(MI_PATH) if lib.does_asset_exist(MI_PATH) else tools.create_asset(
         MI_PATH.rsplit("/", 1)[1], DIR, unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
-    mi.set_editor_property("parent", unreal.load_asset("/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque"))
+    mi.set_editor_property("parent", unreal.load_asset("/InterchangeAssets/gltf/MaterialInstances/MI_Default_Opaque_DS"))   # DS = two-sided (user: could see "the inside of the sole")
     nrm = unreal.load_asset(TEX + "normal")
     nrm.set_editor_property("compression_settings", unreal.TextureCompressionSettings.TC_NORMALMAP)
     nrm.set_editor_property("srgb", False)
@@ -43,9 +43,14 @@ def material():
                        ("MetallicRoughnessTexture", "OcclusionRoughnessMetallic"), ("OcclusionTexture", "OcclusionRoughnessMetallic")):
         MEL.set_material_instance_texture_parameter_value(mi, param, unreal.load_asset(TEX + tex))
     MEL.set_material_instance_vector_parameter_value(mi, "BaseColorFactor", BLACK)
+    # the pack's roughness map says glossy leather and the factor only multiplies it, so it stayed shiny (user:
+    # "get rid of the shinniness"): plain white instead = fully rough; metallic 0 below keeps it from going metal
+    MEL.set_material_instance_texture_parameter_value(mi, "MetallicRoughnessTexture", unreal.load_asset("/Engine/EngineResources/WhiteSquareTexture"))
     # no shine: matte leather (the fallen boot caught the flashlight like metal)
     MEL.set_material_instance_scalar_parameter_value(mi, "MetallicFactor", 0.0)
     MEL.set_material_instance_scalar_parameter_value(mi, "RoughnessFactor", 1.0)
+    MEL.set_material_instance_scalar_parameter_value(mi, "SpecularFactor", 0.0)   # no highlight at all: the fallen boot,
+    # lying face-up to the flashlight, read brown and shiny next to the standing one
     lib.save_loaded_asset(mi, False)
     return mi
 
