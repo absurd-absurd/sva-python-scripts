@@ -829,9 +829,11 @@ def hud_graph():
         col = g.pure(MATH, "SelectColor", [("A", "color", MENU_HOVER), ("B", "color", TEXT), ("bPickA", "bool", hov)], ty="color")
         a = draw(item, a, 0, 0, MENU_SCALE, col, font=MENU_FONT, at=(mx, my))
         a = g.call(HUD, "AddHitBox", a, [
-            ("Position", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", mx), ("B", "real", g.mul(H, 0.06))])),
+            # the click area takes in the red key letter too (user 2026-11-22: clicking the letters did nothing;
+            # the area used to start just right of them)
+            ("Position", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", mx), ("B", "real", g.mul(H, 0.10))])),
                                                                   ("Y", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", my), ("B", "real", g.mul(H, 0.01))]))], ty="vector2d")),
-            ("Size", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", g.mul(H, 2 * half + 0.09)), ("Y", "real", g.mul(H, 0.06))], ty="vector2d")),
+            ("Size", "vector2d", g.pure(MATH, "MakeVector2D", [("X", "real", g.mul(H, 2 * half + 0.13)), ("Y", "real", g.mul(H, 0.06))], ty="vector2d")),
             ("InName", "name", key), ("bConsumesInput", "bool", True), ("Priority", "int", 0)]).then
         a = draw(key, a, 0, 0, 0.75, "(R=0.5,G=0.1,B=0.08,A=1.0)", font=MENU_FONT,
                  at=(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", mx), ("B", "real", g.mul(H, 0.075))]),
