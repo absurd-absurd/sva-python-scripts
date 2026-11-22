@@ -1,8 +1,8 @@
 # Process
 
 How MARROW was built and changed along the way, area by area. Each part says what I asked
-for, what changed, and what was decided. Every image in this folder is from the work; only
-the key ones are shown here (the full day-by-day log is in this file's git history).
+for, what changed, and what was decided. Only the key images are shown here; every other test image is
+in [archive/](archive/), and the full day-by-day log is in this file's git history.
 
 **How the work went:** everything is built by scripts (Maya for the models, Python in Unreal
 for placing and setting up), so a change means editing a script and rebuilding. After each
@@ -150,279 +150,65 @@ the rusted car with its tail lights still glowing, and the climbable lookout tow
 Every person in the game is a silhouette, no faces: Eileen (1997), Cas (2001) and Bug (2002)
 each get their own outline. First rough of Bug as a photo-booth frame: short bob, oversized
 jacket, headphones round her neck. Then Eileen and Cas to match; I liked the style (flat black on an
-aged photo), shapes to refine.
+aged photo) and the shapes went through ten more rounds of notes (hair, collars, proportions).
 
-![All three](2026-11-15_silhouettes_three.png)
+![Final silhouettes](2026-11-17_silhouettes_v11.png)
 
-## 2026-11-16_postcard_back_fonts.png
-The back of the postcard that brings Bug to Marrow Falls ("i miss you bug - cas", postmarked
-Marrow Falls, Oct 9 2002, 37-cent flag stamp). It is written by the thing wearing Cas, so it uses
-the second "wrong" handwriting. Shown in five free erratic handwriting fonts (Google Fonts:
-Zeyada, Reenie Beanie, Nothing You Could Do, Rock Salt, Just Me Again Down Here) next to Cas's real
-handwriting (Ink Free), to pick the wrong-hand font. Address lines are placeholders.
+They end up on Cas's wall in Room 104 (Eileen's MISSING poster, the photo-booth strip of Cas and Bug)
+and on Bug's own MISSING poster in the final shot.
 
-## 2026-11-17_map_rock_salt_compare.png
-Cas's map, before (left, Ink Free) and after (right) switching her handwriting to Rock Salt, so it
-contrasts with the thin "wrong" hand (Zeyada). Rock Salt draws much bigger, so make_map.py scales it
-to 0.78x and pulls its lines closer; the gate label and lookout note were moved to stop overlaps.
+![Cas's wall](2026-11-17_cas_wall_closeup.png)
 
-## 2026-11-17_reading_letter_on_paper.png
-The reading screen now shows a paper as the real thing (user: "when you pick up the letter to read it,
-it should be on a piece of paper"): Cas's letter on Marrow Falls Motel letter paper, in her own
-handwriting (Rock Salt, blue-black pen), with Bug's title beside it. Sheets come from tools/make_papers.py
-(stationery, notebook, typed, ledger, scrap); each clue picks one with "paper" and its hand with "hand".
-Rock Salt's huge built-in line spacing was tightened in a copy of the font (fonts/RockSalt-Tight.ttf).
+## 12. Clues you can hold
 
-## 2026-11-17_reading_keys.png
-The keys on the reading screen as the real objects (user: "make the keys look real too"): the office key
-on a cracked red motel tag, the new gate key on a red tag someone wrote on in marker, and the small
-boathouse key on a loop of fishing line lying on a torn piece of Cas's map with the boathouse circled.
-Drawn by tools/make_keys.py with the tag words drawn in; those clues use hand "none" so nothing is
-written over the picture.
+![Readables in the game](2026-11-17_new_readables_in_game.png)
 
-## 2026-11-17_postcard_back.png
-The postcard that brings Bug to Marrow Falls, for the opening (tools/make_postcard.py): the motel's
-printed side is now just its name (user removed the "Black Hollow Lake - Rooms by the night or week" line).
+**Every clue is a picture of the real thing**, never text describing it: the letter is on motel stationery, the
+researchers' log is typed, the register is a ruled page with each guest in their own handwriting, the keys are
+drawn keys on their tags. Each writer has a hand: Cas writes in bold capitals (Rock Salt), the thing that wears
+her writes thin and lowercase (Zeyada), and the switch between the two is how you find out something is wrong.
+The same pictures lie in the world, so what you pick up is what you read. In the shack her notebook and a page
+in the wrong hand open side by side.
 
-## 2026-11-17_key_rings_threaded.png
-Key rings fixed (user: the keychain didn't look attached): the split ring now goes behind the key's head
-and shows through its hole, then through the tag's hole, with a short stretch drawn in front at each
-hole so it reads as threaded, not lying on top.
+![Keys in the world](2026-11-17_keys_in_world.png)
 
-## 2026-11-17_key_rings_v2.png
-Second ring fix (user: at the tag's corner the ring looked like it went through the flat plastic): the
-ring is now only behind the tag, seen outside it and through its hole; it still passes over the front
-of the key's head on one side.
+## 13. Opening, title and menus
 
-## 2026-11-17_keys_full_v2.png
-All three key pictures at full size after the ring fixes (office, gate, boathouse).
+![Opening](2026-11-17_opening_v2.png)
 
-## 2026-11-17_keys_full_v3.png
-The gate tag is now in a motel worker's felt-tip marker (Permanent Marker), not Cas's handwriting
-(user: "the second key should not be the same font as Cas's handwriting").
+The game opens on black: the backstory types itself out (with a typing sound), then the postcard that brought
+Bug here, in the wrong hand. The title is a slow push down the dock in the fog; the menu, controls page and
+pause menu share its thin lettering and red rule, and work with keys or the mouse.
 
-## 2026-11-17_reading_register.png / 2026-11-17_register_on_counter.png
-The guest register as a real page (user: "pages are pages", no text describing it): October 1997,
-D. Hollis, the Carvers and Eileen Byrne each in their own handwriting, the next days blank, and
-"104 - kept." in pencil in another hand under her name. The book on the office counter now shows the
-same page (the old texture still had guests from the first story draft); the facing page is empty.
-Both come from tools/make_guest_book.py.
+![Title screen](2026-11-17_title_screen_v2.png)
+![Menu and controls](2026-11-17_menu_and_controls.png)
 
-## 2026-11-17_silhouettes_v2.png
-Second pass at the three silhouettes (tools/make_silhouettes.py), smooth curves instead of the straight-
-edged roughs, same aged-print style. Fixes from the user's notes on the roughs: Eileen's hair is one
-shoulder-length mass with the ends flipped out (no "dog ears"); Cas has a real high ponytail falling clear
-of her head behind the right shoulder, ears showing, the hood bunched at her neck, open flannel and
-backpack straps; Bug has the bob with bangs, a shorter neck, the popped collar and smaller tilted
-headphone cups. Waiting for the user's OK before they go on the wall, the photo strip and the posters.
+## 14. The warp and the ending
 
-## 2026-11-17_new_clues_reading_preview.png
-Preview (drawn outside the game with the same fonts, sizes and line breaks) of the five new clues'
-reading screens: the researchers' typed 1974 log, Cas's notebook, the wrong-hand pages nailed in the shack,
-the note by her boots and the last page. It caught the typed log and the wrong hand being far too big
-(running off the sheet), so their sizes were cut (typed 0.85 -> 0.48, wrong hand 1.35 -> 1.15).
+![Warp building up](2026-11-22_warp_buildup_boots_poster.png)
 
-## 2026-11-17_trials_log_preview.png
-The researchers' log after the user's edits: Aug 3 now reads "... and failed again", "We don't know why."
-is gone from Aug 21, and the coffee stain is a realistic dried ring (uneven darker edge, pale wash inside,
-a fainter second ring from setting the mug down again, a drip and splash dots; make_papers.coffee_stain).
+The world breaks down as the story does: the PS2 picture bends and splits for a moment after each page in the
+wrong hand, keeps flashing after the boathouse note, and comes apart completely on the dock. The steady version
+was "way too much", so it became flashes that build. The ending: the last page under the red lantern at the end
+of the dock, "this isn't Cas.", black, then one year later, Bug's own MISSING poster on the payphone, two
+seconds of warp, black, back to the title.
 
-## 2026-11-17_silhouettes_v3.png
-Third pass, still drawn by hand in code (user: "try without reference photos"): real skull/jaw shapes,
-ears for Cas, a sloping neck-to-shoulder line, gaps of background between hair/jaw and collars, loose
-strands at hair ends, slight head tilts. Shown to the user for notes.
+![The ending](2026-11-22_dock_ending.png)
 
-## 2026-11-17_cas_silhouette_v3.png
-Cas redrawn from the user's ponytail reference photo: from the front a high ponytail barely shows on top;
-the crown is smooth and lifted, the ears show, and the tail comes into view behind her right side below
-the ear and hangs past the jaw to the collarbone, with loose ends. The head now has a round skull dome
-(shared by all three silhouettes).
+## 15. Sound
 
-## 2026-11-17_cas_silhouette_hair_down.png
-Cas with long hair worn down, parted in the middle, falling past her shoulders (user: the ponytail
-versions still looked bad). Bug's silhouette goes back to the original 2026-11-15 rough, which the user
-liked more than the redraws.
+The first sounds were made in Python (wind, a lake, a rattle, the flashlight click); the wind and the click
+stayed. The rest are recordings I chose on freesound, cut, looped and levelled by a script: title and ambient music, typing, wind, insects, the lake shore,
+footsteps that change between hard ground and forest floor, paper, keys, doors and the metal gate. The rattle,
+the thing in the lake, is a creature growl made stranger (slowed, doubled, echoed): it comes and goes in the
+forest, answers every wrong-hand page, and on the dock it is the only sound left, louder and lower the further
+out you walk, until it cuts dead with the screen.
 
-## 2026-11-17_silhouettes_v4.png
-Cas without the hood bunched at her neck, so background shows behind her hair (user); Bug's original
-rough with its collar taken off (the popped collar points and the grey triangles by the neck,
-tools/make_bug_rough.py COLLAR = False -> process/2026-11-17_bug_silhouette_no_collar.png).
+## 16. The last play-tests
 
-## 2026-11-17_silhouettes_v5.png
-Cas's long hair now fills the space behind her neck (user: "I don't want to see Cas's neck, I want that to
-be hair"): one mass of hair from her head down past her shoulders.
+![Shack pages and boots](2026-11-22_round4_shack_pages_black_boots.png)
 
-## 2026-11-17_silhouettes_v6.png
-Cas with faint grey lines so her shapes read (user): her face's edge against her hair, the parting, strands
-falling down her hair, and her shoulders under it.
-
-## 2026-11-17_silhouettes_v7.png
-All three now share the same faint grey face outline so they match (user). Cas's backpack straps and
-Eileen's handbag strap and the wispy ends of her hair are gone.
-
-## 2026-11-17_silhouettes_v8.png
-Eileen and Cas now use Bug's face outline (just the lower curve of the oval: cheeks, jaw, chin), which the
-user liked best; Eileen's coat buttons line up in one column down the middle where the coat closes.
-
-## 2026-11-17_silhouettes_v9.png
-Bug's bob redrawn as one smooth closed curve, solid behind her neck with no background showing through
-(user: "make Bug's hair better and smoother with no background behind it like the other two").
-
-## 2026-11-17_silhouettes_v10.png
-More detail on Bug's jacket in faint seams like the zip (user): the neckline, a zip pull, dropped shoulder
-seams, two chest pockets with flaps and snaps, folds near the arms.
-
-## 2026-11-17_silhouettes_v11.png
-Cas without the little strands of hair sticking out (user); her hair edge is clean now.
-
-## 2026-11-17_cas_wall_closeup.png
-Cas's wall as the reading screen shows it (tools/make_wall.py), and on the Room 104 wall itself: her
-notes now in her Rock Salt hand, the lantern note ("why does everyone lie about the red lanterns?"),
-Eileen's MISSING poster with her silhouette (replacing the old names list, which had dates after 2002),
-and the photo-booth strip of Cas and Bug, pinned and strung on the wallpaper with her lake photos,
-the clipping and her lake map.
-
-## 2026-11-17_new_readables_in_game.png
-In-game test of the six new readables (each moved onto the Room 104 bed and opened with E): the 1974 log
-on its typed file sheet, Cas's notebook, the wrong-hand pages, the note by her boots, the last page, and
-Cas's wall close-up. All fit their sheets.
-
-## 2026-11-17_opening.png
-The opening in play: black, Bug's opening text typed out in her hand, the postcard ("i miss you bug - cas"
-in the wrong hand) under it, [E] Continue; after E the screen fades from black into the parking lot with
-her first line at the top.
-
-## 2026-11-17_opening_v2.png
-The opening slowed down (user): text types at 15 characters a second, the postcard fades in over 1.8 s,
-and the line now ends "On the back, one line..." (no "signed Cas:").
-
-## 2026-11-17_postcard_oregon.png
-The postcard now has a made-up Oregon address in the wrong hand (user): bug / 1418 SE Hollins Ave. /
-Portland, OR 97214.
-
-## 2026-11-17_final_shot.png
-The final shot's camera (unreal/final_shot.py, BP_FinalShot): a year later, the payphone in the motel lot
-with Bug's MISSING poster taped to its side (tools/make_photos.py missing_bug: her silhouette, last seen
-October 2002, 555-0117). The poster is hidden during the game and only appears in the ending.
-
-## 2026-11-17_ending.png
-The ending in play: the last page; on closing it, "this isn't Cas."; cut to black, "One year later.";
-the final shot of the payphone with Bug's MISSING poster; cut to black; the game then quits by itself.
-
-## 2026-11-17_keys_in_world.png
-The three keys in the world are now their drawings, cut out and laid flat (user: "the keys are still
-blocks, they should look exactly like the key image"): the office key on the Room 104 dresser, the gate
-key on the office desk, the boathouse key on Cas's lake map in the shack (tools/make_keys.py card(),
-unreal/key_cards.py M_PS2_Cutout, place_clues.py).
-
-## 2026-11-17_opening_text_and_torn_page.png / 2026-11-17_boathouse_notes_in_world.png
-Opening line now "Marrow Falls Motel on the front" (user). The last page is a small scrap torn from a
-notebook page (tools/make_papers.py torn()), on the reading screen and as a ~10 cm cut-out under the lantern;
-the note by her boots is also now its torn sheet with the writing on it, not a white block.
-
-## 2026-11-17_papers_in_world.png
-The last four papers in the world are now the real things too (cut-outs, tools/make_papers.py world_card,
-folder_cover, notebook_cover): Cas's letter on motel stationery on the bed, the researchers' manila folder on
-the back-room bed, Cas's red spiral notebook ("C.B.") on the cot, and the wrong-hand page nailed to the shack
-wall. The reading "The last page" title is gone (user).
-
-## 2026-11-17_title_screen.png
-The title screen (user picked 3B: thin lettering over the lake): BP_TitleShot's camera down the dock into
-the fog, MARROW, [E] Start / [C] Controls / [Q] Quit; the controls page lists every key the game uses. Start
-goes into the opening. Lettering options: process/2026-11-17_title_options.png, _title_1B_3B.png.
-
-## 2026-11-17_title_screen_v2.png
-Second pass at the title screen (user: it looked underdeveloped; approved mockup process/2026-11-17_title_v2_mock.png):
-a row of lit red lanterns down the dock into the fog, MARROW breathing slowly with a thin red rule under it,
-the menu centred in the title's lettering (Century Gothic) with each key in dark red, a vignette and a darker
-band behind the menu, and the camera slowly pushing in down the dock. The controls page uses the same lettering.
-
-## 2026-11-17_title_birds.png
-More birds over the lake behind the title (user): three flocks (30, 22 and 18 crows) circling low over the
-water ahead of the dock, and three single crows gliding over it (unreal/critters.py).
-
-## 2026-11-17_menu_and_controls.png
-The title menu works with the mouse as well as the keys (user: the buttons weren't working): the cursor shows
-on the title, an item lights up red under it, a click does what its key does. The controls page was redesigned
-over the dock: a dark panel, CONTROLS with a red rule, MOVE and INTERACT groups with every key drawn as a keycap,
-and a clickable BACK. The map line now just says "Map".
-
-## 2026-11-17_pause_menu.png
-The pause menu in play (Esc, or P in the editor): the game dims, PAUSED with a red rule, RESUME / CONTROLS /
-QUIT in the title's lettering (mouse hover + click or the keys); CONTROLS opens the same keycap page, Esc or
-BACK returns to the pause menu, Esc again resumes. Blocked on the title, in the opening, the ending and the map.
-
-## 2026-11-17_breakdown_in_game.png
-The world breaking down near the lake, in play (unreal/breakdown.py, M_Breakdown): clean at the motel (top
-left); on the trail near the lake the picture warps and colours split (top right: the bushes); at the shore
-the dock bends and wobbles, the fog goes red and the edges close in dark red (bottom left and right, two
-frames apart); in the boathouse the same. Strength follows how close you are to the lake.
-
-## 2026-11-17_breakdown_v2.png
-Breakdown v2 (user: the whole game had gone dark; wanted only glimpses until "the bridge"): the effect now
-runs after tonemapping like the PS2 look and passes the picture through untouched when off. Top row: the title
-and the motel with the effect off vs on (identical). Middle: four trail frames a moment apart, one catching a
-glimpse (red, colour split). Bottom: the dock and the boathouse, where it takes over completely.
-
-## 2026-11-17_padlock.png
-Realistic padlocks (user: the padlock was done badly): a laminated steel body (stacked plates with a band),
-a brass keyway, a polished U shackle, through real interlocking oval chain links wrapped round the gate post
-(maya/lake_buildings.py padlock, oval_link, chain_loop; also on the boathouse door's hasp and staple).
-Also fixed from the user's playtest: the back gate never opened (it wasn't treated as a door), the gate key
-moved to the front of the office desk, and every item's aim box is bigger/taller (the register could only
-be examined from behind the counter).
-
-## 2026-11-20_synth_sounds_spectrograms.png
-
-First sound pass. These are spectrograms of the sounds made in Python
-by tools/make_sounds.py (no samples). Time runs left to right and pitch goes up, from low at the bottom to high at the top.
-From the top: wind_loop (low roar with gusts swelling in the upper bands), lake_loop (each small wave is a
-bright spike that fades), rattle_loop (inhale = soft round blob, exhale = the striped rattle), warp_sting
-(a reversed rattle swelling up over a falling sub tone). Each loop runs back into its own start without a click,
-because every noise is made in the frequency domain and every envelope is built from whole-cycle sines.
-
-## 2026-11-22_shack_cot_pages.png / 2026-11-22_shack_two_pages.png
-
-From the user's play-through: the shack's two notes now lie side by side on the cot (Cas's red notebook and
-the loose page in the wrong hand; the page used to be nailed to the wall). One E opens both at once: Cas's
-notebook on the left in her Rock Salt hand, the wrong-hand page (Zeyada) on the right. The reading screen
-draws a second sheet whenever a clue has body2/hand2/paper2 in clues.json.
-
-## 2026-11-22_dock_ending.png
-
-The ending, now at the end of the dock (it was still by the boathouse note in the saved level). Top row:
-"[E] Read" at the red lantern on the last planks, the last page ("you came, bug / now we can be together"),
-then Bug's line "this isn't Cas." Bottom row: the one year later shot of the MISSING poster in its last
-second, the only warp in the whole game now (the user wanted no flashes after wrong-hand pages or at the
-lake); then black, and the game quits back to the editor.
-
-## 2026-11-22_warp_buildup_boots_poster.png / 2026-11-22_late_flashes.png
-
-Second round from the same play-through. The user wanted the warp back in the second half, building up:
-flashes for a few seconds after every page in the wrong hand, flashes every few seconds for the rest of the
-game once the boathouse note is read, fully warped from the moment she steps onto the dock (and through her
-last line), and only one second in the "one year later" shot. Big sheet, left to right: the user's Fab hiking
-boots by the boathouse note (my modelled boots taken out of the lake build); six frames after the note; just
-before the dock (clear); on the dock (fully warped); "this isn't Cas."; the final shot with the MISSING
-poster, now bigger text and a closer camera (it was "blurry and hard to read"). The second sheet is a burst
-of 14 frames after the boathouse note: three of them caught a flash.
-
-## 2026-11-22_round3_shack_boots_dock.png
-
-Third round. Top two rows: right after closing the shack pages (Bug now ends "Something is very wrong");
-frame 3 catches the warp flash that was missing before (it only checked the left page's handwriting, and
-on the cot that is Cas's). Third row: the user's second choice of boots (Fab "Leather Boots", tall leather,
-given a material from the pack's own textures) by the water door, the note moved beside them; then Bug's new
-line "Those are Cas's boots... everything keeps bending around me...". Bottom row: walking up the warped
-dock, the last page (now 22 x 16 cm, it was too small to spot) under the last lantern, and reading it.
-
-## 2026-11-22_round4_chairs_boots_ending.png / 2026-11-22_round4_shack_pages_black_boots.png
-
-Fourth round. The motel's plastic chairs rebuilt in one connected piece (no slats poking out the back) and
-pushed back against the wall; the shack notebook lifted clear of the lumpy sleeping bag; the footprints in the
-boathouse now go from the door round the anchor to Cas's boots; the last page lies on the planks beside the
-dock lantern instead of inside its base; the one-year-later shot has no stray flash any more, and after the cut
-to black the game goes back to the title screen. Second sheet: the two shack pages with "[E] Close" bright and
-centred under them (it was faint on top of the left page; my first try at this left the left page blank), and
-the boots black and matte, one standing and one fallen on its side (the pack's pair cut in two in Maya,
-tools/split_boots.py).
+Four rounds of notes from full play-throughs on the last day: the two shack pages side by side, Cas's boots by
+the water door with footprints leading to them, the motel chairs rebuilt against the wall, Bug's lines reworded,
+and walking fixed (the bugs and birds had invisible collision, and trees blocked a crown's width instead of
+their trunk). The game ships as a Windows build that opens in a normal window.

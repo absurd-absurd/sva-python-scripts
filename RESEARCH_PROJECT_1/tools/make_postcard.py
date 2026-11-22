@@ -4,7 +4,7 @@
 
 "i miss you bug - cas" in the wrong hand (Zeyada: the thing wrote it), postmarked Marrow Falls Oct 9 2002,
 a 37-cent flag stamp. The motel's printed side is just its name (user, 2026-11-17: no sub-line).
-Made from the font-comparison sample (process/2026-11-16_postcard_back_fonts.png)."""
+Made from the font-comparison sample (process/archive/2026-11-16_postcard_back_fonts.png)."""
 import math, os, random
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 

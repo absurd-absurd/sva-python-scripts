@@ -101,5 +101,5 @@ frame = Image.new("L", (W + 60, H + 60), 236)
 frame.paste(img, (30, 30))
 out = Image.merge("RGB", [frame.point(lambda v: min(255, int(v * 1.02 + 6))), frame, frame.point(lambda v: int(v * 0.93))])
 out.save(r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/process/2026-11-15_bug_silhouette_rough.png" if COLLAR else
-         r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/process/2026-11-17_bug_silhouette_no_collar.png")
+         r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1/process/archive/2026-11-17_bug_silhouette_no_collar.png")
 print("saved")

@@ -1,7 +1,7 @@
 """The title, MARROW, as a picture the HUD draws over the title screen's camera (see-through round the letters).
 
     python make_title.py [style]   -> export/title.png (2400 x 600)
-    python make_title.py --sheet   -> process/2026-11-17_title_options.png (each style over each background)
+    python make_title.py --sheet   -> process/archive/2026-11-17_title_options.png (each style over each background)
 
 Styles: serif (Baskerville, wide-spaced), condensed (Bodoni condensed, tall), thin (Century Gothic, wide).
 Letters are off-white with a faint red bleed and grain, like a title on a worn PS2 disc's boot screen.
