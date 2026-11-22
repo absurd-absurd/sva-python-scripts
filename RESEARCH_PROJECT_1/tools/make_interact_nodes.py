@@ -144,6 +144,7 @@ FOREST_RATTLE = (25.0, 55.0)        # seconds between the low warped bass in the
 RATTLE = SND("rattle")                 # the growl made stranger, louder (tools/prep_sounds.py rattle())
 DOCK_RATTLE = SND("rattle_dock_loop")  # on the dock it keeps going, louder and lower the further out
 DOCK_GAIN, DOCK_PITCH = (1.5, 4.0), (1.0, 0.72)   # (louder: user 2026-11-22 "so much louder on the dock")   # volume / pitch from the start of the dock to its end
+RATTLE_LEAD = 0.3                      # the last rattle starts this much before the last warp (the growl takes a moment to bite)
 DOCK_Y1 = 16800.0                      # the end of the dock
 HARD_Y = -1400.0                       # the motel's front wall: the lot and walkway in front are hard ground
 DOCK_MIX = "/Game/Horror/Audio/MIX_Dock.MIX_Dock"   # unreal/sound_mix.py: music, wind, insects, lake, steps to silence
@@ -1106,7 +1107,7 @@ def hud_graph():
                 ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", w_on)]))]).then
     # the rattle with the last warp (user 2026-11-22), once
     rattle_then, fade_then = g.sequence(a, 2)          # one exec output can only feed one node
-    eb, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_OUT - END_WARP)), ("B", "bool", g.not_(g.get("EndBass", "bool")))], ty="bool"), rattle_then)
+    eb, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_OUT - END_WARP - RATTLE_LEAD)), ("B", "bool", g.not_(g.get("EndBass", "bool")))], ty="bool"), rattle_then)
     fr = g.call(STATICS, "SpawnSound2D", eb, [("Sound", "sound", SND("rattle_hit")), ("VolumeMultiplier", "float", VOL["growl"])],
                 outs=[("ReturnValue", "audio")])
     g.set("EndBass", "bool", True, g.set("FinalRattle", "audio", fr.o["ReturnValue"], fr.then).then)
@@ -1196,8 +1197,11 @@ def hud_graph():
         ("B", "bool", g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadHand2", "string")), ("B", "string", "wrong")], ty="bool"))], ty="bool")
     w_yes, w_no = g.branch(is_wrong, a)
     a = g.set("WarpUntil", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.now()), ("B", "real", WARP_AFTER)]), w_yes).then
-    a = g.call(STATICS, "PlaySound2D", a, [("Sound", "sound", RATTLE), ("VolumeMultiplier", "float", VOL["bass"])]).then
-    ends, plain = g.branch(g.get("ReadEnds", "bool"), [a, w_no])
+    # the rattle after a wrong-hand page - but not after the last page: the dock rattle is going and must stop dead
+    # at the cut to black (user 2026-11-22; this one rang on past it)
+    rt_yes, rt_no = g.branch(g.not_(g.get("ReadEnds", "bool")), a)
+    a = [g.call(STATICS, "PlaySound2D", rt_yes, [("Sound", "sound", RATTLE), ("VolumeMultiplier", "float", VOL["bass"])]).then, rt_no]
+    ends, plain = g.branch(g.get("ReadEnds", "bool"), a + [w_no])
     unfreeze(plain)
     # (no extra rattle here: the dock rattle is already going and stops dead at the cut to black - user 2026-11-22)
     g.set("EndStart", "real", g.now(), g.set("Ending", "bool", True, ends).then)

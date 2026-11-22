@@ -74,17 +74,25 @@ def rattle_hit():
     return fades(level(drive(level(x, -14, -1), 5.0), -8, -0.5), 0.005, 0.3)
 
 
-def rattle_loop(seconds=16.0):
-    """The dock: the rattle over and over, at three pitches, overlapping, as one seamless loop (the HUD makes it
-    louder and lower the further out you go)."""
+def rattle_loop(seconds=16.0, every=0.7):
+    """The dock (user 2026-11-22: "one continuous rattle"): the rattle laid down over and over, a new one every
+    `every` seconds at a slightly different pitch, so they overlap into one unbroken rattle; wrapped round so the
+    loop has no seam (the HUD makes it louder and lower the further out you go)."""
+    import random
+    rng = random.Random(7)
     n = int(seconds * SR)
     out = np.zeros((n, 2), np.float32)
-    for k, (start, rate) in enumerate(((0.0, 0.8), (5.3, 0.7), (10.6, 0.75))):
-        fx = RATTLE_FX.replace("44100*0.8", f"44100*{rate}")
-        y = level(trim_start(load("growl", af=fx)), -16, -2)
-        i = int(start * SR)
-        idx = (np.arange(len(y)) + i) % n
+    takes = {}
+    t = 0.0
+    while t < seconds:
+        rate = round(rng.uniform(0.68, 0.86), 2)
+        if rate not in takes:
+            fx = RATTLE_FX.replace("44100*0.8", f"44100*{rate}")
+            takes[rate] = level(trim_start(load("growl", af=fx)), -16, -2)
+        y = takes[rate] * rng.uniform(0.6, 1.0)
+        idx = (np.arange(len(y)) + int(t * SR)) % n
         np.add.at(out, idx, y)
+        t += every * rng.uniform(0.8, 1.2)
     return level(drive(level(out, -15, -1), 5.0), -8, -0.5)
 
 
