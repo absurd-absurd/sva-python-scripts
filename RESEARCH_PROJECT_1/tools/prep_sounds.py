@@ -46,7 +46,40 @@ FILES = {
     "paper": "463689__usamah__picking-up-one-paper.wav",
     "door": "460542__coosemek__door-creak.wav",
     "keys": "444267__karinalarasart__jingling-keys.wav",
+    "gate": "682776__thomasanthony321__metal-gate-opening.wav",
+    "typing": "450282__stu556__mechanical-keyboard-typing-treble-version.wav",
 }
+# the rattle (user 2026-11-22: the growl is THE rattle; "louder... reverb or something to make it sound stranger,
+# weirder, more intense"): lower and slower, a chorus so it sounds doubled, echoes trailing off
+RATTLE_FX = ("asetrate=44100*0.8,aresample=44100,"
+             "chorus=0.6:0.9:55|70|90:0.4|0.35|0.3:0.25|0.4|0.3:2|1.3|0.7,"
+             "aecho=0.8:0.75:90|210|430:0.45|0.32|0.2")
+
+
+def drive(x, k=3.0):
+    """Soft saturation: louder and rougher without clipping (tanh)."""
+    return np.tanh(x * k) / np.tanh(k)
+
+
+def rattle():
+    """One rattle: a reversed swell rising into the growl, the growl with RATTLE_FX, echoes; loud."""
+    x = trim_start(load("growl", af=RATTLE_FX))
+    swell = x[::-1][-int(1.2 * SR):] * np.linspace(0, 0.6, int(1.2 * SR))[:, None] ** 2
+    return fades(level(drive(level(np.concatenate([swell, x]), -14, -1)), -10, -1), 0.05, 0.8)
+
+
+def rattle_loop(seconds=16.0):
+    """The dock: the rattle over and over, at three pitches, overlapping, as one seamless loop (the HUD makes it
+    louder and lower the further out you go)."""
+    n = int(seconds * SR)
+    out = np.zeros((n, 2), np.float32)
+    for k, (start, rate) in enumerate(((0.0, 0.8), (5.3, 0.7), (10.6, 0.75))):
+        fx = RATTLE_FX.replace("44100*0.8", f"44100*{rate}")
+        y = level(trim_start(load("growl", af=fx)), -16, -2)
+        i = int(start * SR)
+        idx = (np.arange(len(y)) + i) % n
+        np.add.at(out, idx, y)
+    return level(drive(level(out, -15, -1)), -11, -1)
 
 
 def load(key, start=None, dur=None, af=None):
@@ -144,6 +177,10 @@ if __name__ == "__main__":
     WARPED = "asetrate=44100*0.66,aresample=44100,atempo=0.8,vibrato=f=2.5:d=0.35,aecho=0.6:0.5:180:0.25"
     save("warp_bass", fades(level(load("bass", af=WARPED), -24, -4), 0.4, 1.5))
     save("growl", fades(trim_start(level(load("growl"), -14, -1))))
+    save("rattle", rattle())
+    save("rattle_dock_loop", rattle_loop())
+    save("gate", fades(trim_start(level(load("gate"), -16, -1))))
+    save("typing_loop", loop(level(load("typing", 20, 33), -24, -3), 3.0))
     save("lake_rec_loop", loop(level(load("lake", 20, 66), -24), 4.0))
     save("wind_rec_loop", loop(level(load("wind", 120, 64), -26), 4.0))
     save("bugs_loop", loop(level(load("bugs", 10, 64), -28), 4.0))

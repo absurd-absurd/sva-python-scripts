@@ -135,13 +135,17 @@ CLICK_VOLUME = 0.8
 # the user's freesound recordings (2026-11-22; tools/prep_sounds.py -> unreal/place_sounds.py): S_rec_<name>
 SND = lambda n: f"/Game/Horror/Audio/S_rec_{n}.S_rec_{n}"
 AUDIO = "/Script/Engine.AudioComponent"
-VOL = {"wind": 0.2, "bugs": 0.25, "title": 0.8, "music": 0.4, "car": 0.8, "growl": 1.0, "bass": 0.9, "forest": 0.7, "paper": 0.8, "keys": 0.7, "door": 0.7, "step": 0.45}
+VOL = {"typing": 0.9, "gate": 0.8, "wind": 0.2, "bugs": 0.25, "title": 0.8, "music": 0.4, "car": 0.8, "growl": 1.0, "bass": 0.9, "forest": 0.7, "paper": 0.8, "keys": 0.7, "door": 0.7, "step": 0.45}
 INDOOR_LEVEL = 0.08   # wind + insects under a roof (a ceiling above you), of their outdoor volume
 GATE_Y, LAKE_Y = -100.0, 13900.0   # the back gate's fence line / where the lake area starts (y, cm)
 FOREST_RATTLE = (25.0, 55.0)        # seconds between the low warped bass in the forest (random in range)
 # the rattle (user 2026-11-22: the creature growl heard at "this isn't Cas." is THE rattle): in the forest, after
 # every wrong-hand page, when the dock warps and in the last warp of the one-year-later shot (the bass is not used)
-RATTLE = SND("growl")
+RATTLE = SND("rattle")                 # the growl made stranger, louder (tools/prep_sounds.py rattle())
+DOCK_RATTLE = SND("rattle_dock_loop")  # on the dock it keeps going, louder and lower the further out
+DOCK_GAIN, DOCK_PITCH = (0.6, 1.6), (1.0, 0.72)   # volume / pitch from the start of the dock to its end
+DOCK_Y1 = 16800.0                      # the end of the dock
+HARD_Y = -1400.0                       # the motel's front wall: the lot and walkway in front are hard ground
 DOCK_MIX = "/Game/Horror/Audio/MIX_Dock.MIX_Dock"   # unreal/sound_mix.py: music, wind, insects, lake, steps to silence
 STRIDE = 260.0        # cm walked between footsteps (about two a second walking)
 HIT_SHAKE = "/Game/Horror/Player/CS_FlashHit.CS_FlashHit_C"
@@ -486,12 +490,25 @@ def hud_graph():
     warp = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", warp.then,
                   [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"),
                    ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", whole)]))])
-    seq = g.sequence(warp.then, 2)
+    seq = g.sequence(warp.then, 3)
     d_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", whole), ("B", "bool", g.not_(g.get("DockWarp", "bool")))], ty="bool"), seq[0])
     d_yes = g.call(STATICS, "PlaySound2D", d_yes, [("Sound", "sound", RATTLE), ("VolumeMultiplier", "float", VOL["bass"])]).then
     # on the dock everything goes quiet but the rattle (user 2026-11-22)
     d_yes = g.call(STATICS, "PushSoundMixModifier", d_yes, [("InSoundMixModifier", "soundmix", DOCK_MIX)]).then
+    # ... and the rattle keeps going, louder and weirder the further out (below, every frame while DockWarp)
+    dr = g.call(STATICS, "SpawnSound2D", d_yes, [("Sound", "sound", DOCK_RATTLE), ("VolumeMultiplier", "float", DOCK_GAIN[0])],
+                outs=[("ReturnValue", "audio")])
+    d_yes = g.set("DockRattle", "audio", dr.o["ReturnValue"], dr.then).then
     g.set("DockWarp", "bool", True, d_yes)
+    # the dock rattle follows you out: volume up, pitch down from the start of the dock to its end
+    out_t = g.pure(MATH, "FClamp", [("Value", "real", g.pure(MATH, "Divide_DoubleDouble", [
+        ("A", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", wy), ("B", "real", DOCK_Y0)])), ("B", "real", DOCK_Y1 - DOCK_Y0)])),
+        ("Min", "real", 0.0), ("Max", "real", 1.0)])
+    dk, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", g.get("DockWarp", "bool")), ("B", "bool", g.not_(g.get("EndShot", "bool")))], ty="bool"), seq[2])
+    dk = g.call(AUDIO, "SetVolumeMultiplier", dk, [("NewVolumeMultiplier", "float", g.pure(MATH, "Lerp", [("A", "real", DOCK_GAIN[0]), ("B", "real", DOCK_GAIN[1]), ("Alpha", "real", out_t)]))],
+                target=(g.get("DockRattle", "audio"), "audio")).then
+    g.call(AUDIO, "SetPitchMultiplier", dk, [("NewPitchMultiplier", "float", g.pure(MATH, "Lerp", [("A", "real", DOCK_PITCH[0]), ("B", "real", DOCK_PITCH[1]), ("Alpha", "real", out_t)]))],
+           target=(g.get("DockRattle", "audio"), "audio"))
     title_yes, title_no = g.branch(g.get("Title", "bool"), seq[1])
     end_yes, end_no = g.branch(g.get("Ending", "bool"), title_no)
     op_yes, op_no = g.branch(g.get("Opening", "bool"), end_no)
@@ -644,8 +661,12 @@ def hud_graph():
     # user 2026-11-22: hard steps on the motel side (lot, walkway, rooms, office), on the dock, and inside the boathouse
     # and cabins (a roof, at the lake); forest steps everywhere past the gate
     roofed_lake = g.pure(MATH, "BooleanAND", [("A", "bool", lake_side), ("B", "bool", up.o["ReturnValue"])], ty="bool")
-    wood = g.pure(MATH, "BooleanOR", [("A", "bool", motel_side), ("B", "bool", g.pure(MATH, "BooleanOR", [
-        ("A", "bool", on_dock), ("B", "bool", roofed_lake)], ty="bool"))], ty="bool")
+    # user 2026-11-22: the leafy ground behind the motel (inside the fence) is forest; the lot / walkway in front of
+    # the motel, the rooms and office (a roof), the dock and the lake buildings are hard
+    front = g.pure(MATH, "Less_DoubleDouble", [("A", "real", wy), ("B", "real", HARD_Y)], ty="bool")
+    roofed_motel = g.pure(MATH, "BooleanAND", [("A", "bool", motel_side), ("B", "bool", up.o["ReturnValue"])], ty="bool")
+    wood = g.pure(MATH, "BooleanOR", [("A", "bool", g.pure(MATH, "BooleanOR", [("A", "bool", front), ("B", "bool", roofed_motel)], ty="bool")),
+                                      ("B", "bool", g.pure(MATH, "BooleanOR", [("A", "bool", on_dock), ("B", "bool", roofed_lake)], ty="bool"))], ty="bool")
     w_, g_ = g.branch(wood, due)
     pitch = lambda: g.pure(MATH, "RandomFloatInRange", [("Min", "real", 0.9), ("Max", "real", 1.1)])
     g.call(STATICS, "PlaySound2D", w_, [("Sound", "sound", SND("step_wood_3")), ("VolumeMultiplier", "float", VOL["step"]), ("PitchMultiplier", "float", pitch())])
@@ -843,7 +864,19 @@ def hud_graph():
     # ---- the opening: drawn instead of the HUD while Opening is on ----
     g.row(340 * 9, -3200)
     t = open_t()
-    a = g.call(HUD, "DrawRect", op_yes, [("RectColor", "color", BLACK), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
+    # the typing sound: starts with the first letter, stops with the last (user 2026-11-22)
+    op_start, op_stop, op_draw = g.sequence(op_yes, 3)
+    past = lambda k: g.pure(MATH, "Greater_DoubleDouble", [("A", "real", t), ("B", "real", k)], ty="bool")
+    both = lambda x, y: g.pure(MATH, "BooleanAND", [("A", "bool", x), ("B", "bool", y)], ty="bool")
+    ty_go, _ = g.branch(both(past(OPEN_DELAY), g.not_(g.get("TypeStarted", "bool"))), op_start)
+    tp = g.call(STATICS, "SpawnSound2D", ty_go, [("Sound", "sound", SND("typing_loop")), ("VolumeMultiplier", "float", VOL["typing"])],
+                outs=[("ReturnValue", "audio")])
+    g.set("TypeStarted", "bool", True, g.set("TypingAudio", "audio", tp.o["ReturnValue"], tp.then).then)
+    ty_end, _ = g.branch(both(past(OPEN_T_TEXT), both(g.get("TypeStarted", "bool"), g.not_(g.get("TypeDone", "bool")))), op_stop)
+    ty_end = g.call(AUDIO, "FadeOut", ty_end, [("FadeOutDuration", "float", 0.15), ("FadeVolumeLevel", "float", 0.0)],
+                    target=(g.get("TypingAudio", "audio"), "audio")).then
+    g.set("TypeDone", "bool", True, ty_end)
+    a = g.call(HUD, "DrawRect", op_draw, [("RectColor", "color", BLACK), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
                                          ("ScreenW", "float", W), ("ScreenH", "float", H)]).then
     shown = g.pure(MATH, "FTrunc", [("A", "real", g.mul(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", t), ("B", "real", OPEN_DELAY)]),
                                                        OPEN_CPS))], ty="int")
@@ -1040,6 +1073,7 @@ def hud_graph():
     # 2: black from the cut until the final shot, with "One year later." fading in
     b_on = g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_BLACK)), ("B", "bool", g.not_(after(END_T_SHOT)))], ty="bool")
     b_yes, _ = g.branch(b_on, steps[1])
+    b_yes = g.call(AUDIO, "Stop", b_yes, [], target=(g.get("DockRattle", "audio"), "audio")).then   # silence at the cut
     a = g.call(HUD, "DrawRect", b_yes, [("RectColor", "color", BLACK), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
                                         ("ScreenW", "float", W), ("ScreenH", "float", H)]).then
     y_on = g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_YEAR)), ("B", "bool", g.not_(after(END_T_YEAR_OUT)))], ty="bool")
@@ -1073,8 +1107,9 @@ def hud_graph():
     # the rattle with the last warp (user 2026-11-22), once
     rattle_then, fade_then = g.sequence(a, 2)          # one exec output can only feed one node
     eb, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_OUT - END_WARP)), ("B", "bool", g.not_(g.get("EndBass", "bool")))], ty="bool"), rattle_then)
-    eb = g.call(STATICS, "PlaySound2D", eb, [("Sound", "sound", RATTLE), ("VolumeMultiplier", "float", VOL["growl"])]).then
-    g.set("EndBass", "bool", True, eb)
+    fr = g.call(STATICS, "SpawnSound2D", eb, [("Sound", "sound", RATTLE), ("VolumeMultiplier", "float", VOL["growl"])],
+                outs=[("ReturnValue", "audio")])
+    g.set("EndBass", "bool", True, g.set("FinalRattle", "audio", fr.o["ReturnValue"], fr.then).then)
     f_yes, f_no = g.branch(f_on, fade_then)
     fa = g.pure(MATH, "FMax", [("A", "real", 0.0), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", 1.0),
                ("B", "real", g.mul(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", et), ("B", "real", END_T_SHOT)]), 1.0 / END_SHOT_FADE))]))], ty="real")
@@ -1082,6 +1117,7 @@ def hud_graph():
     g.call(HUD, "DrawRect", f_yes, [("RectColor", "color", fcol), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
                                     ("ScreenW", "float", W), ("ScreenH", "float", H)])
     o_yes, _ = g.branch(after(END_T_OUT), f_no)
+    o_yes = g.call(AUDIO, "Stop", o_yes, [], target=(g.get("FinalRattle", "audio"), "audio")).then   # stops as it cuts to black
     g.call(HUD, "DrawRect", o_yes, [("RectColor", "color", BLACK), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
                                     ("ScreenW", "float", W), ("ScreenH", "float", H)])
     # 5: back to the title screen (user 2026-11-22; it used to quit): reload the level, which starts on the title
@@ -1128,14 +1164,13 @@ def hud_graph():
                    [("PlayerController", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc"))]).then
         a = g.call(PC, "SetViewTargetWithBlend", a, [("NewViewTarget", "actor", g.pure(HUD, "GetOwningPawn", ty="actor")), ("BlendTime", "float", 0.0)],
                    target=(g.pure(HUD, "GetOwningPlayerController", ty="pc"), "pc")).then
-        # sound: the title music fades out, the car pulls in (the opening), the ambient music (hualdk) fades in
-        a = g.call(AUDIO, "FadeOut", a, [("FadeOutDuration", "float", 2.5), ("FadeVolumeLevel", "float", 0.0)],
+        # sound (user 2026-11-22): the opening is ONLY the typing - the title music, wind and insects fade out here;
+        # the typing runs while the text types (the opening draw); the rest comes back when you press E
+        a = g.call(AUDIO, "FadeOut", a, [("FadeOutDuration", "float", 1.5), ("FadeVolumeLevel", "float", 0.0)],
                    target=(g.get("TitleMusic", "audio"), "audio")).then
-        a = g.call(STATICS, "PlaySound2D", a, [("Sound", "sound", SND("car")), ("VolumeMultiplier", "float", VOL["car"])]).then
-        gm = g.call(STATICS, "SpawnSound2D", a, [("Sound", "sound", SND("music_loop")), ("VolumeMultiplier", "float", VOL["music"])],
-                    outs=[("ReturnValue", "audio")])
-        a = g.set("GameMusic", "audio", gm.o["ReturnValue"], gm.then).then
-        g.call(AUDIO, "FadeIn", a, [("FadeInDuration", "float", 6.0), ("FadeVolumeLevel", "float", 1.0)], target=(g.get("GameMusic", "audio"), "audio"))
+        for amb in ("WindAudio", "BugsAudio"):
+            a = g.call(AUDIO, "AdjustVolume", a, [("AdjustVolumeDuration", "float", 1.0), ("AdjustVolumeLevel", "float", 0.0)],
+                       target=(g.get(amb, "audio"), "audio")).then
 
     on_title, e_game = g.branch(g.get("Title", "bool"), e)
     start, _ = g.branch(g.not_(g.get("ControlsOpen", "bool")), on_title)
@@ -1144,6 +1179,14 @@ def hud_graph():
     in_open, e_play = g.branch(g.get("Opening", "bool"), e_live)
     ready, _ = g.branch(g.pure(MATH, "Greater_DoubleDouble", [("A", "real", open_t()), ("B", "real", OPEN_T_GO)], ty="bool"), in_open)
     a = g.set("Opening", "bool", False, ready).then
+    # into the game: the ambient music (hualdk) fades in, the wind and insects come back
+    gm = g.call(STATICS, "SpawnSound2D", a, [("Sound", "sound", SND("music_loop")), ("VolumeMultiplier", "float", VOL["music"])],
+                outs=[("ReturnValue", "audio")])
+    a = g.set("GameMusic", "audio", gm.o["ReturnValue"], gm.then).then
+    a = g.call(AUDIO, "FadeIn", a, [("FadeInDuration", "float", 6.0), ("FadeVolumeLevel", "float", 1.0)], target=(g.get("GameMusic", "audio"), "audio")).then
+    for amb in ("WindAudio", "BugsAudio"):
+        a = g.call(AUDIO, "AdjustVolume", a, [("AdjustVolumeDuration", "float", 2.0), ("AdjustVolumeLevel", "float", 1.0)],
+                   target=(g.get(amb, "audio"), "audio")).then
     unfreeze(g.set("OpenEnd", "real", g.now(), a).then)
     b_read, b_not_read = g.branch(g.get("Reading", "bool"), e_play)
     a = g.set("Reading", "bool", False, b_read).then
@@ -1157,7 +1200,7 @@ def hud_graph():
     ends, plain = g.branch(g.get("ReadEnds", "bool"), [a, w_no])
     unfreeze(plain)
     a = g.set("EndStart", "real", g.now(), g.set("Ending", "bool", True, ends).then).then
-    g.call(STATICS, "PlaySound2D", a, [("Sound", "sound", SND("growl")), ("VolumeMultiplier", "float", VOL["growl"])])
+    g.call(STATICS, "PlaySound2D", a, [("Sound", "sound", RATTLE), ("VolumeMultiplier", "float", VOL["growl"])])
     g.row(340, 3300)
     b_jour, b_not_jour = g.branch(g.get("JournalOpen", "bool"), b_not_read)
     unfreeze(g.set("JournalOpen", "bool", False, b_jour).then)
@@ -1176,10 +1219,12 @@ def hud_graph():
     # 0: open its page
     g.row(340 * 5, 5000)
     p_yes, _ = g.branch(g.not_(g.empty(fget("Body"))), steps[0])
-    k_yes, k_no = g.branch(g.pure(STR, "Contains", [("SearchIn", "string", fget("Paper")), ("Substring", "string", "key_")], ty="bool"), p_yes)
+    # no sound for looking at Cas's wall (paper "wall"; user 2026-11-22)
+    not_wall, is_wall = g.branch(g.not_(g.pure(STR, "EqualEqual_StrStr", [("A", "string", fget("Paper")), ("B", "string", "wall")], ty="bool")), p_yes)
+    k_yes, k_no = g.branch(g.pure(STR, "Contains", [("SearchIn", "string", fget("Paper")), ("Substring", "string", "key_")], ty="bool"), not_wall)
     s_key = g.call(STATICS, "PlaySound2D", k_yes, [("Sound", "sound", SND("keys")), ("VolumeMultiplier", "float", VOL["keys"])])
     s_pap = g.call(STATICS, "PlaySound2D", k_no, [("Sound", "sound", SND("paper")), ("VolumeMultiplier", "float", VOL["paper"])])
-    a = g.set("ReadTitle", "string", fget("Title"), [s_key.then, s_pap.then]).then
+    a = g.set("ReadTitle", "string", fget("Title"), [s_key.then, s_pap.then, is_wall]).then
     a = g.set("ReadBody", "string", fget("Body"), a).then
     a = g.set("ReadHand", "string", fget("Hand"), a).then
     a = g.set("ReadPaper", "string", fget("Paper"), a).then
@@ -1224,11 +1269,16 @@ def hud_graph():
     # 2: doors swing open
     g.row(340 * 5, 8800)
     y, _ = g.branch(fget("IsDoor", "bool"), steps[2])
-    y = g.call(STATICS, "PlaySound2D", y, [("Sound", "sound", SND("door_creak")), ("VolumeMultiplier", "float", VOL["door"])]).then
-    g.set("Opened", "bool", True, y, target=focus())
+    is_gate, not_gate = g.branch(g.pure(STR, "EqualEqual_StrStr", [("A", "string", fget("ClueId")), ("B", "string", "door_backgate")], ty="bool"), y)
+    sg = g.call(STATICS, "PlaySound2D", is_gate, [("Sound", "sound", SND("gate")), ("VolumeMultiplier", "float", VOL["gate"])])
+    sd = g.call(STATICS, "PlaySound2D", not_gate, [("Sound", "sound", SND("door_creak")), ("VolumeMultiplier", "float", VOL["door"])])
+    g.set("Opened", "bool", True, [sg.then, sd.then], target=focus())
     # 3: pickups disappear
     g.row(340 * 5, 9400)
     y, _ = g.branch(fget("PickUp", "bool"), steps[3])
+    # the map (picked up, no page of its own) rustles like paper (user 2026-11-22)
+    is_map, not_map = g.branch(g.pure(STR, "EqualEqual_StrStr", [("A", "string", fget("GivesKey")), ("B", "string", "map")], ty="bool"), y)
+    y = [g.call(STATICS, "PlaySound2D", is_map, [("Sound", "sound", SND("paper")), ("VolumeMultiplier", "float", VOL["paper"])]).then, not_map]
     g.call(ACTOR, "K2_DestroyActor", y, target=(g.get("Focus", "ex"), "actor"))
 
     # ---- mouse on the title menu: hover lights an item red, a click does what its key does ----
