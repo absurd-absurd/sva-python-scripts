@@ -14,8 +14,8 @@ problems. **MARROW runs on Windows only** (64-bit Windows 10 or 11). There is no
 
 ## Install and start
 
-1. Download **`MARROW_Final_2026-11-22.zip`** from the
-   [Releases page](https://github.com/absurd-absurd/sva-python-scripts/releases) (about 540 MB).
+1. Download **[MARROW_Final_2026-11-22.zip](https://github.com/absurd-absurd/sva-python-scripts/releases/download/marrow-v1.0/MARROW_Final_2026-11-22.zip)** (about 540 MB), also on the
+   [Releases page](https://github.com/absurd-absurd/sva-python-scripts/releases/tag/marrow-v1.0).
 2. Right-click the zip and choose **Extract All...**, then pick a folder (for example your Desktop). Don't run
    the game from inside the zip: Windows can open a zip like a folder, but the game won't start from there.
 3. Open the extracted **`MARROW`** folder and double-click **`RP1_Horror.exe`**.
