@@ -610,6 +610,9 @@ def hud_graph():
         ("A", "real", speed), ("B", "real", g.pure(STATICS, "GetWorldDeltaSeconds"))]))])
     st = g.set("StepDist", "real", walked, [fl.then, changed_no])
     st_step, st_room, st_forest = g.sequence(st.then, 3)
+    # where you are: the motel side of the back gate / the lake area
+    motel_side = g.pure(MATH, "Less_DoubleDouble", [("A", "real", wy), ("B", "real", GATE_Y)], ty="bool")
+    lake_side = g.pure(MATH, "Greater_DoubleDouble", [("A", "real", wy), ("B", "real", LAKE_Y)], ty="bool")
     # in the forest (past the gate, before the lake) the low warped bass comes and goes on its own (user 2026-11-22:
     # "make it happen throughout the forest not just with the notes"); the first one as you pass the gate
     in_forest = g.pure(MATH, "BooleanAND", [("A", "bool", g.not_(motel_side)), ("B", "bool", g.not_(lake_side))], ty="bool")
@@ -632,8 +635,6 @@ def hud_graph():
     due = g.set("StepDist", "real", 0.0, due).then
     # user 2026-11-22: hard steps on the motel side (lot, walkway, rooms, office), on the dock, and inside the boathouse
     # and cabins (a roof, at the lake); forest steps everywhere past the gate
-    motel_side = g.pure(MATH, "Less_DoubleDouble", [("A", "real", wy), ("B", "real", GATE_Y)], ty="bool")
-    lake_side = g.pure(MATH, "Greater_DoubleDouble", [("A", "real", wy), ("B", "real", LAKE_Y)], ty="bool")
     roofed_lake = g.pure(MATH, "BooleanAND", [("A", "bool", lake_side), ("B", "bool", up.o["ReturnValue"])], ty="bool")
     wood = g.pure(MATH, "BooleanOR", [("A", "bool", motel_side), ("B", "bool", g.pure(MATH, "BooleanOR", [
         ("A", "bool", on_dock), ("B", "bool", roofed_lake)], ty="bool"))], ty="bool")
