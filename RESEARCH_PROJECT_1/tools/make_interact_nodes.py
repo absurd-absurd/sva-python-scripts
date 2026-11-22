@@ -135,10 +135,14 @@ CLICK_VOLUME = 0.8
 # the user's freesound recordings (2026-11-22; tools/prep_sounds.py -> unreal/place_sounds.py): S_rec_<name>
 SND = lambda n: f"/Game/Horror/Audio/S_rec_{n}.S_rec_{n}"
 AUDIO = "/Script/Engine.AudioComponent"
-VOL = {"wind": 0.2, "bugs": 0.25, "title": 0.8, "music": 0.4, "car": 0.8, "growl": 1.0, "bass": 0.6, "forest": 0.45, "paper": 0.8, "keys": 0.7, "door": 0.7, "step": 0.45}
+VOL = {"wind": 0.2, "bugs": 0.25, "title": 0.8, "music": 0.4, "car": 0.8, "growl": 1.0, "bass": 0.9, "forest": 0.7, "paper": 0.8, "keys": 0.7, "door": 0.7, "step": 0.45}
 INDOOR_LEVEL = 0.08   # wind + insects under a roof (a ceiling above you), of their outdoor volume
 GATE_Y, LAKE_Y = -100.0, 13900.0   # the back gate's fence line / where the lake area starts (y, cm)
 FOREST_RATTLE = (25.0, 55.0)        # seconds between the low warped bass in the forest (random in range)
+# the rattle (user 2026-11-22: the creature growl heard at "this isn't Cas." is THE rattle): in the forest, after
+# every wrong-hand page, when the dock warps and in the last warp of the one-year-later shot (the bass is not used)
+RATTLE = SND("growl")
+DOCK_MIX = "/Game/Horror/Audio/MIX_Dock.MIX_Dock"   # unreal/sound_mix.py: music, wind, insects, lake, steps to silence
 STRIDE = 260.0        # cm walked between footsteps (about two a second walking)
 HIT_SHAKE = "/Game/Horror/Player/CS_FlashHit.CS_FlashHit_C"
 # flashlight flicker, calm -> afraid (Fear 0 -> 1 in MPC_Horror)
@@ -195,6 +199,7 @@ TY = {
     "smc": _t("object", obj=C("/Script/Engine.StaticMeshComponent")),
     "sound": _t("object", obj=C("/Script/Engine.SoundBase")),
     "audio": _t("object", obj=C("/Script/Engine.AudioComponent")),
+    "soundmix": _t("object", obj=C("/Script/Engine.SoundMix")),
 }
 
 
@@ -209,7 +214,7 @@ def fmt_default(ty, v):
         return f'DefaultValue="{int(v)}"'
     if ty == "bool":
         return f'DefaultValue="{"true" if v else "false"}"'
-    if ty in ("font", "texture", "mpc", "compclass", "shakeclass", "actorclass", "sound"):
+    if ty in ("font", "texture", "mpc", "compclass", "shakeclass", "actorclass", "sound", "soundmix"):
         return f'DefaultObject="{v}"'
     if isinstance(v, float) or isinstance(v, int):
         return f'DefaultValue="{float(v)}"'
@@ -409,6 +414,7 @@ def hud_graph():
                [("PlayerController", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc")), ("bHideCursorDuringCapture", "bool", False)]).then
     # keyboard focus on the game view, or E / C / Q on the title do nothing until you click into it (user 2026-11-22)
     a = g.call("/Script/UMG.WidgetBlueprintLibrary", "SetFocusToGameViewport", a, []).then
+    a = g.call(STATICS, "ClearSoundMixModifiers", a, []).then
     # the title music (yemxid) until the game starts
     tm = g.call(STATICS, "SpawnSound2D", a, [("Sound", "sound", SND("title_loop")), ("VolumeMultiplier", "float", VOL["title"])],
                 outs=[("ReturnValue", "audio")])
@@ -482,7 +488,9 @@ def hud_graph():
                    ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", whole)]))])
     seq = g.sequence(warp.then, 2)
     d_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", whole), ("B", "bool", g.not_(g.get("DockWarp", "bool")))], ty="bool"), seq[0])
-    d_yes = g.call(STATICS, "PlaySound2D", d_yes, [("Sound", "sound", SND("warp_bass")), ("VolumeMultiplier", "float", VOL["bass"])]).then
+    d_yes = g.call(STATICS, "PlaySound2D", d_yes, [("Sound", "sound", RATTLE), ("VolumeMultiplier", "float", VOL["bass"])]).then
+    # on the dock everything goes quiet but the rattle (user 2026-11-22)
+    d_yes = g.call(STATICS, "PushSoundMixModifier", d_yes, [("InSoundMixModifier", "soundmix", DOCK_MIX)]).then
     g.set("DockWarp", "bool", True, d_yes)
     title_yes, title_no = g.branch(g.get("Title", "bool"), seq[1])
     end_yes, end_no = g.branch(g.get("Ending", "bool"), title_no)
@@ -619,7 +627,7 @@ def hud_graph():
     due_r = g.pure(MATH, "BooleanAND", [("A", "bool", in_forest), ("B", "bool", g.pure(MATH, "Greater_DoubleDouble", [
         ("A", "real", g.now()), ("B", "real", g.get("NextRattle", "real"))], ty="bool"))], ty="bool")
     r_yes, _ = g.branch(due_r, st_forest)
-    r_yes = g.call(STATICS, "PlaySound2D", r_yes, [("Sound", "sound", SND("warp_bass")), ("VolumeMultiplier", "float", VOL["forest"])]).then
+    r_yes = g.call(STATICS, "PlaySound2D", r_yes, [("Sound", "sound", RATTLE), ("VolumeMultiplier", "float", VOL["forest"])]).then
     g.set("NextRattle", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.now()), ("B", "real", g.pure(MATH, "RandomFloatInRange", [
         ("Min", "real", FOREST_RATTLE[0]), ("Max", "real", FOREST_RATTLE[1])]))]), r_yes)
     # under a roof (the ceiling trace) the wind and insects drop to INDOOR_LEVEL; back up outside
@@ -1042,6 +1050,7 @@ def hud_graph():
     # 3: once, at the final shot: show BP_FinalShot (the poster) and look through its camera
     s_yes, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_SHOT)), ("B", "bool", g.not_(g.get("EndShot", "bool")))], ty="bool"), steps[2])
     a = g.set("EndShot", "bool", True, s_yes).then
+    a = g.call(STATICS, "PopSoundMixModifier", a, [("InSoundMixModifier", "soundmix", DOCK_MIX)]).then
     # no music in the one-year-later shot (user 2026-11-22)
     a = g.call(AUDIO, "FadeOut", a, [("FadeOutDuration", "float", 1.0), ("FadeVolumeLevel", "float", 0.0)],
                target=(g.get("GameMusic", "audio"), "audio")).then
@@ -1061,8 +1070,12 @@ def hud_graph():
     a = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", a,
                [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"),
                 ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", w_on)]))]).then
-    # (no bass in the one-year-later shot: user 2026-11-22 - the warp there stays silent)
-    f_yes, f_no = g.branch(f_on, a)
+    # the rattle with the last warp (user 2026-11-22), once
+    rattle_then, fade_then = g.sequence(a, 2)          # one exec output can only feed one node
+    eb, _ = g.branch(g.pure(MATH, "BooleanAND", [("A", "bool", after(END_T_OUT - END_WARP)), ("B", "bool", g.not_(g.get("EndBass", "bool")))], ty="bool"), rattle_then)
+    eb = g.call(STATICS, "PlaySound2D", eb, [("Sound", "sound", RATTLE), ("VolumeMultiplier", "float", VOL["growl"])]).then
+    g.set("EndBass", "bool", True, eb)
+    f_yes, f_no = g.branch(f_on, fade_then)
     fa = g.pure(MATH, "FMax", [("A", "real", 0.0), ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", 1.0),
                ("B", "real", g.mul(g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", et), ("B", "real", END_T_SHOT)]), 1.0 / END_SHOT_FADE))]))], ty="real")
     fcol = g.pure(MATH, "MakeColor", [("R", "float", 0.0), ("G", "float", 0.0), ("B", "float", 0.0), ("A", "float", fa)], ty="color")
@@ -1140,7 +1153,7 @@ def hud_graph():
         ("B", "bool", g.pure(STR, "EqualEqual_StrStr", [("A", "string", g.get("ReadHand2", "string")), ("B", "string", "wrong")], ty="bool"))], ty="bool")
     w_yes, w_no = g.branch(is_wrong, a)
     a = g.set("WarpUntil", "real", g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.now()), ("B", "real", WARP_AFTER)]), w_yes).then
-    a = g.call(STATICS, "PlaySound2D", a, [("Sound", "sound", SND("warp_bass")), ("VolumeMultiplier", "float", VOL["bass"])]).then
+    a = g.call(STATICS, "PlaySound2D", a, [("Sound", "sound", RATTLE), ("VolumeMultiplier", "float", VOL["bass"])]).then
     ends, plain = g.branch(g.get("ReadEnds", "bool"), [a, w_no])
     unfreeze(plain)
     a = g.set("EndStart", "real", g.now(), g.set("Ending", "bool", True, ends).then).then

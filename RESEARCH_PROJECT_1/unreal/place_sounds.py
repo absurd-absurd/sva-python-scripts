@@ -4,6 +4,7 @@ Run in the Unreal editor after `python tools/make_sounds.py` (export/sounds/*.wa
   /Game/Horror/Audio/S_<name>     every export/sounds/*.wav as a SoundWave (the *_loop ones set to loop)
   snd_wind                        the wind, everywhere, not placed in space (2D), quiet under everything
   snd_lake_<k>                    the waves, placed along the shore, heard only near the water (attenuation)
+After this, run unreal/sound_mix.py (the dock's quiet: it tags the ambience sounds with SC_Ambience).
 The flashlight click is played by BP_HorrorHUD when the light is switched (tools/make_interact_nodes.py).
 The drone, the rattle and the warp sting are imported but not placed yet (the user said they "don't work").
 """
