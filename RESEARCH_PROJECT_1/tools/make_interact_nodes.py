@@ -1278,8 +1278,7 @@ if __name__ == "__main__":
     # an exec output may feed only ONE node, or the Blueprint won't compile and Play silently runs the last good
     # version (2026-11-22: that hid the whole sound pass) - stop here instead
     import re as _r
-    multi = [m.group(1) for m in _r.finditer(r'Direction="EGPD_Output",PinType\.PinCategory="exec"[^
-]*?LinkedTo=\(([^)]*)\)', out)
+    multi = [m.group(1) for m in _r.finditer(r'Direction="EGPD_Output",PinType\.PinCategory="exec"[^\n]*?LinkedTo=\(([^)]*)\)', out)
              if len([x for x in m.group(1).split(",") if x.strip()]) > 1]
     if multi:
         sys.exit(f"exec output wired to more than one node: {multi[:3]}")
