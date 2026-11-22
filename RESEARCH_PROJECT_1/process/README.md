@@ -406,3 +406,12 @@ boots by the boathouse note (my modelled boots taken out of the lake build); six
 before the dock (clear); on the dock (fully warped); "this isn't Cas."; the final shot with the MISSING
 poster, now bigger text and a closer camera (it was "blurry and hard to read"). The second sheet is a burst
 of 14 frames after the boathouse note: three of them caught a flash.
+
+## 2026-11-22_round3_shack_boots_dock.png
+
+Third round. Top two rows: right after closing the shack pages (Bug now ends "Something is very wrong");
+frame 3 catches the warp flash that was missing before (it only checked the left page's handwriting, and
+on the cot that is Cas's). Third row: the user's second choice of boots (Fab "Leather Boots", tall leather,
+given a material from the pack's own textures) by the water door, the note moved beside them; then Bug's new
+line "Those are Cas's boots... everything keeps bending around me...". Bottom row: walking up the warped
+dock, the last page (now 22 x 16 cm, it was too small to spot) under the last lantern, and reading it.
