@@ -18,7 +18,7 @@ BP_HorrorHUD
          locked (NeedsKey not in Keys) -> show LockedText
          else -> open its page (Body), and the first time: journal line, key, objective;
                  doors swing open, pickups disappear
-  Tab: open / close the journal (not while reading)
+  Tab: nothing (the journal was switched off 2026-11-22; its screen code stays but never opens)
   M:   open / close the full torn-paper map; pauses the game while it's open
   flashlight flicker (every frame, top of Draw HUD): flutters, short cut-outs, sometimes a hit to
   bring it back (CS_FlashHit camera jolt); Fear in MPC_Horror makes it worse
@@ -115,7 +115,7 @@ MENU = [("E", "S T A R T"), ("C", "C O N T R O L S"), ("Q", "Q U I T")]
 MENU_SCALE = 1.05
 # the controls page (2026-11-17 second pass): two groups, each key drawn as a keycap
 CONTROLS_MOVE = [(["W", "A", "S", "D"], "Walk"), (["Mouse"], "Look"), (["Shift"], "Run"), (["Space"], "Jump")]
-CONTROLS_USE = [(["E"], "Examine, read, use"), (["Tab"], "Journal"), (["M"], "Map"), (["Esc", "P"], "Pause")]
+CONTROLS_USE = [(["E"], "Examine, read, use"), (["F"], "Flashlight"), (["M"], "Map"), (["Esc", "P"], "Pause")]   # no Journal (user 2026-11-22)
 # the pause menu (Esc; P too, since Esc stops play in the editor): key label, item, hit-box name
 PAUSE_MENU = [("ESC", "R E S U M E", "P_RESUME"), ("C", "C O N T R O L S", "C"), ("Q", "Q U I T", "Q")]
 CONTROLS = [(" ".join(k), w) for k, w in CONTROLS_MOVE + CONTROLS_USE]
@@ -1172,16 +1172,7 @@ def hud_graph():
     ok, _ = g.branch(g.not_(blocked), not_p)
     pause(ok)
 
-    # ---- Tab ----
-    g.row(0, 10200)
-    tab = g.input_event("IA_Journal")
-    _, free = g.branch(g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Reading", "bool")),
-                                                 ("B", "bool", g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Opening", "bool")),
-                                                 ("B", "bool", g.get("Ending", "bool"))], ty="bool"))], ty="bool"), tab)
-    shut, opn = g.branch(g.get("JournalOpen", "bool"), free)
-    unfreeze(g.set("JournalOpen", "bool", False, shut).then)
-    g.row(340 * 2, 10700)
-    freeze(g.set("JournalOpen", "bool", True, opn).then)
+    # ---- Tab: the journal is switched off (user 2026-11-22: "turn journal off"); IA_Journal does nothing now ----
 
     # ---- M: the full map, pauses the game (IA_Map works while paused) ----
     g.row(0, 11400)
