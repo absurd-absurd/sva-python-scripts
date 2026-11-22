@@ -67,26 +67,29 @@ def facade(x0, x1, i, number):
     if i in (1, 3, 4):
         rsoft(px, FRONT - 40, 13.4, 90, 55, 1.2, "doormat_mat", jitter=0.15, seed=i)
     if i in (0, 2, 4):
-        chair(x0 + 60, FRONT - 120)
+        chair(x0 + 60, FRONT - 29)          # back against the wall (user 2026-11-22; was out at FRONT - 120)
 
 
 def chair(x, y):
-    """A white plastic stacking patio chair, facing the lot: a slatted seat with a rolled front,
-    a curved slatted back, arms, splayed legs with feet."""
+    """A white plastic stacking patio chair, facing the lot, its back against the room wall.
+    Rebuilt 2026-11-22 (user: "not completely connected", "random bars coming out the back"): the back is
+    upright and grows out of the seat's back edge, the slots are shallow grooves on its front face only, the
+    arms run from the front posts (which stand on the seat) straight into the back, the legs meet the seat."""
     m = "chair_mat"
     z = 12.6                                                              # sits on the walkway
-    rsoft(x, y, z + 42, 48, 44, 3.2, m, sag=0.8, smooth=2, seed=int(x))  # seat
+    rsoft(x, y, z + 42, 48, 44, 3.2, m, sag=0.8, smooth=2, seed=int(x))  # seat: y-22..y+22, top at z+43.6
     for k in range(4):
-        box(x - 20, x + 20, y - 14 + k * 9, y - 13 + k * 9, z + 43.6, z + 44.3, "trim_mat")   # seat slots
-    rsoft(x, y + 22, z + 70, 46, 4, 40, m, sag=-1.5, smooth=2, seed=int(x) + 1, tilt_y=-10)  # back
+        box(x - 20, x + 20, y - 14 + k * 9, y - 13 + k * 9, z + 43.5, z + 43.9, "trim_mat")   # seat slots
+    rsoft(x, y + 22, z + 65, 46, 4, 42, m, sag=-1.0, smooth=2, seed=int(x) + 1)  # back: y+20..y+24, z+44..z+86
     for k in range(5):
-        box(x - 18 + k * 9, x - 17 + k * 9, y + 24.5, y + 25.5, z + 56, z + 84, "trim_mat")  # back slots
+        box(x - 18 + k * 9, x - 17 + k * 9, y + 19.6, y + 20.3, z + 58, z + 80, "trim_mat")  # back slots (front face)
     for s in (-1, 1):
-        tube((x + s * 24, y - 18, z + 62), (x + s * 24, y + 20, z + 64), 2.0, m, sides=8)   # arms
-        tube((x + s * 24, y - 18, z + 62), (x + s * 24, y - 16, z + 44), 1.8, m, sides=8)
-        for dy in (-18, 18):
-            frustum(x + s * (22 + 3), y + dy * 1.1, z + 0.5, z + 42, 2.6, 2.0, m, sides=8)   # legs
-            sphere(x + s * 25, y + dy * 1.1, z + 0.9, 2.4, m, sides=8, scale=(1, 1, 0.4))     # feet
+        ax = x + s * 22
+        tube((ax, y - 18, z + 64), (ax, y + 21, z + 64), 2.0, m, sides=8)      # arm, into the back
+        tube((ax, y - 18, z + 64), (ax, y - 18, z + 43), 1.8, m, sides=8)      # front arm post, onto the seat
+        for dy in (-17, 17):
+            frustum(x + s * 22, y + dy, z + 0.5, z + 42, 2.6, 2.0, m, sides=8)  # legs, up into the seat
+            sphere(x + s * 22, y + dy, z + 0.9, 2.4, m, sides=8, scale=(1, 1, 0.4))     # feet
 
 
 # ---------- the awning ----------

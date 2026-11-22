@@ -17,7 +17,7 @@
   "areas": {
     "room104": {"clues": ["note_bed", "cas_wall", "key_office"], "next": "I have her office key. Whatever she found, it started in the office."},
     "office": {"clues": ["guest_book", "field_log", "key_backgate"], "next": "A key marked GATE. The trail behind the motel starts at that gate."},
-    "shack": {"clues": ["shack_notes", "key_boathouse"], "next": "Something is very wrong, and my eyes keep playing tricks on me. The boathouse is circled on her map. Whatever this is, it ends at the lake."}
+    "shack": {"clues": ["shack_notes", "key_boathouse"], "next": "Something is very wrong. This place... it's making me see things. The boathouse is circled on her map. Whatever this is, it ends at the lake."}
   },
   "game_text": {
     "opening": "October 2002.\n\nIt's been a year since Cas stopped answering my calls. Other than me, she has no one to even care to look for her. Not since her mom went missing.\n\nThen last week a postcard came. Marrow Falls Motel on the front. On the back, one line...\n\ni miss you bug",
@@ -186,7 +186,7 @@
     {
       "id": "shack_notes", "hand": "cas", "paper": "notebook",
       "shape": "notebook",
-      "at": [2235, 4241, 56.0], "yaw": 0, "room": true,
+      "at": [2235, 4241, 57.0], "yaw": 0, "room": true,
       "prompt": "Read",
       "title": "Notes on the cot",
       "body": "Night 3. I can't stay in the motel anymore. They watch me there.\n\nThe rattle comes every night now. It stops when I stop. So I don't stop.\n\nI heard her calling from the water. She said my name the way she used to, like she did when I was eight.\n\nThe log said one goes in, one comes back. I could bring her back.",
@@ -204,12 +204,12 @@
       "title": "A note by her boots",
       "body": "the lanterns are lit for you, bug\n\ndon't worry, it won't be much longer now",
       "journal": "Her boots by the water door, set side by side. A note beside them: it won't be much longer now.",
-      "objective": "Those are Cas's boots. Not much longer? The rattling is getting louder, and everything keeps bending around me. The lanterns on the dock are all lit. Something's at the end of it."
+      "objective": "Those are Cas's boots. Not much longer... the rattling is getting louder... everything is bending around me... The lanterns on the dock are all lit. Something's at the end of it."
     },
     {
       "id": "last_page", "hand": "wrong", "paper": "torn", "ends": true,
       "shape": "scrap_small", "card_scale": 2.2,
-      "at": [1496, 16735, 15.8], "needs_key": "#boathouse_note,", "locked_text": "A page under the lantern. Not yet. I need to know what happened to her first.", "yaw": -8, "room": false,
+      "at": [1480, 16757, 16.3], "needs_key": "#boathouse_note,", "locked_text": "A page under the lantern. Not yet. I need to know what happened to her first.", "yaw": -8, "room": false,
       "prompt": "Read",
       "title": "",
       "body": "you came, bug\n\nnow we can be together",

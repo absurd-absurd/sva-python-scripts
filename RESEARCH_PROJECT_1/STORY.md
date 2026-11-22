@@ -41,10 +41,10 @@ mom back. She went missing too.
 4. **The shack**: on the cot, side by side, Cas's notebook (she misquotes the log: "one comes back") and a
    later page in **the wrong handwriting** (second font), signed "- cas". One look opens both together
    (Cas's on the left, the wrong hand on the right; 2026-11-22). The boathouse key.
-5. **The boathouse**: her boots by the water (a scanned pair from Fab, 2026-11-22: one standing, one tipped
-   over on its side); a note in the wrong hand:
+5. **The boathouse**: her boots by the water (tall black leather boots, 2026-11-22: one standing, one fallen
+   on its side, muddy footprints leading from the door right up to them); a note in the wrong hand:
    "the lanterns are lit for you, bug / don't worry, it won't be much longer now". Bug: "Those are
-   Cas's boots. Not much longer? The rattling is getting louder, and everything keeps bending around me.
+   Cas's boots. Not much longer... the rattling is getting louder... everything is bending around me...
    The lanterns on the dock are all lit. Something's at the end of it." That line sends you out of the boathouse to the dock, where the game ends (below).
 
 ## The world breaks down
@@ -55,7 +55,7 @@ and in the "one year later" shot, just one second right before it cuts to black.
 
 ## Ending
 The end of the dock (2026-11-22; before that the boathouse). After the note by her boots you walk out
-along the dock between the lit lanterns; on the last planks a lit red lantern holds down one last page in the wrong handwriting: *"you came, bug / now we can be together."* Bug: *"this isn't Cas."* The
+along the dock between the lit lanterns; on the last planks, beside a lit red lantern, lies one last page in the wrong handwriting: *"you came, bug / now we can be together."* Bug: *"this isn't Cas."* The
 map was bait: Cas drew it for herself in 2001; the thing left it by your car. The lake took her mother, took Cas, and now it has you too. The rattle is right
 behind you. Cut to black.
 
@@ -75,7 +75,7 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
   table with a torn page). Not part of the ending.
 - Wrong-hand font = **Zeyada** (fonts/Zeyada.ttf, SIL Open Font License). Cas's own hand = **Rock Salt** (fonts/RockSalt-Regular.ttf, Apache license): bold all-caps scrawl, the opposite of the thin wrong hand. (Was Ink Free until 2026-11-16; map/wall/letter textures and the HUD still use Ink Free until regenerated.)
 - Other people's writing is never Cas's or the thing's font: the motel's marker on the gate key tag = Permanent Marker (fonts/, Apache license). The register: D. Hollis = Lucida Handwriting, the Carvers = Bradley Hand, Eileen = Segoe Script, the desk clerk's dates = Segoe Print, "104 - kept." in pencil = Reenie Beanie (fonts/, OFL).
-- Ending cuts straight to black. No credits screen.
+- Ending cuts straight to black, then back to the title screen (2026-11-22; it used to quit). No credits screen.
 - Phone numbers are fake 555 numbers (Bug's poster: 555-0117, a nod to Oct 17).
 
 ## Continuity checklist (check EVERY new clue piece against this before it goes in)

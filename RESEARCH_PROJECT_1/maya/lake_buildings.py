@@ -1035,8 +1035,10 @@ def boathouse():
               (X + SLIP - 2, Y + 160, F - 4), (X + SLIP - 5, Y + 166, F - 20)], 1.3, 1.3, "rope_new_mat", sides=8)
     # ---- an anchor and its chain on the west walkway
     admiralty_anchor(X - SLIP - 60, Y + 200, F, 0)
-    # ---- muddy boot prints: in at the door, to the slip, along the east walkway
-    path = [(X + 10, Y + S + 20), (X + 40, Y - 240), (X + SLIP + 60, Y - 140), (X + SLIP + 70, Y + 40)]
+    # ---- muddy boot prints: in at the door, across the landward floor, round the anchor on the west walkway,
+    # and up to her boots by the water door (user 2026-11-22: they went to the east walkway, which made no sense)
+    path = [(X + 10, Y + S + 20), (X - 60, Y - 230), (X - SLIP - 100, Y - 190), (X - SLIP - 138, Y + 150),
+            (X - SLIP - 130, Y + 300), (X - SLIP - 95, Y + 515)]
     step = 0
     for (x0, y0), (x1, y1) in zip(path, path[1:]):
         d = math.hypot(x1 - x0, y1 - y0)

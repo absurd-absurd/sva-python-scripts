@@ -50,6 +50,7 @@ INK = "(R=0.030,G=0.028,B=0.035,A=0.950000)"     # writing with no hand, on pape
 PAPERS = [(k, f"/Game/Horror/UI/T_Paper_{k.capitalize()}.T_Paper_{k.capitalize()}")
           for k in ("stationery", "notebook", "typed", "ledger", "scrap", "key_office", "key_gate", "key_boathouse", "register", "wall", "torn")]
 PAPER_H, PAPER_ASPECT, PAPER_TOP = 0.92, 0.75, 0.04       # sheet height / width:height / top, x screen height
+PAIR_H, PAIR_TOP = 0.86, 0.025                          # two sheets: height / top (x screen height); [E] Close under them
 PAIR_GAP = 0.03                                           # gap between two sheets side by side, x screen height
 PAPER_TEXT_X, PAPER_TEXT_Y = 0.11, 0.15                   # where the writing starts: x screen height in, x sheet height down
 TEXT = "(R=0.78,G=0.75,B=0.68,A=1.000000)"                   # warm off-white
@@ -89,6 +90,7 @@ END_T_LINE, END_T_BLACK = 0.6, 3.4                  # her line shows, then cut t
 END_T_YEAR, END_T_YEAR_OUT = 4.4, 7.6               # "One year later." fades in / is gone
 END_T_SHOT, END_SHOT_FADE = 8.2, 2.0                 # the final shot, fading up from black
 END_T_OUT, END_T_QUIT = 17.0, 20.0                   # cut to black, then quit
+LEVEL_NAME = "MotelLake"                             # the ending reloads it -> the title screen
 END_WARP = 1.0                                       # the warp: this long, right before the cut (user 2026-11-22)
 FINAL_CLASS = "/Game/Horror/Interact/BP_FinalShot.BP_FinalShot_C"
 # the title screen (2026-11-17): BP_TitleShot's camera on the foggy lake, the MARROW lettering (T_Title,
@@ -659,18 +661,20 @@ def hud_graph():
     draw("[E]  Close", close_then, 0.2, 0.88, 0.75, DIM)
 
     # on a sheet: the paper in the middle, the words written on it; Bug's title and [E] beside it
-    PH = g.mul(H, PAPER_H)
-    PW = g.mul(H, PAPER_H * PAPER_ASPECT)
+    two = g.not_(g.empty(g.get("ReadPaper2", "string")))
+    # two sheets (user 2026-11-22: "[E] Close" was faint on top of the left sheet): a little smaller and higher,
+    # with [E] Close bright and centred under them
+    PH = g.pure(MATH, "SelectFloat", [("A", "real", g.mul(H, PAIR_H)), ("B", "real", g.mul(H, PAPER_H)), ("bPickA", "bool", two)], ty="real")
+    PW = g.mul(PH, PAPER_ASPECT)
     # two sheets (ReadPaper2 set, user 2026-11-22: the shack's notes side by side): first on the left, second
     # on the right, a small gap between; one sheet: centred as before
-    two = g.not_(g.empty(g.get("ReadPaper2", "string")))
     left = g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.pure(MATH, "Add_DoubleDouble", [
         ("A", "real", PW), ("B", "real", g.mul(H, PAIR_GAP / 2))]))])
     PX = g.pure(MATH, "SelectFloat", [("A", "real", left),
                                       ("B", "real", g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(PW, 0.5))])),
                                       ("bPickA", "bool", two)], ty="real")
     PX2 = g.pure(MATH, "Add_DoubleDouble", [("A", "real", g.mul(W, 0.5)), ("B", "real", g.mul(H, PAIR_GAP / 2))])
-    PY = g.mul(H, PAPER_TOP)
+    PY = g.pure(MATH, "SelectFloat", [("A", "real", g.mul(H, PAIR_TOP)), ("B", "real", g.mul(H, PAPER_TOP)), ("bPickA", "bool", two)], ty="real")
 
     def sheet_tex(after, var, x):
         nxt = after
@@ -687,7 +691,9 @@ def hud_graph():
     sheet = g.sequence(on_paper, 4)
     sheet_tex(sheet[0], "ReadPaper", PX)
     words = sheet[1]
-    words = draw("[E]  Close", words, 0.03, 0.9, 0.75, DIM)
+    c_two, c_one = g.branch(two, words)
+    draw("[E]  Close", c_two, 0.465, PAIR_TOP + PAIR_H + 0.012, 0.8, TEXT, True)
+    words = draw("[E]  Close", c_one, 0.03, 0.9, 0.75, DIM)
     body(words, g.pure(MATH, "Add_DoubleDouble", [("A", "real", PX), ("B", "real", g.mul(H, PAPER_TEXT_X))]),
          g.pure(MATH, "Add_DoubleDouble", [("A", "real", PY), ("B", "real", g.mul(PH, PAPER_TEXT_Y))]), True)
     two_a, _ = g.branch(two, sheet[2])
@@ -970,7 +976,10 @@ def hud_graph():
     # warped on the dock until the cut to black, then one second just before the final shot cuts to black (user 2026-11-22)
     w_on = g.pure(MATH, "BooleanOR", [("A", "bool", g.not_(after(END_T_BLACK))), ("B", "bool", g.pure(MATH, "BooleanAND", [
         ("A", "bool", after(END_T_OUT - END_WARP)), ("B", "bool", g.not_(after(END_T_OUT)))], ty="bool"))], ty="bool")
+    # no flashes once the ending starts (user 2026-11-22: "one small warp before it i dont like")
     a = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", steps[3],
+               [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpFlash"), ("ParameterValue", "float", 0.0)]).then
+    a = g.call("/Script/Engine.KismetMaterialLibrary", "SetScalarParameterValue", a,
                [("Collection", "mpc", MPC_PATH), ("ParameterName", "name", "WarpWhole"),
                 ("ParameterValue", "float", g.pure(MATH, "SelectFloat", [("A", "real", 1.0), ("B", "real", 0.0), ("bPickA", "bool", w_on)]))]).then
     f_yes, f_no = g.branch(f_on, a)
@@ -982,9 +991,9 @@ def hud_graph():
     o_yes, _ = g.branch(after(END_T_OUT), f_no)
     g.call(HUD, "DrawRect", o_yes, [("RectColor", "color", BLACK), ("ScreenX", "float", 0.0), ("ScreenY", "float", 0.0),
                                     ("ScreenW", "float", W), ("ScreenH", "float", H)])
-    # 5: quit
+    # 5: back to the title screen (user 2026-11-22; it used to quit): reload the level, which starts on the title
     q_yes, _ = g.branch(after(END_T_QUIT), steps[4])
-    g.call(SYS, "QuitGame", q_yes, [("SpecificPlayer", "pc", g.pure(HUD, "GetOwningPlayerController", ty="pc"))])
+    g.call(STATICS, "OpenLevel", q_yes, [("LevelName", "name", LEVEL_NAME), ("bAbsolute", "bool", True), ("Options", "string", "")])
 
     def freeze(after):
         a = g.call(CTRL, "SetIgnoreMoveInput", after, [("bNewMoveInput", "bool", True)], target=pc()).then
