@@ -13,6 +13,7 @@ Safe to run again: everything it placed before (tag "ch2") is removed first.
 Then run heavy_walk.py (the slow underwater movement, Lakebed map only).
 """
 import json
+import math
 
 import unreal
 
@@ -368,17 +369,26 @@ if (Orbit != 0.0) {
     q += (q / rad) * sin(th * rad / 2.4 - T * 9.0) * 0.9;
     sway += float3(q - r.xy, sin(T * 0.4 + th * 2.0) * 25.0);
 }
+// Breath: the sleeping thing's back swells out along its normals and sinks back, slowly
+sway += Nrm * Breath * (0.5 + 0.5 * sin(T * 0.35));
 """
 
-SWAY = {   # Maya material -> (SwayAmp cm, SwayHeight cm, SwaySpeed, Drift cm)
-    "weed_mat": (16.0, 160.0, 0.9, 0.0),
-    "weed_brown_mat": (10.0, 120.0, 1.1, 0.0),
-    "rope_mat": (0.0, 1.0, 0.0, 6.0),
-    "specks_mat": (0.0, 1.0, 0.0, 18.0),
-    "bubble_mat": (0.0, 1.0, 0.0, 0.0, 38.0, 600.0),    # + Rise cm/s, RiseHeight (= make_lakebed BUBBLE_RISE)
-    # fish: every part of a fish must move the same way (+ Orbit rad/s: ~0.13 = a fish 3 m out swims 40 cm/s)
-    "fish_body_mat": (0, 1, 0, 0, 0, 600, 0.13), "fish_back_mat": (0, 1, 0, 0, 0, 600, 0.13),
-    "fish_fin_mat": (0, 1, 0, 0, 0, 600, 0.13), "fish_eye_mat": (0, 1, 0, 0, 0, 600, 0.13),
+# per Maya material: the M_Ch2_Sway numbers it gets (anything not given stays 0; RiseHeight 900).
+# Every part of one moving thing must get the same motion, or it comes apart.
+FISH = {"Orbit": 0.13}
+HUNTER = {"Orbit": 0.07}             # 9 m out: ~63 cm/s round its ring
+BREATHER = {"Breath": 45.0}
+SWAY = {
+    "weed_mat": {"SwayAmp": 16.0, "SwayHeight": 160.0, "SwaySpeed": 0.9},
+    "weed_brown_mat": {"SwayAmp": 10.0, "SwayHeight": 120.0, "SwaySpeed": 1.1},
+    "rope_mat": {"Drift": 6.0},
+    "specks_mat": {"Drift": 18.0},
+    "bubble_mat": {"Rise": 38.0, "RiseHeight": 600.0},     # RiseHeight = make_lakebed BUBBLE_RISE
+    "fish_body_mat": FISH, "fish_back_mat": FISH, "fish_fin_mat": FISH, "fish_eye_mat": FISH,
+    "hunter_skin_mat": HUNTER, "hunter_belly_mat": HUNTER, "hunter_teeth_mat": HUNTER, "hunter_eye_mat": HUNTER,
+    "hunter_lure_mat": dict(HUNTER, Glow=(25.0, 1.0, 0.3)),
+    "breather_skin_mat": BREATHER, "breather_rib_mat": BREATHER,
+    "breather_lure_mat": dict(BREATHER, Glow=(40.0, 1.5, 0.4)),
 }
 
 
@@ -399,7 +409,8 @@ def sway_material():
     ins = list(node.get_editor_property("inputs"))
     new = {}
     for name, default in (("WP", None), ("Obj", None), ("T", None), ("SwayAmp", 0.0), ("SwayHeight", 100.0),
-                          ("SwaySpeed", 1.0), ("Drift", 0.0), ("Rise", 0.0), ("RiseHeight", 900.0), ("Orbit", 0.0)):
+                          ("SwaySpeed", 1.0), ("Drift", 0.0), ("Rise", 0.0), ("RiseHeight", 900.0), ("Orbit", 0.0),
+                          ("Nrm", None), ("Breath", 0.0)):
         ci = unreal.CustomInput()
         ci.set_editor_property("input_name", name)
         ins.append(ci)
@@ -409,7 +420,10 @@ def sway_material():
     new["WP"] = MEL.create_material_expression(m, unreal.MaterialExpressionWorldPosition, -1400, 300)
     new["Obj"] = MEL.create_material_expression(m, unreal.MaterialExpressionObjectPositionWS, -1400, 400)
     new["T"] = MEL.create_material_expression(m, unreal.MaterialExpressionTime, -1400, 500)
+    new["Nrm"] = MEL.create_material_expression(m, unreal.MaterialExpressionVertexNormalWS, -1400, 200)
     _wire(m, node, new)
+    glow = _params(m, [("Glow", (0.0, 0.0, 0.0))], -600, 900)["Glow"]      # lure bulbs shine (emissive)
+    MEL.connect_material_property(glow, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     MEL.recompile_material(m)
     lib.save_loaded_asset(m, False)
     return m
@@ -417,16 +431,74 @@ def sway_material():
 
 def make_sway(mats, sway):
     """Re-parent the moving things' material instances onto M_Ch2_Sway with their numbers."""
-    for name, nums in SWAY.items():
-        amp, height, speed, drift, rise, rise_h, orbit = (tuple(nums) + (0.0, 900.0, 0.0)[len(nums) - 4:])[:7]
+    for name, spec in SWAY.items():
         mi = mats.get(name)
         if not mi or not isinstance(mi, unreal.MaterialInstanceConstant):
             continue
         mi.set_editor_property("parent", sway)
-        for p, v in (("SwayAmp", amp), ("SwayHeight", height), ("SwaySpeed", speed), ("Drift", drift),
-                     ("Rise", rise), ("RiseHeight", rise_h), ("Orbit", orbit)):
-            MEL.set_material_instance_scalar_parameter_value(mi, p, v)
+        for p in ("SwayAmp", "SwayHeight", "SwaySpeed", "Drift", "Rise", "RiseHeight", "Orbit", "Breath"):
+            MEL.set_material_instance_scalar_parameter_value(mi, p, float(spec.get(p, {"RiseHeight": 900.0, "SwayHeight": 100.0}.get(p, 0.0))))
+        if "Glow" in spec:
+            MEL.set_material_instance_vector_parameter_value(mi, "Glow", unreal.LinearColor(*spec["Glow"], 1))
         lib.save_loaded_asset(mi, False)
+
+
+FIGURE_HLSL = """
+// The red-lit figure is only there from a distance: closer than Near it is gone (dithered out
+// over Fade cm), so it seems to step back into the dark ahead of you.
+float d = distance(WP, Cam);
+float k = saturate((d - Near) / Fade);
+float n = frac(sin(dot(floor(SP.xy * 900.0), float2(12.9898, 78.233))) * 43758.5453);
+return k - n;
+"""
+
+
+def figure_material():
+    """M_Ch2_Figure: a black silhouette (masked) that dissolves when you come within ~9 m."""
+    m = _fresh(f"{CH2}/Materials/M_Ch2_Figure", "M_Ch2_Figure")
+    m.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
+    prm = _params(m, [("Color", (0.005, 0.004, 0.004)), ("Near", 900.0), ("Fade", 250.0)])
+    MEL.connect_material_property(prm["Color"], "", unreal.MaterialProperty.MP_BASE_COLOR)
+    node = _custom(m, FIGURE_HLSL, ["WP", "Cam", "SP", "Near", "Fade"], unreal.CustomMaterialOutputType.CMOT_FLOAT1, -400, 200)
+    _wire(m, node, {"WP": MEL.create_material_expression(m, unreal.MaterialExpressionWorldPosition, -900, 300),
+                    "Cam": MEL.create_material_expression(m, unreal.MaterialExpressionCameraPositionWS, -900, 400),
+                    "SP": MEL.create_material_expression(m, unreal.MaterialExpressionScreenPosition, -900, 500),
+                    "Near": prm["Near"], "Fade": prm["Fade"]})
+    MEL.connect_material_property(node, "", unreal.MaterialProperty.MP_OPACITY_MASK)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
+
+
+def place_story(data):
+    """The figure at each of its spots (with a red light behind it), the hunter's ring, the breather."""
+    fig = unreal.load_asset(f"{SETS_DIR}/lb_figure")
+    fmat = figure_material()
+    for i, (x, y, z, yaw) in enumerate(data.get("figures", [])):
+        a = tagged(actors.spawn_actor_from_object(fig, unreal.Vector(x, y, z), unreal.Rotator(0, 0, yaw)), f"Figure_{i}", "Story")
+        a.static_mesh_component.set_material(0, fmat)
+        no_collision(a.static_mesh_component)
+        r = math.radians(yaw)
+        lp = unreal.Vector(x - math.cos(r) * 120, y - math.sin(r) * 120, z + 150)     # behind it: a red rim
+        l = tagged(actors.spawn_actor_from_class(unreal.PointLight, lp), f"Figure_{i}_Light", "Story")
+        c = l.point_light_component
+        c.set_intensity(60.0)
+        c.set_light_color(unreal.LinearColor(1.0, 0.05, 0.02, 1))
+        c.set_attenuation_radius(650.0)
+        c.set_cast_shadows(False)
+    for name, key in (("lb_hunter", "hunter"), ("lb_breather", "breather")):
+        if key in data:
+            a = tagged(actors.spawn_actor_from_object(unreal.load_asset(f"{SETS_DIR}/{name}"), unreal.Vector(*data[key])),
+                       name, "Story")
+            no_collision(a.static_mesh_component)
+    if "breather" in data:                         # its bulb lights the basin red
+        x, y, z = data["breather"]
+        l = tagged(actors.spawn_actor_from_class(unreal.PointLight, unreal.Vector(x + 1130, y + 50, z + 2300)), "Breather_Light", "Story")
+        c = l.point_light_component
+        c.set_intensity(400.0)
+        c.set_light_color(unreal.LinearColor(1.0, 0.05, 0.02, 1))
+        c.set_attenuation_radius(4000.0)
+        c.set_cast_shadows(False)
 
 
 # ---------- 3. the scatter ----------
@@ -584,6 +656,7 @@ def main():
     for name, fbx in data.get("props", {}).items():      # the fish school
         import_set(name, fbx, mats)
     place_schools(data)
+    place_story(data)
     n = place_scatter(table)
     underwater_look(ps2, data)
     level_subsys.save_current_level()

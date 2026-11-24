@@ -51,7 +51,8 @@ def main():
     gm_cdo.set_editor_property("default_pawn_class", BPL.generated_class(char))
     # plain HUD for now: Chapter 1's BP_HorrorHUD runs the title screen and looks for Chapter 1
     # actors every frame ("Accessed None" errors, dark screen); Chapter 2 needs its own
-    gm_cdo.set_editor_property("hud_class", unreal.HUD.static_class())
+    hud = "/Game/Chapter2/Blueprints/BP_Ch2HUD"      # (ch2_ui.py; until its graph is pasted, a plain HUD)
+    gm_cdo.set_editor_property("hud_class", BPL.generated_class(unreal.load_asset(hud)) if lib.does_asset_exist(hud) else unreal.HUD.static_class())
     BPL.compile_blueprint(gm)
     lib.save_loaded_asset(gm, False)
     world.get_world_settings().set_editor_property("default_game_mode", BPL.generated_class(gm))

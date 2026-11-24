@@ -631,22 +631,61 @@ def export_scatter(sources):
     return len(copies)
 
 
+exec(open(os.path.join(RP2, "maya", "ch2_props.py"), encoding="utf-8").read())
+LANTERNS = []
+
+
+def export_prop(name, mesh):
+    """One prop mesh -> export/<name>.fbx (pivot where it was built). Returns (path, its materials)."""
+    path = os.path.join(OUT, name + ".fbx").replace("\\", "/")
+    cmds.select(mesh)
+    mel.eval("FBXResetExport")
+    mel.eval('FBXExport -f "{}" -s'.format(path))
+    mats = set()
+    for sg in cmds.listConnections(cmds.listRelatives(mesh, shapes=True), type="shadingEngine") or []:
+        mats.update(cmds.listConnections(sg + ".surfaceShader") or [])
+    return path, mats
+
+
+HUNTER_R = 900.0       # the hunter swims round a ring this wide (cm) over the gully
+
+
+def hunter_on_ring():
+    """The hunter, built nose +x, moved out to HUNTER_R and turned to swim anticlockwise round the prop's
+    pivot (Unreal turns the ring with M_Ch2_Sway Orbit, like the fish)."""
+    before = len(PARTS)
+    hunter_parts()
+    parts = PARTS[before:]
+    del PARTS[before:]
+    m = cmds.polyUnite(parts, constructionHistory=False)[0]
+    cmds.rotate(0, -90, 0, m, pivot=(0, 0, 0))          # heading +y (Maya Y turn = minus Unreal yaw)
+    cmds.move(HUNTER_R, 0, 0, m, relative=True)
+    cmds.makeIdentity(m, apply=True, t=True, r=True, s=True)
+    PARTS.append(m)
+
+
 def build():
     del PARTS[:]
     del ROOM_PARTS[:]
     cmds.file(new=True, force=True)
     os.makedirs(OUT, exist_ok=True)
-    for name, rgb in list(MATS.items()) + list(BED_MATS.items()):
+    for name, rgb in list(MATS.items()) + list(BED_MATS.items()) + list(CH2_MATS.items()):
         material(name, rgb)
     sources = scatter_props()
     school = make_prop("lb_fish_school", fish_school(60, 70))
     cmds.move(-30000, 0, -5000, school)
+    story_props = {"lb_figure": make_prop("lb_figure", figure_parts), "lb_hunter": make_prop("lb_hunter", hunter_on_ring),
+                   "lb_breather": make_prop("lb_breather", breather_parts)}
+    for k, m in enumerate(story_props.values()):
+        cmds.move(-40000 - k * 5000, 0, -5000, m)
     floor = lakebed()
     n_ledges = wall_ledges()
     n_rubble = rubble()
     n_trees = sunken_trees()
     dock_from_below()
     lanterns = sunken_lanterns()
+    LANTERNS[:] = lanterns
+    story_set()
     fx = surface_underside()
     # scatter on the bare floor before it is combined with the rest of the set
     floor_copy = cmds.duplicate(floor, name="scatter_surface")[0]
@@ -671,6 +710,12 @@ def build():
     for sg in cmds.listConnections(cmds.listRelatives(school, shapes=True), type="shadingEngine") or []:
         school_mats.update(cmds.listConnections(sg + ".surfaceShader") or [])
     cmds.delete(school)
+    prop_files = {"lb_fish_school": school_fbx}
+    for name, m in story_props.items():
+        cmds.move(0, 0, 0, m)
+        prop_files[name], mts = export_prop(name, m)
+        school_mats |= mts
+        cmds.delete(m)
     cmds.delete(floor_copy)
 
     bed = cmds.polyUnite(PARTS, name="set_lakebed", constructionHistory=False)[0]
@@ -702,13 +747,20 @@ def build():
         for sg in cmds.listConnections(cmds.listRelatives(m, shapes=True), type="shadingEngine") or []:
             used.update(cmds.listConnections(sg + ".surfaceShader") or [])
     sx = path_x(START_Y)
-    data = {"sets": sets, "room_sets": [], "props": {"lb_fish_school": school_fbx},
+    data = {"sets": sets, "room_sets": [], "props": prop_files,
             "materials": {m: list(cmds.getAttr(m + ".color")[0]) for m in sorted(used | school_mats)},
             "lights": [dict(json.loads(cmds.getAttr(l + ".ue_light")), name=l,
                             position=[cmds.xform(l, q=True, t=True, ws=True)[i] for i in (0, 2, 1)]) for l in lights],
             "start": [sx, START_Y, bed_z(sx, START_Y) + 100], "surface_z": SURFACE_Z,
             "lanterns": [[x, y, bed_z(x, y)] for x, y in lanterns],
             # fish schools: one copy of lb_fish_school milling 2-3 m over the gully floor at each spot
+            # the story (unreal/place_clues2.py, lakebed_level.py place_story)
+            "clue_spots": CLUE_SPOTS,
+            # the red-lit figure, standing further on each time (it fades out as you get near)
+            "figures": [[path_x(y) + dx, y, bed_z(path_x(y) + dx, y), yaw] for y, dx, yaw in
+                        ((8200, 350, 200), (11900, -200, 170), (14700, 250, 190), (16050, 60, 185))],
+            "hunter": [path_x(10200), 10200, floor_z(10200) + 260],
+            "breather": [path_x(17600), 17900, floor_z(17600) - 300],
             "schools": [[path_x(y) + dx, y, floor_z(y) + h] for y, dx, h in
                         ((1200, 150, 260), (5600, -250, 300), (9800, 200, 330), (15200, -300, 420))],
             "path": [[path_x(y), y, floor_z(y)] for y in range(-2000, 18000, 500)]}

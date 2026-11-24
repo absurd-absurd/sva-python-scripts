@@ -1,0 +1,60 @@
+{
+ "_about": "MARROW Chapter 2 (Cas, October 17 2001, under the lake). Same fields as RESEARCH_PROJECT_1/clues.json. Corner lines are CAS talking (first person). 'at' comes from export/sets_lakebed.json clue_spots (unreal/place_clues2.py), so only the text lives here. FIRST PASS 2026-11-24: texts are a draft for the user to review; checked against STORY.md's continuity checklist.",
+ "start_objective": "The lanterns go down into the dark. Mom's down there. I'm going to follow them.",
+ "game_text": {
+  "opening": "October 17, 2001.\n\nOn this night in 1974 a man named Freedman walked into this lake, and something walked out of the woods.\n\nOn this night four years ago, Mom checked into room 104 and never checked out.\n\nI've read their log a hundred times. One goes in, one comes back.\n\nSo I'm going in.\n\n[card: Mom's MISSING poster]",
+  "ending_last_line": "That's not her handwriting.",
+  "ending_card": "October 9, 2002.",
+  "final_shot": "The i miss you bug postcard, in the wrong hand, signed - cas, postmarked OCT 09 2002 (what brings Bug in Chapter 1)"
+ },
+ "areas": {},
+ "clues": [
+  {
+   "id": "bag",
+   "shape": "zone_small",
+   "paper": "typed",
+   "hand": "print",
+   "prompt": "Look",
+   "title": "Mom's handbag",
+   "body": "A brown leather shoulder bag, half buried in the silt, the strap torn.\n\nInside: a motel key on a green tag, ROOM 104. Her reading glasses. My school photo from second grade, laminated, like she knew it would get wet.",
+   "journal": "Mom's bag, in the silt. Her room key is still in it.",
+   "objective": "Her bag. She was here. She really came all the way down here."
+  },
+  {
+   "id": "log_1974",
+   "shape": "folder",
+   "paper": "typed",
+   "hand": "print",
+   "prompt": "Read",
+   "title": "A page in a plastic sleeve",
+   "body": "THE TRIALS OF BLACK HOLLOW LAKE\nField log, October 17, 1974 (cont.)\n\n23:10  Freedman enters the water at the dock. Lanterns lit along the shore as before.\n23:40  A light under the water, moving north. Red.\n23:52  A boy, approx. 10, walks out of the treeline. Dry.\n\nFreedman has not come back.\n\nOne goes in. Something comes back out.\nDO NOT FOLLOW THE LIGHT.",
+   "journal": "Their log. A page I never had.",
+   "objective": "'Something comes back.' They wrote it down wrong. They had to. There's a red light up ahead."
+  },
+  {
+   "id": "watch",
+   "shape": "zone_small",
+   "paper": "scrap",
+   "hand": "print",
+   "prompt": "Look",
+   "title": "A wristwatch",
+   "body": "A man's steel wristwatch on a flat rock, the strap rotted through.\n\nEngraved on the back: FREEDMAN.\n\nThe hands stopped at ten past eleven.",
+   "journal": "Freedman's watch. Ten past eleven.",
+   "objective": "He's still down here. Then so is she. The light keeps moving further down."
+  },
+  {
+   "id": "last_page",
+   "shape": "scrap_small",
+   "card_scale": 2.2,
+   "paper": "torn",
+   "hand": "wrong",
+   "ends": true,
+   "needs_key": "#watch,",
+   "locked_text": "Her coat. There's a page on it. Not yet... I have to know what happened to Freedman first.",
+   "prompt": "Read",
+   "title": "",
+   "body": "you came, cas\n\ni missed you\n\n- mom",
+   "objective": "That's not her handwriting."
+  }
+ ]
+}
