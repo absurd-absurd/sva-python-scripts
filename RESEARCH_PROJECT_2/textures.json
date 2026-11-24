@@ -1,8 +1,57 @@
 {
- "_about": "Chapter 2's lakebed ground (textures/*.jpg from tools/fetch_textures.py). unreal/lakebed_level.py builds M_Ch2_Ground from this: flat ground shows sand, where it starts to rise silt, steep banks clay. tint multiplies the photo, size = cm one tile covers, slope = where the next layer takes over (0 flat .. 1 vertical, sine of the angle).",
+ "_about": "Chapter 2's lakebed ground (textures/*.jpg from tools/fetch_textures.py). unreal/lakebed_level.py builds M_Ch2_Ground from this: flat ground shows sand, where it starts to rise silt, steep banks clay. tint multiplies the photo, size = cm one tile covers, slope = where the next layer takes over (0 flat .. 1 vertical, sine of the angle). rock = the steepest walls (triplanar); strata = sediment bands across clay and rock: spacing in cm, strength 0..1.",
  "ground": {
-  "sand": {"texture": "sand", "tint": [0.24, 0.23, 0.2], "size": 250},
-  "silt": {"texture": "silt", "tint": [0.3, 0.29, 0.25], "size": 300, "slope": [0.12, 0.3]},
-  "clay": {"texture": "clay_bank", "tint": [0.17, 0.21, 0.21], "size": 450, "slope": [0.42, 0.62]}
+  "sand": {
+   "texture": "sand",
+   "tint": [
+    0.24,
+    0.23,
+    0.2
+   ],
+   "size": 250
+  },
+  "silt": {
+   "texture": "silt",
+   "tint": [
+    0.3,
+    0.29,
+    0.25
+   ],
+   "size": 300,
+   "slope": [
+    0.12,
+    0.3
+   ]
+  },
+  "clay": {
+   "texture": "clay_bank",
+   "tint": [
+    0.17,
+    0.21,
+    0.21
+   ],
+   "size": 450,
+   "slope": [
+    0.38,
+    0.55
+   ]
+  },
+  "rock": {
+   "texture": "bank_rock",
+   "tint": [
+    0.45,
+    0.5,
+    0.48
+   ],
+   "size": 600,
+   "slope": [
+    0.62,
+    0.78
+   ]
+  },
+  "strata": {
+   "spacing": 38,
+   "strength": 0.6
+  }
  }
 }

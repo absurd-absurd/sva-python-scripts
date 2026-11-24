@@ -82,12 +82,16 @@ TOE = 700.0        # how far the floor takes to curve up into a bank (no crease 
 STEEP = 1.25       # how steep the bank gets past the toe (~51 degrees: too steep to climb)
 
 
+def edge_w(y, side):
+    """Distance from the middle of the gully to the foot of the bank on one side (+1 / -1).
+    It wanders in and out on each side on its own, instead of running parallel to the path."""
+    return half_width(y) + 220 * math.sin(y / 640.0 + side * 2.1) + 90 * math.sin(y / 230.0 + side)
+
+
 def edge(x, y):
-    """How far past the edge of the gully floor (x, y) is (0 or less = on the floor). The edge
-    wanders in and out on each side on its own, instead of running parallel to the path."""
+    """How far past the edge of the gully floor (x, y) is (0 or less = on the floor)."""
     side = 1.0 if x > path_x(y) else -1.0
-    w = half_width(y) + 220 * math.sin(y / 640.0 + side * 2.1) + 90 * math.sin(y / 230.0 + side)
-    return abs(x - path_x(y)) - w, side
+    return abs(x - path_x(y)) - edge_w(y, side), side
 
 
 def bank_rise(e):
@@ -137,6 +141,32 @@ def lakebed():
     # by slope in the shader, so there are no hard face edges between them
     keep(p, "lb_ground_mat")
     return p
+
+
+def wall_ledges():
+    """Shelves of rock sticking out of the banks, like harder layers the water hasn't worn away:
+    long and flat, sunk half into the wall, along both sides of the gully. They share the
+    ground material, so their tops collect silt and their faces show rock."""
+    r = random.Random(51)
+    n = 0
+    for side in (-1.0, 1.0):
+        y = -1800.0
+        while y < 17600:
+            y += r.uniform(300, 700)
+            e = r.uniform(TOE + 100, TOE + 1900)
+            x = path_x(y) + side * (edge_w(y, side) + e)
+            z = bed_z(x, y)
+            length, depth, height = r.uniform(220, 560), r.uniform(160, 280), r.uniform(45, 130)
+            rsoft(x + side * depth * 0.2, y, z - height * 0.15, depth, length, height, "lb_ground_mat",
+                  jitter=height * 0.18, smooth=1, seed=int(y) + int(side * 7), div=(4, 3, 6),
+                  yaw=r.uniform(-12, 12))
+            n += 1
+            if r.random() < 0.35:                      # a smaller shelf stepped above it
+                z2 = bed_z(x + side * 180, y + 60)
+                rsoft(x + side * 200, y + 60, z2 - 10, depth * 0.7, length * 0.6, height * 0.7, "lb_ground_mat",
+                      jitter=height * 0.15, smooth=1, seed=int(y) + 99, div=(4, 3, 5), yaw=r.uniform(-12, 12))
+                n += 1
+    return n
 
 
 # ---------- the dock from below ----------
@@ -351,6 +381,7 @@ def build():
         material(name, rgb)
     sources = scatter_props()
     floor = lakebed()
+    n_ledges = wall_ledges()
     dock_from_below()
     lanterns = sunken_lanterns()
     fx = surface_underside()
@@ -396,7 +427,7 @@ def build():
             "path": [[path_x(y), y, floor_z(y)] for y in range(-2000, 18000, 500)]}
     json.dump(data, open(os.path.join(OUT, "sets_lakebed.json"), "w"), indent=1)
     print(f"Lakebed built: {cmds.polyEvaluate(bed, triangle=True)} triangles, {len(lanterns)} sunken lanterns, "
-          f"{n_copies} scatter copies")
+          f"{n_copies} scatter copies, {n_ledges} wall ledges")
 
 
 build()

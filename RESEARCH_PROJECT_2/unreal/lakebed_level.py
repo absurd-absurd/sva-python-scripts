@@ -167,21 +167,38 @@ def place_set(data, mats):
 
 
 GROUND_HLSL = """
-// The lakebed ground: sand on the flat, silt where it starts to rise, clay up the steep banks.
-// Blended by slope (sine of the angle) with a little world noise, so the line wanders and is soft.
+// The lakebed ground: sand on the flat, silt where it starts to rise, clay up the banks, layered
+// rock on the steepest walls. Blended by slope (sine of the angle) with world noise, so the lines
+// wander and are soft. Walls use triplanar mapping (no stretching) and get sediment bands.
 float3 n = normalize(N);
 float s = sqrt(saturate(1.0 - n.z * n.z));
-s += 0.07 * sin(WP.x / 170.0 + WP.y / 230.0) + 0.04 * sin(WP.x / 61.0 - WP.y / 47.0);
-float3 sand = Sand.Sample(SandSampler, WP.xy / SandSize).rgb * SandTint;
-float3 silt = Silt.Sample(SiltSampler, WP.xy / SiltSize).rgb * SiltTint;
+float wob = 0.07 * sin(WP.x / 170.0 + WP.y / 230.0) + 0.04 * sin(WP.x / 61.0 - WP.y / 47.0);
 float3 w = pow(abs(n), 4.0);
 w /= (w.x + w.y + w.z);
+float3 sand = Sand.Sample(SandSampler, WP.xy / SandSize).rgb * SandTint;
+float3 silt = Silt.Sample(SiltSampler, WP.xy / SiltSize).rgb * SiltTint;
 float3 clay = (Clay.Sample(ClaySampler, WP.yz / ClaySize).rgb * w.x
              + Clay.Sample(ClaySampler, WP.xz / ClaySize).rgb * w.y
              + Clay.Sample(ClaySampler, WP.xy / ClaySize).rgb * w.z) * ClayTint;
-float a = smoothstep(SiltSlope.x, SiltSlope.y, s);
-float b = smoothstep(ClaySlope.x, ClaySlope.y, s);
-return lerp(lerp(sand, silt, a), clay, b);
+float3 rock = (Rock.Sample(RockSampler, WP.yz / RockSize).rgb * w.x
+             + Rock.Sample(RockSampler, WP.xz / RockSize).rgb * w.y
+             + Rock.Sample(RockSampler, WP.xy / RockSize).rgb * w.z) * RockTint;
+// rock shows in patches through the clay, more of it the steeper the wall
+float patches = 0.12 * sin(WP.x / 330.0 + WP.z / 140.0) + 0.08 * sin(WP.y / 210.0 - WP.z / 90.0);
+float a = smoothstep(SiltSlope.x, SiltSlope.y, s + wob);
+float b = smoothstep(ClaySlope.x, ClaySlope.y, s + wob);
+float c = smoothstep(RockSlope.x, RockSlope.y, s + wob + patches);
+float3 col = lerp(lerp(lerp(sand, silt, a), clay, b), rock, c);
+// sediment bands: layers of uneven thickness and strength stacked up the wall, gently warped,
+// fading in only where the wall is steep (not on the silt at its foot)
+float z = WP.z / Strata.x + 1.5 * sin(WP.x / 900.0 + WP.y / 700.0) + 0.4 * sin(WP.y / 260.0 + WP.x / 410.0);
+float layer = floor(z);
+float h = frac(sin(layer * 12.9898) * 43758.5453);          // each layer its own shade
+float h2 = frac(sin(layer * 78.233) * 12345.678);
+float edge = smoothstep(0.0, 0.08, frac(z)) * smoothstep(1.0, 0.9, frac(z));   // thin dark seams between layers
+float band = (h - 0.5) * 0.9 + (edge - 1.0) * 0.6 * h2;
+col *= 1.0 + Strata.y * band * smoothstep(0.45, 0.7, s + wob);
+return col;
 """
 
 
@@ -191,7 +208,7 @@ def ground_material(spec):
     pins = ["N", "WP"]
     node_in = {}
     y = -400
-    for layer in ("sand", "silt", "clay"):
+    for layer in ("sand", "silt", "clay", "rock"):
         L = spec[layer]
         name = layer.capitalize()
         tex = MEL.create_material_expression(m, unreal.MaterialExpressionTextureObjectParameter, -900, y)
@@ -210,6 +227,10 @@ def ground_material(spec):
             sl.set_editor_property("g", float(L["slope"][1]))
             node_in[name + "Slope"] = sl
         y += 420
+    st = MEL.create_material_expression(m, unreal.MaterialExpressionConstant2Vector, -900, y)
+    st.set_editor_property("r", float(spec["strata"]["spacing"]))
+    st.set_editor_property("g", float(spec["strata"]["strength"]))
+    node_in["Strata"] = st
     pins += list(node_in)
     node = _custom(m, GROUND_HLSL, pins, unreal.CustomMaterialOutputType.CMOT_FLOAT3, -400, 0)
     MEL.connect_material_expressions(MEL.create_material_expression(m, unreal.MaterialExpressionVertexNormalWS, -900, -600), "", node, "N")

@@ -13,5 +13,10 @@
   "asset": "Clay005",
   "url": "https://ambientcg.com/view?id=Clay005",
   "license": "CC0"
+ },
+ "bank_rock": {
+  "asset": "Rock051",
+  "url": "https://ambientcg.com/view?id=Rock051",
+  "license": "CC0"
  }
 }

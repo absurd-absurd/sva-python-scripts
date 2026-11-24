@@ -12,7 +12,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SURFACES = {
     "sand": "sand",               # the gully floor
     "silt": "mud",                # where the floor rises into the banks
-    "clay_bank": "clay",          # the steep banks
+    "clay_bank": "clay",          # the lower banks
+    "bank_rock": "rock wall",     # the steep upper walls: layered rock with algae streaks (Rock051)
 }
 
 src = open(RP1_TOOL, encoding="utf-8").read()
