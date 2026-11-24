@@ -340,6 +340,70 @@ def surface_material():
     return m
 
 
+SWAY_HLSL = """
+// Things moving in the water. Sway: plants bend back and forth, more the higher up they are
+// (Obj = the actor's base). Drift: a slow float, the same over metres, so a whole fleck or rope
+// moves as one.
+float h = max(0.0, WP.z - Obj.z);
+float k = pow(saturate(h / SwayHeight), 1.5) * SwayAmp;
+float ph = T * SwaySpeed + Obj.x * 0.011 + Obj.y * 0.017;
+float3 sway = float3(sin(ph + h * 0.015), cos(ph * 0.83 + h * 0.012), 0.0) * k;
+sway += Drift * float3(sin(T * 0.21 + WP.y / 310.0), cos(T * 0.17 + WP.x / 290.0), 0.6 * sin(T * 0.13 + (WP.x + WP.y) / 330.0));
+"""
+
+SWAY = {   # Maya material -> (SwayAmp cm, SwayHeight cm, SwaySpeed, Drift cm)
+    "weed_mat": (16.0, 160.0, 0.9, 0.0),
+    "weed_brown_mat": (10.0, 120.0, 1.1, 0.0),
+    "rope_mat": (0.0, 1.0, 0.0, 6.0),
+    "specks_mat": (0.0, 1.0, 0.0, 35.0),
+}
+
+
+def sway_material():
+    """M_Ch2_Sway: a copy of Chapter 1's M_PS2_Surface (texture, colour, PS2 wobble) whose
+    World Position Offset node also sways and drifts. Unreal's Python can't connect anything to
+    World Position Offset, but the copy keeps Chapter 1's hand-made wire, so its node is edited
+    in place and fed new inputs."""
+    path = f"{CH2}/Materials/M_Ch2_Sway"
+    if lib.does_asset_exist(path):
+        lib.delete_asset(path)
+    m = lib.duplicate_asset(SURFACE, path)
+    node = [e for e in unreal.ObjectIterator(unreal.MaterialExpressionCustom) if e.get_outer() == m][0]
+    code = node.get_editor_property("code")
+    code = code.replace("return float3(0, 0, 0);", "return sway;")
+    code = code.replace("return floor(Rel / g + 0.5) * g - Rel;", "return sway + floor(Rel / g + 0.5) * g - Rel;")
+    node.set_editor_property("code", SWAY_HLSL + code)
+    ins = list(node.get_editor_property("inputs"))
+    new = {}
+    for name, default in (("WP", None), ("Obj", None), ("T", None), ("SwayAmp", 0.0), ("SwayHeight", 100.0),
+                          ("SwaySpeed", 1.0), ("Drift", 0.0)):
+        ci = unreal.CustomInput()
+        ci.set_editor_property("input_name", name)
+        ins.append(ci)
+        if default is not None:
+            new[name] = _params(m, [(name, default)], -1400, 600 + len(new) * 110)[name]
+    node.set_editor_property("inputs", ins)
+    new["WP"] = MEL.create_material_expression(m, unreal.MaterialExpressionWorldPosition, -1400, 300)
+    new["Obj"] = MEL.create_material_expression(m, unreal.MaterialExpressionObjectPositionWS, -1400, 400)
+    new["T"] = MEL.create_material_expression(m, unreal.MaterialExpressionTime, -1400, 500)
+    _wire(m, node, new)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
+
+
+def make_sway(mats, sway):
+    """Re-parent the moving things' material instances onto M_Ch2_Sway with their numbers."""
+    for name, (amp, height, speed, drift) in SWAY.items():
+        mi = mats.get(name)
+        if not mi or not isinstance(mi, unreal.MaterialInstanceConstant):
+            continue
+        mi.set_editor_property("parent", sway)
+        for p, v in (("SwayAmp", amp), ("SwayHeight", height), ("SwaySpeed", speed), ("Drift", drift)):
+            MEL.set_material_instance_scalar_parameter_value(mi, p, v)
+        lib.save_loaded_asset(mi, False)
+
+
 # ---------- 3. the scatter ----------
 
 def maya_to_unreal(m):
@@ -355,6 +419,7 @@ def place_scatter(table):
     mats = materials(data["materials"], table)
     darker(mats)
     mats["lb_ground_mat"] = unreal.load_asset(f"{CH2}/Materials/M_Ch2_Ground")   # rocks: silt on top, rock on the sides
+    make_sway(mats, unreal.load_asset(f"{CH2}/Materials/M_Ch2_Sway"))              # the plants sway
     global SETS_DIR
     SETS_DIR = f"{CH2}/Props"
     meshes = {asset: import_set(asset, info["fbx"], mats) for asset, info in data["props"].items()}
@@ -470,7 +535,8 @@ def main():
     mats = materials(data["materials"], table)
     darker(mats)
     mats["lb_ground_mat"] = ground_material(json.load(open(f"{RP2}/textures.json"))["ground"])
-    mats["specks_mat"] = specks_material()
+    sway = sway_material()
+    make_sway(mats, sway)              # specks_mat, rope_mat (and the plants, in place_scatter)
     mats["shaft_mat"] = shaft_material()
     mats["under_surface_mat"] = surface_material()
     place_set(data, mats)

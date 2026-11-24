@@ -57,8 +57,9 @@ def path_x(y):
 
 
 # depth along the gully: (y, z). Shallows by the dock, a long slope, the drop-off, the deep basin.
-DEPTH = [(-2600, -120), (-1500, -330), (0, -400), (3000, -600), (6000, -850), (9000, -1000),
-         (11000, -1150), (12500, -2050), (14000, -2350), (18000, -2450)]
+# (2026-11-24: 5 m deeper than the first pass, the user found it shallow: ~8.5 m at the start, ~30 m in the basin)
+DEPTH = [(-2600, -500), (-1500, -830), (0, -900), (3000, -1100), (6000, -1350), (9000, -1500),
+         (11000, -1650), (12500, -2550), (14000, -2850), (18000, -2950)]
 
 
 def floor_z(y):
@@ -265,7 +266,7 @@ def dock_from_below():
     lx, ly = dx + 60, -1250                                                                         # the swim ladder
     for s in (-1, 1):
         tube((lx + s * 25, ly, bed_z(lx, ly) + 40), (lx + s * 25, ly, SURFACE_Z + 40), 2, "ladder_metal_mat", sides=8)
-    for k in range(6):
+    for k in range(int((SURFACE_Z - bed_z(lx, ly)) / 30) - 1):    # rungs all the way down
         z = SURFACE_Z - 20 - k * 30
         tube((lx - 25, ly, z), (lx + 25, ly, z), 1.6, "ladder_metal_mat", sides=8)
     a = (dx - 100, -1600, SURFACE_Z - 5)                                                           # a mooring rope hanging down
@@ -344,7 +345,7 @@ def light_shafts():
         y += r.uniform(500, 1100)
         x = path_x(y) + r.uniform(-900, 900)
         top = SURFACE_Z - 5
-        L = r.uniform(500, 900)
+        L = r.uniform(800, 1300)
         rad = r.uniform(60, 160)
         c = cmds.polyCone(r=rad, h=L, sx=14, sy=4, ch=False)[0]
         cmds.delete(c + ".f[%d]" % (cmds.polyEvaluate(c, face=True) - 1))   # open: no base cap
@@ -516,9 +517,9 @@ def scatter(surface):
     # nothing in the deep basin (min_height = the deepest a plant grows, in cm)
     nets = [
         net("Carpet", [("lb_tuft_A", 1), ("lb_tuft_B", 1)], count=12000, scale_min=0.7, scale_max=1.5,
-            tilt=8, follow=90, spacing=True, min_distance=45, max_slope=20, min_height=-650, seed=15),
+            tilt=8, follow=90, spacing=True, min_distance=45, max_slope=20, min_height=-1150, seed=15),
         net("Milfoil", [("lb_milfoil_A", 1), ("lb_milfoil_B", 2)], count=3500, scale_min=0.7, scale_max=1.3,
-            tilt=8, follow=40, spacing=True, min_distance=60, max_slope=25, min_height=-950, near="Rocks",
+            tilt=8, follow=40, spacing=True, min_distance=60, max_slope=25, min_height=-1450, near="Rocks",
             near_range=300, open_share=35, seed=16),
         # (sunken leaf patches, lb_litter_*, were tried 2026-11-24: they read as dark holes in the sand)
         net("Boulders", [("lb_boulder_A", 1), ("lb_boulder_B", 1)], count=70, scale_min=0.7, scale_max=1.6,
@@ -526,7 +527,7 @@ def scatter(surface):
         net("Rocks", [("lb_rock_A", 2), ("lb_rock_B", 3), ("lb_rock_C", 1)], count=900, scale_min=0.5, scale_max=1.7,
             tilt=25, sink=30, spacing=True, min_distance=160, max_slope=55, seed=12),
         net("Weeds", [("lb_weed_A", 3), ("lb_weed_B", 2), ("lb_weed_C", 3)], count=4500, scale_min=0.7, scale_max=1.4,
-            tilt=12, follow=30, spacing=True, min_distance=70, max_slope=30, min_height=-1100, near="Rocks", near_range=250,
+            tilt=12, follow=30, spacing=True, min_distance=70, max_slope=30, min_height=-1600, near="Rocks", near_range=250,
             open_share=20, near_size=120, seed=13),
         net("Branches", [("lb_branch_A", 2), ("lb_branch_B", 1)], count=80, scale_min=0.8, scale_max=1.3,
             tilt=6, follow=100, sink=5, spacing=True, min_distance=300, max_slope=25, seed=14),
