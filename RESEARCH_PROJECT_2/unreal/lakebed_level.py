@@ -139,7 +139,7 @@ def import_ch2_textures():
         lib.save_loaded_asset(tex, False)
 
 
-DARKER = {"rock_mat": 0.4, "bubble_mat": 0.45}     # bubbles: glowing orbs at full white with Chapter 1's bloom     # Chapter 1's rock texture tint read as pale foam under the green light
+DARKER = {"rock_mat": 0.4, "bubble_mat": 0.45, "fish_body_mat": 0.6, "fish_fin_mat": 0.7}   # fish glowed white too     # bubbles: glowing orbs at full white with Chapter 1's bloom     # Chapter 1's rock texture tint read as pale foam under the green light
 
 
 def darker(mats):
@@ -356,6 +356,18 @@ if (Rise > 0.0) {
     float nz = frac((hz + T * Rise) / RiseHeight) * RiseHeight;
     sway += float3(sin(T * 4.0 + hz * 0.11) * 1.5, cos(T * 3.3 + hz * 0.13) * 1.5, nz - hz);
 }
+// Orbit: a fish school milling round its centre (Obj) at Orbit rad/s. Every fish turns with the
+// ring, a ripple runs down each body (its wavelength about a fish long), and the school bobs.
+if (Orbit != 0.0) {
+    float3 r = WP - Obj;
+    float a = T * Orbit;
+    float ca = cos(a), sa = sin(a);
+    float2 q = float2(r.x * ca - r.y * sa, r.x * sa + r.y * ca);
+    float th = atan2(q.y, q.x);
+    float rad = max(length(q), 1.0);
+    q += (q / rad) * sin(th * rad / 2.4 - T * 9.0) * 0.9;
+    sway += float3(q - r.xy, sin(T * 0.4 + th * 2.0) * 25.0);
+}
 """
 
 SWAY = {   # Maya material -> (SwayAmp cm, SwayHeight cm, SwaySpeed, Drift cm)
@@ -364,6 +376,9 @@ SWAY = {   # Maya material -> (SwayAmp cm, SwayHeight cm, SwaySpeed, Drift cm)
     "rope_mat": (0.0, 1.0, 0.0, 6.0),
     "specks_mat": (0.0, 1.0, 0.0, 18.0),
     "bubble_mat": (0.0, 1.0, 0.0, 0.0, 38.0, 600.0),    # + Rise cm/s, RiseHeight (= make_lakebed BUBBLE_RISE)
+    # fish: every part of a fish must move the same way (+ Orbit rad/s: ~0.13 = a fish 3 m out swims 40 cm/s)
+    "fish_body_mat": (0, 1, 0, 0, 0, 600, 0.13), "fish_back_mat": (0, 1, 0, 0, 0, 600, 0.13),
+    "fish_fin_mat": (0, 1, 0, 0, 0, 600, 0.13), "fish_eye_mat": (0, 1, 0, 0, 0, 600, 0.13),
 }
 
 
@@ -384,7 +399,7 @@ def sway_material():
     ins = list(node.get_editor_property("inputs"))
     new = {}
     for name, default in (("WP", None), ("Obj", None), ("T", None), ("SwayAmp", 0.0), ("SwayHeight", 100.0),
-                          ("SwaySpeed", 1.0), ("Drift", 0.0), ("Rise", 0.0), ("RiseHeight", 900.0)):
+                          ("SwaySpeed", 1.0), ("Drift", 0.0), ("Rise", 0.0), ("RiseHeight", 900.0), ("Orbit", 0.0)):
         ci = unreal.CustomInput()
         ci.set_editor_property("input_name", name)
         ins.append(ci)
@@ -403,13 +418,13 @@ def sway_material():
 def make_sway(mats, sway):
     """Re-parent the moving things' material instances onto M_Ch2_Sway with their numbers."""
     for name, nums in SWAY.items():
-        amp, height, speed, drift, rise, rise_h = (tuple(nums) + (0.0, 900.0))[:6]
+        amp, height, speed, drift, rise, rise_h, orbit = (tuple(nums) + (0.0, 900.0, 0.0)[len(nums) - 4:])[:7]
         mi = mats.get(name)
         if not mi or not isinstance(mi, unreal.MaterialInstanceConstant):
             continue
         mi.set_editor_property("parent", sway)
         for p, v in (("SwayAmp", amp), ("SwayHeight", height), ("SwaySpeed", speed), ("Drift", drift),
-                     ("Rise", rise), ("RiseHeight", rise_h)):
+                     ("Rise", rise), ("RiseHeight", rise_h), ("Orbit", orbit)):
             MEL.set_material_instance_scalar_parameter_value(mi, p, v)
         lib.save_loaded_asset(mi, False)
 
@@ -422,6 +437,16 @@ def maya_to_unreal(m):
     x_axis, y_axis, z_axis = swap(m[0:3]), swap(m[8:11]), swap(m[4:7])
     rotation = unreal.MathLibrary.make_rot_from_xz(x_axis, z_axis)
     return unreal.Transform(swap(m[12:15]), rotation, unreal.Vector(x_axis.length(), y_axis.length(), z_axis.length()))
+
+
+def place_schools(data):
+    """A copy of the fish school (data["props"]) at each spot in data["schools"]; they swim by material."""
+    mesh = unreal.load_asset(f"{SETS_DIR}/lb_fish_school")
+    for i, pos in enumerate(data.get("schools", [])):
+        a = tagged(actors.spawn_actor_from_object(mesh, unreal.Vector(*pos)), f"FishSchool_{i}", "Fish")
+        no_collision(a.static_mesh_component)
+        a.static_mesh_component.set_cast_shadow(False)
+    return len(data.get("schools", []))
 
 
 def place_scatter(table):
@@ -526,6 +551,8 @@ def underwater_look(ps2_settings, data):
     s.set_editor_property("color_gain", unreal.Vector4(0.75, 1.0, 0.95, 1.0))
     s.set_editor_property("override_color_saturation", True)
     s.set_editor_property("color_saturation", unreal.Vector4(0.7, 0.7, 0.7, 1.0))
+    s.set_editor_property("override_bloom_intensity", True)
+    s.set_editor_property("bloom_intensity", 1.2)           # Chapter 1's bloom 9 blew fish and bubbles out into glowing blobs
     s.set_editor_property("override_motion_blur_amount", True)
     s.set_editor_property("motion_blur_amount", 0.0)        # rising bubbles smeared into lines (and the PS2 had none)
     s.set_editor_property("override_scene_fringe_intensity", True)
@@ -554,6 +581,9 @@ def main():
     mats["shaft_mat"] = shaft_material()
     mats["under_surface_mat"] = surface_material()
     place_set(data, mats)
+    for name, fbx in data.get("props", {}).items():      # the fish school
+        import_set(name, fbx, mats)
+    place_schools(data)
     n = place_scatter(table)
     underwater_look(ps2, data)
     level_subsys.save_current_level()

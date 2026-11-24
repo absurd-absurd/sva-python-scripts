@@ -44,7 +44,9 @@ BED_MATS = {
     "under_surface_mat": (0.02, 0.05, 0.05), "ladder_metal_mat": (0.14, 0.13, 0.12),
     "rusty_tool_mat": (0.2, 0.11, 0.07), "seeglass_red_mat": (0.6, 0.05, 0.03),      # red_lantern() (as in lake_buildings.py)
     # the ground (blended in Unreal: unreal/lakebed_level.py ground_material())
-    "lb_ground_mat": (0.3, 0.28, 0.24), "bubble_mat": (0.95, 1.0, 1.0), "lb_litter_mat": (0.2, 0.15, 0.1),
+    "lb_ground_mat": (0.3, 0.28, 0.24),
+    "fish_body_mat": (0.42, 0.42, 0.34), "fish_back_mat": (0.12, 0.14, 0.09), "fish_fin_mat": (0.3, 0.22, 0.12),
+    "fish_eye_mat": (0.02, 0.02, 0.02), "bubble_mat": (0.95, 1.0, 1.0), "lb_litter_mat": (0.2, 0.15, 0.1),
 }
 rng = random.Random(2001)
 
@@ -503,6 +505,46 @@ def bubble_stream(seed, count):
     return build
 
 
+def fish_parts():
+    """One small lake fish (perch-like), nose toward +x, centred on the origin, about 16 cm long:
+    a slim body with a darker back, forked tail, dorsal and side fins, eyes. Returns its meshes."""
+    before = len(PARTS)
+    sphere(0, 0, 0, 1, "fish_body_mat", sides=10, scale=(8.0, 1.3, 2.5))               # body
+    sphere(0.5, 0, 1.0, 1, "fish_back_mat", sides=10, scale=(6.8, 1.1, 1.6))           # dark back
+    for s_ in (-1, 1):                                                                  # forked tail
+        t = sphere(-9.2, 0, s_ * 1.3, 1, "fish_fin_mat", sides=6, scale=(2.2, 0.2, 0.9))
+        cmds.rotate(0, 0, s_ * 28, t, relative=True, pivot=(-8, 0, 0))
+    sphere(0.8, 0, 2.6, 1, "fish_fin_mat", sides=6, scale=(3.2, 0.15, 1.1))             # dorsal fin
+    for s_ in (-1, 1):
+        sphere(2.6, s_ * 1.3, -0.8, 1, "fish_fin_mat", sides=6, scale=(1.4, 0.15, 0.6))  # side fins
+        sphere(5.6, s_ * 1.05, 0.5, 0.45, "fish_eye_mat", sides=6)                     # eyes
+    parts = PARTS[before:]
+    del PARTS[before:]
+    return parts
+
+
+def fish_school(seed, n):
+    """A school milling in a slow ring (a 'bait ball'): n fish spread round a ring 2-4 m across,
+    each heading along the ring, at a few heights. Unreal's M_Ch2_Sway (Orbit) turns the ring,
+    ripples each body and bobs the school, so the fish swim round for ever."""
+    def build():
+        r = random.Random(seed)
+        for _ in range(n):
+            th = r.uniform(0, 6.283)
+            R = r.uniform(170, 330)
+            h = r.uniform(-60, 60) + 25 * math.sin(th * 3)
+            parts = fish_parts()
+            f = cmds.polyUnite(parts, constructionHistory=False)[0] if len(parts) > 1 else parts[0]
+            k = r.uniform(0.8, 1.2)
+            cmds.scale(k, k, k, f, pivot=(0, 0, 0))
+            heading = math.degrees(th) + 90 + r.uniform(-8, 8)       # along the ring, anticlockwise
+            cmds.rotate(r.uniform(-6, 6), -heading, 0, f, pivot=(0, 0, 0))   # (Maya Y turn = minus Unreal yaw)
+            cmds.move(R * math.cos(th), h, R * math.sin(th), f, relative=True)
+            cmds.makeIdentity(f, apply=True, t=True, r=True, s=True)
+            PARTS.append(f)
+    return build
+
+
 def scatter_props():
     props = {
         "lb_bubbles_A": bubble_stream(18, 220), "lb_bubbles_B": bubble_stream(19, 130),
@@ -597,6 +639,8 @@ def build():
     for name, rgb in list(MATS.items()) + list(BED_MATS.items()):
         material(name, rgb)
     sources = scatter_props()
+    school = make_prop("lb_fish_school", fish_school(60, 70))
+    cmds.move(-30000, 0, -5000, school)
     floor = lakebed()
     n_ledges = wall_ledges()
     n_rubble = rubble()
@@ -618,6 +662,15 @@ def build():
         cmds.delete(far)
     scatter(floor_copy)
     n_copies = export_scatter(sources)
+    cmds.move(0, 0, 0, school)
+    school_fbx = os.path.join(OUT, "lb_fish_school.fbx").replace("\\", "/")
+    cmds.select(school)
+    mel.eval("FBXResetExport")
+    mel.eval('FBXExport -f "{}" -s'.format(school_fbx))
+    school_mats = set()
+    for sg in cmds.listConnections(cmds.listRelatives(school, shapes=True), type="shadingEngine") or []:
+        school_mats.update(cmds.listConnections(sg + ".surfaceShader") or [])
+    cmds.delete(school)
     cmds.delete(floor_copy)
 
     bed = cmds.polyUnite(PARTS, name="set_lakebed", constructionHistory=False)[0]
@@ -649,12 +702,15 @@ def build():
         for sg in cmds.listConnections(cmds.listRelatives(m, shapes=True), type="shadingEngine") or []:
             used.update(cmds.listConnections(sg + ".surfaceShader") or [])
     sx = path_x(START_Y)
-    data = {"sets": sets, "room_sets": [], "props": {},
-            "materials": {m: list(cmds.getAttr(m + ".color")[0]) for m in sorted(used)},
+    data = {"sets": sets, "room_sets": [], "props": {"lb_fish_school": school_fbx},
+            "materials": {m: list(cmds.getAttr(m + ".color")[0]) for m in sorted(used | school_mats)},
             "lights": [dict(json.loads(cmds.getAttr(l + ".ue_light")), name=l,
                             position=[cmds.xform(l, q=True, t=True, ws=True)[i] for i in (0, 2, 1)]) for l in lights],
             "start": [sx, START_Y, bed_z(sx, START_Y) + 100], "surface_z": SURFACE_Z,
             "lanterns": [[x, y, bed_z(x, y)] for x, y in lanterns],
+            # fish schools: one copy of lb_fish_school milling 2-3 m over the gully floor at each spot
+            "schools": [[path_x(y) + dx, y, floor_z(y) + h] for y, dx, h in
+                        ((1200, 150, 260), (5600, -250, 300), (9800, 200, 330), (15200, -300, 420))],
             "path": [[path_x(y), y, floor_z(y)] for y in range(-2000, 18000, 500)]}
     json.dump(data, open(os.path.join(OUT, "sets_lakebed.json"), "w"), indent=1)
     print(f"Lakebed built: {cmds.polyEvaluate(bed, triangle=True)} triangles, {len(lanterns)} sunken lanterns, "
