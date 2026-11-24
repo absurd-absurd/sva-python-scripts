@@ -103,6 +103,13 @@ def open_map():
             actors.destroy_actor(a)
 
 
+def no_collision(comp):
+    """Walk-through, in Play too: set_collision_enabled alone only lasted in the editor (in Play the
+    silt specks and a milfoil plant blocked the start, so Cas never spawned). The profile is saved."""
+    comp.set_collision_profile_name("NoCollision")
+    comp.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+
+
 def tagged(a, label, folder):
     a.set_actor_label(label)
     a.set_folder_path(folder)
@@ -150,10 +157,10 @@ def place_set(data, mats):
         a = tagged(actors.spawn_actor_from_object(mesh, unreal.Vector(0, 0, 0)), name, "Sets")
         comp = a.static_mesh_component
         if name.endswith(("_specks", "_shafts")):     # silt flecks and light shafts: seen, never felt
-            comp.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+            no_collision(comp)
             comp.set_cast_shadow(False)
         elif name.endswith("_fx"):
-            comp.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+            no_collision(comp)
             comp.set_cast_shadow(False)
         elif name.endswith("_block"):
             a.set_actor_hidden_in_game(True)
@@ -363,7 +370,7 @@ def place_scatter(table):
             tagged(a, f"{c['asset']}_{i}", f"Scatter/{c['network']}")
             comp = a.static_mesh_component
             if any(k in c["asset"] for k in ("weed", "milfoil", "tuft", "litter")):
-                comp.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)    # walk through the weed
+                no_collision(comp)    # walk through the weed
                 comp.set_cast_shadow(False)
     return len(copies)
 
