@@ -355,7 +355,7 @@ SWAY = {   # Maya material -> (SwayAmp cm, SwayHeight cm, SwaySpeed, Drift cm)
     "weed_mat": (16.0, 160.0, 0.9, 0.0),
     "weed_brown_mat": (10.0, 120.0, 1.1, 0.0),
     "rope_mat": (0.0, 1.0, 0.0, 6.0),
-    "specks_mat": (0.0, 1.0, 0.0, 35.0),
+    "specks_mat": (0.0, 1.0, 0.0, 18.0),
 }
 
 
@@ -516,6 +516,8 @@ def underwater_look(ps2_settings, data):
     s.set_editor_property("color_gain", unreal.Vector4(0.75, 1.0, 0.95, 1.0))
     s.set_editor_property("override_color_saturation", True)
     s.set_editor_property("color_saturation", unreal.Vector4(0.7, 0.7, 0.7, 1.0))
+    s.set_editor_property("override_scene_fringe_intensity", True)
+    s.set_editor_property("scene_fringe_intensity", 0.0)     # Chapter 1's colour fringe turned the silt into rainbow sparkles
     s.set_editor_property("override_vignette_intensity", True)
     s.set_editor_property("vignette_intensity", 0.8)
     ppv.set_editor_property("settings", s)

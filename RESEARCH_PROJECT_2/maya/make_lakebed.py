@@ -322,15 +322,15 @@ def specks():
         z = r.uniform(z0 + 10, min(z0 + 700, SURFACE_Z - 40))
         if z <= z0 + 10:
             continue
-        sz = r.uniform(0.8, 2.4)
-        c = cmds.polyCube(w=sz, h=sz * r.uniform(0.5, 1.0), d=sz, ch=False)[0]
-        cmds.rotate(r.uniform(0, 90), r.uniform(0, 90), 0, c)
+        sz = r.uniform(1.5, 4.0) if r.random() < 0.8 else r.uniform(4.0, 7.0)    # flakes of silt, a few clumps
+        c = cmds.polyCube(w=sz, h=sz * r.uniform(0.15, 0.35), d=sz * r.uniform(0.5, 1.0), ch=False)[0]
+        cmds.rotate(r.uniform(0, 180), r.uniform(0, 180), r.uniform(0, 180), c)
         cmds.move(x, z, y, c)
         parts.append(c)
     m = cmds.polyUnite(parts, name="set_lakebed_specks", constructionHistory=False)[0]
     cmds.delete(m, constructionHistory=True)
     cmds.xform(m, pivots=(0, 0, 0), worldSpace=True)
-    material("specks_mat", (0.5, 0.6, 0.55))
+    material("specks_mat", (0.2, 0.2, 0.17))      # muted grey-brown silt, close to the water
     cmds.sets(m, edit=True, forceElement="specks_matSG")
     return m
 
