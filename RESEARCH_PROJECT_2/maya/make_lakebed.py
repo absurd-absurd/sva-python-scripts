@@ -43,6 +43,8 @@ BED_MATS = {
     "weed_brown_mat": (0.12, 0.1, 0.05), "slime_mat": (0.06, 0.08, 0.04), "rope_mat": (0.3, 0.25, 0.17),
     "under_surface_mat": (0.02, 0.05, 0.05), "ladder_metal_mat": (0.14, 0.13, 0.12),
     "rusty_tool_mat": (0.2, 0.11, 0.07), "seeglass_red_mat": (0.6, 0.05, 0.03),      # red_lantern() (as in lake_buildings.py)
+    # the ground (blended in Unreal: unreal/lakebed_level.py ground_material())
+    "lb_ground_mat": (0.3, 0.28, 0.24),
 }
 rng = random.Random(2001)
 
@@ -76,11 +78,39 @@ def half_width(y):
     return w
 
 
+TOE = 700.0        # how far the floor takes to curve up into a bank (no crease where they meet)
+STEEP = 1.25       # how steep the bank gets past the toe (~51 degrees: too steep to climb)
+
+
+def edge(x, y):
+    """How far past the edge of the gully floor (x, y) is (0 or less = on the floor). The edge
+    wanders in and out on each side on its own, instead of running parallel to the path."""
+    side = 1.0 if x > path_x(y) else -1.0
+    w = half_width(y) + 220 * math.sin(y / 640.0 + side * 2.1) + 90 * math.sin(y / 230.0 + side)
+    return abs(x - path_x(y)) - w, side
+
+
+def bank_rise(e):
+    """The floor curves up into the bank: the slope grows smoothly from 0 over TOE cm, then the
+    bank keeps rising (and steepens a little higher up)."""
+    if e <= 0:
+        return 0.0
+    if e < TOE:
+        return STEEP * e * e / (2 * TOE)
+    return STEEP * TOE / 2 + STEEP * (e - TOE) + 0.0004 * (e - TOE) ** 2
+
+
 def bed_z(x, y):
-    e = max(0.0, abs(x - path_x(y)) - half_width(y))
-    bank = 1.15 * e * min(1.0, e / 400.0) + 0.0005 * e * e   # flat floor, then a steep silt bank
-    z = floor_z(y) + min(bank, 2600.0)
-    z += 18 * math.sin(x / 260.0) * math.sin(y / 210.0) + 9 * math.sin(x / 77.0 + y / 113.0)   # ripples in the silt
+    e, side = edge(x, y)
+    z = floor_z(y) + min(bank_rise(e), 2600.0)
+    if e > 0:
+        # the banks are worn into gullies and spurs running down the slope, softly at the toe
+        g = min(1.0, e / 900.0)
+        z += g * (70 * math.sin(y / 190.0 + side * 1.7) + 35 * math.sin(y / 83.0 + x / 400.0))
+        # slumped silt at the foot of the bank: low humps
+        if e < TOE * 1.3:
+            z += 22 * math.sin(math.pi * e / (TOE * 1.3)) * (0.5 + 0.5 * math.sin(y / 170.0 + x / 260.0))
+    z += 18 * math.sin(x / 260.0) * math.sin(y / 210.0) + 9 * math.sin(x / 377.0 + y / 313.0)   # sand ripples
     for mx, my, r, h in MOUNDS:                           # silt mounds on the floor
         d2 = ((x - mx) ** 2 + (y - my) ** 2) / (r * r)
         if d2 < 4:
@@ -91,7 +121,7 @@ def bed_z(x, y):
 MOUNDS = []
 for _ in range(40):
     _y = rng.uniform(-1000, 17000)
-    MOUNDS.append((path_x(_y) + rng.uniform(-1, 1) * half_width(_y), _y, rng.uniform(150, 450), rng.uniform(15, 60)))
+    MOUNDS.append((path_x(_y) + rng.uniform(-0.8, 0.8) * half_width(_y), _y, rng.uniform(150, 450), rng.uniform(15, 60)))
 
 
 def lakebed():
@@ -102,16 +132,10 @@ def lakebed():
     cmds.makeIdentity(p, apply=True, t=True)
     pts = [(x, bed_z(x, z), z) for x, _, z in _verts(p)]
     _set_verts(p, pts)
-    cmds.polySoftEdge(p, angle=70, ch=False)
-    keep(p, "lakebed_mat")
-    banks = []                                            # the steep banks: wetter, darker mud
-    for f in range(cmds.polyEvaluate(p, face=True)):
-        vs = [int(v) for v in cmds.polyInfo(f"{p}.f[{f}]", faceToVertex=True)[0].split()[2:]]
-        zs = [pts[v][1] for v in vs]
-        if max(zs) - min(zs) > 60:
-            banks.append(f"{p}.f[{f}]")
-    if banks:
-        cmds.sets(banks, edit=True, forceElement="mud_wet_matSG")
+    cmds.polySoftEdge(p, angle=180, ch=False)             # smooth shading all over: no facets on the banks
+    # one material: Unreal's M_Ch2_Ground blends sand (flat), silt (the toe) and clay (steep banks)
+    # by slope in the shader, so there are no hard face edges between them
+    keep(p, "lb_ground_mat")
     return p
 
 

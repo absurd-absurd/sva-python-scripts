@@ -112,6 +112,26 @@ def tagged(a, label, folder):
 
 # ---------- 2. the set ----------
 
+def import_ch2_textures():
+    """RESEARCH_PROJECT_2/textures/*.jpg -> /Game/Horror/Textures/T_<name> (where materials() looks),
+    shrunk to PS2 size like Chapter 1's (apply_textures.py)."""
+    import glob, os
+    tasks = []
+    for f in sorted(glob.glob(f"{RP2}/textures/*.jpg")):
+        t = unreal.AssetImportTask()
+        t.filename = f
+        t.destination_path = "/Game/Horror/Textures"
+        t.destination_name = "T_" + os.path.basename(f)[:-4]
+        t.automated = True
+        t.replace_existing = True
+        tasks.append(t)
+    tools.import_asset_tasks(tasks)
+    for t in tasks:
+        tex = unreal.load_asset(f"/Game/Horror/Textures/{t.destination_name}")
+        tex.set_editor_property("max_texture_size", 256)
+        lib.save_loaded_asset(tex, False)
+
+
 DARKER = {"rock_mat": 0.4}     # Chapter 1's rock texture tint read as pale foam under the green light
 
 
@@ -144,6 +164,66 @@ def place_set(data, mats):
         c.set_attenuation_radius(l["radius"])
         c.set_cast_shadows(False)
         tagged(p, l["name"], "Sets/Lights")
+
+
+GROUND_HLSL = """
+// The lakebed ground: sand on the flat, silt where it starts to rise, clay up the steep banks.
+// Blended by slope (sine of the angle) with a little world noise, so the line wanders and is soft.
+float3 n = normalize(N);
+float s = sqrt(saturate(1.0 - n.z * n.z));
+s += 0.07 * sin(WP.x / 170.0 + WP.y / 230.0) + 0.04 * sin(WP.x / 61.0 - WP.y / 47.0);
+float3 sand = Sand.Sample(SandSampler, WP.xy / SandSize).rgb * SandTint;
+float3 silt = Silt.Sample(SiltSampler, WP.xy / SiltSize).rgb * SiltTint;
+float3 w = pow(abs(n), 4.0);
+w /= (w.x + w.y + w.z);
+float3 clay = (Clay.Sample(ClaySampler, WP.yz / ClaySize).rgb * w.x
+             + Clay.Sample(ClaySampler, WP.xz / ClaySize).rgb * w.y
+             + Clay.Sample(ClaySampler, WP.xy / ClaySize).rgb * w.z) * ClayTint;
+float a = smoothstep(SiltSlope.x, SiltSlope.y, s);
+float b = smoothstep(ClaySlope.x, ClaySlope.y, s);
+return lerp(lerp(sand, silt, a), clay, b);
+"""
+
+
+def ground_material(spec):
+    """M_Ch2_Ground: one material for the whole lakebed (see GROUND_HLSL). Numbers in textures.json."""
+    m = _fresh(f"{CH2}/Materials/M_Ch2_Ground", "M_Ch2_Ground")
+    pins = ["N", "WP"]
+    node_in = {}
+    y = -400
+    for layer in ("sand", "silt", "clay"):
+        L = spec[layer]
+        name = layer.capitalize()
+        tex = MEL.create_material_expression(m, unreal.MaterialExpressionTextureObjectParameter, -900, y)
+        tex.set_editor_property("parameter_name", name)
+        tex.set_editor_property("texture", unreal.load_asset(f"/Game/Horror/Textures/T_{L['texture']}"))
+        size = MEL.create_material_expression(m, unreal.MaterialExpressionScalarParameter, -900, y + 120)
+        size.set_editor_property("parameter_name", name + "Size")
+        size.set_editor_property("default_value", float(L["size"]))
+        tint = MEL.create_material_expression(m, unreal.MaterialExpressionVectorParameter, -900, y + 200)
+        tint.set_editor_property("parameter_name", name + "Tint")
+        tint.set_editor_property("default_value", unreal.LinearColor(*L["tint"], 1))
+        node_in.update({name: tex, name + "Size": size, name + "Tint": tint})
+        if "slope" in L:
+            sl = MEL.create_material_expression(m, unreal.MaterialExpressionConstant2Vector, -900, y + 300)
+            sl.set_editor_property("r", float(L["slope"][0]))
+            sl.set_editor_property("g", float(L["slope"][1]))
+            node_in[name + "Slope"] = sl
+        y += 420
+    pins += list(node_in)
+    node = _custom(m, GROUND_HLSL, pins, unreal.CustomMaterialOutputType.CMOT_FLOAT3, -400, 0)
+    MEL.connect_material_expressions(MEL.create_material_expression(m, unreal.MaterialExpressionVertexNormalWS, -900, -600), "", node, "N")
+    MEL.connect_material_expressions(MEL.create_material_expression(m, unreal.MaterialExpressionWorldPosition, -900, -700), "", node, "WP")
+    for name, expr in node_in.items():
+        MEL.connect_material_expressions(expr, "", node, name)
+    MEL.connect_material_property(node, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    for prop, v in ((unreal.MaterialProperty.MP_ROUGHNESS, 1.0), (unreal.MaterialProperty.MP_SPECULAR, 0.0)):
+        c = MEL.create_material_expression(m, unreal.MaterialExpressionConstant, -200, 300)
+        c.set_editor_property("r", v)
+        MEL.connect_material_property(c, "", prop)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
 
 
 # ---------- 3. the scatter ----------
@@ -270,8 +350,10 @@ def main():
     table = json.load(open(f"{RP1}/textures.json"))
     ps2 = chapter1_look()
     open_map()
+    import_ch2_textures()
     mats = materials(data["materials"], table)
     darker(mats)
+    mats["lb_ground_mat"] = ground_material(json.load(open(f"{RP2}/textures.json"))["ground"])
     place_set(data, mats)
     n = place_scatter(table)
     underwater_look(ps2, data)
