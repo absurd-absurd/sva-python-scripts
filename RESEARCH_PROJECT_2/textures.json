@@ -53,5 +53,16 @@
    "spacing": 38,
    "strength": 0.0
   }
+ },
+ "surfaces": {
+  "MI_PS2_lb_litter_mat": {
+   "texture": "forest_litter",
+   "tint": [
+    0.55,
+    0.45,
+    0.32
+   ],
+   "size": 120
+  }
  }
 }

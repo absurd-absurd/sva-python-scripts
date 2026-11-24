@@ -1,6 +1,8 @@
 {
  "sets": {
   "set_lakebed": "C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_2/export/set_lakebed.fbx",
+  "set_lakebed_specks": "C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_2/export/set_lakebed_specks.fbx",
+  "set_lakebed_shafts": "C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_2/export/set_lakebed_shafts.fbx",
   "set_lakebed_fx": "C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_2/export/set_lakebed_fx.fbx",
   "set_lakebed_block": "C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_2/export/set_lakebed_block.fbx"
  },
@@ -47,10 +49,20 @@
    0.05000000074505806,
    0.029999999329447746
   ],
+  "shaft_mat": [
+   0.5,
+   0.800000011920929,
+   0.699999988079071
+  ],
   "slime_mat": [
    0.05999999865889549,
    0.07999999821186066,
    0.03999999910593033
+  ],
+  "specks_mat": [
+   0.5,
+   0.6000000238418579,
+   0.550000011920929
   ],
   "under_surface_mat": [
    0.019999999552965164,

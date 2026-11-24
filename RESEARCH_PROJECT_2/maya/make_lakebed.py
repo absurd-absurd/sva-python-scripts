@@ -44,7 +44,7 @@ BED_MATS = {
     "under_surface_mat": (0.02, 0.05, 0.05), "ladder_metal_mat": (0.14, 0.13, 0.12),
     "rusty_tool_mat": (0.2, 0.11, 0.07), "seeglass_red_mat": (0.6, 0.05, 0.03),      # red_lantern() (as in lake_buildings.py)
     # the ground (blended in Unreal: unreal/lakebed_level.py ground_material())
-    "lb_ground_mat": (0.3, 0.28, 0.24),
+    "lb_ground_mat": (0.3, 0.28, 0.24), "lb_litter_mat": (0.2, 0.15, 0.1),
 }
 rng = random.Random(2001)
 
@@ -143,10 +143,40 @@ def lakebed():
     return p
 
 
+def angular(cx, cy, cz, sx, sy, sz, mat, seed, yaw=0.0, tilt=0.0, chips=6):
+    """A rock with flat broken faces and sharp edges (not a soft lump): a rough ball, chipped
+    flat by a few random planes, then stretched to sx * sy * sz (Unreal cm, centred on cx, cy, cz).
+    The bottom is flattened so it sits in the silt. Returns the mesh (already kept)."""
+    r = random.Random(seed)
+    m = cmds.polySphere(r=1, sx=10, sy=7, ch=False)[0]
+    pts = []
+    for x, y, z in _verts(m):
+        k = 1.0 + r.uniform(-0.12, 0.12)
+        pts.append([x * k, y * k, z * k])
+    for _ in range(chips):                                # chip off flat faces
+        a, b = r.uniform(0, 6.283), r.uniform(-0.6, 1.2)
+        n = (math.cos(a) * math.cos(b), math.sin(b), math.sin(a) * math.cos(b))
+        d = r.uniform(0.55, 0.85)
+        for q in pts:
+            t = q[0] * n[0] + q[1] * n[1] + q[2] * n[2]
+            if t > d:
+                for i in range(3):
+                    q[i] -= (t - d) * n[i]
+    for q in pts:
+        q[1] = max(q[1], -0.45)                           # flat underside
+    _set_verts(m, [tuple(q) for q in pts])
+    cmds.scale(sx / 2.0, sz / 2.0, sy / 2.0, m)
+    cmds.rotate(tilt, yaw, r.uniform(-tilt, tilt), m)
+    cmds.move(cx, cz, cy, m)
+    cmds.makeIdentity(m, apply=True, t=True, r=True, s=True)
+    cmds.polySoftEdge(m, angle=35, ch=False)              # hard edges between the chipped faces
+    return keep(m, mat)
+
+
 def wall_ledges():
-    """Shelves of rock sticking out of the banks, like harder layers the water hasn't worn away:
-    long and flat, sunk half into the wall, along both sides of the gully. They share the
-    ground material, so their tops collect silt and their faces show rock."""
+    """Slabs of harder rock sticking out of the banks (the water wore the clay away around them):
+    long, flat and broken-edged, sunk half into the wall, tilted a little like the bedding.
+    They use the ground material, so their tops collect silt and their faces show rock."""
     r = random.Random(51)
     n = 0
     for side in (-1.0, 1.0):
@@ -156,17 +186,67 @@ def wall_ledges():
             e = r.uniform(TOE + 100, TOE + 1900)
             x = path_x(y) + side * (edge_w(y, side) + e)
             z = bed_z(x, y)
-            length, depth, height = r.uniform(220, 560), r.uniform(160, 280), r.uniform(45, 130)
-            rsoft(x + side * depth * 0.2, y, z - height * 0.15, depth, length, height, "lb_ground_mat",
-                  jitter=height * 0.18, smooth=1, seed=int(y) + int(side * 7), div=(4, 3, 6),
-                  yaw=r.uniform(-12, 12))
+            length, depth, height = r.uniform(240, 600), r.uniform(150, 260), r.uniform(35, 90)
+            angular(x + side * depth * 0.15, y, z, depth, length, height, "lb_ground_mat",
+                    seed=int(y) * 3 + int(side), yaw=r.uniform(-10, 10), tilt=r.uniform(-6, 6), chips=8)
             n += 1
-            if r.random() < 0.35:                      # a smaller shelf stepped above it
-                z2 = bed_z(x + side * 180, y + 60)
-                rsoft(x + side * 200, y + 60, z2 - 10, depth * 0.7, length * 0.6, height * 0.7, "lb_ground_mat",
-                      jitter=height * 0.15, smooth=1, seed=int(y) + 99, div=(4, 3, 5), yaw=r.uniform(-12, 12))
+            if r.random() < 0.35:                      # a thinner slab stepped above it
+                x2 = x + side * 190
+                angular(x2, y + 60, bed_z(x2, y + 60), depth * 0.7, length * 0.6, height * 0.7, "lb_ground_mat",
+                        seed=int(y) + 99, yaw=r.uniform(-10, 10), tilt=r.uniform(-6, 6), chips=8)
                 n += 1
     return n
+
+
+def rubble():
+    """Broken rock that fell off the walls and piled up at their foot (the toe), bigger pieces
+    nearer the wall. Same ground material: silt settles on top."""
+    r = random.Random(52)
+    n = 0
+    for side in (-1.0, 1.0):
+        y = -2000.0
+        while y < 17800:
+            y += r.uniform(90, 260)
+            e = TOE * r.uniform(0.15, 1.1)
+            x = path_x(y) + side * (edge_w(y, side) + e)
+            size = r.uniform(25, 90) * (0.5 + e / TOE)
+            angular(x, y, bed_z(x, y) - size * 0.12, size * r.uniform(0.9, 1.4), size * r.uniform(0.8, 1.3),
+                    size * r.uniform(0.45, 0.75), "lb_ground_mat", seed=n + 7000, yaw=r.uniform(0, 360),
+                    tilt=r.uniform(0, 25), chips=r.randint(4, 7))
+            n += 1
+    return n
+
+
+def sunken_trees():
+    """Whole dead trees that fell in long ago and sank: thick waterlogged trunks lying on the bed,
+    a root plate at one end, broken branch stubs, half buried in the silt."""
+    r = random.Random(53)
+    spots = [(-600, 1), (2300, -1), (5200, 1), (7900, -1), (10300, 1), (13300, -1), (15200, 1), (16800, -1)]
+    for y, side in spots:
+        x = path_x(y) + side * r.uniform(200, 700)
+        length, rad = r.uniform(700, 1200), r.uniform(18, 30)
+        yaw = math.radians(r.uniform(-50, 50) + (90 if r.random() < 0.5 else 0))
+        dx, dy = math.cos(yaw) * length / 2, math.sin(yaw) * length / 2
+        a = (x - dx, y - dy, bed_z(x - dx, y - dy) + rad * 0.5)
+        b = (x + dx, y + dy, bed_z(x + dx, y + dy) + rad * 0.35)
+        mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, max(a[2], b[2], bed_z(x, y) + rad * 0.4))
+        tube(a, mid, rad, "bark_dark_mat", sides=12)
+        tube(mid, b, rad * 0.75, "bark_dark_mat", sides=12)
+        tube(b, (b[0] + dx * 0.12, b[1] + dy * 0.12, b[2] - 4), rad * 0.4, "bark_dark_mat", sides=8)   # snapped top
+        ux, uy = -math.cos(yaw), -math.sin(yaw)               # root plate at the thick end
+        for k in range(9):
+            ang = k * 6.283 / 9 + r.uniform(-0.2, 0.2)
+            px, py = -uy * math.cos(ang), ux * math.cos(ang)
+            tip = (a[0] + px * rad * 3.2 + ux * 25, a[1] + py * rad * 3.2 + uy * 25, a[2] + math.sin(ang) * rad * 2.6)
+            tube(a, (tip[0], tip[1], max(tip[2], bed_z(tip[0], tip[1]) - 5)), rad * 0.22, "bark_dark_mat", sides=5)
+        for k in range(6):                                    # broken branch stubs
+            t = r.uniform(0.2, 0.85)
+            p0 = tuple(a[i] + (b[i] - a[i]) * t for i in range(3))
+            ang = r.uniform(0.3, 2.8) * (1 if r.random() < 0.5 else -1)
+            L = r.uniform(40, 140)
+            q = (p0[0] - uy * math.cos(ang) * L, p0[1] + ux * math.cos(ang) * L, p0[2] + abs(math.sin(ang)) * r.uniform(30, 120))
+            tube(p0, q, rad * r.uniform(0.15, 0.3), "bark_dark_mat", sides=6)
+    return len(spots)
 
 
 # ---------- the dock from below ----------
@@ -228,6 +308,59 @@ def sunken_lanterns():
     return spots
 
 
+def specks():
+    """Silt hanging in the water: tiny flecks filling the gully from the floor to ~7 m up.
+    (They can't follow the camera: Unreal's Python can't wire World Position Offset.)"""
+    r = random.Random(54)
+    parts = []
+    while len(parts) < 12000:
+        y = r.uniform(-2500, 17800)
+        side = r.choice((-1.0, 1.0))
+        x = path_x(y) + side * r.uniform(0, edge_w(y, side) + TOE)
+        z0 = bed_z(x, y)
+        z = r.uniform(z0 + 10, min(z0 + 700, SURFACE_Z - 40))
+        if z <= z0 + 10:
+            continue
+        sz = r.uniform(0.8, 2.4)
+        c = cmds.polyCube(w=sz, h=sz * r.uniform(0.5, 1.0), d=sz, ch=False)[0]
+        cmds.rotate(r.uniform(0, 90), r.uniform(0, 90), 0, c)
+        cmds.move(x, z, y, c)
+        parts.append(c)
+    m = cmds.polyUnite(parts, name="set_lakebed_specks", constructionHistory=False)[0]
+    cmds.delete(m, constructionHistory=True)
+    cmds.xform(m, pivots=(0, 0, 0), worldSpace=True)
+    material("specks_mat", (0.5, 0.6, 0.55))
+    cmds.sets(m, edit=True, forceElement="specks_matSG")
+    return m
+
+
+def light_shafts():
+    """Shafts of light slanting down from the surface in the shallows (they fade out deeper):
+    long open cones, wide at the top; M_Ch2_Shaft makes them a faint, soft, shifting glow."""
+    r = random.Random(55)
+    parts = []
+    y = -2400.0
+    while y < 7000:
+        y += r.uniform(500, 1100)
+        x = path_x(y) + r.uniform(-900, 900)
+        top = SURFACE_Z - 5
+        L = r.uniform(500, 900)
+        rad = r.uniform(60, 160)
+        c = cmds.polyCone(r=rad, h=L, sx=14, sy=4, ch=False)[0]
+        cmds.delete(c + ".f[%d]" % (cmds.polyEvaluate(c, face=True) - 1))   # open: no base cap
+        cmds.move(0, -L / 2.0, 0, c)                    # tip at the origin, then flip: wide end up
+        cmds.makeIdentity(c, apply=True, t=True)
+        cmds.rotate(180 + r.uniform(-14, 14), 0, r.uniform(-14, 14), c)
+        cmds.move(x, top - L, y, c)
+        parts.append(c)
+    m = cmds.polyUnite(parts, name="set_lakebed_shafts", constructionHistory=False)[0]
+    cmds.delete(m, constructionHistory=True)
+    cmds.xform(m, pivots=(0, 0, 0), worldSpace=True)
+    material("shaft_mat", (0.5, 0.8, 0.7))
+    cmds.sets(m, edit=True, forceElement="shaft_matSG")
+    return m
+
+
 def blockers():
     """Invisible walls round the edge of the map, and a lid just under the surface by the dock."""
     out = []
@@ -261,7 +394,58 @@ def make_prop(name, build):
 
 def rock(seed, sx, sy, sz):
     def build():
-        rsoft(0, 0, sz * 0.3, sx, sy, sz, "rock_mat", jitter=min(sx, sz) * 0.14, smooth=2, seed=seed)
+        angular(0, 0, sz * 0.35, sx, sy, sz, "lb_ground_mat", seed=seed, chips=7)
+    return build
+
+
+def milfoil(seed, stems, h0, h1):
+    """Water milfoil: thin stems with whorls of short feathery leaves all the way up."""
+    def build():
+        r = random.Random(seed)
+        for _ in range(stems):
+            x, y = r.uniform(-10, 10), r.uniform(-10, 10)
+            h = r.uniform(h0, h1)
+            lean = (r.uniform(-0.25, 0.25), r.uniform(-0.25, 0.25))
+            top = (x + lean[0] * h, y + lean[1] * h, h)
+            tube((x, y, -2), top, 0.7, "weed_mat", sides=3)
+            k = 7.0
+            while k < h:
+                t = k / h
+                c = (x + (top[0] - x) * t, y + (top[1] - y) * t, k)
+                L = 7 * (1.1 - t * 0.6)
+                for j in range(4):
+                    a = j * 1.571 + k * 0.4
+                    tube(c, (c[0] + math.cos(a) * L, c[1] + math.sin(a) * L, c[2] + L * 0.5), 0.45, "weed_mat", sides=3)
+                k += r.uniform(6, 9)
+    return build
+
+
+def tuft(seed, blades, h0, h1):
+    """A low tuft of stonewort/grass-like weed: the carpet in the shallows."""
+    def build():
+        r = random.Random(seed)
+        for _ in range(blades):
+            a = r.uniform(0, 6.283)
+            d = r.uniform(0, 14)
+            x, y = math.cos(a) * d, math.sin(a) * d
+            h = r.uniform(h0, h1)
+            tube((x, y, -2), (x + math.cos(a) * h * 0.35, y + math.sin(a) * h * 0.35, h), 0.6, "weed_brown_mat", sides=3)
+    return build
+
+
+def litter(seed, size):
+    """A patch of sunken dead leaves: a thin, slightly domed mat with a ragged edge."""
+    def build():
+        r = random.Random(seed)
+        m = cmds.polyCylinder(r=size / 2.0, h=1, sx=14, sy=1, sc=3, ch=False)[0]
+        pts = []
+        for x, y, z in _verts(m):
+            d = math.hypot(x, z) / (size / 2.0)
+            k = 1.0 + r.uniform(-0.3, 0.05) if d > 0.95 else 1.0
+            top = y > 0
+            pts.append((x * k, (2.5 + 2.0 * (1 - d * d) if top else -1.0) + r.uniform(-0.4, 0.4), z * k))
+        _set_verts(m, pts)
+        keep(m, "lb_litter_mat")
     return build
 
 
@@ -302,6 +486,9 @@ def branch(seed, length):
 
 def scatter_props():
     props = {
+        "lb_milfoil_A": milfoil(11, 3, 50, 110), "lb_milfoil_B": milfoil(12, 5, 30, 70),
+        "lb_tuft_A": tuft(13, 22, 8, 18), "lb_tuft_B": tuft(14, 30, 5, 12),
+        "lb_litter_A": litter(15, 90), "lb_litter_B": litter(16, 140),
         "lb_rock_A": rock(1, 70, 55, 40), "lb_rock_B": rock(2, 45, 50, 28), "lb_rock_C": rock(3, 90, 60, 35),
         "lb_boulder_A": rock(4, 260, 200, 170), "lb_boulder_B": rock(5, 320, 240, 140),
         "lb_weed_A": pondweed(6, 7, 70, 150, "weed_mat"), "lb_weed_B": pondweed(7, 5, 110, 220, "weed_mat"),
@@ -325,13 +512,21 @@ def scatter(surface):
         s = dict(base, **c)
         s.update(name=name, objects=objects, surface=surface, near=c.get("near", ""))
         return s
+    # plants need light: the carpet only in the shallows, milfoil and pondweed a little deeper,
+    # nothing in the deep basin (min_height = the deepest a plant grows, in cm)
     nets = [
+        net("Carpet", [("lb_tuft_A", 1), ("lb_tuft_B", 1)], count=12000, scale_min=0.7, scale_max=1.5,
+            tilt=8, follow=90, spacing=True, min_distance=45, max_slope=20, min_height=-650, seed=15),
+        net("Milfoil", [("lb_milfoil_A", 1), ("lb_milfoil_B", 2)], count=3500, scale_min=0.7, scale_max=1.3,
+            tilt=8, follow=40, spacing=True, min_distance=60, max_slope=25, min_height=-950, near="Rocks",
+            near_range=300, open_share=35, seed=16),
+        # (sunken leaf patches, lb_litter_*, were tried 2026-11-24: they read as dark holes in the sand)
         net("Boulders", [("lb_boulder_A", 1), ("lb_boulder_B", 1)], count=70, scale_min=0.7, scale_max=1.6,
             tilt=20, sink=35, spacing=True, min_distance=700, max_slope=50, seed=11),
-        net("Rocks", [("lb_rock_A", 2), ("lb_rock_B", 3), ("lb_rock_C", 1)], count=700, scale_min=0.5, scale_max=1.7,
+        net("Rocks", [("lb_rock_A", 2), ("lb_rock_B", 3), ("lb_rock_C", 1)], count=900, scale_min=0.5, scale_max=1.7,
             tilt=25, sink=30, spacing=True, min_distance=160, max_slope=55, seed=12),
-        net("Weeds", [("lb_weed_A", 3), ("lb_weed_B", 2), ("lb_weed_C", 3)], count=2600, scale_min=0.7, scale_max=1.4,
-            tilt=12, follow=30, spacing=True, min_distance=70, max_slope=30, near="Rocks", near_range=250,
+        net("Weeds", [("lb_weed_A", 3), ("lb_weed_B", 2), ("lb_weed_C", 3)], count=4500, scale_min=0.7, scale_max=1.4,
+            tilt=12, follow=30, spacing=True, min_distance=70, max_slope=30, min_height=-1100, near="Rocks", near_range=250,
             open_share=20, near_size=120, seed=13),
         net("Branches", [("lb_branch_A", 2), ("lb_branch_B", 1)], count=80, scale_min=0.8, scale_max=1.3,
             tilt=6, follow=100, sink=5, spacing=True, min_distance=300, max_slope=25, seed=14),
@@ -382,11 +577,23 @@ def build():
     sources = scatter_props()
     floor = lakebed()
     n_ledges = wall_ledges()
+    n_rubble = rubble()
+    n_trees = sunken_trees()
     dock_from_below()
     lanterns = sunken_lanterns()
     fx = surface_underside()
     # scatter on the bare floor before it is combined with the rest of the set
     floor_copy = cmds.duplicate(floor, name="scatter_surface")[0]
+    far = []                                              # drop the banks and the flats up top
+    vp = _verts(floor_copy)
+    for f in range(cmds.polyEvaluate(floor_copy, face=True)):
+        vs = [int(v) for v in cmds.polyInfo(f"{floor_copy}.f[{f}]", faceToVertex=True)[0].split()[2:]]
+        cx = sum(vp[v][0] for v in vs) / len(vs)
+        cy = sum(vp[v][2] for v in vs) / len(vs)
+        if edge(cx, cy)[0] > TOE + 250:
+            far.append(f"{floor_copy}.f[{f}]")
+    if far:
+        cmds.delete(far)
     scatter(floor_copy)
     n_copies = export_scatter(sources)
     cmds.delete(floor_copy)
@@ -395,6 +602,8 @@ def build():
     cmds.delete(bed, constructionHistory=True)
     cmds.xform(bed, pivots=(0, 0, 0), worldSpace=True)
     extra = {}
+    extra["set_lakebed_specks"] = specks()
+    extra["set_lakebed_shafts"] = light_shafts()
     for name, parts in (("set_lakebed_fx", fx), ("set_lakebed_block", blockers())):
         m = cmds.polyUnite(parts, name=name, constructionHistory=False)[0] if len(parts) > 1 else cmds.rename(parts[0], name)
         cmds.delete(m, constructionHistory=True)
@@ -427,7 +636,7 @@ def build():
             "path": [[path_x(y), y, floor_z(y)] for y in range(-2000, 18000, 500)]}
     json.dump(data, open(os.path.join(OUT, "sets_lakebed.json"), "w"), indent=1)
     print(f"Lakebed built: {cmds.polyEvaluate(bed, triangle=True)} triangles, {len(lanterns)} sunken lanterns, "
-          f"{n_copies} scatter copies, {n_ledges} wall ledges")
+          f"{n_copies} scatter copies, {n_ledges} wall ledges, {n_rubble} rubble rocks, {n_trees} sunken trees")
 
 
 build()

@@ -149,7 +149,10 @@ def place_set(data, mats):
         mesh = import_set(name, fbx, mats)
         a = tagged(actors.spawn_actor_from_object(mesh, unreal.Vector(0, 0, 0)), name, "Sets")
         comp = a.static_mesh_component
-        if name.endswith("_fx"):
+        if name.endswith(("_specks", "_shafts")):     # silt flecks and light shafts: seen, never felt
+            comp.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+            comp.set_cast_shadow(False)
+        elif name.endswith("_fx"):
             comp.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
             comp.set_cast_shadow(False)
         elif name.endswith("_block"):
@@ -247,6 +250,89 @@ def ground_material(spec):
     return m
 
 
+SHAFT_HLSL = """
+// A shaft of light from the surface: bright near the top, gone by the bottom, soft at its sides
+// (seen edge-on it fades), slowly shimmering.
+float top = saturate(1.0 - (Top - WP.z) / Len);
+float side = pow(saturate(abs(dot(normalize(N), normalize(V)))), 1.5);
+float shimmer = 0.75 + 0.25 * sin(T * 0.8 + WP.x / 90.0 + WP.y / 120.0);
+return Color * Strength * top * top * side * shimmer;
+"""
+
+SURFACE_HLSL = """
+// The underside of the lake surface: faint light moving through ripples overhead.
+float2 p = WP.xy / 220.0;
+float r = sin(p.x * 3.1 + T * 0.5) * sin(p.y * 2.7 - T * 0.4) + 0.5 * sin((p.x + p.y) * 5.3 + T * 0.9);
+return Color * (0.6 + 0.4 * r);
+"""
+
+
+def _params(m, specs, x=-900, y=0):
+    out = {}
+    for name, value in specs:
+        if isinstance(value, tuple):
+            e = MEL.create_material_expression(m, unreal.MaterialExpressionVectorParameter, x, y)
+            e.set_editor_property("default_value", unreal.LinearColor(*value, 1))
+        else:
+            e = MEL.create_material_expression(m, unreal.MaterialExpressionScalarParameter, x, y)
+            e.set_editor_property("default_value", float(value))
+        e.set_editor_property("parameter_name", name)
+        out[name] = e
+        y += 110
+    return out
+
+
+def _wire(m, node, inputs):
+    for pin, expr in inputs.items():
+        MEL.connect_material_expressions(expr, "", node, pin)
+
+
+def specks_material():
+    """M_Ch2_Specks: unlit pale flecks of silt."""
+    m = _fresh(f"{CH2}/Materials/M_Ch2_Specks", "M_Ch2_Specks")
+    m.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
+    prm = _params(m, [("Color", (0.3, 0.42, 0.36))])
+    MEL.connect_material_property(prm["Color"], "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
+
+
+def shaft_material():
+    """M_Ch2_Shaft: additive, unlit, two-sided glow for the light shafts."""
+    m = _fresh(f"{CH2}/Materials/M_Ch2_Shaft", "M_Ch2_Shaft")
+    m.set_editor_property("blend_mode", unreal.BlendMode.BLEND_ADDITIVE)
+    m.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
+    m.set_editor_property("two_sided", True)
+    prm = _params(m, [("Color", (0.35, 0.75, 0.6)), ("Strength", 0.8), ("Top", 0.0), ("Len", 900.0)])
+    node = _custom(m, SHAFT_HLSL, ["WP", "N", "V", "T", "Color", "Strength", "Top", "Len"],
+                   unreal.CustomMaterialOutputType.CMOT_FLOAT3, -400, 0)
+    _wire(m, node, {"WP": MEL.create_material_expression(m, unreal.MaterialExpressionWorldPosition, -900, -300),
+                    "N": MEL.create_material_expression(m, unreal.MaterialExpressionVertexNormalWS, -900, -200),
+                    "V": MEL.create_material_expression(m, unreal.MaterialExpressionCameraVectorWS, -900, -100),
+                    "T": MEL.create_material_expression(m, unreal.MaterialExpressionTime, -900, -400),
+                    **prm})
+    MEL.connect_material_property(node, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
+
+
+def surface_material():
+    """M_Ch2_Surface: the lake surface from below, a faint moving glow (it was plain black)."""
+    m = _fresh(f"{CH2}/Materials/M_Ch2_Surface", "M_Ch2_Surface")
+    m.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
+    m.set_editor_property("two_sided", True)
+    prm = _params(m, [("Color", (0.05, 0.16, 0.14))])
+    node = _custom(m, SURFACE_HLSL, ["WP", "T", "Color"], unreal.CustomMaterialOutputType.CMOT_FLOAT3, -400, 0)
+    _wire(m, node, {"WP": MEL.create_material_expression(m, unreal.MaterialExpressionWorldPosition, -900, -300),
+                    "T": MEL.create_material_expression(m, unreal.MaterialExpressionTime, -900, -200), **prm})
+    MEL.connect_material_property(node, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    MEL.recompile_material(m)
+    lib.save_loaded_asset(m, False)
+    return m
+
+
 # ---------- 3. the scatter ----------
 
 def maya_to_unreal(m):
@@ -261,6 +347,7 @@ def place_scatter(table):
     data = json.load(open(f"{RP2}/export/scatter.json"))
     mats = materials(data["materials"], table)
     darker(mats)
+    mats["lb_ground_mat"] = unreal.load_asset(f"{CH2}/Materials/M_Ch2_Ground")   # rocks: silt on top, rock on the sides
     global SETS_DIR
     SETS_DIR = f"{CH2}/Props"
     meshes = {asset: import_set(asset, info["fbx"], mats) for asset, info in data["props"].items()}
@@ -275,7 +362,7 @@ def place_scatter(table):
             a.set_actor_transform(xf, False, False)
             tagged(a, f"{c['asset']}_{i}", f"Scatter/{c['network']}")
             comp = a.static_mesh_component
-            if "weed" in c["asset"]:
+            if any(k in c["asset"] for k in ("weed", "milfoil", "tuft", "litter")):
                 comp.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)    # walk through the weed
                 comp.set_cast_shadow(False)
     return len(copies)
@@ -369,12 +456,16 @@ def underwater_look(ps2_settings, data):
 def main():
     data = json.load(open(f"{RP2}/export/sets_lakebed.json"))
     table = json.load(open(f"{RP1}/textures.json"))
+    table.update(json.load(open(f"{RP2}/textures.json")).get("surfaces", {}))   # Chapter 2 extras (leaf litter)
     ps2 = chapter1_look()
     open_map()
     import_ch2_textures()
     mats = materials(data["materials"], table)
     darker(mats)
     mats["lb_ground_mat"] = ground_material(json.load(open(f"{RP2}/textures.json"))["ground"])
+    mats["specks_mat"] = specks_material()
+    mats["shaft_mat"] = shaft_material()
+    mats["under_surface_mat"] = surface_material()
     place_set(data, mats)
     n = place_scatter(table)
     underwater_look(ps2, data)
