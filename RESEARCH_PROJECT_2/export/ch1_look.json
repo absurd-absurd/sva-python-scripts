@@ -1,0 +1,41 @@
+{
+ "values": {
+  "auto_exposure_bias": 7.300000190734863,
+  "auto_exposure_method": {
+   "enum": "AutoExposureMethod",
+   "value": "AEM_MANUAL"
+  },
+  "bloom_intensity": 9.0,
+  "bloom_size_scale": 10.0,
+  "bloom_threshold": -1.0,
+  "color_contrast": {
+   "Vector4": [
+    1.1,
+    1.1,
+    1.1,
+    1.0
+   ]
+  },
+  "color_saturation": {
+   "Vector4": [
+    0.82,
+    0.82,
+    0.82,
+    1.0
+   ]
+  },
+  "film_grain_intensity": 0.5,
+  "scene_fringe_intensity": 1.0,
+  "vignette_intensity": 0.3499999940395355
+ },
+ "blendables": [
+  [
+   1.0,
+   "/Game/Horror/Materials/PS2/MI_Breakdown.MI_Breakdown"
+  ],
+  [
+   1.0,
+   "/Game/Horror/Materials/PS2/MI_PS2_Screen.MI_PS2_Screen"
+  ]
+ ]
+}

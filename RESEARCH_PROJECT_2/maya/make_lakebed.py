@@ -1,0 +1,378 @@
+"""MARROW Chapter 2: build the bottom of Black Hollow Lake in Maya and export it for Unreal.
+
+Run with mayapy (or in Maya's Script Editor, Python tab):
+    exec(open(r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_2/maya/make_lakebed.py").read())
+
+What it makes (positions are Unreal cm, Z up, like Chapter 1):
+  - the lakebed: one sheet bent into a winding gully that starts in the shallows under the dock
+    (about 3-4 m down) and sinks north to a drop-off and the deep basin (about 24 m down).
+    Steep silt banks on both sides keep you in the gully.
+  - the old dock's pilings coming down through the surface, a rope, the swim ladder
+  - the underside of the lake surface (seen from below, only near the dock; the murk hides the rest)
+  - sunken red lanterns along the gully, still glowing: the lure trail
+  - scatter props (rocks, boulders, pondweed, sunken branches), scattered over the lakebed with
+    the MIDTERM scatter tool (its own build_all, called with settings instead of the window)
+
+Writes to RESEARCH_PROJECT_2/:
+  maya/lakebed_scene.ma
+  export/set_lakebed*.fbx + export/sets_lakebed.json   (the set, read by unreal/lakebed_level.py)
+  export/<prop>.fbx + export/scatter.json             (the scatter, same format as Chapter 1)
+"""
+import json
+import math
+import os
+import random
+
+import maya.cmds as cmds
+import maya.mel as mel
+
+RP1 = r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_1"
+RP2 = r"C:/Users/fayth/sva-python-scripts/RESEARCH_PROJECT_2"
+SCATTER_TOOL = r"C:/Users/fayth/sva-python-scripts/MIDTERM/scatter_tool.py"
+
+ROOT = RP1
+_src = open(os.path.join(RP1, "maya", "make_motel.py"), encoding="utf-8").read()
+exec(_src[:_src.rindex("\nbuild()")])          # Chapter 1 helpers: box, tube, rsoft, frustum, sphere, light, red_lantern...
+OUT = os.path.join(RP2, "export")              # (make_motel set OUT to Chapter 1's folder)
+
+SURFACE_Z = 0.0          # the lake surface, overhead at the start
+START_Y = -1900          # where Cas lands, under the end of the dock
+BED_MATS = {
+    "lakebed_mat": (0.05, 0.05, 0.045), "mud_wet_mat": (0.09, 0.08, 0.065), "rock_mat": (0.22, 0.23, 0.21),
+    "bark_mat": (0.13, 0.1, 0.07), "bark_dark_mat": (0.07, 0.06, 0.05), "weed_mat": (0.09, 0.12, 0.05),
+    "weed_brown_mat": (0.12, 0.1, 0.05), "slime_mat": (0.06, 0.08, 0.04), "rope_mat": (0.3, 0.25, 0.17),
+    "under_surface_mat": (0.02, 0.05, 0.05), "ladder_metal_mat": (0.14, 0.13, 0.12),
+    "rusty_tool_mat": (0.2, 0.11, 0.07), "seeglass_red_mat": (0.6, 0.05, 0.03),      # red_lantern() (as in lake_buildings.py)
+}
+rng = random.Random(2001)
+
+
+# ---------- the shape of the lakebed ----------
+
+def path_x(y):
+    """The middle of the gully: it winds left and right as it goes north."""
+    return 1400 * math.sin(y / 3200.0) + 600 * math.sin(y / 1100.0 + 1.0)
+
+
+# depth along the gully: (y, z). Shallows by the dock, a long slope, the drop-off, the deep basin.
+DEPTH = [(-2600, -120), (-1500, -330), (0, -400), (3000, -600), (6000, -850), (9000, -1000),
+         (11000, -1150), (12500, -2050), (14000, -2350), (18000, -2450)]
+
+
+def floor_z(y):
+    for (ya, za), (yb, zb) in zip(DEPTH, DEPTH[1:]):
+        if y <= yb:
+            t = max(0.0, (y - ya) / (yb - ya))
+            t = t * t * (3 - 2 * t)                       # smooth: no creases where the slope changes
+            return za + (zb - za) * t
+    return DEPTH[-1][1]
+
+
+def half_width(y):
+    """How wide the walkable gully floor is: 9-15 m, opening into a wide basin past the drop-off."""
+    w = 900 + 600 * math.sin(y / 2300.0) ** 2
+    if y > 12000:
+        w += min(1.0, (y - 12000) / 1500.0) * 2200
+    return w
+
+
+def bed_z(x, y):
+    e = max(0.0, abs(x - path_x(y)) - half_width(y))
+    bank = 1.15 * e * min(1.0, e / 400.0) + 0.0005 * e * e   # flat floor, then a steep silt bank
+    z = floor_z(y) + min(bank, 2600.0)
+    z += 18 * math.sin(x / 260.0) * math.sin(y / 210.0) + 9 * math.sin(x / 77.0 + y / 113.0)   # ripples in the silt
+    for mx, my, r, h in MOUNDS:                           # silt mounds on the floor
+        d2 = ((x - mx) ** 2 + (y - my) ** 2) / (r * r)
+        if d2 < 4:
+            z += h * math.exp(-d2)
+    return z
+
+
+MOUNDS = []
+for _ in range(40):
+    _y = rng.uniform(-1000, 17000)
+    MOUNDS.append((path_x(_y) + rng.uniform(-1, 1) * half_width(_y), _y, rng.uniform(150, 450), rng.uniform(15, 60)))
+
+
+def lakebed():
+    x0, x1, y0, y1 = -7500, 7500, -2600, 18000
+    nx, ny = 150, 206                                     # ~1 m squares
+    p = cmds.polyPlane(w=x1 - x0, h=y1 - y0, sx=nx, sy=ny, ch=False, name="lakebed_floor")[0]
+    cmds.move((x0 + x1) / 2.0, 0, (y0 + y1) / 2.0, p)
+    cmds.makeIdentity(p, apply=True, t=True)
+    pts = [(x, bed_z(x, z), z) for x, _, z in _verts(p)]
+    _set_verts(p, pts)
+    cmds.polySoftEdge(p, angle=70, ch=False)
+    keep(p, "lakebed_mat")
+    banks = []                                            # the steep banks: wetter, darker mud
+    for f in range(cmds.polyEvaluate(p, face=True)):
+        vs = [int(v) for v in cmds.polyInfo(f"{p}.f[{f}]", faceToVertex=True)[0].split()[2:]]
+        zs = [pts[v][1] for v in vs]
+        if max(zs) - min(zs) > 60:
+            banks.append(f"{p}.f[{f}]")
+    if banks:
+        cmds.sets(banks, edit=True, forceElement="mud_wet_matSG")
+    return p
+
+
+# ---------- the dock from below ----------
+
+def dock_from_below():
+    """Pilings in two rows down through the surface, cross-bracing, the ladder and a rope."""
+    dx = path_x(START_Y)
+    for y in range(-2500, -1100, 300):
+        for s in (-1, 1):
+            x = dx + s * 120 + rng.uniform(-6, 6)
+            z0 = bed_z(x, y) - 30
+            tube((x, y, z0), (x + rng.uniform(-8, 8), y, SURFACE_Z + 60), 13, "bark_dark_mat", sides=10)
+            tube((x, y, z0 + 10), (x, y, z0 + 70 + rng.uniform(0, 60)), 14.2, "slime_mat", sides=10)   # weed slime at the foot
+        x = dx
+        tube((x - 120, y, -90), (x + 120, y, -150), 5, "bark_dark_mat", sides=6)                      # bracing
+    lx, ly = dx + 60, -1250                                                                         # the swim ladder
+    for s in (-1, 1):
+        tube((lx + s * 25, ly, bed_z(lx, ly) + 40), (lx + s * 25, ly, SURFACE_Z + 40), 2, "ladder_metal_mat", sides=8)
+    for k in range(6):
+        z = SURFACE_Z - 20 - k * 30
+        tube((lx - 25, ly, z), (lx + 25, ly, z), 1.6, "ladder_metal_mat", sides=8)
+    a = (dx - 100, -1600, SURFACE_Z - 5)                                                           # a mooring rope hanging down
+    b = (dx - 140, -1640, bed_z(dx - 140, -1640) + 10)
+    mid = ((a[0] + b[0]) / 2 + 20, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2)
+    tube(a, mid, 1.2, "rope_mat", sides=6)
+    tube(mid, b, 1.2, "rope_mat", sides=6)
+
+
+def surface_underside():
+    """The lake surface seen from below, near the dock. Flipped so it faces down."""
+    before = len(PARTS)
+    p = cmds.polyPlane(w=9000, h=8000, sx=30, sy=26, ch=False)[0]
+    cmds.move(path_x(START_Y), SURFACE_Z, 400, p)
+    cmds.polyNormal(p, normalMode=0, ch=False)
+    keep(p, "under_surface_mat")
+    fx = PARTS[before:]
+    del PARTS[before:]
+    return fx
+
+
+# ---------- the lure trail ----------
+
+def sunken_lanterns():
+    """Red lanterns sunk along the gully, still lit. They lead you down. Some stand in the silt,
+    some lie on their side; each one a little further, a little brighter."""
+    spots = []
+    y = 900
+    while y < 15500:
+        side = rng.choice((-1, 1))
+        x = path_x(y) + side * rng.uniform(200, half_width(y) * 0.6)
+        spots.append((x, y))
+        y += rng.uniform(1400, 2000)
+    for k, (x, y) in enumerate(spots):
+        z = bed_z(x, y) - 3                               # sunk a little into the silt
+        red_lantern(x, y, z)
+        frustum(x, y, z + 6, z + 20, 3.2, 3.2, "glow_lamp_red_mat", sides=10)    # the glow inside the red glass
+        t = k / max(1, len(spots) - 1)
+        light("light_sunken_lantern_%d" % k, x, y, z + 30, [1.0, 0.06, 0.02], 25 + 55 * t, 700 + 500 * t)
+    return spots
+
+
+def blockers():
+    """Invisible walls round the edge of the map, and a lid just under the surface by the dock."""
+    out = []
+    def wall(x0, x1, y0, y1, z0, z1):
+        c = cmds.polyCube(w=x1 - x0, h=z1 - z0, d=y1 - y0, ch=False)[0]
+        cmds.move((x0 + x1) / 2.0, (z0 + z1) / 2.0, (y0 + y1) / 2.0, c)
+        out.append(c)
+    wall(-7600, 7600, -2700, -2600, -3000, 300)
+    wall(-7600, 7600, 18000, 18100, -3000, 300)
+    wall(-7600, -7500, -2600, 18000, -3000, 300)
+    wall(7500, 7600, -2600, 18000, -3000, 300)
+    wall(-7500, 7500, -2600, 18000, SURFACE_Z - 120, SURFACE_Z - 100)   # can't swim up and out
+    return out
+
+
+# ---------- scatter props (sources for the scatter tool) ----------
+
+def make_prop(name, build):
+    """Run build() (which adds parts at the origin), combine its parts into one tagged mesh."""
+    before = len(PARTS)
+    build()
+    parts = PARTS[before:]
+    del PARTS[before:]
+    m = cmds.polyUnite(parts, name=name, constructionHistory=False)[0] if len(parts) > 1 else cmds.rename(parts[0], name)
+    cmds.delete(m, constructionHistory=True)
+    cmds.xform(m, pivots=(0, 0, 0), worldSpace=True)
+    cmds.addAttr(m, longName="ue_asset", dataType="string")
+    cmds.setAttr(m + ".ue_asset", name, type="string")
+    return m
+
+
+def rock(seed, sx, sy, sz):
+    def build():
+        rsoft(0, 0, sz * 0.3, sx, sy, sz, "rock_mat", jitter=min(sx, sz) * 0.14, smooth=2, seed=seed)
+    return build
+
+
+def pondweed(seed, blades, h0, h1, mat):
+    """A clump of long ribbon weed: thin blades that rise and bend with the (still) water."""
+    def build():
+        r = random.Random(seed)
+        for _ in range(blades):
+            a = r.uniform(0, 6.283)
+            x, y, z = math.cos(a) * r.uniform(0, 8), math.sin(a) * r.uniform(0, 8), -2.0
+            h = r.uniform(h0, h1)
+            lean = r.uniform(0, 6.283)
+            bend = r.uniform(0.1, 0.35)
+            segs = 5
+            for s in range(segs):
+                t = (s + 1) / segs
+                nx = math.cos(a) * 8 * t + math.cos(lean) * h * bend * t * t
+                ny = math.sin(a) * 8 * t + math.sin(lean) * h * bend * t * t
+                nz = h * t
+                tube((x, y, z), (nx, ny, nz), max(0.5, 1.6 * (1 - t * 0.7)), mat, sides=3)
+                x, y, z = nx, ny, nz
+    return build
+
+
+def branch(seed, length):
+    """A sunken branch lying on the bed, with a few broken twigs."""
+    def build():
+        r = random.Random(seed)
+        a, b = (-length / 2, 0, 6), (length / 2, r.uniform(-30, 30), 4)
+        tube(a, b, 6, "bark_mat", sides=8)
+        for k in range(4):
+            t = r.uniform(0.15, 0.85)
+            p = tuple(a[i] + (b[i] - a[i]) * t for i in range(3))
+            q = (p[0] + r.uniform(-60, 60), p[1] + r.uniform(-70, 70), p[2] + r.uniform(5, 50))
+            tube(p, q, 2, "bark_mat", sides=5)
+    return build
+
+
+def scatter_props():
+    props = {
+        "lb_rock_A": rock(1, 70, 55, 40), "lb_rock_B": rock(2, 45, 50, 28), "lb_rock_C": rock(3, 90, 60, 35),
+        "lb_boulder_A": rock(4, 260, 200, 170), "lb_boulder_B": rock(5, 320, 240, 140),
+        "lb_weed_A": pondweed(6, 7, 70, 150, "weed_mat"), "lb_weed_B": pondweed(7, 5, 110, 220, "weed_mat"),
+        "lb_weed_C": pondweed(8, 9, 40, 90, "weed_brown_mat"),
+        "lb_branch_A": branch(9, 260), "lb_branch_B": branch(10, 420),
+    }
+    made = {}
+    for i, (name, fn) in enumerate(props.items()):
+        made[name] = make_prop(name, fn)
+        cmds.move(-20000 - i * 600, 0, -5000, made[name])   # out of the way (the scatter places copies by matrix)
+    return made
+
+
+def scatter(surface):
+    """Scatter with the midterm scatter tool. Same settings the window would give; the bed's
+    banks are too steep for anything but rocks (max slope)."""
+    tool = {"__name__": "scatter_tool"}
+    exec(open(SCATTER_TOOL, encoding="utf-8").read(), tool)
+    base = dict(tool["DEFAULT_CONTROLS"])
+    def net(name, objects, **c):
+        s = dict(base, **c)
+        s.update(name=name, objects=objects, surface=surface, near=c.get("near", ""))
+        return s
+    nets = [
+        net("Boulders", [("lb_boulder_A", 1), ("lb_boulder_B", 1)], count=70, scale_min=0.7, scale_max=1.6,
+            tilt=20, sink=35, spacing=True, min_distance=700, max_slope=50, seed=11),
+        net("Rocks", [("lb_rock_A", 2), ("lb_rock_B", 3), ("lb_rock_C", 1)], count=700, scale_min=0.5, scale_max=1.7,
+            tilt=25, sink=30, spacing=True, min_distance=160, max_slope=55, seed=12),
+        net("Weeds", [("lb_weed_A", 3), ("lb_weed_B", 2), ("lb_weed_C", 3)], count=2600, scale_min=0.7, scale_max=1.4,
+            tilt=12, follow=30, spacing=True, min_distance=70, max_slope=30, near="Rocks", near_range=250,
+            open_share=20, near_size=120, seed=13),
+        net("Branches", [("lb_branch_A", 2), ("lb_branch_B", 1)], count=80, scale_min=0.8, scale_max=1.3,
+            tilt=6, follow=100, sink=5, spacing=True, min_distance=300, max_slope=25, seed=14),
+    ]
+    top, skipped, no_room, made = tool["build_all"](nets, "scatter_grp1", False)
+    print("Scatter:", made, f"(skipped {skipped} on steep banks, {no_room} found no room)")
+    return top
+
+
+def export_scatter(sources):
+    """Same as Chapter 1's export_to_unreal.py, into RESEARCH_PROJECT_2/export."""
+    copies = []
+    for net in cmds.listRelatives("scatter_grp1", children=True, fullPath=True, type="transform") or []:
+        for c in cmds.listRelatives(net, children=True, fullPath=True, type="transform") or []:
+            asset = cmds.getAttr(c + ".ue_asset") if cmds.attributeQuery("ue_asset", node=c, exists=True) else None
+            if asset:
+                copies.append({"asset": asset, "network": net.split("|")[-1],
+                               "matrix": cmds.xform(c, q=True, matrix=True, worldSpace=True)})
+    props, colors = {}, {}
+    for asset in sorted({c["asset"] for c in copies}):
+        node = sources[asset]
+        dup = cmds.duplicate(node, name=asset + "_export")[0]
+        cmds.xform(dup, translation=(0, 0, 0), worldSpace=True)
+        path = os.path.join(OUT, asset + ".fbx").replace("\\", "/")
+        cmds.select(dup)
+        mel.eval("FBXResetExport")
+        mel.eval("FBXExportSmoothingGroups -v true")
+        mel.eval('FBXExport -f "{}" -s'.format(path))
+        cmds.delete(dup)
+        shapes = cmds.listRelatives(node, shapes=True, fullPath=True) or []
+        mats = set()
+        for sg in set(cmds.listConnections(shapes, type="shadingEngine") or []):
+            mats.update(cmds.listConnections(sg + ".surfaceShader") or [])
+        props[asset] = {"fbx": path, "materials": sorted(mats)}
+        colors.update({m: list(cmds.getAttr(m + ".color")[0]) for m in mats})
+    json.dump({"props": props, "materials": colors, "copies": copies},
+              open(os.path.join(OUT, "scatter.json"), "w"), indent=1)
+    return len(copies)
+
+
+def build():
+    del PARTS[:]
+    del ROOM_PARTS[:]
+    cmds.file(new=True, force=True)
+    os.makedirs(OUT, exist_ok=True)
+    for name, rgb in list(MATS.items()) + list(BED_MATS.items()):
+        material(name, rgb)
+    sources = scatter_props()
+    floor = lakebed()
+    dock_from_below()
+    lanterns = sunken_lanterns()
+    fx = surface_underside()
+    # scatter on the bare floor before it is combined with the rest of the set
+    floor_copy = cmds.duplicate(floor, name="scatter_surface")[0]
+    scatter(floor_copy)
+    n_copies = export_scatter(sources)
+    cmds.delete(floor_copy)
+
+    bed = cmds.polyUnite(PARTS, name="set_lakebed", constructionHistory=False)[0]
+    cmds.delete(bed, constructionHistory=True)
+    cmds.xform(bed, pivots=(0, 0, 0), worldSpace=True)
+    extra = {}
+    for name, parts in (("set_lakebed_fx", fx), ("set_lakebed_block", blockers())):
+        m = cmds.polyUnite(parts, name=name, constructionHistory=False)[0] if len(parts) > 1 else cmds.rename(parts[0], name)
+        cmds.delete(m, constructionHistory=True)
+        cmds.xform(m, pivots=(0, 0, 0), worldSpace=True)
+        if name.endswith("_block"):
+            material("lake_block_mat", (1, 0, 1))
+            cmds.sets(m, edit=True, forceElement="lake_block_matSG")
+        extra[name] = m
+    lights = cmds.ls("light_*", type="transform")
+    cmds.file(rename=os.path.join(RP2, "maya", "lakebed_scene.ma"))
+    cmds.file(save=True, type="mayaAscii")
+    if not cmds.pluginInfo("fbxmaya", q=True, loaded=True):
+        cmds.loadPlugin("fbxmaya")
+    sets, used = {}, set()
+    for name, m in [("set_lakebed", bed)] + list(extra.items()):
+        f = os.path.join(OUT, name + ".fbx").replace("\\", "/")
+        cmds.select(m)
+        mel.eval("FBXResetExport")
+        mel.eval('FBXExport -f "{}" -s'.format(f))
+        sets[name] = f
+        for sg in cmds.listConnections(cmds.listRelatives(m, shapes=True), type="shadingEngine") or []:
+            used.update(cmds.listConnections(sg + ".surfaceShader") or [])
+    sx = path_x(START_Y)
+    data = {"sets": sets, "room_sets": [], "props": {},
+            "materials": {m: list(cmds.getAttr(m + ".color")[0]) for m in sorted(used)},
+            "lights": [dict(json.loads(cmds.getAttr(l + ".ue_light")), name=l,
+                            position=[cmds.xform(l, q=True, t=True, ws=True)[i] for i in (0, 2, 1)]) for l in lights],
+            "start": [sx, START_Y, bed_z(sx, START_Y) + 100], "surface_z": SURFACE_Z,
+            "lanterns": [[x, y, bed_z(x, y)] for x, y in lanterns],
+            "path": [[path_x(y), y, floor_z(y)] for y in range(-2000, 18000, 500)]}
+    json.dump(data, open(os.path.join(OUT, "sets_lakebed.json"), "w"), indent=1)
+    print(f"Lakebed built: {cmds.polyEvaluate(bed, triangle=True)} triangles, {len(lanterns)} sunken lanterns, "
+          f"{n_copies} scatter copies")
+
+
+build()
