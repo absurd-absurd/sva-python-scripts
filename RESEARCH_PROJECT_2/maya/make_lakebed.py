@@ -127,7 +127,7 @@ def dock_from_below():
             tube((x, y, z0), (x + rng.uniform(-8, 8), y, SURFACE_Z + 60), 13, "bark_dark_mat", sides=10)
             tube((x, y, z0 + 10), (x, y, z0 + 70 + rng.uniform(0, 60)), 14.2, "slime_mat", sides=10)   # weed slime at the foot
         x = dx
-        tube((x - 120, y, -90), (x + 120, y, -150), 5, "bark_dark_mat", sides=6)                      # bracing
+        tube((x - 120, y, SURFACE_Z - 35), (x + 120, y, SURFACE_Z - 70), 5, "bark_dark_mat", sides=6)   # bracing, up by the surface (lower, it hit your head)
     lx, ly = dx + 60, -1250                                                                         # the swim ladder
     for s in (-1, 1):
         tube((lx + s * 25, ly, bed_z(lx, ly) + 40), (lx + s * 25, ly, SURFACE_Z + 40), 2, "ladder_metal_mat", sides=8)
@@ -185,7 +185,7 @@ def blockers():
     wall(-7600, 7600, 18000, 18100, -3000, 300)
     wall(-7600, -7500, -2600, 18000, -3000, 300)
     wall(7500, 7600, -2600, 18000, -3000, 300)
-    wall(-7500, 7500, -2600, 18000, SURFACE_Z - 120, SURFACE_Z - 100)   # can't swim up and out
+    wall(-7500, 7500, -2600, 18000, SURFACE_Z - 30, SURFACE_Z - 10)     # can't swim up and out (lower than this blocked the start)
     return out
 
 
