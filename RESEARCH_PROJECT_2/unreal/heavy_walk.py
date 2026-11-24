@@ -47,7 +47,11 @@ def main():
     BPL.compile_blueprint(char)
     lib.save_loaded_asset(char, False)
     gm = child_blueprint("BP_Ch2GameMode", "/Game/FirstPerson/Blueprints/BP_FirstPersonGameMode")
-    unreal.get_default_object(BPL.generated_class(gm)).set_editor_property("default_pawn_class", BPL.generated_class(char))
+    gm_cdo = unreal.get_default_object(BPL.generated_class(gm))
+    gm_cdo.set_editor_property("default_pawn_class", BPL.generated_class(char))
+    # plain HUD for now: Chapter 1's BP_HorrorHUD runs the title screen and looks for Chapter 1
+    # actors every frame ("Accessed None" errors, dark screen); Chapter 2 needs its own
+    gm_cdo.set_editor_property("hud_class", unreal.HUD.static_class())
     BPL.compile_blueprint(gm)
     lib.save_loaded_asset(gm, False)
     world.get_world_settings().set_editor_property("default_game_mode", BPL.generated_class(gm))
