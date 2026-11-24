@@ -95,4 +95,29 @@ payphone, a MISSING poster: yours (Bug's photo-booth silhouette; brunette, 5'4",
 - **Props match text:** the visible prop (register pages, tags, wall notes, poster) must show
   the same words as its reading screen.
 
+## Chapter 2: Under the Lake (RESEARCH_PROJECT_2, FIRST PASS 2026-11-24, draft for review)
+You play **Cas, October 17, 2001**, walking the lakebed. Texts in RESEARCH_PROJECT_2/clues.json.
+Corner lines are **Cas** talking (first person), the same rule as Bug's in Chapter 1.
+- **Opening** (typed, then Mom's MISSING poster): the night in 1974, the night in 1997, "One goes in,
+  one comes back. So I'm going in." (her misreading, as in Chapter 1).
+- **The lure trail:** the red lanterns sunk along the gully lead down; they copy the light of the thing.
+- **Mom's handbag** in the silt: the room 104 key on its green tag, her reading glasses, Cas's
+  second-grade photo, laminated.
+- **The 1974 researchers' case** with a page of the field log: Freedman enters the water 23:10, a red
+  light under the water 23:40, the boy walks out 23:52. "One goes in. Something comes back out. DO NOT
+  FOLLOW THE LIGHT." Cas: they wrote it down wrong.
+- **Freedman's watch** on a rock, stopped at ten past eleven (23:10, when he went in).
+- **The red-lit figure** in a long wool coat (Eileen's silhouette) always further on: it fades as you
+  get near. A lure.
+- **The hunter:** an eel-like thing with a red bulb on a stalk, circling over the gully. Too close and
+  it has you: back to before its ring.
+- **The thing itself**, asleep in the basin: a huge buried back, ribbed, breathing (the rattle), its
+  own red bulb high above it.
+- **Ending:** Mom's coat spread on the basin floor, a page on it in **the wrong hand**:
+  *"you came, cas / i missed you / - mom"*. Cas: *"That's not her handwriting."* Black.
+  **"October 9, 2002."** The postcard: *"i miss you bug - cas"* (the wrong hand, postmarked OCT 09 2002),
+  the one that brings Bug in Chapter 1. Back to the title.
+- Continuity checked: "something" comes back (only Cas says "one"); all on October 17 (2001 here);
+  the wrong hand is lowercase and cold; Eileen's look as on her poster; no new named people.
+
 ## Still open

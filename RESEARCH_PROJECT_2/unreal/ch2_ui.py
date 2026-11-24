@@ -67,7 +67,8 @@ def place_shots(start):
     t.set_actor_label("TitleShot")
     t.tags = [TAG]
     # the final shot: the postcard, close up, far above the water (no murk up there)
-    tex = texture(f"{RP1}/export/postcard_back.png", "T_Ch2_Postcard", ui=False)
+    # (tools/make_ch2_card.py turns it so it reads upright on BP_FinalShot's poster plane)
+    tex = texture(f"{RP2}/export/ch2_postcard_turned.png", "T_Ch2_Postcard", ui=False)
     path = "/Game/Chapter2/Materials/MI_Ch2_Postcard"
     mi = unreal.load_asset(path) if lib.does_asset_exist(path) else tools.create_asset(
         "MI_Ch2_Postcard", "/Game/Chapter2/Materials", unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
@@ -88,6 +89,34 @@ def place_shots(start):
     cam.set_relative_location(off, False, True)
     cam.set_relative_rotation(unreal.Rotator(roll=0.0, pitch=math.degrees(math.atan2(-off.z, math.hypot(off.x, off.y))),
                                              yaw=math.degrees(math.atan2(-off.y, -off.x))), False, True)
+    # behind it: black, and its own neutral colour (no underwater green up here)
+    at = f.get_actor_location()
+    back = actors.spawn_actor_from_object(unreal.load_asset("/Engine/BasicShapes/Plane"), unreal.Vector(at.x - 60, at.y, at.z),
+                                          unreal.Rotator(roll=0.0, pitch=-90.0, yaw=0.0))
+    back.set_actor_scale3d(unreal.Vector(6, 6, 1))
+    back.static_mesh_component.set_material(0, unreal.load_asset("/Game/Chapter2/Materials/MI_PS2_figure_mat"))
+    back.set_actor_label("FinalShot_Backdrop")
+    back.tags = [TAG]
+    ppv = actors.spawn_actor_from_class(unreal.PostProcessVolume, at)
+    ppv.set_actor_scale3d(unreal.Vector(6, 6, 6))
+    ppv.set_editor_property("unbound", False)
+    ppv.set_editor_property("priority", 10.0)
+    st = ppv.get_editor_property("settings")
+    for k, v in (("color_gain", unreal.Vector4(1, 1, 1, 1)), ("color_saturation", unreal.Vector4(0.85, 0.85, 0.85, 1)),
+                 ("vignette_intensity", 0.6)):
+        st.set_editor_property("override_" + k, True)
+        st.set_editor_property(k, v)
+    ppv.set_editor_property("settings", st)
+    ppv.set_actor_label("FinalShot_Look")
+    ppv.tags = [TAG]
+    lamp = actors.spawn_actor_from_class(unreal.PointLight, unreal.Vector(at.x + 55, at.y + 25, at.z + 40))
+    lc = lamp.point_light_component
+    lc.set_intensity(5.0)
+    lc.set_light_color(unreal.LinearColor(1.0, 0.78, 0.5, 1))       # a warm desk lamp, not the lake's green
+    lc.set_attenuation_radius(250.0)
+    lc.set_cast_shadows(False)
+    lamp.set_actor_label("FinalShot_Lamp")
+    lamp.tags = [TAG]
 
 
 def main():

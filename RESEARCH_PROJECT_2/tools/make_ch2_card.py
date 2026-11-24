@@ -12,3 +12,9 @@ card = Image.new("RGBA", (900, 600), (14, 12, 11, 255))
 card.alpha_composite(poster, ((900 - poster.width) // 2, (600 - poster.height) // 2))
 card.convert("RGB").save(OUT)
 print("wrote", OUT)
+
+# the final shot's postcard (Chapter 1's export/postcard_back.png), turned a quarter so it reads upright on
+# BP_FinalShot's poster plane (unreal/ch2_ui.py)
+turned = os.path.join(os.path.dirname(OUT), "ch2_postcard_turned.png")
+Image.open(os.path.join(RP1, "export", "postcard_back.png")).transpose(Image.Transpose.ROTATE_90).save(turned)
+print("wrote", turned)

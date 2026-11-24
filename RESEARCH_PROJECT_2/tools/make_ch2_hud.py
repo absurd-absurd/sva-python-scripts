@@ -41,7 +41,53 @@ for a, b in SWAPS:
 
 ns = {"__name__": "ch2_hud", "__file__": GEN}
 exec(compile(src, GEN, "exec"), ns)
-out = ns["hud_graph"]().text()
+
+# ---- the hunter (Chapter 2): it swims round its ring (M_Ch2_Sway Orbit, so its head is worked out here
+# the same way: the ring centre + its head's spot turned by time x Orbit). Come within CATCH_DIST of its
+# head and it has you: the growl, the picture warps, and you're back at the checkpoint before its ring.
+SETS = json.load(open(os.path.join(RP2, "export", "sets_lakebed.json")))
+HUNT_C = SETS["hunter"]
+HUNTER_R, HEAD_FWD, ORBIT = 900.0, 220.0, 0.07          # make_lakebed HUNTER_R; its head is ~2.2 m ahead of the ring point
+CATCH_DIST = 380.0
+CHECKPOINT = SETS["checkpoint"]
+CAUGHT_LINE = "It had me... Its light. I can't let that light find me."
+
+
+def hunter_logic(g):
+    MATH, STATICS, ACTOR, HUD = ns["MATH"], ns["STATICS"], ns["ACTOR"], ns["HUD"]
+    add = lambda x, y: g.pure(MATH, "Add_DoubleDouble", [("A", "real", x), ("B", "real", y)])
+    sub = lambda x, y: g.pure(MATH, "Subtract_DoubleDouble", [("A", "real", x), ("B", "real", y)])
+    mulr = lambda x, y: g.pure(MATH, "Multiply_DoubleDouble", [("A", "real", x), ("B", "real", y)])
+    g.row(-12000, 9000)
+    tick = g.event(ACTOR, "ReceiveTick", [("DeltaSeconds", "float")])
+    ang = g.mul(g.now(), ORBIT)
+    c = g.pure(MATH, "Cos", [("A", "real", ang)])
+    s_ = g.pure(MATH, "Sin", [("A", "real", ang)])
+    hx = add(HUNT_C[0], sub(g.mul(c, HUNTER_R), g.mul(s_, HEAD_FWD)))
+    hy = add(HUNT_C[1], add(g.mul(s_, HUNTER_R), g.mul(c, HEAD_FWD)))
+    head = g.pure(MATH, "MakeVector", [("X", "real", hx), ("Y", "real", hy), ("Z", "real", HUNT_C[2])], ty="vector")
+    pawn = g.pure(HUD, "GetOwningPawn", ty="actor")
+    ploc = g.pure(ACTOR, "K2_GetActorLocation", ty="vector", target=(pawn, "actor"))
+    dist = g.pure(MATH, "VSize", [("A", "vector", g.pure(MATH, "Subtract_VectorVector", [("A", "vector", head), ("B", "vector", ploc)], ty="vector"))])
+    near = g.pure(MATH, "Less_DoubleDouble", [("A", "real", dist), ("B", "real", CATCH_DIST)], ty="bool")
+    rested = g.pure(MATH, "Greater_DoubleDouble", [("A", "real", g.now()), ("B", "real", add(g.get("CatchT", "real"), 4.0))], ty="bool")
+    playing = g.not_(g.pure(MATH, "BooleanOR", [("A", "bool", g.get("Title", "bool")), ("B", "bool", g.pure(MATH, "BooleanOR", [
+        ("A", "bool", g.get("Opening", "bool")), ("B", "bool", g.get("Ending", "bool"))], ty="bool"))], ty="bool"))
+    go = g.pure(MATH, "BooleanAND", [("A", "bool", near), ("B", "bool", g.pure(MATH, "BooleanAND", [("A", "bool", rested), ("B", "bool", playing)], ty="bool"))], ty="bool")
+    yes, _ = g.branch(go, tick.then)
+    a = g.set("CatchT", "real", g.now(), yes).then
+    a = g.call(STATICS, "SpawnSound2D", a, [("Sound", "sound", ns["SND"]("growl")), ("VolumeMultiplier", "float", ns["VOL"]["growl"])]).then
+    a = g.set("WarpUntil", "real", add(g.now(), 1.5), a).then
+    cp = g.pure(MATH, "MakeVector", [("X", "real", CHECKPOINT[0]), ("Y", "real", CHECKPOINT[1]), ("Z", "real", CHECKPOINT[2])], ty="vector")
+    a = g.call(ACTOR, "K2_SetActorLocation", a, [("NewLocation", "vector", cp), ("bSweep", "bool", False), ("bTeleport", "bool", True)],
+               target=(g.pure(HUD, "GetOwningPawn", ty="actor"), "actor")).then
+    a = g.set("Toast", "string", CAUGHT_LINE, a).then
+    g.set("ToastTime", "real", g.now(), a)
+
+
+graph = ns["hud_graph"]()
+hunter_logic(graph)
+out = graph.text()
 import re
 multi = [m.group(1) for m in re.finditer(r'Direction="EGPD_Output",PinType\.PinCategory="exec"[^\n]*?LinkedTo=\(([^)]*)\)', out)
          if len([x for x in m.group(1).split(",") if x.strip()]) > 1]

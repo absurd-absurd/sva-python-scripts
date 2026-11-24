@@ -760,6 +760,8 @@ def build():
             "figures": [[path_x(y) + dx, y, bed_z(path_x(y) + dx, y), yaw] for y, dx, yaw in
                         ((8200, 350, 200), (11900, -200, 170), (14700, 250, 190), (16050, 60, 185))],
             "hunter": [path_x(10200), 10200, floor_z(10200) + 260],
+            # where you wake up if the hunter catches you: back before its ring (on the floor, + capsule)
+            "checkpoint": [path_x(8000), 8000, bed_z(path_x(8000), 8000) + 130],
             "breather": [path_x(17600), 17900, floor_z(17600) - 300],
             "schools": [[path_x(y) + dx, y, floor_z(y) + h] for y, dx, h in
                         ((1200, 150, 260), (5600, -250, 300), (9800, 200, 330), (15200, -300, 420))],
