@@ -44,7 +44,7 @@ BED_MATS = {
     "under_surface_mat": (0.02, 0.05, 0.05), "ladder_metal_mat": (0.14, 0.13, 0.12),
     "rusty_tool_mat": (0.2, 0.11, 0.07), "seeglass_red_mat": (0.6, 0.05, 0.03),      # red_lantern() (as in lake_buildings.py)
     # the ground (blended in Unreal: unreal/lakebed_level.py ground_material())
-    "lb_ground_mat": (0.3, 0.28, 0.24), "lb_litter_mat": (0.2, 0.15, 0.1),
+    "lb_ground_mat": (0.3, 0.28, 0.24), "bubble_mat": (0.95, 1.0, 1.0), "lb_litter_mat": (0.2, 0.15, 0.1),
 }
 rng = random.Random(2001)
 
@@ -485,8 +485,27 @@ def branch(seed, length):
     return build
 
 
+BUBBLE_RISE = 600.0      # how high a stream's bubbles go before they start again at the bottom (Unreal: RiseHeight)
+
+
+def bubble_stream(seed, count):
+    """A stream of gas bubbles from a seep in the silt: small round bubbles spread up a column
+    BUBBLE_RISE high. Unreal's M_Ch2_Sway (Rise) moves them all up and wraps them back to the
+    bottom, so the stream never ends; bigger bubbles are rarer."""
+    def build():
+        r = random.Random(seed)
+        for k in range(count):
+            z = (k + r.uniform(0, 0.8)) * BUBBLE_RISE / count
+            rad = r.uniform(1.0, 2.0) if r.random() < 0.8 else r.uniform(2.0, 3.2)
+            spread = 2.0 + z * 0.012                     # the stream widens a little as it rises
+            sphere(r.uniform(-spread, spread), r.uniform(-spread, spread), z, rad, "bubble_mat",
+                   sides=6, scale=(1, 1, 0.8))
+    return build
+
+
 def scatter_props():
     props = {
+        "lb_bubbles_A": bubble_stream(18, 220), "lb_bubbles_B": bubble_stream(19, 130),
         "lb_milfoil_A": milfoil(11, 3, 50, 110), "lb_milfoil_B": milfoil(12, 5, 30, 70),
         "lb_tuft_A": tuft(13, 22, 8, 18), "lb_tuft_B": tuft(14, 30, 5, 12),
         "lb_litter_A": litter(15, 90), "lb_litter_B": litter(16, 140),
@@ -522,6 +541,8 @@ def scatter(surface):
             tilt=8, follow=40, spacing=True, min_distance=60, max_slope=25, min_height=-1450, near="Rocks",
             near_range=300, open_share=35, seed=16),
         # (sunken leaf patches, lb_litter_*, were tried 2026-11-24: they read as dark holes in the sand)
+        net("Seeps", [("lb_bubbles_A", 1), ("lb_bubbles_B", 2)], count=40, scale_min=1.0, scale_max=1.0,
+            spin=360, tilt=0, follow=0, spacing=True, min_distance=500, max_slope=15, seed=18),
         net("Boulders", [("lb_boulder_A", 1), ("lb_boulder_B", 1)], count=70, scale_min=0.7, scale_max=1.6,
             tilt=20, sink=35, spacing=True, min_distance=700, max_slope=50, seed=11),
         net("Rocks", [("lb_rock_A", 2), ("lb_rock_B", 3), ("lb_rock_C", 1)], count=900, scale_min=0.5, scale_max=1.7,

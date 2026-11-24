@@ -139,7 +139,7 @@ def import_ch2_textures():
         lib.save_loaded_asset(tex, False)
 
 
-DARKER = {"rock_mat": 0.4}     # Chapter 1's rock texture tint read as pale foam under the green light
+DARKER = {"rock_mat": 0.4, "bubble_mat": 0.45}     # bubbles: glowing orbs at full white with Chapter 1's bloom     # Chapter 1's rock texture tint read as pale foam under the green light
 
 
 def darker(mats):
@@ -349,6 +349,13 @@ float k = pow(saturate(h / SwayHeight), 1.5) * SwayAmp;
 float ph = T * SwaySpeed + Obj.x * 0.011 + Obj.y * 0.017;
 float3 sway = float3(sin(ph + h * 0.015), cos(ph * 0.83 + h * 0.012), 0.0) * k;
 sway += Drift * float3(sin(T * 0.21 + WP.y / 310.0), cos(T * 0.17 + WP.x / 290.0), 0.6 * sin(T * 0.13 + (WP.x + WP.y) / 330.0));
+// Rise: bubbles climb Rise cm/s up their column and start again at the bottom after RiseHeight,
+// wobbling side to side as they go
+if (Rise > 0.0) {
+    float hz = WP.z - Obj.z;
+    float nz = frac((hz + T * Rise) / RiseHeight) * RiseHeight;
+    sway += float3(sin(T * 4.0 + hz * 0.11) * 1.5, cos(T * 3.3 + hz * 0.13) * 1.5, nz - hz);
+}
 """
 
 SWAY = {   # Maya material -> (SwayAmp cm, SwayHeight cm, SwaySpeed, Drift cm)
@@ -356,6 +363,7 @@ SWAY = {   # Maya material -> (SwayAmp cm, SwayHeight cm, SwaySpeed, Drift cm)
     "weed_brown_mat": (10.0, 120.0, 1.1, 0.0),
     "rope_mat": (0.0, 1.0, 0.0, 6.0),
     "specks_mat": (0.0, 1.0, 0.0, 18.0),
+    "bubble_mat": (0.0, 1.0, 0.0, 0.0, 38.0, 600.0),    # + Rise cm/s, RiseHeight (= make_lakebed BUBBLE_RISE)
 }
 
 
@@ -376,7 +384,7 @@ def sway_material():
     ins = list(node.get_editor_property("inputs"))
     new = {}
     for name, default in (("WP", None), ("Obj", None), ("T", None), ("SwayAmp", 0.0), ("SwayHeight", 100.0),
-                          ("SwaySpeed", 1.0), ("Drift", 0.0)):
+                          ("SwaySpeed", 1.0), ("Drift", 0.0), ("Rise", 0.0), ("RiseHeight", 900.0)):
         ci = unreal.CustomInput()
         ci.set_editor_property("input_name", name)
         ins.append(ci)
@@ -394,12 +402,14 @@ def sway_material():
 
 def make_sway(mats, sway):
     """Re-parent the moving things' material instances onto M_Ch2_Sway with their numbers."""
-    for name, (amp, height, speed, drift) in SWAY.items():
+    for name, nums in SWAY.items():
+        amp, height, speed, drift, rise, rise_h = (tuple(nums) + (0.0, 900.0))[:6]
         mi = mats.get(name)
         if not mi or not isinstance(mi, unreal.MaterialInstanceConstant):
             continue
         mi.set_editor_property("parent", sway)
-        for p, v in (("SwayAmp", amp), ("SwayHeight", height), ("SwaySpeed", speed), ("Drift", drift)):
+        for p, v in (("SwayAmp", amp), ("SwayHeight", height), ("SwaySpeed", speed), ("Drift", drift),
+                     ("Rise", rise), ("RiseHeight", rise_h)):
             MEL.set_material_instance_scalar_parameter_value(mi, p, v)
         lib.save_loaded_asset(mi, False)
 
@@ -434,7 +444,7 @@ def place_scatter(table):
             a.set_actor_transform(xf, False, False)
             tagged(a, f"{c['asset']}_{i}", f"Scatter/{c['network']}")
             comp = a.static_mesh_component
-            if any(k in c["asset"] for k in ("weed", "milfoil", "tuft", "litter")):
+            if any(k in c["asset"] for k in ("weed", "milfoil", "tuft", "litter", "bubbles")):
                 no_collision(comp)    # walk through the weed
                 comp.set_cast_shadow(False)
     return len(copies)
@@ -516,6 +526,8 @@ def underwater_look(ps2_settings, data):
     s.set_editor_property("color_gain", unreal.Vector4(0.75, 1.0, 0.95, 1.0))
     s.set_editor_property("override_color_saturation", True)
     s.set_editor_property("color_saturation", unreal.Vector4(0.7, 0.7, 0.7, 1.0))
+    s.set_editor_property("override_motion_blur_amount", True)
+    s.set_editor_property("motion_blur_amount", 0.0)        # rising bubbles smeared into lines (and the PS2 had none)
     s.set_editor_property("override_scene_fringe_intensity", True)
     s.set_editor_property("scene_fringe_intensity", 0.0)     # Chapter 1's colour fringe turned the silt into rainbow sparkles
     s.set_editor_property("override_vignette_intensity", True)
