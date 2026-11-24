@@ -19,6 +19,12 @@ fixes for common problems.
 
 You need a DirectX 12 graphics card, about 1 GB of free space, and 8 GB of memory or more.
 
+## Gameplay video
+
+Watch a playthrough of MARROW on YouTube: **[MARROW gameplay](https://youtu.be/lb3NeSzsPp0)**
+
+[![MARROW gameplay video](https://img.youtube.com/vi/lb3NeSzsPp0/hqdefault.jpg)](https://youtu.be/lb3NeSzsPp0)
+
 ## The project
 
 The production plan (schedule, what got done, open bugs) is in [PRODUCTION_PLAN.md](PRODUCTION_PLAN.md).
