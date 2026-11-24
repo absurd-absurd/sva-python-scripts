@@ -1,5 +1,5 @@
 {
- "_about": "Chapter 2's lakebed ground (textures/*.jpg from tools/fetch_textures.py). unreal/lakebed_level.py builds M_Ch2_Ground from this: flat ground shows sand, where it starts to rise silt, steep banks clay. tint multiplies the photo, size = cm one tile covers, slope = where the next layer takes over (0 flat .. 1 vertical, sine of the angle). rock = the steepest walls (triplanar); strata = sediment bands across clay and rock: spacing in cm, strength 0..1.",
+ "_about": "Chapter 2's lakebed ground (textures/*.jpg from tools/fetch_textures.py). unreal/lakebed_level.py builds M_Ch2_Ground from this: flat ground shows sand, where it starts to rise silt, steep banks clay. tint multiplies the photo, size = cm one tile covers, slope = where the next layer takes over (0 flat .. 1 vertical, sine of the angle). rock = the steepest walls (triplanar); strata = sediment bands across clay and rock: spacing in cm, strength 0..1 (0: the user saw them as stripes, 2026-11-24).",
  "ground": {
   "sand": {
    "texture": "sand",
@@ -51,7 +51,7 @@
   },
   "strata": {
    "spacing": 38,
-   "strength": 0.6
+   "strength": 0.0
   }
  }
 }
